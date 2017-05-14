@@ -52,4 +52,11 @@ const schema = new mongoose.Schema(
     }
 );
 
+// 送信ステータスで検索して処理するので
+schema.index(
+    {
+        status: 1
+    }
+);
+
 export default mongoose.model('EmailQueue', schema);

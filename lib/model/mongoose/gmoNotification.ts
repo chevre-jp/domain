@@ -44,4 +44,11 @@ const schema = new mongoose.Schema(
     }
 );
 
+// 処理ステータスで検索して処理するので
+schema.index(
+    {
+        process_status: 1
+    }
+);
+
 export default mongoose.model('GMONotification', schema);
