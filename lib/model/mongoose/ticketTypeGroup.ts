@@ -3,6 +3,8 @@ import * as mongoose from 'mongoose';
 import multilingualString from './schemaTypes/multilingualString';
 import TicketType from './ticketType';
 
+const safe: any = { j: 1, w: 'majority', wtimeout: 10000 };
+
 /**
  * 券種グループスキーマ
  */
@@ -20,7 +22,7 @@ const schema = new mongoose.Schema(
         collection: 'ticket_type_groups',
         id: true,
         read: 'primaryPreferred',
-        safe: <any>{ j: 1, w: 'majority', wtimeout: 10000 },
+        safe: safe,
         timestamps: {
             createdAt: 'created_at',
             updatedAt: 'updated_at'

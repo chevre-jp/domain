@@ -9,6 +9,8 @@ import Screen from './screen';
 import Theater from './theater';
 import TicketTypeGroup from './ticketTypeGroup';
 
+const safe: any = { j: 1, w: 'majority', wtimeout: 10000 };
+
 const DEFAULT_RADIX = 10;
 
 /**
@@ -44,7 +46,7 @@ const schema = new mongoose.Schema(
         collection: 'performances',
         id: true,
         read: 'primaryPreferred',
-        safe: <any>{ j: 1, w: 'majority', wtimeout: 10000 },
+        safe: safe,
         timestamps: {
             createdAt: 'created_at',
             updatedAt: 'updated_at'
@@ -58,14 +60,12 @@ const schema = new mongoose.Schema(
  * 開始文字列を多言語で取得
  */
 schema.virtual('start_str').get(function (this: any) {
-    const date = `${moment(`${this.day.substr(0, 4)}-${this.day.substr(4, 2)}-` +
-        `${this.day.substr(6)}T00:00:00+09:00`).format('MMMM DD, YYYY')}`;
-    const en = `Open: ${this.open_time.substr(0, 2)}:${this.open_time.substr(2)}/` +
-        `Start: ${this.start_time.substr(0, 2)}:${this.start_time.substr(2)} ` +
-        `on ${date}`;
-
-    const ja = `${this.day.substr(0, 4)}/${this.day.substr(4, 2)}/${this.day.substr(6)} ` +
-        `開場 ${this.open_time.substr(0, 2)}:${this.open_time.substr(2)} 開演 ${this.start_time.substr(0, 2)}:${this.start_time.substr(2)}`;
+    // tslint:disable-next-line:max-line-length
+    const date = `${moment(`${this.day.substr(0, 4)}-${this.day.substr(4, 2)}-${this.day.substr(6)}T00:00:00+09:00`).format('MMMM DD, YYYY')}`;
+    // tslint:disable-next-line:max-line-length
+    const en = `Open: ${this.open_time.substr(0, 2)}:${this.open_time.substr(2)}/Start: ${this.start_time.substr(0, 2)}:${this.start_time.substr(2)} on ${date}`;
+    // tslint:disable-next-line:max-line-length
+    const ja = `${this.day.substr(0, 4)}/${this.day.substr(4, 2)}/${this.day.substr(6)} 開場 ${this.open_time.substr(0, 2)}:${this.open_time.substr(2)} 開演 ${this.start_time.substr(0, 2)}:${this.start_time.substr(2)}`;
 
     return {
         en: en,

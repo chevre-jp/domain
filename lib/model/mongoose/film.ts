@@ -2,6 +2,8 @@ import * as mongoose from 'mongoose';
 
 import multilingualString from './schemaTypes/multilingualString';
 
+const safe: any = { j: 1, w: 'majority', wtimeout: 10000 };
+
 /**
  * 作品スキーマ
  */
@@ -29,7 +31,7 @@ const schema = new mongoose.Schema(
         collection: 'films',
         id: true,
         read: 'primaryPreferred',
-        safe: <any>{ j: 1, w: 'majority', wtimeout: 10000 },
+        safe: safe,
         timestamps: {
             createdAt: 'created_at',
             updatedAt: 'updated_at'

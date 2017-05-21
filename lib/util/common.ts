@@ -39,6 +39,7 @@ export function createToken(): string {
 export function createHash(password: string, salt: string): string {
     const sha512 = crypto.createHash('sha512');
     sha512.update(salt + password, 'utf8');
+
     return sha512.digest('hex');
 }
 

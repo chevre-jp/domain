@@ -123,6 +123,7 @@ export async function publishPaymentNo(date: string): Promise<string> {
     // sortTypes[checkDigit]で並べ替える
     const sortType = ReservationUtil.SORT_TYPES_PAYMENT_NO[checKDigit];
     debug('sortType:', sortType);
+
     return checKDigit2.toString() + sortType.map((index) => source.substr(index, 1)).join('') + checKDigit.toString();
 }
 

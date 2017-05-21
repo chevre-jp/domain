@@ -1,5 +1,7 @@
 import * as mongoose from 'mongoose';
 
+const safe: any = { j: 1, w: 'majority', wtimeout: 10000 };
+
 /**
  * 採番スキーマ
  */
@@ -14,7 +16,7 @@ const schema = new mongoose.Schema(
         id: true,
         read: 'primaryPreferred',
         // 採番はprimaryとその他で決してデータが重複してはならないので、write concernの設定には要注意
-        safe: <any>{ j: 1, w: 'majority', wtimeout: 10000 },
+        safe: safe,
         timestamps: {
             createdAt: 'created_at',
             updatedAt: 'updated_at'

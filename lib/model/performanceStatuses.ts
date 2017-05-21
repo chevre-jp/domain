@@ -77,11 +77,13 @@ export async function find(): Promise<PerformanceStatuses> {
         redisClient.get(REDIS_KEY, (err, reply) => {
             if (err instanceof Error) {
                 reject(err);
+
                 return;
             }
 
             if (reply === null) {
                 reject(new Error('not found'));
+
                 return;
             }
 
@@ -94,6 +96,7 @@ export async function find(): Promise<PerformanceStatuses> {
                 });
             } catch (error) {
                 reject(error);
+
                 return;
             }
 

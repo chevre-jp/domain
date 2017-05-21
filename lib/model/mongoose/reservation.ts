@@ -12,6 +12,8 @@ import Theater from './theater';
 
 import * as ReservationUtil from '../../util/reservation';
 
+const safe: any = { j: 1, w: 'majority', wtimeout: 10000 };
+
 /**
  * 予約スキーマ
  */
@@ -145,7 +147,7 @@ const schema = new mongoose.Schema(
         collection: 'reservations',
         id: true,
         read: 'primaryPreferred',
-        safe: <any>{ j: 1, w: 'majority', wtimeout: 10000 },
+        safe: safe,
         timestamps: {
             createdAt: 'created_at',
             updatedAt: 'updated_at'
@@ -166,18 +168,13 @@ schema.virtual('performance_start_str').get(function (this: any) {
         return {};
     }
 
-    const date = `${moment(`${this.performance_day.substr(0, 4)}-` +
-        `${this.performance_day.substr(4, 2)}-` +
-        `${this.performance_day.substr(6)}T00:00:00+09:00`).format('MMMM DD, YYYY')}`;
+    // tslint:disable-next-line:max-line-length
+    const date = `${moment(`${this.performance_day.substr(0, 4)}-${this.performance_day.substr(4, 2)}-${this.performance_day.substr(6)}T00:00:00+09:00`).format('MMMM DD, YYYY')}`;
     const en = `Open: ${this.performance_open_time.substr(0, 2)}:${this.performance_open_time.substr(2)}/` +
-        `Start: ${this.performance_start_time.substr(0, 2)}:${this.performance_start_time.substr(2)} ` +
-        `on ${date}`;
-
-    const ja = `${this.performance_day.substr(0, 4)}/` +
-        `${this.performance_day.substr(4, 2)}/` +
-        `${this.performance_day.substr(6)} ` +
-        `開場 ${this.performance_open_time.substr(0, 2)}:${this.performance_open_time.substr(2)} ` +
-        `開演 ${this.performance_start_time.substr(0, 2)}:${this.performance_start_time.substr(2)}`;
+        `Start: ${this.performance_start_time.substr(0, 2)}:${this.performance_start_time.substr(2)} on ${date}`;
+    const ja = `${this.performance_day.substr(0, 4)}/${this.performance_day.substr(4, 2)}/${this.performance_day.substr(6)} ` +
+        // tslint:disable-next-line:max-line-length
+        `開場 ${this.performance_open_time.substr(0, 2)}:${this.performance_open_time.substr(2)} 開演 ${this.performance_start_time.substr(0, 2)}:${this.performance_start_time.substr(2)}`;
 
     return {
         en: en,
