@@ -40,7 +40,7 @@ describe('券種グループスキーマ', () => {
         };
         const ticketTypeDoc = yield ticketType_1.default.create(ticketType);
         const ticketTypeGroupeDoc = yield ticketTypeGroup_1.default.create(ticketTypeGroup);
-        const ticketTypeGroupDetails = yield ticketTypeGroup_1.default.findById(ticketTypeGroup._id).populate('ticket_types');
+        const ticketTypeGroupDetails = yield ticketTypeGroup_1.default.findById(ticketTypeGroup._id).populate('ticket_types').exec();
         assert(Array.isArray(ticketTypeGroupDetails.get('ticket_types')));
         assert.equal(ticketTypeGroupDetails.get('ticket_types').length, 1);
         assert.equal(ticketTypeGroupDetails.get('ticket_types')[0]._id, ticketType._id);

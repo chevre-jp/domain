@@ -35,7 +35,7 @@ describe('券種グループスキーマ', () => {
         const ticketTypeDoc = await TicketType.create(ticketType);
         const ticketTypeGroupeDoc = await TicketTypeGroup.create(ticketTypeGroup);
 
-        const ticketTypeGroupDetails = await TicketTypeGroup.findById(ticketTypeGroup._id).populate('ticket_types');
+        const ticketTypeGroupDetails = await TicketTypeGroup.findById(ticketTypeGroup._id).populate('ticket_types').exec();
         assert(Array.isArray(ticketTypeGroupDetails.get('ticket_types')));
         assert.equal(ticketTypeGroupDetails.get('ticket_types').length, 1);
         assert.equal(ticketTypeGroupDetails.get('ticket_types')[0]._id, ticketType._id);

@@ -31,7 +31,7 @@ describe('予約ユーティリティ 購入管理番号生成', () => {
         const no2 = ReservationUtil.decodePaymentNo(paymentNo2);
 
         // 連番が+1かどうか
-        assert.equal(no2, sequenceDoc1.get('no') + 1);
+        assert.equal(no2, <number>sequenceDoc1.get('no') + 1);
 
         // 連番のデータが確かにあるかどうか
         const sequenceDoc2 = await Sequence.findOne({

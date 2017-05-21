@@ -45,7 +45,7 @@ describe('パフォーマンススキーマ', () => {
             day: '20170426',
             open_time: '0850',
             start_time: '0900',
-            end_time: '1200',
+            end_time: '1200' // 上映終了時刻
         };
         const performanceDoc = yield performance_1.default.create(performance);
         const ticketTypeDoc = yield ticketType_1.default.create(ticketType);
@@ -54,9 +54,9 @@ describe('パフォーマンススキーマ', () => {
             .populate({
             path: 'ticket_type_group',
             populate: {
-                path: 'ticket_types',
+                path: 'ticket_types'
             }
-        });
+        }).exec();
         // 券種グループと券種へのリファレンスがはられていることを確認
         assert.equal(performanceDetail.get('ticket_type_group')._id, ticketTypeGroup._id);
         assert.equal(performanceDetail.get('ticket_type_group').ticket_types.length, 1);

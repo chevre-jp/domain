@@ -57,8 +57,8 @@ describe('予約スキーマ virtual', () => {
         const reservationDoc = yield reservation_1.default.create(reservation);
         const reservation2Doc = yield reservation_1.default.create(reservation2);
         // 入場履歴が空配列かどうか確認
-        assert(!reservationDoc.get('checked_in'));
-        assert(reservation2Doc.get('checked_in'));
+        assert(reservationDoc.get('checked_in') === false);
+        assert(reservation2Doc.get('checked_in') === true);
         // テストデータ削除
         yield reservationDoc.remove();
         yield reservation2Doc.remove();
