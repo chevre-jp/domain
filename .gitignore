@@ -2,10 +2,11 @@
 logs
 .env*
 npm-debug.log*
-
 node_modules
 docs/
 .vscode/
+coverage/
+.nyc_output/
 
 !.gitignore
 !.gitkeep
