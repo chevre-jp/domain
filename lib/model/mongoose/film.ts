@@ -25,7 +25,8 @@ const schema = new mongoose.Schema(
         ],
         minutes: Number, // 上映時間
         is_mx4d: Boolean, // MX4D上映かどうか
-        copyright: String // コピーライト
+        copyright: String, // コピーライト
+        rating: String // レイティング
     },
     {
         collection: 'films',
