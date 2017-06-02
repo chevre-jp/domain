@@ -65,6 +65,7 @@ const schema = new mongoose.Schema(
         film_image: String,
         film_is_mx4d: Boolean,
         film_copyright: String,
+        film_rating: String,
 
         purchaser_group: String, // 購入者区分
         purchaser_last_name: String,
@@ -381,7 +382,7 @@ schema.post('findOneAndUpdate', function (this: any, err: any, doc: any, next: a
             , 'performance_day', 'performance_open_time', 'performance_start_time', 'performance_end_time', 'performance_canceled'
             , 'theater', 'theater_name', 'theater_address'
             , 'screen', 'screen_name'
-            , 'film', 'film_name', 'film_image', 'film_is_mx4d', 'film_copyright'
+            , 'film', 'film_name', 'film_image', 'film_is_mx4d', 'film_copyright', 'film_rating'
         ];
         const unset: any = {};
         this.schema.eachPath((path: string) => {
