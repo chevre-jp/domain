@@ -66,6 +66,8 @@ const schema = new mongoose.Schema(
         film_is_mx4d: Boolean,
         film_copyright: String,
         film_rating: String,
+        film_sales_release_date: String,
+        film_sales_end_date: String,
 
         purchaser_group: String, // 購入者区分
         purchaser_last_name: String,
