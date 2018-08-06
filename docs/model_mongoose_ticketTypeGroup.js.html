@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Chevre Domain Library for Node.js Source: model/mongoose/ticketTypeGroup.js</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.cosmo.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">Chevre Domain Library for Node.js</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="PerformanceStatuses.html">PerformanceStatuses</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#CHARGE_CVS">CHARGE_CVS</a></li><li><a href="global.html#CHARGE_MX4D">CHARGE_MX4D</a></li><li><a href="global.html#create">create</a></li><li><a href="global.html#createDebug">createDebug</a></li><li><a href="global.html#createGMOOrderId">createGMOOrderId</a></li><li><a href="global.html#createHash">createHash</a></li><li><a href="global.html#createToken">createToken</a></li><li><a href="global.html#crypto">crypto</a></li><li><a href="global.html#decodePaymentNo">decodePaymentNo</a></li><li><a href="global.html#find">find</a></li><li><a href="global.html#getCheckDigit">getCheckDigit</a></li><li><a href="global.html#getCheckDigit2">getCheckDigit2</a></li><li><a href="global.html#getOne4staff">getOne4staff</a></li><li><a href="global.html#getPrefectrues">getPrefectrues</a></li><li><a href="global.html#getSections">getSections</a></li><li><a href="global.html#GROUP_STAFF">GROUP_STAFF</a></li><li><a href="global.html#GROUP_WINDOW_STAFF">GROUP_WINDOW_STAFF</a></li><li><a href="global.html#isValidPaymentNo">isValidPaymentNo</a></li><li><a href="global.html#mongoose">mongoose</a></li><li><a href="global.html#pad">pad</a></li><li><a href="global.html#parseGMOOrderId">parseGMOOrderId</a></li><li><a href="global.html#PROCESS_STATUS_PROCESSED">PROCESS_STATUS_PROCESSED</a></li><li><a href="global.html#PROCESS_STATUS_PROCESSING">PROCESS_STATUS_PROCESSING</a></li><li><a href="global.html#PROCESS_STATUS_UNPROCESSED">PROCESS_STATUS_UNPROCESSED</a></li><li><a href="global.html#publishPaymentNo">publishPaymentNo</a></li><li><a href="global.html#PURCHASER_GROUP_CUSTOMER">PURCHASER_GROUP_CUSTOMER</a></li><li><a href="global.html#PURCHASER_GROUP_MEMBER">PURCHASER_GROUP_MEMBER</a></li><li><a href="global.html#PURCHASER_GROUP_STAFF">PURCHASER_GROUP_STAFF</a></li><li><a href="global.html#PURCHASER_GROUP_WINDOW">PURCHASER_GROUP_WINDOW</a></li><li><a href="global.html#redis">redis</a></li><li><a href="global.html#schema">schema</a></li><li><a href="global.html#SEAT_GRADE_CODE_FRONT_RECLINING">SEAT_GRADE_CODE_FRONT_RECLINING</a></li><li><a href="global.html#SEAT_GRADE_CODE_NORMAL">SEAT_GRADE_CODE_NORMAL</a></li><li><a href="global.html#SEAT_GRADE_CODE_PREMIERE_BOX">SEAT_GRADE_CODE_PREMIERE_BOX</a></li><li><a href="global.html#SEAT_GRADE_CODE_PREMIERE_LUXURY">SEAT_GRADE_CODE_PREMIERE_LUXURY</a></li><li><a href="global.html#SEAT_STATUS_A">SEAT_STATUS_A</a></li><li><a href="global.html#SEAT_STATUS_B">SEAT_STATUS_B</a></li><li><a href="global.html#SEAT_STATUS_C">SEAT_STATUS_C</a></li><li><a href="global.html#SEAT_STATUS_G">SEAT_STATUS_G</a></li><li><a href="global.html#SEAT_STATUS_THRESHOLD_A">SEAT_STATUS_THRESHOLD_A</a></li><li><a href="global.html#SEAT_STATUS_THRESHOLD_B">SEAT_STATUS_THRESHOLD_B</a></li><li><a href="global.html#SEQUENCE_TARGET">SEQUENCE_TARGET</a></li><li><a href="global.html#sortBySeatCode">sortBySeatCode</a></li><li><a href="global.html#STATUS_KEPT_BY_CHEVRE">STATUS_KEPT_BY_CHEVRE</a></li><li><a href="global.html#STATUS_KEPT_BY_MEMBER">STATUS_KEPT_BY_MEMBER</a></li><li><a href="global.html#STATUS_RESERVED">STATUS_RESERVED</a></li><li><a href="global.html#STATUS_SENDING">STATUS_SENDING</a></li><li><a href="global.html#STATUS_SENT">STATUS_SENT</a></li><li><a href="global.html#STATUS_TEMPORARY">STATUS_TEMPORARY</a></li><li><a href="global.html#STATUS_TEMPORARY_ON_KEPT_BY_CHEVRE">STATUS_TEMPORARY_ON_KEPT_BY_CHEVRE</a></li><li><a href="global.html#STATUS_UNSENT">STATUS_UNSENT</a></li><li><a href="global.html#STATUS_WAITING_SETTLEMENT">STATUS_WAITING_SETTLEMENT</a></li><li><a href="global.html#STATUS_WAITING_SETTLEMENT_PAY_DESIGN">STATUS_WAITING_SETTLEMENT_PAY_DESIGN</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#TICKET_TYPE_CODE_ADULTS">TICKET_TYPE_CODE_ADULTS</a></li><li><a href="global.html#TICKET_TYPE_CODE_FREE">TICKET_TYPE_CODE_FREE</a></li><li><a href="global.html#TICKET_TYPE_CODE_NOT_FOR_SALE">TICKET_TYPE_CODE_NOT_FOR_SALE</a></li><li><a href="global.html#TICKET_TYPE_CODE_STUDENTS">TICKET_TYPE_CODE_STUDENTS</a></li><li><a href="global.html#TICKET_TYPE_CODE_STUDENTS_ON_THE_DAY">TICKET_TYPE_CODE_STUDENTS_ON_THE_DAY</a></li><li><a href="global.html#TicketTypeGroupUtil">TicketTypeGroupUtil</a></li><li><a href="global.html#toFullWidth">toFullWidth</a></li><li><a href="global.html#toHalfWidth">toHalfWidth</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			
+
+		<h1 class="page-title">Source: model/mongoose/ticketTypeGroup.js</h1>
+    
+<section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript linenums">"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose = require("mongoose");
+const multilingualString_1 = require("./schemaTypes/multilingualString");
+const ticketType_1 = require("./ticketType");
+const safe = { j: 1, w: 'majority', wtimeout: 10000 };
+/**
+ * 券種グループスキーマ
+ */
+const schema = new mongoose.Schema({
+    _id: String,
+    name: multilingualString_1.default,
+    ticket_types: [{
+            type: String,
+            ref: ticketType_1.default.modelName,
+            required: true
+        }]
+}, {
+    collection: 'ticket_type_groups',
+    id: true,
+    read: 'primaryPreferred',
+    safe: safe,
+    timestamps: {
+        createdAt: 'created_at',
+        updatedAt: 'updated_at'
+    },
+    toJSON: { getters: true },
+    toObject: { getters: true }
+});
+exports.default = mongoose.model('TicketTypeGroup', schema);
+</pre>
+    </article>
+</section>
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
+	
+		on Mon Aug 6th 2018
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>
