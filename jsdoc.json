@@ -24,7 +24,7 @@
         "dateFormat": "ddd MMM Do YYYY",
         "outputSourceFiles": true,
         "outputSourcePath": true,
-        "systemName": "元祖興行パッケージドメインモデル for Node.js",
+        "systemName": "Chevre Domain Library for Node.js",
         "footer": "",
         "navType": "vertical",
         "theme": "cosmo",

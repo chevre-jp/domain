@@ -1,10 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 // tslint:disable:max-line-length no-irregular-whitespace
 /**
  * 部門リストを取得する
  */
-function getSections() {
+export function getSections() {
     return [
         { code: '01', name: { ja: 'オープニング作品', en: 'Opening' } },
         { code: '02', name: { ja: 'クロージング作品', en: 'Closing' } },
@@ -34,4 +32,3 @@ function getSections() {
         { code: '26', name: { ja: '第６回日本学生映画祭', en: 'The 6th Japan Student Film Festival' } }
     ];
 }
-exports.getSections = getSections;

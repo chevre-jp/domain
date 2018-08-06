@@ -1,56 +1,65 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * 共通ユーティリティ
  */
-const crypto = require("crypto");
+import * as crypto from 'crypto';
+
+export interface IPrefecture {
+    code: string;
+    name: {
+        ja: string;
+        en: string;
+    };
+}
+
 /**
  * ミリ秒とプロセスに対してユニークなトークンを生成する
  * todo uniqidの型定義なし
  */
-function createToken() {
+export function createToken(): string {
     // tslint:disable-next-line:no-require-imports
     const uniqid = require('uniqid');
     // tslint:disable-next-line:no-magic-numbers insecure-random
-    const data = (Math.floor(Math.random() * 10000) + 1000).toString() + uniqid();
+    const data = (Math.floor(Math.random() * 10000) + 1000).toString() + <string>uniqid();
+
     return crypto.createHash('md5').update(data, 'utf8').digest('hex');
 }
-exports.createToken = createToken;
+
 /**
  * ハッシュ値を作成する
  */
-function createHash(password, salt) {
+export function createHash(password: string, salt: string): string {
     const sha512 = crypto.createHash('sha512');
     sha512.update(salt + password, 'utf8');
+
     return sha512.digest('hex');
 }
-exports.createHash = createHash;
+
 /**
  * 全角→半角変換
  */
-function toHalfWidth(str) {
+export function toHalfWidth(str: string): string {
     return str.split('').map((value) => {
         // 全角であれば変換
         // tslint:disable-next-line:no-irregular-whitespace no-magic-numbers
         return value.replace(/[！-～]/g, String.fromCharCode(value.charCodeAt(0) - 0xFEE0)).replace('　', ' ');
     }).join('');
 }
-exports.toHalfWidth = toHalfWidth;
+
 /**
  * 半角→全角変換
  */
-function toFullWidth(str) {
+export function toFullWidth(str: string): string {
     return str.split('').map((value) => {
         // 半角であれば変換
         // tslint:disable-next-line:no-irregular-whitespace no-magic-numbers
         return value.replace(/[!-~]/g, String.fromCharCode(value.charCodeAt(0) + 0xFEE0)).replace(' ', '　');
     }).join('');
 }
-exports.toFullWidth = toFullWidth;
+
 /**
  * 都道府県リスト
  */
-function getPrefectrues() {
+export function getPrefectrues(): IPrefecture[] {
     return [
         { code: '01', name: { ja: '北海道', en: 'Hokkaido Government' } },
         { code: '02', name: { ja: '青森県', en: 'Aomori Prefectural Government' } },
@@ -101,4 +110,3 @@ function getPrefectrues() {
         { code: '47', name: { ja: '沖縄県', en: 'Okinawa Prefecture' } }
     ];
 }
-exports.getPrefectrues = getPrefectrues;

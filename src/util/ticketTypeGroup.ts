@@ -1,33 +1,33 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * 券種ユーティリティ
  */
-const TicketTypeGroupUtil = require("./ticketTypeGroup");
+import * as TicketTypeGroupUtil from './ticketTypeGroup';
+
 /**
  * 券種(一般)
  */
-exports.TICKET_TYPE_CODE_ADULTS = '01';
+export const TICKET_TYPE_CODE_ADULTS = '01';
 /**
  * 券種(学生)
  */
-exports.TICKET_TYPE_CODE_STUDENTS = '02';
+export const TICKET_TYPE_CODE_STUDENTS = '02';
 /**
  * 券種(学生当日)
  */
-exports.TICKET_TYPE_CODE_STUDENTS_ON_THE_DAY = '03';
+export const TICKET_TYPE_CODE_STUDENTS_ON_THE_DAY = '03';
 /**
  * 券種(無料)
  */
-exports.TICKET_TYPE_CODE_FREE = 'FREE';
+export const TICKET_TYPE_CODE_FREE = 'FREE';
 /**
  * 券種(Not for sale)
  */
-exports.TICKET_TYPE_CODE_NOT_FOR_SALE = 'NOTFORSALE';
+export const TICKET_TYPE_CODE_NOT_FOR_SALE = 'NOTFORSALE';
+
 /**
  * 内部関係者用券種グループを取得する
  */
-function getOne4staff() {
+export function getOne4staff() {
     return [
         {
             _id: TicketTypeGroupUtil.TICKET_TYPE_CODE_NOT_FOR_SALE,
@@ -47,4 +47,3 @@ function getOne4staff() {
         }
     ];
 }
-exports.getOne4staff = getOne4staff;

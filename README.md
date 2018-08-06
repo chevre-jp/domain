@@ -1,52 +1,51 @@
-# 元祖興行パッケージドメインモデル for Node.js
+# Chevre Domain Library for Node.js
+
+[![npm (scoped)](https://img.shields.io/npm/v/@chevre/domain.svg)](https://www.npmjs.com/package/@chevre/domain)
+[![CircleCI](https://circleci.com/gh/chevre-jp/domain.svg?style=svg)](https://circleci.com/gh/chevre-jp/domain)
+[![Coverage Status](https://coveralls.io/repos/github/chevre-jp/domain/badge.svg?branch=master)](https://coveralls.io/github/chevre-jp/domain?branch=master)
+[![Dependency Status](https://img.shields.io/david/chevre-jp/domain.svg)](https://david-dm.org/chevre-jp/domain)
+[![Known Vulnerabilities](https://snyk.io/test/github/chevre-jp/domain/badge.svg?targetFile=package.json)](https://snyk.io/test/github/chevre-jp/domain?targetFile=package.json)
+[![npm](https://img.shields.io/npm/dm/@chevre/domain.svg)](https://nodei.co/npm/@chevre/domain/)
 
 元祖興行パッケージオンラインチケットシステムのドメインモデルをnode.jsで使いやすいようにまとめたパッケージです。
 
-# Features
+## Table of contents
 
-# Getting Started
-
-## Install
-
-```shell
-npm install --save @motionpicture/chevre-domain
-```
+* [Usage](#usage)
+* [Code Samples](#code-samples)
+* [License](#license)
 
 ## Usage
 
+```shell
+npm install --save @chevre/domain
+```
+
 ```Javascript
-var CHEVRE = require("@motionpicture/chevre-domain");
+const chevre = require("@chevre/chevredomain");
 ```
 
 前提として、mongooseでdefault connectionを確保することと、redis情報をセットすることが必要。
 
 * mongoose default connection
+
 ```Javascript
-mongoose.connect();
+chevre.mongoose.connect();
 ```
 
-* set environment variables
-```shell
-set CHEVRE_PERFORMANCE_STATUSES_REDIS_PORT=*****
-set CHEVRE_PERFORMANCE_STATUSES_REDIS_HOST=*****
-set CHEVRE_PERFORMANCE_STATUSES_REDIS_KEY=*****
-```
+### Environment variables
+
+| Name                                     | Required | Value           | Purpose                     |
+|------------------------------------------|----------|-----------------|-----------------------------|
+| `DEBUG`                                  | false    | chevre-domain:* | Debug                       |
+| `CHEVRE_PERFORMANCE_STATUSES_REDIS_PORT` | true     |                 | パフォーマンス空席状況保管RedisCache接続情報 |
+| `CHEVRE_PERFORMANCE_STATUSES_REDIS_HOST` | true     |                 | パフォーマンス空席状況保管RedisCache接続情報 |
+| `CHEVRE_PERFORMANCE_STATUSES_REDIS_KEY`  | true     |                 | パフォーマンス空席状況保管RedisCache接続情報 |
 
 ## Code Samples
 
-コードサンプルが./examplesにあります。
+Code sample are [here](https://github.com/chevre-jp/domain/tree/master/example).
 
-# tslint
+## License
 
-コード品質チェックをtslintで行っています。lintパッケージとして以下を仕様。
-* [tslint](https://github.com/palantir/tslint)
-* [tslint-microsoft-contrib](https://github.com/Microsoft/tslint-microsoft-contrib)
-`npm run check`でチェック実行。改修の際には、必ずチェックすること。
-
-# Test
-
-`npm test`でテスト実行。パッケージをpublishする前にこれで確認。
-
-# JsDoc
-
-`npm run jsdoc`でjsdocを作成できます。./docsに出力されます。
+ISC
