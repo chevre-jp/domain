@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - パッケージ名を変更。
+- 予約管理サービスとして再構築。
 
 ### Deprecated
 

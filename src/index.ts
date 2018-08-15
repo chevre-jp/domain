@@ -1,20 +1,12 @@
 /**
  * index module
  */
+import * as factory from '@chevre/factory';
 import * as mongoose from 'mongoose';
+import * as redis from 'redis';
 
-import * as Models from './model/mongoose';
-import * as PerformanceStatusesModel from './model/performanceStatuses';
-
-import * as CommonUtil from './util/common';
-import * as EmailQueueUtil from './util/emailQueue';
-import * as FilmUtil from './util/film';
-import * as GMONotificationUtil from './util/gmoNotification';
-import * as OwnerUtil from './util/owner';
-import * as PerformanceUtil from './util/performance';
-import * as ReservationUtil from './util/reservation';
-import * as ScreenUtil from './util/screen';
-import * as TicketTypeGroupUtil from './util/ticketTypeGroup';
+import * as repository from './repository';
+import * as service from './service';
 
 /**
  * MongoDBクライアント`mongoose`
@@ -24,16 +16,17 @@ import * as TicketTypeGroupUtil from './util/ticketTypeGroup';
  * });
  */
 export import mongoose = mongoose;
-export {
-    Models,
-    PerformanceStatusesModel,
-    CommonUtil,
-    EmailQueueUtil,
-    FilmUtil,
-    GMONotificationUtil,
-    OwnerUtil,
-    PerformanceUtil,
-    ReservationUtil,
-    ScreenUtil,
-    TicketTypeGroupUtil
-};
+/**
+ * Redis Cacheクライアント
+ * @example
+ * const client = domain.redis.createClient({
+ *      host: process.env.REDIS_HOST,
+ *      port: process.env.REDIS_PORT,
+ *      password: process.env.REDIS_KEY,
+ *      tls: { servername: process.env.REDIS_HOST }
+ * });
+ */
+export import redis = redis;
+export import factory = factory;
+export import repository = repository;
+export import service = service;
