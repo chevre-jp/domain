@@ -186,7 +186,7 @@ export class MongoRepository {
         // MongoDB検索条件
         const andConditions: any[] = [
             {
-                typeOf: factory.eventType.ScreeningEvent
+                typeOf: factory.eventType.ScreeningEventSeries
             }
         ];
 

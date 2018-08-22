@@ -30,4 +30,20 @@ export class MongoRepository {
         return this.ticketTypeModel.find({ _id: { $in: ticketTypeGroup.ticketTypes } }).exec()
             .then((docs) => docs.map((doc) => <factory.ticketType.ITicketType>doc.toObject()));
     }
+    /**
+     * 券種グループを検索する
+     */
+    public async searchTicketTypeGroups(_: {}): Promise<factory.ticketType.ITicketTypeGroup[]> {
+        const andConditions: any[] = [
+            {
+                _id: { $exists: true }
+            }
+        ];
+
+        return <factory.ticketType.ITicketTypeGroup[]>await this.ticketTypeGroupModel.find({ $and: andConditions })
+            .sort({ _id: 1 })
+            .setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
+    }
 }
