@@ -55,6 +55,26 @@ export class MongoRepository {
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
     }
+    /**
+     * IDで上映イベント予約を検索する
+     */
+    public async findScreeningEventReservationById(params: {
+        id: string;
+    }): Promise<factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent>> {
+        const doc = await this.reservationModel.findById(
+            params.id,
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        ).exec();
+        if (doc === null) {
+            throw new factory.errors.NotFound('Reservation');
+        }
+
+        return doc.toObject();
+    }
     public async confirm(params: { id: string }) {
         await this.reservationModel.findByIdAndUpdate(
             params.id,

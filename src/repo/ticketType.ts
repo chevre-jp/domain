@@ -18,7 +18,14 @@ export class MongoRepository {
         this.ticketTypeGroupModel = connection.model(TicketTypeGroupModel.modelName);
     }
     public async findByTicketGroupId(params: { ticketGroupId: string }): Promise<factory.ticketType.ITicketType[]> {
-        const ticketTypeGroup = await this.ticketTypeGroupModel.findById(params.ticketGroupId).exec()
+        const ticketTypeGroup = await this.ticketTypeGroupModel.findById(
+            params.ticketGroupId,
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        ).exec()
             .then((doc) => {
                 if (doc === null) {
                     throw new factory.errors.NotFound('Ticket type group');
@@ -40,7 +47,14 @@ export class MongoRepository {
             }
         ];
 
-        return <factory.ticketType.ITicketTypeGroup[]>await this.ticketTypeGroupModel.find({ $and: andConditions })
+        return <factory.ticketType.ITicketTypeGroup[]>await this.ticketTypeGroupModel.find(
+            { $and: andConditions },
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        )
             .sort({ _id: 1 })
             .setOptions({ maxTimeMS: 10000 })
             .exec()

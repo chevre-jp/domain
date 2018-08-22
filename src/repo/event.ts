@@ -78,6 +78,7 @@ export class MongoRepository {
     /**
      * 個々の上映イベントを検索する
      */
+    // tslint:disable-next-line:max-func-body-length
     public async searchScreeningEvents(
         searchConditions: factory.event.screeningEvent.ISearchConditions
     ): Promise<factory.event.screeningEvent.IEvent[]> {
@@ -170,7 +171,14 @@ export class MongoRepository {
             });
         }
 
-        return <factory.event.screeningEvent.IEvent[]>await this.eventModel.find({ $and: andConditions })
+        return <factory.event.screeningEvent.IEvent[]>await this.eventModel.find(
+            { $and: andConditions },
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        )
             .sort({ startDate: 1 })
             .setOptions({ maxTimeMS: 10000 })
             .exec()
@@ -252,7 +260,14 @@ export class MongoRepository {
             });
         }
 
-        return <factory.event.screeningEventSeries.IEvent[]>await this.eventModel.find({ $and: andConditions })
+        return <factory.event.screeningEventSeries.IEvent[]>await this.eventModel.find(
+            { $and: andConditions },
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        )
             .sort({ startDate: 1 })
             .setOptions({ maxTimeMS: 10000 })
             .exec()
@@ -266,10 +281,17 @@ export class MongoRepository {
         typeOf: T;
         id: string;
     }): Promise<factory.event.IEvent<T>> {
-        const event = await this.eventModel.findOne({
-            typeOf: params.typeOf,
-            _id: params.id
-        }).exec();
+        const event = await this.eventModel.findOne(
+            {
+                typeOf: params.typeOf,
+                _id: params.id
+            },
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        ).exec();
         if (event === null) {
             throw new factory.errors.NotFound('Event');
         }

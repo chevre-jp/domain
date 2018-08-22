@@ -120,6 +120,11 @@ export class MongoRepository {
             {
                 typeOf: typeOf,
                 _id: actionId
+            },
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
             }
         ).exec()
             .then((doc) => {
@@ -140,8 +145,6 @@ export class MongoRepository {
         startDateFrom?: Date;
         startDateThrough?: Date;
         purposeTypeOfs?: factory.transactionType[];
-        fromLocationAccountNumbers?: string[];
-        toLocationAccountNumbers?: string[];
         limit: number;
     }): Promise<IAction<T>[]> {
         const andConditions: any[] = [
@@ -173,29 +176,6 @@ export class MongoRepository {
                 }
             });
         }
-
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (Array.isArray(searchConditions.fromLocationAccountNumbers) && searchConditions.fromLocationAccountNumbers.length > 0) {
-            andConditions.push({
-                'fromLocation.accountNumber': {
-                    $exists: true,
-                    $in: searchConditions.fromLocationAccountNumbers
-                }
-            });
-        }
-
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (Array.isArray(searchConditions.toLocationAccountNumbers) && searchConditions.toLocationAccountNumbers.length > 0) {
-            andConditions.push({
-                'toLocation.accountNumber': {
-                    $exists: true,
-                    $in: searchConditions.toLocationAccountNumbers
-                }
-            });
-        }
-
         debug('finding actions...', andConditions);
 
         return this.actionModel.find(

@@ -59,7 +59,12 @@ export class MongoRepository {
         // containsPlaceを含めるとデータサイズが大きくなるので、検索結果には含めない
         return this.placeModel.find(
             conditions,
-            { containsPlace: 0 }
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0,
+                containsPlace: 0
+            }
         )
             .setOptions({ maxTimeMS: 10000 })
             .exec()
@@ -72,10 +77,17 @@ export class MongoRepository {
     public async findMovieTheaterByBranchCode(
         branchCode: string
     ): Promise<factory.place.movieTheater.IPlace> {
-        const doc = await this.placeModel.findOne({
-            typeOf: factory.placeType.MovieTheater,
-            branchCode: branchCode
-        }).exec();
+        const doc = await this.placeModel.findOne(
+            {
+                typeOf: factory.placeType.MovieTheater,
+                branchCode: branchCode
+            },
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        ).exec();
 
         if (doc === null) {
             throw new factory.errors.NotFound('movieTheater');
