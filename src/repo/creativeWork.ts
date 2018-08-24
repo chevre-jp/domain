@@ -79,4 +79,17 @@ export class MongoRepository implements Repository {
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
     }
+    /**
+     * 映画作品を削除する
+     */
+    public async deleteMovie(params: {
+        identifier: string;
+    }) {
+        await this.creativeWorkModel.findOneAndRemove(
+            {
+                identifier: params.identifier,
+                typeOf: factory.creativeWorkType.Movie
+            }
+        ).exec();
+    }
 }
