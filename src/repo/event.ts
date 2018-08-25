@@ -10,11 +10,9 @@ import eventModel from './mongoose/model/event';
  */
 export class MongoRepository {
     public readonly eventModel: typeof eventModel;
-
     constructor(connection: Connection) {
         this.eventModel = connection.model(eventModel.modelName);
     }
-
     /**
      * 上映イベントを保管する
      */
@@ -44,7 +42,6 @@ export class MongoRepository {
 
         return event;
     }
-
     /**
      * 個々の上映イベントを保管する
      */
@@ -74,7 +71,6 @@ export class MongoRepository {
 
         return event;
     }
-
     /**
      * 個々の上映イベントを検索する
      */
@@ -184,7 +180,6 @@ export class MongoRepository {
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
     }
-
     /**
      * 上映イベントを検索する
      */
@@ -273,7 +268,6 @@ export class MongoRepository {
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
     }
-
     /**
      * IDでイベントを取得する
      */
@@ -297,5 +291,19 @@ export class MongoRepository {
         }
 
         return event.toObject();
+    }
+    /**
+     * IDでイベントを削除する
+     */
+    public async deleteById(params: {
+        typeOf: factory.eventType;
+        id: string;
+    }): Promise<void> {
+        await this.eventModel.findOneAndRemove(
+            {
+                typeOf: params.typeOf,
+                _id: params.id
+            }
+        ).exec();
     }
 }
