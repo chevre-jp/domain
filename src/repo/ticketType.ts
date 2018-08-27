@@ -17,6 +17,48 @@ export class MongoRepository {
         this.ticketTypeModel = connection.model(TicketTypeModel.modelName);
         this.ticketTypeGroupModel = connection.model(TicketTypeGroupModel.modelName);
     }
+    public static CREATE_TICKET_TYPE_MONGO_CONDITIONS(params: factory.ticketType.ITicketTypeSearchConditions) {
+        // MongoDB検索条件
+        const andConditions: any[] = [
+            {
+                _id: { $exists: true }
+            }
+        ];
+        if (params.id !== undefined) {
+            andConditions.push({ _id: new RegExp(params.id, 'i') });
+        }
+        if (params.name !== undefined) {
+            andConditions.push({
+                $or: [
+                    { 'name.ja': new RegExp(params.name, 'i') },
+                    { 'name.en': new RegExp(params.name, 'i') }
+                ]
+            });
+        }
+
+        return andConditions;
+    }
+    public static CREATE_TICKET_TYPE_GROUP_MONGO_CONDITIONS(params: factory.ticketType.ITicketTypeGroupSearchConditions) {
+        // MongoDB検索条件
+        const andConditions: any[] = [
+            {
+                _id: { $exists: true }
+            }
+        ];
+        if (params.id !== undefined) {
+            andConditions.push({ _id: new RegExp(params.id, 'i') });
+        }
+        if (params.name !== undefined) {
+            andConditions.push({
+                $or: [
+                    { 'name.ja': new RegExp(params.name, 'i') },
+                    { 'name.en': new RegExp(params.name, 'i') }
+                ]
+            });
+        }
+
+        return andConditions;
+    }
     public async findByTicketGroupId(params: { ticketGroupId: string }): Promise<factory.ticketType.ITicketType[]> {
         const ticketTypeGroup = await this.ticketTypeGroupModel.findById(
             params.ticketGroupId,
@@ -67,25 +109,36 @@ export class MongoRepository {
 
         return doc.toObject();
     }
+    public async countTicketTypeGroups(
+        params: factory.ticketType.ITicketTypeGroupSearchConditions
+    ): Promise<number> {
+        const conditions = MongoRepository.CREATE_TICKET_TYPE_GROUP_MONGO_CONDITIONS(params);
+
+        return this.ticketTypeGroupModel.countDocuments(
+            { $and: conditions }
+        ).setOptions({ maxTimeMS: 10000 })
+            .exec();
+    }
     /**
      * 券種グループを検索する
      */
-    public async searchTicketTypeGroups(_: {}): Promise<factory.ticketType.ITicketTypeGroup[]> {
-        const andConditions: any[] = [
-            {
-                _id: { $exists: true }
-            }
-        ];
-
-        return <factory.ticketType.ITicketTypeGroup[]>await this.ticketTypeGroupModel.find(
-            { $and: andConditions },
+    public async searchTicketTypeGroups(
+        params: factory.ticketType.ITicketTypeGroupSearchConditions
+    ): Promise<factory.ticketType.ITicketTypeGroup[]> {
+        const conditions = MongoRepository.CREATE_TICKET_TYPE_GROUP_MONGO_CONDITIONS(params);
+        const query = this.ticketTypeGroupModel.find(
+            { $and: conditions },
             {
                 __v: 0,
                 createdAt: 0,
                 updatedAt: 0
             }
-        )
-            .sort({ _id: 1 })
+        );
+        if (params.limit !== undefined && params.page !== undefined) {
+            query.limit(params.limit).skip(params.limit * (params.page - 1));
+        }
+
+        return query.sort({ _id: 1 })
             .setOptions({ maxTimeMS: 10000 })
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
@@ -147,25 +200,36 @@ export class MongoRepository {
 
         return doc.toObject();
     }
+    public async countTicketTypes(
+        params: factory.ticketType.ITicketTypeSearchConditions
+    ): Promise<number> {
+        const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
+
+        return this.ticketTypeModel.countDocuments(
+            { $and: conditions }
+        ).setOptions({ maxTimeMS: 10000 })
+            .exec();
+    }
     /**
      * 券種を検索する
      */
-    public async searchTicketTypes(_: {}): Promise<factory.ticketType.ITicketType[]> {
-        const andConditions: any[] = [
-            {
-                _id: { $exists: true }
-            }
-        ];
-
-        return this.ticketTypeModel.find(
-            { $and: andConditions },
+    public async searchTicketTypes(
+        params: factory.ticketType.ITicketTypeSearchConditions
+    ): Promise<factory.ticketType.ITicketType[]> {
+        const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
+        const query = this.ticketTypeModel.find(
+            { $and: conditions },
             {
                 __v: 0,
                 createdAt: 0,
                 updatedAt: 0
             }
-        )
-            .sort({ _id: 1 })
+        );
+        if (params.limit !== undefined && params.page !== undefined) {
+            query.limit(params.limit).skip(params.limit * (params.page - 1));
+        }
+
+        return query.sort({ _id: 1 })
             .setOptions({ maxTimeMS: 10000 })
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));

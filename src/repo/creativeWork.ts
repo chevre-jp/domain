@@ -17,6 +17,22 @@ export class MongoRepository implements Repository {
     constructor(connection: Connection) {
         this.creativeWorkModel = connection.model(creativeWorkModel.modelName);
     }
+    public static CREATE_MONGO_CONDITIONS(params: factory.creativeWork.movie.ISearchConditions) {
+        // MongoDB検索条件
+        const andConditions: any[] = [
+            {
+                typeOf: factory.creativeWorkType.Movie
+            }
+        ];
+        if (params.identifier !== undefined) {
+            andConditions.push({ identifier: new RegExp(params.identifier, 'i') });
+        }
+        if (params.name !== undefined) {
+            andConditions.push({ name: new RegExp(params.name, 'i') });
+        }
+
+        return andConditions;
+    }
     /**
      * 映画作品を保管する
      */
@@ -53,28 +69,32 @@ export class MongoRepository implements Repository {
 
         return doc.toObject();
     }
+    public async countMovies(params: factory.creativeWork.movie.ISearchConditions): Promise<number> {
+        const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
+
+        return this.creativeWorkModel.countDocuments(
+            { $and: conditions }
+        ).setOptions({ maxTimeMS: 10000 })
+            .exec();
+    }
     /**
      * 映画作品を検索する
      */
-    public async searchMovies(
-        _: {}
-    ): Promise<factory.creativeWork.movie.ICreativeWork[]> {
-        // MongoDB検索条件
-        const andConditions: any[] = [
-            {
-                typeOf: factory.creativeWorkType.Movie
-            }
-        ];
-
-        return this.creativeWorkModel.find(
-            { $and: andConditions },
+    public async searchMovies(params: factory.creativeWork.movie.ISearchConditions): Promise<factory.creativeWork.movie.ICreativeWork[]> {
+        const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
+        const query = this.creativeWorkModel.find(
+            { $and: conditions },
             {
                 __v: 0,
                 createdAt: 0,
                 updatedAt: 0
             }
-        )
-            .sort({ identifier: 1 })
+        );
+        if (params.limit !== undefined && params.page !== undefined) {
+            query.limit(params.limit).skip(params.limit * (params.page - 1));
+        }
+
+        return query.sort({ identifier: 1 })
             .setOptions({ maxTimeMS: 10000 })
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
