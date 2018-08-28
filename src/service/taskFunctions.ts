@@ -31,6 +31,23 @@ export function cancelReservation(data: factory.task.cancelReservation.IData): I
         });
     };
 }
+export function cancelPendingReservation(data: factory.task.cancelPendingReservation.IData): IOperation<void> {
+    return async (settings: IConnectionSettings) => {
+        if (settings.redisClient === undefined) {
+            throw new factory.errors.Argument('settings', 'redisClient required');
+        }
+        const actionRepo = new ActionRepo(settings.connection);
+        const reservationRepo = new ReservationRepo(settings.connection);
+        const transactionRepo = new TransactionRepo(settings.connection);
+        const eventAvailabilityRepo = new ScreeningEventAvailabilityRepo(settings.redisClient);
+        await ReserveService.cancelPendingReservation(data.actionAttributes)({
+            action: actionRepo,
+            reservation: reservationRepo,
+            transaction: transactionRepo,
+            eventAvailability: eventAvailabilityRepo
+        });
+    };
+}
 export function reserve(data: factory.task.reserve.IData): IOperation<void> {
     return async (settings: IConnectionSettings) => {
         const actionRepo = new ActionRepo(settings.connection);

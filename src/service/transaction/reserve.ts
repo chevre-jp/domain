@@ -274,19 +274,30 @@ export function exportTasksById(
 
             case factory.transactionStatusType.Canceled:
             case factory.transactionStatusType.Expired:
-                // const cancelMoneyTransferTask: factory.task.cancelMoneyTransfer.IAttributes = {
-                //     name: factory.taskName.CancelMoneyTransfer,
-                //     status: factory.taskStatus.Ready,
-                //     runsAt: new Date(), // なるはやで実行
-                //     remainingNumberOfTries: 10,
-                //     lastTriedAt: null,
-                //     numberOfTried: 0,
-                //     executionResults: [],
-                //     data: {
-                //         transaction: { typeOf: transaction.typeOf, id: transaction.id }
-                //     }
-                // };
-                // taskAttributes.push(cancelMoneyTransferTask);
+                const actionAttributes: factory.action.cancel.reservation.IAttributes[] = transaction.object.reservations.map((r) => {
+                    return {
+                        typeOf: <factory.actionType.CancelAction>factory.actionType.CancelAction,
+                        purpose: {
+                            typeOf: transaction.typeOf,
+                            id: transaction.id
+                        },
+                        agent: transaction.agent,
+                        object: r
+                    };
+                });
+                const cancelPendingReservationTask: factory.task.cancelPendingReservation.IAttributes = {
+                    name: factory.taskName.cancelPendingReservation,
+                    status: factory.taskStatus.Ready,
+                    runsAt: new Date(), // なるはやで実行
+                    remainingNumberOfTries: 10,
+                    lastTriedAt: null,
+                    numberOfTried: 0,
+                    executionResults: [],
+                    data: {
+                        actionAttributes: actionAttributes
+                    }
+                };
+                taskAttributes.push(cancelPendingReservationTask);
                 break;
 
             default:
