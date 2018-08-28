@@ -12,6 +12,8 @@ const schema = new mongoose.Schema(
     {
         _id: String,
         name: multilingualString,
+        description: multilingualString,
+        notes: multilingualString,
         ticketTypes: [{
             type: String,
             ref: TicketType.modelName,
@@ -32,4 +34,14 @@ const schema = new mongoose.Schema(
     }
 );
 
-export default mongoose.model('TicketTypeGroup', schema);
+export default mongoose.model('TicketTypeGroup', schema).on(
+    'index',
+    // tslint:disable-next-line:no-single-line-block-comment
+    /* istanbul ignore next */
+    (error) => {
+        if (error !== undefined) {
+            // tslint:disable-next-line:no-console
+            console.error(error);
+        }
+    }
+);

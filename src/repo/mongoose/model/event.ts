@@ -83,29 +83,25 @@ schema.index(
     {
         partialFilterExpression: {
             'superEvent.location.branchCode': { $exists: true }
-        }
+        },
+        name: 'searchScreeningEventsByLocationBranchCode'
     }
 );
 schema.index(
     {
         typeOf: 1,
-        'superEvent.location.identifier': 1,
+        'superEvent.workPerformed.identifier': 1,
         startDate: 1
     },
     {
         partialFilterExpression: {
-            'superEvent.location.identifier': { $exists: true }
+            'superEvent.workPerformed.identifier': { $exists: true }
         },
-        name: 'searchScreeningEventsConditions'
+        name: 'searchScreeningEventsByWorkPerformedIdentifier'
     }
 );
 schema.index({ typeOf: 1, startDate: 1 });
 schema.index({ typeOf: 1, endDate: 1 });
-
-// 上映イベント取得に使用
-schema.index(
-    { identifier: 1, typeOf: 1 }
-);
 
 export default mongoose.model('Event', schema).on(
     'index',
