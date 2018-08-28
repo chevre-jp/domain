@@ -1,9 +1,6 @@
 import * as factory from '@chevre/factory';
-import * as createDebug from 'debug';
 import { Connection } from 'mongoose';
 import placeModel from './mongoose/model/place';
-
-const debug = createDebug('chevre-domain:*');
 
 /**
  * 場所抽象リポジトリー
@@ -19,58 +16,77 @@ export abstract class Repository {
  */
 export class MongoRepository {
     public readonly placeModel: typeof placeModel;
-
     constructor(connection: Connection) {
         this.placeModel = connection.model(placeModel.modelName);
     }
+    public static CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params: factory.creativeWork.movie.ISearchConditions) {
+        // MongoDB検索条件
+        const andConditions: any[] = [
+            {
+                typeOf: factory.placeType.MovieTheater
+            }
+        ];
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.name !== undefined) {
+            andConditions.push({
+                $or: [
+                    { 'name.ja': new RegExp(params.name, 'i') },
+                    { 'name.en': new RegExp(params.name, 'i') },
+                    { kanaName: new RegExp(params.name, 'i') }
+                ]
+            });
+        }
 
+        return andConditions;
+    }
     /**
      * 劇場を保管する
-     * @param movieTheater movieTheater object
      */
     public async saveMovieTheater(movieTheater: factory.place.movieTheater.IPlace) {
         await this.placeModel.findOneAndUpdate(
             {
+                typeOf: factory.placeType.MovieTheater,
                 branchCode: movieTheater.branchCode
             },
             movieTheater,
             { upsert: true }
         ).exec();
     }
+    public async countMovieTheaters(params: factory.place.movieTheater.ISearchConditions): Promise<number> {
+        const conditions = MongoRepository.CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params);
 
+        return this.placeModel.countDocuments(
+            { $and: conditions }
+        ).setOptions({ maxTimeMS: 10000 })
+            .exec();
+    }
     /**
      * 劇場検索
-     * @param searchConditions 検索条件
      */
     public async searchMovieTheaters(
-        searchConditions: {}
+        params: factory.place.movieTheater.ISearchConditions
     ): Promise<factory.place.movieTheater.IPlaceWithoutScreeningRoom[]> {
-        // 検索条件を作成
-        const conditions: any = {
-            typeOf: factory.placeType.MovieTheater
-        };
-        debug('searchConditions:', searchConditions);
-
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO 検索条件を指定できるように改修
-
-        debug('finding places...', conditions);
-
+        const conditions = MongoRepository.CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params);
         // containsPlaceを含めるとデータサイズが大きくなるので、検索結果には含めない
-        return this.placeModel.find(
-            conditions,
+        const query = this.placeModel.find(
+            { $and: conditions },
             {
                 __v: 0,
                 createdAt: 0,
                 updatedAt: 0,
                 containsPlace: 0
             }
-        )
+        );
+        if (params.limit !== undefined && params.page !== undefined) {
+            query.limit(params.limit).skip(params.limit * (params.page - 1));
+        }
+
+        return query.sort({ branchCode: 1 })
             .setOptions({ maxTimeMS: 10000 })
             .exec()
-            .then((docs) => docs.map((doc) => <factory.place.movieTheater.IPlaceWithoutScreeningRoom>doc.toObject()));
+            .then((docs) => docs.map((doc) => doc.toObject()));
     }
-
     /**
      * 枝番号で劇場検索
      */

@@ -11,46 +11,89 @@ export class MongoRepository {
     constructor(connection: Connection) {
         this.reservationModel = connection.model(reservationModel.modelName);
     }
-    /**
-     * 上映イベント予約を検索する
-     */
-    public async searchScreeningEventReservations(
-        searchConditions: factory.reservation.event.ISearchConditions
-    ): Promise<factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent>[]> {
+    public static CREATE_EVENT_RESERVATION_MONGO_CONDITIONS(params: factory.reservation.event.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [
             {
                 typeOf: factory.reservationType.EventReservation
             }
         ];
-
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (Array.isArray(searchConditions.ids)) {
+        if (Array.isArray(params.ids)) {
             andConditions.push({
                 _id: {
-                    $in: searchConditions.ids
+                    $in: params.ids
                 }
             });
         }
-
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (Array.isArray(searchConditions.reservationStatuses)) {
+        if (Array.isArray(params.reservationStatuses)) {
             andConditions.push({
-                reservationStatus: { $in: searchConditions.reservationStatuses }
+                reservationStatus: { $in: params.reservationStatuses }
             });
         }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.modifiedFrom !== undefined) {
+            andConditions.push({
+                modifiedTime: { $gte: params.modifiedFrom }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.modifiedThrough !== undefined) {
+            andConditions.push({
+                modifiedTime: { $lte: params.modifiedThrough }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.reservationFor !== undefined) {
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.reservationFor.typeOf !== undefined
+                && params.reservationFor.id !== undefined) {
+                andConditions.push(
+                    { 'reservationFor.typeOf': params.reservationFor.typeOf },
+                    { 'reservationFor.id': params.reservationFor.id }
+                );
+            }
+        }
 
-        return this.reservationModel.find(
-            { $and: andConditions },
+        return andConditions;
+    }
+    public async countScreeningEventReservations(
+        params: factory.reservation.event.ISearchConditions
+    ): Promise<number> {
+        const conditions = MongoRepository.CREATE_EVENT_RESERVATION_MONGO_CONDITIONS(params);
+
+        return this.reservationModel.countDocuments(
+            { $and: conditions }
+        ).setOptions({ maxTimeMS: 10000 })
+            .exec();
+    }
+    /**
+     * 上映イベント予約を検索する
+     */
+    public async searchScreeningEventReservations(
+        params: factory.reservation.event.ISearchConditions
+    ): Promise<factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent>[]> {
+        const conditions = MongoRepository.CREATE_EVENT_RESERVATION_MONGO_CONDITIONS(params);
+        const query = this.reservationModel.find(
+            { $and: conditions },
             {
                 __v: 0,
                 createdAt: 0,
                 updatedAt: 0
             }
-        )
-            .sort({ createdAt: 1 })
+        );
+        if (params.limit !== undefined && params.page !== undefined) {
+            query.limit(params.limit).skip(params.limit * (params.page - 1));
+        }
+
+        return query.sort({ modifiedTime: 1 })
             .setOptions({ maxTimeMS: 10000 })
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
