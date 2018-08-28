@@ -286,7 +286,7 @@ export function exportTasksById(
                     };
                 });
                 const cancelPendingReservationTask: factory.task.cancelPendingReservation.IAttributes = {
-                    name: factory.taskName.cancelPendingReservation,
+                    name: factory.taskName.CancelPendingReservation,
                     status: factory.taskStatus.Ready,
                     runsAt: new Date(), // なるはやで実行
                     remainingNumberOfTries: 10,
