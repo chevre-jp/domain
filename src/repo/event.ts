@@ -1,5 +1,4 @@
 import * as factory from '@chevre/factory';
-import * as moment from 'moment';
 import { Connection } from 'mongoose';
 import * as uniqid from 'uniqid';
 
@@ -12,6 +11,192 @@ export class MongoRepository {
     public readonly eventModel: typeof eventModel;
     constructor(connection: Connection) {
         this.eventModel = connection.model(eventModel.modelName);
+    }
+    public static CREATE_SCREENING_EVENT_MONGO_CONDITIONS(params: factory.event.screeningEvent.ISearchConditions) {
+        const andConditions: any[] = [
+            {
+                typeOf: factory.eventType.ScreeningEvent
+            }
+        ];
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.name !== undefined) {
+            andConditions.push({
+                $or: [
+                    { 'name.ja': new RegExp(params.name, 'i') },
+                    { 'name.en': new RegExp(params.name, 'i') }
+                ]
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.superEvent !== undefined) {
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (Array.isArray(params.superEvent.locationBranchCodes)) {
+                andConditions.push({
+                    'superEvent.location.branchCode': {
+                        $exists: true,
+                        $in: params.superEvent.locationBranchCodes
+                    }
+                });
+            }
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (Array.isArray(params.superEvent.workPerformedIdentifiers)) {
+                andConditions.push({
+                    'superEvent.workPerformed.identifier': {
+                        $exists: true,
+                        $in: params.superEvent.workPerformedIdentifiers
+                    }
+                });
+            }
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (Array.isArray(params.eventStatuses)) {
+            andConditions.push({
+                eventStatus: { $in: params.eventStatuses }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.inSessionFrom !== undefined) {
+            andConditions.push({
+                endDate: { $gt: params.inSessionFrom }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.inSessionThrough !== undefined) {
+            andConditions.push({
+                startDate: { $lt: params.inSessionThrough }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.startFrom !== undefined) {
+            andConditions.push({
+                startDate: { $gte: params.startFrom }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.startThrough !== undefined) {
+            andConditions.push({
+                startDate: { $lt: params.startThrough }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.endFrom !== undefined) {
+            andConditions.push({
+                endDate: { $gte: params.endFrom }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.endThrough !== undefined) {
+            andConditions.push({
+                endDate: { $lt: params.endThrough }
+            });
+        }
+
+        return andConditions;
+    }
+    public static CREATE_SCREENING_EVENT_SERIES_MONGO_CONDITIONS(params: factory.event.screeningEventSeries.ISearchConditions) {
+        const andConditions: any[] = [
+            {
+                typeOf: factory.eventType.ScreeningEventSeries
+            }
+        ];
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.name !== undefined) {
+            andConditions.push({
+                $or: [
+                    { 'name.ja': new RegExp(params.name, 'i') },
+                    { 'name.en': new RegExp(params.name, 'i') },
+                    { kanaName: new RegExp(params.name, 'i') }
+                ]
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.location !== undefined) {
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (Array.isArray(params.location.branchCodes)) {
+                andConditions.push({
+                    'location.branchCode': {
+                        $exists: true,
+                        $in: params.location.branchCodes
+                    }
+                });
+            }
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (Array.isArray(params.eventStatuses)) {
+            andConditions.push({
+                eventStatus: { $in: params.eventStatuses }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.workPerformed !== undefined) {
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (Array.isArray(params.workPerformed.identifiers)) {
+                andConditions.push({
+                    'workPerformed.identifier': { $in: params.workPerformed.identifiers }
+                });
+            }
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.inSessionFrom !== undefined) {
+            andConditions.push({
+                endDate: { $gt: params.inSessionFrom }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.inSessionThrough !== undefined) {
+            andConditions.push({
+                startDate: { $lt: params.inSessionThrough }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.startFrom !== undefined) {
+            andConditions.push({
+                startDate: { $gte: params.startFrom }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.startThrough !== undefined) {
+            andConditions.push({
+                startDate: { $lt: params.startThrough }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.endFrom !== undefined) {
+            andConditions.push({
+                endDate: { $gte: params.endFrom }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.endThrough !== undefined) {
+            andConditions.push({
+                endDate: { $lt: params.endThrough }
+            });
+        }
+
+        return andConditions;
     }
     /**
      * 上映イベントを保管する
@@ -71,199 +256,66 @@ export class MongoRepository {
 
         return event;
     }
-    /**
-     * 個々の上映イベントを検索する
-     */
-    // tslint:disable-next-line:max-func-body-length
-    public async searchScreeningEvents(
-        searchConditions: factory.event.screeningEvent.ISearchConditions
-    ): Promise<factory.event.screeningEvent.IEvent[]> {
-        // dayプロパティがあればstartFrom & startThroughに変換(互換性維持のため)
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if ((<any>searchConditions).day !== undefined) {
-            searchConditions.startFrom = moment(`${(<any>searchConditions).day} +09:00`, 'YYYYMMDD Z').toDate();
-            searchConditions.startThrough = moment(`${(<any>searchConditions).day} +09:00`, 'YYYYMMDD Z').add(1, 'day').toDate();
-        }
+    public async countScreeningEvents(params: factory.event.screeningEvent.ISearchConditions): Promise<number> {
+        const conditions = MongoRepository.CREATE_SCREENING_EVENT_MONGO_CONDITIONS(params);
 
-        // MongoDB検索条件
-        const andConditions: any[] = [
-            {
-                typeOf: factory.eventType.ScreeningEvent
-            }
-        ];
-
-        // theaterプロパティがあればbranchCodeで検索(互換性維持のため)
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if ((<any>searchConditions).theater !== undefined) {
-            andConditions.push({
-                'superEvent.location.branchCode': {
-                    $exists: true,
-                    $eq: (<any>searchConditions).theater
-                }
-            });
-        }
-
-        // 場所の識別子条件
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (Array.isArray(searchConditions.superEventLocationIds)) {
-            andConditions.push({
-                'superEvent.location.id': {
-                    $exists: true,
-                    $in: searchConditions.superEventLocationIds
-                }
-            });
-        }
-
-        // イベントステータス条件
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (Array.isArray(searchConditions.eventStatuses)) {
-            andConditions.push({
-                eventStatus: { $in: searchConditions.eventStatuses }
-            });
-        }
-
-        // 作品識別子条件
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (Array.isArray(searchConditions.workPerformedIds)) {
-            andConditions.push({
-                'workPerformed.id': { $in: searchConditions.workPerformedIds }
-            });
-        }
-
-        // 開始日時条件
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (searchConditions.startFrom !== undefined) {
-            andConditions.push({
-                startDate: { $gte: searchConditions.startFrom }
-            });
-        }
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (searchConditions.startThrough !== undefined) {
-            andConditions.push({
-                startDate: { $lt: searchConditions.startThrough }
-            });
-        }
-
-        // 終了日時条件
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (searchConditions.endFrom !== undefined) {
-            andConditions.push({
-                endDate: { $gte: searchConditions.endFrom }
-            });
-        }
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (searchConditions.endThrough !== undefined) {
-            andConditions.push({
-                endDate: { $lt: searchConditions.endThrough }
-            });
-        }
-
-        return <factory.event.screeningEvent.IEvent[]>await this.eventModel.find(
-            { $and: andConditions },
-            {
-                __v: 0,
-                createdAt: 0,
-                updatedAt: 0
-            }
-        )
-            .sort({ startDate: 1 })
-            .setOptions({ maxTimeMS: 10000 })
-            .exec()
-            .then((docs) => docs.map((doc) => doc.toObject()));
+        return this.eventModel.countDocuments(
+            { $and: conditions }
+        ).setOptions({ maxTimeMS: 10000 })
+            .exec();
     }
     /**
      * 上映イベントを検索する
      */
-    public async searchScreeningEventSeries(
-        searchConditions: factory.event.screeningEventSeries.ISearchConditions
-    ): Promise<factory.event.screeningEventSeries.IEvent[]> {
-        // MongoDB検索条件
-        const andConditions: any[] = [
-            {
-                typeOf: factory.eventType.ScreeningEventSeries
-            }
-        ];
-
-        // 場所の識別子条件
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (Array.isArray(searchConditions.locationIds)) {
-            andConditions.push({
-                'location.id': {
-                    $exists: true,
-                    $in: searchConditions.locationIds
-                }
-            });
-        }
-
-        // イベントステータス条件
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (Array.isArray(searchConditions.eventStatuses)) {
-            andConditions.push({
-                eventStatus: { $in: searchConditions.eventStatuses }
-            });
-        }
-
-        // 作品識別子条件
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (Array.isArray(searchConditions.workPerformedIds)) {
-            andConditions.push({
-                'workPerformed.id': { $in: searchConditions.workPerformedIds }
-            });
-        }
-
-        // 開始日時条件
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (searchConditions.startFrom !== undefined) {
-            andConditions.push({
-                startDate: { $gte: searchConditions.startFrom }
-            });
-        }
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (searchConditions.startThrough !== undefined) {
-            andConditions.push({
-                startDate: { $lt: searchConditions.startThrough }
-            });
-        }
-
-        // 終了日時条件
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (searchConditions.endFrom !== undefined) {
-            andConditions.push({
-                endDate: { $gte: searchConditions.endFrom }
-            });
-        }
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (searchConditions.endThrough !== undefined) {
-            andConditions.push({
-                endDate: { $lt: searchConditions.endThrough }
-            });
-        }
-
-        return <factory.event.screeningEventSeries.IEvent[]>await this.eventModel.find(
-            { $and: andConditions },
+    public async searchScreeningEvents(
+        params: factory.event.screeningEvent.ISearchConditions
+    ): Promise<factory.event.screeningEvent.IEvent[]> {
+        const conditions = MongoRepository.CREATE_SCREENING_EVENT_MONGO_CONDITIONS(params);
+        const query = this.eventModel.find(
+            { $and: conditions },
             {
                 __v: 0,
                 createdAt: 0,
                 updatedAt: 0
             }
-        )
-            .sort({ startDate: 1 })
+        );
+        if (params.limit !== undefined && params.page !== undefined) {
+            query.limit(params.limit).skip(params.limit * (params.page - 1));
+        }
+
+        return query.sort({ startDate: 1 })
+            .setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
+    }
+    public async countScreeningEventSeries(params: factory.event.screeningEventSeries.ISearchConditions): Promise<number> {
+        const conditions = MongoRepository.CREATE_SCREENING_EVENT_SERIES_MONGO_CONDITIONS(params);
+
+        return this.eventModel.countDocuments(
+            { $and: conditions }
+        ).setOptions({ maxTimeMS: 10000 })
+            .exec();
+    }
+    /**
+     * 上映イベントシリーズを検索する
+     */
+    public async searchScreeningEventSeries(
+        params: factory.event.screeningEventSeries.ISearchConditions
+    ): Promise<factory.event.screeningEventSeries.IEvent[]> {
+        const conditions = MongoRepository.CREATE_SCREENING_EVENT_SERIES_MONGO_CONDITIONS(params);
+        const query = this.eventModel.find(
+            { $and: conditions },
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        );
+        if (params.limit !== undefined && params.page !== undefined) {
+            query.limit(params.limit).skip(params.limit * (params.page - 1));
+        }
+
+        return query.sort({ startDate: 1 })
             .setOptions({ maxTimeMS: 10000 })
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
