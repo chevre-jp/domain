@@ -8,7 +8,7 @@ import { MongoRepository as ReservationRepo } from '../../repo/reservation';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
-const debug = createDebug('chevre-domain:*');
+const debug = createDebug('chevre-domain:service');
 
 export type IStartOperation<T> = (repos: {
     reservation: ReservationRepo;

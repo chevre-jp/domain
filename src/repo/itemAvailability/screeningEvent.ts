@@ -3,7 +3,7 @@ import * as createDebug from 'debug';
 import * as moment from 'moment';
 import * as redis from 'redis';
 
-const debug = createDebug('chevre-domain:*');
+const debug = createDebug('chevre-domain:repo');
 
 export interface IOffer {
     seatSection: string;

@@ -12,7 +12,7 @@ import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TicketTypeRepo } from '../../repo/ticketType';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
-const debug = createDebug('chevre-domain:*');
+const debug = createDebug('chevre-domain:service');
 
 export type IStartOperation<T> = (repos: {
     eventAvailability: ScreeningEventAvailabilityRepo;

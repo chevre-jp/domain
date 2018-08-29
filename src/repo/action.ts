@@ -4,7 +4,7 @@ import { Connection } from 'mongoose';
 
 import ActionModel from './mongoose/model/action';
 
-const debug = createDebug('chevre-domain:*');
+const debug = createDebug('chevre-domain:repo');
 
 export type IAction<T extends factory.actionType> =
     T extends factory.actionType ? factory.action.IAction<factory.action.IAttributes<any, any>> :

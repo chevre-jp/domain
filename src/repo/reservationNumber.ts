@@ -4,7 +4,7 @@ import * as moment from 'moment-timezone';
 import * as redis from 'redis';
 import * as util from 'util';
 
-const debug = createDebug('chevre-domain:*');
+const debug = createDebug('chevre-domain:repo');
 
 /**
  * Redisリポジトリー

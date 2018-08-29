@@ -9,7 +9,7 @@ import { RedisRepository as ScreeningEventAvailabilityRepo } from '../repo/itemA
 import { MongoRepository as ReservationRepo } from '../repo/reservation';
 import { MongoRepository as TransactionRepo } from '../repo/transaction';
 
-const debug = createDebug('chevre-domain:*');
+const debug = createDebug('chevre-domain:service');
 
 /**
  * 予約を確定する

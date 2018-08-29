@@ -5,7 +5,7 @@ import { Connection } from 'mongoose';
 import TicketTypeModel from './mongoose/model/ticketType';
 import TicketTypeGroupModel from './mongoose/model/ticketTypeGroup';
 
-// const debug = createDebug('chevre-domain:*');
+// const debug = createDebug('chevre-domain:repo');
 
 /**
  * Mongoリポジトリー

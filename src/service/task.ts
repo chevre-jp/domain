@@ -29,7 +29,7 @@ export interface ISettings extends IConnectionSettings {
 export type TaskOperation<T> = (repos: { task: TaskRepo }) => Promise<T>;
 export type IExecuteOperation<T> = (settings: ISettings) => Promise<T>;
 
-const debug = createDebug('sskts-domain:service:task');
+const debug = createDebug('chevre-domain:service');
 
 export const ABORT_REPORT_SUBJECT = 'Task aborted !!!';
 
