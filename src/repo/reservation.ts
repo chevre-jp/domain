@@ -89,14 +89,18 @@ export class MongoRepository {
                 updatedAt: 0
             }
         );
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
             query.limit(params.limit).skip(params.limit * (params.page - 1));
         }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
 
-        return query.sort({ modifiedTime: 1 })
-            .setOptions({ maxTimeMS: 10000 })
-            .exec()
-            .then((docs) => docs.map((doc) => doc.toObject()));
+        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
     }
     /**
      * IDで上映イベント予約を検索する

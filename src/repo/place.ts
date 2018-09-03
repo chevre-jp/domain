@@ -19,7 +19,7 @@ export class MongoRepository {
     constructor(connection: Connection) {
         this.placeModel = connection.model(placeModel.modelName);
     }
-    public static CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params: factory.creativeWork.movie.ISearchConditions) {
+    public static CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params: factory.place.movieTheater.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [
             {
@@ -78,14 +78,18 @@ export class MongoRepository {
                 containsPlace: 0
             }
         );
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
             query.limit(params.limit).skip(params.limit * (params.page - 1));
         }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
 
-        return query.sort({ branchCode: 1 })
-            .setOptions({ maxTimeMS: 10000 })
-            .exec()
-            .then((docs) => docs.map((doc) => doc.toObject()));
+        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
     }
     /**
      * 枝番号で劇場検索

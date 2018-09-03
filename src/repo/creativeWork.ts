@@ -8,7 +8,6 @@ import creativeWorkModel from './mongoose/model/creativeWork';
 export abstract class Repository {
     public abstract async saveMovie(movie: factory.creativeWork.movie.ICreativeWork): Promise<void>;
 }
-
 /**
  * 作品リポジトリー
  */
@@ -90,14 +89,18 @@ export class MongoRepository implements Repository {
                 updatedAt: 0
             }
         );
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
             query.limit(params.limit).skip(params.limit * (params.page - 1));
         }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
 
-        return query.sort({ identifier: 1 })
-            .setOptions({ maxTimeMS: 10000 })
-            .exec()
-            .then((docs) => docs.map((doc) => doc.toObject()));
+        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
     }
     /**
      * 映画作品を削除する

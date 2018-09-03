@@ -12,6 +12,7 @@ export class MongoRepository {
     constructor(connection: Connection) {
         this.eventModel = connection.model(eventModel.modelName);
     }
+    // tslint:disable-next-line:max-func-body-length
     public static CREATE_SCREENING_EVENT_MONGO_CONDITIONS(params: factory.event.screeningEvent.ISearchConditions) {
         const andConditions: any[] = [
             {
@@ -31,6 +32,16 @@ export class MongoRepository {
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.superEvent !== undefined) {
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (Array.isArray(params.superEvent.ids)) {
+                andConditions.push({
+                    'superEvent.id': {
+                        $exists: true,
+                        $in: params.superEvent.ids
+                    }
+                });
+            }
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
             if (Array.isArray(params.superEvent.locationBranchCodes)) {
@@ -279,14 +290,18 @@ export class MongoRepository {
                 updatedAt: 0
             }
         );
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
             query.limit(params.limit).skip(params.limit * (params.page - 1));
         }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
 
-        return query.sort({ startDate: 1 })
-            .setOptions({ maxTimeMS: 10000 })
-            .exec()
-            .then((docs) => docs.map((doc) => doc.toObject()));
+        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
     }
     public async countScreeningEventSeries(params: factory.event.screeningEventSeries.ISearchConditions): Promise<number> {
         const conditions = MongoRepository.CREATE_SCREENING_EVENT_SERIES_MONGO_CONDITIONS(params);
@@ -311,14 +326,18 @@ export class MongoRepository {
                 updatedAt: 0
             }
         );
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
             query.limit(params.limit).skip(params.limit * (params.page - 1));
         }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
 
-        return query.sort({ startDate: 1 })
-            .setOptions({ maxTimeMS: 10000 })
-            .exec()
-            .then((docs) => docs.map((doc) => doc.toObject()));
+        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
     }
     /**
      * IDでイベントを取得する
