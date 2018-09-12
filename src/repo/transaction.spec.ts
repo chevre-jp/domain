@@ -1,7 +1,6 @@
 // tslint:disable:no-implicit-dependencies
 /**
  * 取引リポジトリーテスト
- * @ignore
  */
 import { } from 'mocha';
 import * as assert from 'power-assert';
@@ -14,7 +13,7 @@ let sandbox: sinon.SinonSandbox;
 let transactionRepo: domain.repository.Transaction;
 
 before(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
 });
 
 describe('取引を開始する', () => {

@@ -22,7 +22,6 @@ const dataSchema = new mongoose.Schema(
 
 /**
  * タスクスキーマ
- * @ignore
  */
 const schema = new mongoose.Schema(
     {

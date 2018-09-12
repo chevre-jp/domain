@@ -1,15 +1,13 @@
 /**
  * タスクサービス
  */
-import * as factory from '@chevre/factory';
 import * as createDebug from 'debug';
-// import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as redis from 'redis';
 
+import * as factory from '../factory';
 import { MongoRepository as TaskRepo } from '../repo/task';
 
-import * as TaskFunctionsService from './taskFunctions';
 export interface IConnectionSettings {
     /**
      * MongoDBコネクション
@@ -28,11 +26,9 @@ export interface ISettings extends IConnectionSettings {
 }
 export type TaskOperation<T> = (repos: { task: TaskRepo }) => Promise<T>;
 export type IExecuteOperation<T> = (settings: ISettings) => Promise<T>;
-
+export type IOperation<T> = (settings: IConnectionSettings) => Promise<T>;
 const debug = createDebug('chevre-domain:service');
-
 export const ABORT_REPORT_SUBJECT = 'Task aborted !!!';
-
 /**
  * execute a task by taskName
  * タスク名でタスクをひとつ実行する
@@ -55,12 +51,10 @@ export function executeByName(taskName: factory.taskName): IExecuteOperation<voi
         }
     };
 }
-
 /**
  * execute a task
  * タスクを実行する
  * @param task タスクオブジェクト
- * @export
  */
 export function execute(task: factory.task.ITask): IExecuteOperation<void> {
     debug('executing a task...', task);
@@ -69,8 +63,8 @@ export function execute(task: factory.task.ITask): IExecuteOperation<void> {
     return async (settings: ISettings) => {
         try {
             // タスク名の関数が定義されていなければ、TypeErrorとなる
-            await (<any>TaskFunctionsService)[task.name](task.data)(settings);
-
+            const { call } = await import(`./task/${task.name}`);
+            await call(task.data)(settings);
             const result = {
                 executedAt: now,
                 error: ''
@@ -87,24 +81,20 @@ export function execute(task: factory.task.ITask): IExecuteOperation<void> {
         }
     };
 }
-
 /**
  * retry tasks in running status
  * 実行中ステータスのままになっているタスクをリトライする
  * @param intervalInMinutes 最終トライ日時から何分経過したタスクをリトライするか
- * @export
  */
 export function retry(intervalInMinutes: number): TaskOperation<void> {
     return async (repos: { task: TaskRepo }) => {
         await repos.task.retry(intervalInMinutes);
     };
 }
-
 /**
  * abort a task
  * トライ可能回数が0に達したタスクを実行中止する
  * @param intervalInMinutes 最終トライ日時から何分経過したタスクを中止するか
- * @export
  */
 export function abort(intervalInMinutes: number): TaskOperation<void> {
     return async (repos: { task: TaskRepo }) => {

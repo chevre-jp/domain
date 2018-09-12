@@ -1,7 +1,7 @@
-import * as factory from '@chevre/factory';
 import * as moment from 'moment';
 import { Connection } from 'mongoose';
 
+import * as factory from '../factory';
 import TransactionModel from './mongoose/model/transaction';
 
 /**

@@ -1,7 +1,7 @@
 /**
  * 集計サービス
  */
-import * as factory from '@chevre/factory';
+import * as factory from '../factory';
 import {
     IAggregation as IScreeningEventAggregation,
     RedisRepository as ScreeningEventAggregationRepo

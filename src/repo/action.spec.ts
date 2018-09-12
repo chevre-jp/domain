@@ -1,7 +1,6 @@
 // tslint:disable:no-implicit-dependencies
 /**
  * アクションリポジトリーテスト
- * @ignore
  */
 import { } from 'mocha';
 import * as assert from 'power-assert';
@@ -14,7 +13,7 @@ let sandbox: sinon.SinonSandbox;
 let actionRepo: domain.repository.Action;
 
 before(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
 });
 
 describe('アクションを開始する', () => {

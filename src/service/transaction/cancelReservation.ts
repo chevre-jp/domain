@@ -3,7 +3,7 @@
  */
 import * as createDebug from 'debug';
 
-import * as factory from '@chevre/factory';
+import * as factory from '../../factory';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';

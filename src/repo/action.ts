@@ -1,7 +1,7 @@
-import * as factory from '@chevre/factory';
 import * as createDebug from 'debug';
 import { Connection } from 'mongoose';
 
+import * as factory from '../factory';
 import ActionModel from './mongoose/model/action';
 
 const debug = createDebug('chevre-domain:repo');

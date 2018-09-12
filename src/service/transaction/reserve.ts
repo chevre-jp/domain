@@ -3,7 +3,7 @@
  */
 import * as createDebug from 'debug';
 
-import * as factory from '@chevre/factory';
+import * as factory from '../../factory';
 import { MongoRepository as EventRepo } from '../../repo/event';
 import { RedisRepository as ScreeningEventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
@@ -177,6 +177,8 @@ function createReservation(params: {
  */
 export function confirm(params: {
     transactionId: string;
+    issuedBy?: factory.reservation.IUnderName;
+    underName?: factory.reservation.IUnderName;
 }): ITransactionOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
@@ -188,6 +190,15 @@ export function confirm(params: {
 
         // 予約アクション属性作成
         const reserveActionAttributes: factory.action.reserve.IAttributes[] = transaction.object.reservations.map((r) => {
+            if (params.issuedBy !== undefined) {
+                r.reservedTicket.issuedBy = params.issuedBy;
+            }
+            // 予約者の指定があれば上書き
+            if (params.underName !== undefined) {
+                r.underName = params.underName;
+                r.reservedTicket.underName = params.underName;
+            }
+
             return {
                 typeOf: <factory.actionType.ReserveAction>factory.actionType.ReserveAction,
                 description: transaction.object.notes,

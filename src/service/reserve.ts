@@ -1,9 +1,9 @@
 /**
  * 予約サービス
  */
-import * as factory from '@chevre/factory';
 import * as createDebug from 'debug';
 
+import * as factory from '../factory';
 import { MongoRepository as ActionRepo } from '../repo/action';
 import { RedisRepository as ScreeningEventAvailabilityRepo } from '../repo/itemAvailability/screeningEvent';
 import { MongoRepository as ReservationRepo } from '../repo/reservation';
@@ -25,7 +25,7 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
 
             try {
                 // 予約を確定状態に変更する
-                await repos.reservation.confirm({ id: actionAttributes.object.id });
+                await repos.reservation.confirm(actionAttributes.object);
             } catch (error) {
                 // actionにエラー結果を追加
                 try {

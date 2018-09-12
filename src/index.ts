@@ -1,10 +1,10 @@
 /**
  * index module
  */
-import * as factory from '@chevre/factory';
 import * as mongoose from 'mongoose';
 import * as redis from 'redis';
 
+import * as factory from './factory';
 import * as repository from './repository';
 import * as service from './service';
 

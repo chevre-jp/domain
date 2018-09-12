@@ -1,7 +1,8 @@
-import * as factory from '@chevre/factory';
 import { Connection } from 'mongoose';
 
 import reservationModel from './mongoose/model/reservation';
+
+import * as factory from '../factory';
 
 /**
  * 予約リポジトリー
@@ -122,10 +123,11 @@ export class MongoRepository {
 
         return doc.toObject();
     }
-    public async confirm(params: { id: string }) {
+    public async confirm(params: factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent>) {
         await this.reservationModel.findByIdAndUpdate(
             params.id,
             {
+                ...params,
                 reservationStatus: factory.reservationStatusType.ReservationConfirmed,
                 modifiedTime: new Date()
             }

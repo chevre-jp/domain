@@ -1,7 +1,7 @@
-import * as factory from '@chevre/factory';
 import { Connection } from 'mongoose';
 import * as uniqid from 'uniqid';
 
+import * as factory from '../factory';
 import eventModel from './mongoose/model/event';
 
 /**

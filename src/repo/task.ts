@@ -1,23 +1,21 @@
-import * as factory from '@chevre/factory';
 import * as moment from 'moment';
 import { Connection } from 'mongoose';
 import taskModel from './mongoose/model/task';
 
+import * as factory from '../factory';
+
 /**
  * タスク実行時のソート条件
- * @const
  */
 const sortOrder4executionOfTasks = {
     numberOfTried: 1, // トライ回数の少なさ優先
     runsAt: 1 // 実行予定日時の早さ優先
 };
-
 /**
  * タスクレポジトリー
  */
 export class MongoRepository {
     public readonly taskModel: typeof taskModel;
-
     constructor(connection: Connection) {
         this.taskModel = connection.model(taskModel.modelName);
     }

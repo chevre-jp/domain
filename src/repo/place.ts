@@ -1,6 +1,7 @@
-import * as factory from '@chevre/factory';
 import { Connection } from 'mongoose';
 import placeModel from './mongoose/model/place';
+
+import * as factory from '../factory';
 
 /**
  * 場所抽象リポジトリー

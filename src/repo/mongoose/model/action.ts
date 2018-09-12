@@ -76,7 +76,6 @@ const potentialActionsSchema = new mongoose.Schema(
 
 /**
  * アクションスキーマ
- * @ignore
  */
 const schema = new mongoose.Schema(
     {
