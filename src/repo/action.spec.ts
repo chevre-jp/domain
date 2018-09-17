@@ -5,146 +5,172 @@
 import { } from 'mocha';
 import * as assert from 'power-assert';
 import * as sinon from 'sinon';
+import { } from 'sinon-mongoose';
 // tslint:disable-next-line:no-require-imports no-var-requires
 require('sinon-mongoose');
 import * as domain from '../index';
 
 let sandbox: sinon.SinonSandbox;
-let actionRepo: domain.repository.Action;
-
 before(() => {
     sandbox = sinon.createSandbox();
 });
-
-describe('アクションを開始する', () => {
-    beforeEach(() => {
+describe('start()', () => {
+    afterEach(() => {
         sandbox.restore();
-        actionRepo = new domain.repository.Action(domain.mongoose.connection);
     });
 
-    it('MongoDBが正常であれば開始できるはず', async () => {
-        sandbox.mock(actionRepo.actionModel).expects('create').once().resolves(new actionRepo.actionModel());
+    it('アクションオブジェクトが返却されるはず', async () => {
+        const params = {};
+        const repository = new domain.repository.Action(domain.mongoose.connection);
+        sandbox.mock(repository.actionModel).expects('create').once()
+            .resolves(new repository.actionModel());
 
-        const result = await actionRepo.start(<any>{});
-        assert.equal(typeof result, 'object');
+        const result = await repository.start(<any>params);
+        assert(typeof result, 'object');
         sandbox.verify();
     });
 });
 
-describe('アクションを完了する', () => {
-    beforeEach(() => {
+describe('complete()', () => {
+    afterEach(() => {
         sandbox.restore();
-        actionRepo = new domain.repository.Action(domain.mongoose.connection);
     });
 
-    it('アクションが存在すれば完了できるはず', async () => {
-        sandbox.mock(actionRepo.actionModel).expects('findOneAndUpdate').once().chain('exec').resolves(new actionRepo.actionModel());
+    it('アクションが存在すればオブジェクトが返却されるはず', async () => {
+        const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
+        const actionResult = {};
+        const repository = new domain.repository.Action(domain.mongoose.connection);
+        sandbox.mock(repository.actionModel).expects('findOneAndUpdate').once()
+            .chain('exec').resolves(new repository.actionModel());
 
-        const result = await actionRepo.complete(domain.factory.actionType.AuthorizeAction, 'actionId', {});
-        assert.equal(typeof result, 'object');
+        const result = await repository.complete({
+            typeOf: action.typeOf,
+            id: action.id,
+            result: actionResult
+        });
+        assert(typeof result, 'object');
         sandbox.verify();
     });
 
-    it('存在しなければNotFoundエラーとなるはず', async () => {
-        sandbox.mock(actionRepo.actionModel).expects('findOneAndUpdate').once().chain('exec').resolves(null);
+    it('アクションが存在しなければNotFoundエラーとなるはず', async () => {
+        const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
+        const actionResult = {};
+        const repository = new domain.repository.Action(domain.mongoose.connection);
+        sandbox.mock(repository.actionModel).expects('findOneAndUpdate').once()
+            .chain('exec').resolves(null);
 
-        const result = await actionRepo.complete(domain.factory.actionType.AuthorizeAction, 'actionId', {}).catch((err) => err);
+        const result = await repository.complete({
+            typeOf: action.typeOf,
+            id: action.id,
+            result: actionResult
+        }).catch((err) => err);
         assert(result instanceof domain.factory.errors.NotFound);
         sandbox.verify();
     });
 });
 
-describe('アクションを中止する', () => {
-    beforeEach(() => {
+describe('cancel()', () => {
+    afterEach(() => {
         sandbox.restore();
-        actionRepo = new domain.repository.Action(domain.mongoose.connection);
     });
 
-    it('アクションが存在すれば中止できるはず', async () => {
-        sandbox.mock(actionRepo.actionModel).expects('findOneAndUpdate').once().chain('exec').resolves(new actionRepo.actionModel());
+    it('アクションが存在すればオブジェクトが返却されるはず', async () => {
+        const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
+        const repository = new domain.repository.Action(domain.mongoose.connection);
+        sandbox.mock(repository.actionModel).expects('findOneAndUpdate').once()
+            .chain('exec').resolves(new repository.actionModel());
 
-        const result = await actionRepo.cancel(domain.factory.actionType.AuthorizeAction, 'actionId');
-        assert.equal(typeof result, 'object');
+        const result = await repository.cancel({
+            typeOf: action.typeOf,
+            id: action.id
+        });
+        assert(typeof result, 'object');
         sandbox.verify();
     });
 
-    it('存在しなければNotFoundエラーとなるはず', async () => {
-        sandbox.mock(actionRepo.actionModel).expects('findOneAndUpdate').once().chain('exec').resolves(null);
+    it('アクションが存在しなければNotFoundエラーとなるはず', async () => {
+        const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
+        const repository = new domain.repository.Action(domain.mongoose.connection);
+        sandbox.mock(repository.actionModel).expects('findOneAndUpdate').once()
+            .chain('exec').resolves(null);
 
-        const result = await actionRepo.cancel(domain.factory.actionType.AuthorizeAction, 'actionId').catch((err) => err);
+        const result = await repository.cancel({
+            typeOf: action.typeOf,
+            id: action.id
+        }).catch((err) => err);
         assert(result instanceof domain.factory.errors.NotFound);
         sandbox.verify();
     });
 });
 
-describe('アクションを断念する', () => {
-    beforeEach(() => {
+describe('giveUp()', () => {
+    afterEach(() => {
         sandbox.restore();
-        actionRepo = new domain.repository.Action(domain.mongoose.connection);
     });
 
-    it('アクションが存在すれば断念できるはず', async () => {
-        sandbox.mock(actionRepo.actionModel).expects('findOneAndUpdate').once().chain('exec').resolves(new actionRepo.actionModel());
+    it('アクションが存在すればオブジェクトが返却されるはず', async () => {
+        const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
+        const error = {};
+        const repository = new domain.repository.Action(domain.mongoose.connection);
+        sandbox.mock(repository.actionModel).expects('findOneAndUpdate').once()
+            .chain('exec').resolves(new repository.actionModel());
 
-        const result = await actionRepo.giveUp(domain.factory.actionType.AuthorizeAction, 'actionId', {});
-        assert.equal(typeof result, 'object');
+        const result = await repository.giveUp({
+            typeOf: action.typeOf,
+            id: action.id,
+            error: error
+        });
+        assert(typeof result, 'object');
         sandbox.verify();
     });
 
-    it('存在しなければNotFoundエラーとなるはず', async () => {
-        sandbox.mock(actionRepo.actionModel).expects('findOneAndUpdate').once().chain('exec').resolves(null);
+    it('アクションが存在しなければNotFoundエラーとなるはず', async () => {
+        const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
+        const error = {};
+        const repository = new domain.repository.Action(domain.mongoose.connection);
+        sandbox.mock(repository.actionModel).expects('findOneAndUpdate').once()
+            .chain('exec').resolves(null);
 
-        const result = await actionRepo.giveUp(domain.factory.actionType.AuthorizeAction, 'actionId', {}).catch((err) => err);
+        const result = await repository.giveUp({
+            typeOf: action.typeOf,
+            id: action.id,
+            error: error
+        }).catch((err) => err);
         assert(result instanceof domain.factory.errors.NotFound);
         sandbox.verify();
     });
 });
 
-describe('IDでアクションを検索する', () => {
-    beforeEach(() => {
+describe('findById()', () => {
+    afterEach(() => {
         sandbox.restore();
-        actionRepo = new domain.repository.Action(domain.mongoose.connection);
     });
 
-    it('アクションが存在すればオブジェクトを取得できるはず', async () => {
-        sandbox.mock(actionRepo.actionModel).expects('findOne').once().chain('exec').resolves(new actionRepo.actionModel());
+    it('アクションが存在すればオブジェクトが返却されるはず', async () => {
+        const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
+        const repository = new domain.repository.Action(domain.mongoose.connection);
+        sandbox.mock(repository.actionModel).expects('findOne').once()
+            .chain('exec').resolves(new repository.actionModel());
 
-        const result = await actionRepo.findById(domain.factory.actionType.AuthorizeAction, 'actionId');
-        assert.equal(typeof result, 'object');
+        const result = await repository.findById({
+            typeOf: action.typeOf,
+            id: action.id
+        });
+        assert(typeof result, 'object');
         sandbox.verify();
     });
 
-    it('存在しなければNotFoundエラーとなるはず', async () => {
-        sandbox.mock(actionRepo.actionModel).expects('findOne').once().chain('exec').resolves(null);
+    it('アクションが存在しなければNotFoundエラーとなるはず', async () => {
+        const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
+        const repository = new domain.repository.Action(domain.mongoose.connection);
+        sandbox.mock(repository.actionModel).expects('findOne').once()
+            .chain('exec').resolves(null);
 
-        const result = await actionRepo.findById(domain.factory.actionType.AuthorizeAction, 'actionId').catch((err) => err);
+        const result = await repository.findById({
+            typeOf: action.typeOf,
+            id: action.id
+        }).catch((err) => err);
         assert(result instanceof domain.factory.errors.NotFound);
-        sandbox.verify();
-    });
-});
-
-describe('アクションを検索する', () => {
-    beforeEach(() => {
-        sandbox.restore();
-        actionRepo = new domain.repository.Action(domain.mongoose.connection);
-    });
-
-    it('MongoDBが正常であれば配列を取得できるはず', async () => {
-        const searchConditions = {
-            typeOf: domain.factory.actionType.AuthorizeAction,
-            actionStatuses: [domain.factory.actionStatusType.ActiveActionStatus],
-            startDateFrom: new Date(),
-            startDateThrough: new Date(),
-            purposeTypeOfs: [domain.factory.transactionType.Reserve],
-            fromLocationAccountNumbers: ['accountNumber'],
-            toLocationAccountNumbers: ['accountNumber'],
-            limit: 1
-        };
-        sandbox.mock(actionRepo.actionModel).expects('find').once()
-            .chain('sort').chain('limit').chain('exec').resolves([new actionRepo.actionModel()]);
-
-        const result = await actionRepo.search(searchConditions);
-        assert(Array.isArray(result));
         sandbox.verify();
     });
 });

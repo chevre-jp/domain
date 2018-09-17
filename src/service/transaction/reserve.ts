@@ -4,6 +4,7 @@
 import * as createDebug from 'debug';
 
 import * as factory from '../../factory';
+import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as EventRepo } from '../../repo/event';
 import { RedisRepository as ScreeningEventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
@@ -11,6 +12,8 @@ import { RedisRepository as ReservationNumberRepo } from '../../repo/reservation
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TicketTypeRepo } from '../../repo/ticketType';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
+
+import * as ReserveService from '../reserve';
 
 const debug = createDebug('chevre-domain:service');
 
@@ -21,6 +24,12 @@ export type IStartOperation<T> = (repos: {
     reservationNumber: ReservationNumberRepo;
     transaction: TransactionRepo;
     ticketType: TicketTypeRepo;
+}) => Promise<T>;
+export type ICancelOperation<T> = (repos: {
+    action: ActionRepo;
+    eventAvailability: ScreeningEventAvailabilityRepo;
+    reservation: ReservationRepo;
+    transaction: TransactionRepo;
 }) => Promise<T>;
 export type ITaskAndTransactionOperation<T> = (repos: {
     task: TaskRepo;
@@ -115,7 +124,7 @@ export function start(
         // 取引作成
         let transaction: factory.transaction.reserve.ITransaction;
         try {
-            transaction = await repos.transaction.start<factory.transactionType.Reserve>(factory.transactionType.Reserve, startParams);
+            transaction = await repos.transaction.start<factory.transactionType.Reserve>(startParams);
         } catch (error) {
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore next */
@@ -186,7 +195,10 @@ export function confirm(params: {
         debug(`confirming reserve transaction ${params.transactionId}...`);
 
         // 取引存在確認
-        const transaction = await repos.transaction.findById(factory.transactionType.Reserve, params.transactionId);
+        const transaction = await repos.transaction.findById({
+            typeOf: factory.transactionType.Reserve,
+            id: params.transactionId
+        });
 
         // 予約アクション属性作成
         const reserveActionAttributes: factory.action.reserve.IAttributes[] = transaction.object.reservations.map((r) => {
@@ -218,7 +230,51 @@ export function confirm(params: {
 
         // 取引確定
         const result: factory.transaction.reserve.IResult = {};
-        await repos.transaction.confirm(factory.transactionType.Reserve, transaction.id, result, potentialActions);
+        await repos.transaction.confirm({
+            typeOf: factory.transactionType.Reserve,
+            id: transaction.id,
+            result: result,
+            potentialActions: potentialActions
+        });
+    };
+}
+
+/**
+ * 取引中止
+ */
+export function cancel(params: {
+    transactionId: string;
+}): ICancelOperation<void> {
+    return async (repos: {
+        action: ActionRepo;
+        reservation: ReservationRepo;
+        transaction: TransactionRepo;
+        eventAvailability: ScreeningEventAvailabilityRepo;
+    }) => {
+        // まず取引状態変更
+        const transaction = await repos.transaction.cancel({
+            typeOf: factory.transactionType.Reserve,
+            id: params.transactionId
+        });
+
+        // 本来非同期でタスクが実行されるが、同期的に仮予約取消が実行されていないと、サービス利用側が困る可能性があるので、
+        // 一応同期的にもcancelPendingReservationを実行しておく
+        try {
+            const actionAttributes: factory.action.cancel.reservation.IAttributes[] = transaction.object.reservations.map((r) => {
+                return {
+                    typeOf: <factory.actionType.CancelAction>factory.actionType.CancelAction,
+                    purpose: {
+                        typeOf: transaction.typeOf,
+                        id: transaction.id
+                    },
+                    agent: transaction.agent,
+                    object: r
+                };
+            });
+            await ReserveService.cancelPendingReservation(actionAttributes)(repos);
+        } catch (error) {
+            // no op
+        }
     };
 }
 
@@ -230,7 +286,10 @@ export function exportTasks(status: factory.transactionStatusType) {
         task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
-        const transaction = await repos.transaction.startExportTasks(factory.transactionType.Reserve, status);
+        const transaction = await repos.transaction.startExportTasks({
+            typeOf: factory.transactionType.Reserve,
+            status: status
+        });
         if (transaction === null) {
             return;
         }
@@ -238,7 +297,7 @@ export function exportTasks(status: factory.transactionStatusType) {
         // 失敗してもここでは戻さない(RUNNINGのまま待機)
         await exportTasksById(transaction.id)(repos);
 
-        await repos.transaction.setTasksExportedById(transaction.id);
+        await repos.transaction.setTasksExportedById({ id: transaction.id });
     };
 }
 
@@ -252,9 +311,10 @@ export function exportTasksById(
         task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
-        const transaction = await repos.transaction.findById<factory.transactionType.Reserve>(
-            factory.transactionType.Reserve, transactionId
-        );
+        const transaction = await repos.transaction.findById({
+            typeOf: factory.transactionType.Reserve,
+            id: transactionId
+        });
         const potentialActions = transaction.potentialActions;
 
         const taskAttributes: factory.task.IAttributes[] = [];

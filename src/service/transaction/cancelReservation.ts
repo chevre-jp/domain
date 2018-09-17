@@ -33,10 +33,11 @@ export function start(
         transaction: TransactionRepo;
     }) => {
         debug('starting transaction...', params);
-
         // 予約取引存在確認
-        const reserveTransaction = await repos.transaction.findById(factory.transactionType.Reserve, params.object.transaction.id);
-
+        const reserveTransaction = await repos.transaction.findById({
+            typeOf: factory.transactionType.Reserve,
+            id: params.object.transaction.id
+        });
         const startParams: factory.transaction.IStartParams<factory.transactionType.CancelReservation> = {
             typeOf: factory.transactionType.CancelReservation,
             agent: params.agent,
@@ -50,7 +51,7 @@ export function start(
         // 取引作成
         let transaction: factory.transaction.cancelReservation.ITransaction;
         try {
-            transaction = await repos.transaction.start(factory.transactionType.CancelReservation, startParams);
+            transaction = await repos.transaction.start<factory.transactionType.CancelReservation>(startParams);
         } catch (error) {
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore next */
@@ -83,7 +84,10 @@ export function confirm(params: {
         debug(`confirming reserve transaction ${params.transactionId}...`);
 
         // 取引存在確認
-        const transaction = await repos.transaction.findById(factory.transactionType.CancelReservation, params.transactionId);
+        const transaction = await repos.transaction.findById({
+            typeOf: factory.transactionType.CancelReservation,
+            id: params.transactionId
+        });
         const reserveTransaction = transaction.object.transaction;
 
         // 予約アクション属性作成
@@ -108,7 +112,12 @@ export function confirm(params: {
 
         // 取引確定
         const result: factory.transaction.cancelReservation.IResult = {};
-        await repos.transaction.confirm(factory.transactionType.CancelReservation, transaction.id, result, potentialActions);
+        await repos.transaction.confirm({
+            typeOf: factory.transactionType.CancelReservation,
+            id: transaction.id,
+            result: result,
+            potentialActions: potentialActions
+        });
     };
 }
 
@@ -120,7 +129,10 @@ export function exportTasks(status: factory.transactionStatusType) {
         task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
-        const transaction = await repos.transaction.startExportTasks(factory.transactionType.CancelReservation, status);
+        const transaction = await repos.transaction.startExportTasks({
+            typeOf: factory.transactionType.CancelReservation,
+            status: status
+        });
         if (transaction === null) {
             return;
         }
@@ -128,7 +140,7 @@ export function exportTasks(status: factory.transactionStatusType) {
         // 失敗してもここでは戻さない(RUNNINGのまま待機)
         await exportTasksById(transaction.id)(repos);
 
-        await repos.transaction.setTasksExportedById(transaction.id);
+        await repos.transaction.setTasksExportedById({ id: transaction.id });
     };
 }
 
@@ -142,9 +154,10 @@ export function exportTasksById(
         task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
-        const transaction = await repos.transaction.findById<factory.transactionType.CancelReservation>(
-            factory.transactionType.CancelReservation, transactionId
-        );
+        const transaction = await repos.transaction.findById({
+            typeOf: factory.transactionType.CancelReservation,
+            id: transactionId
+        });
         const potentialActions = transaction.potentialActions;
 
         const taskAttributes: factory.task.IAttributes[] = [];

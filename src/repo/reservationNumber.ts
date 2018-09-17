@@ -30,7 +30,7 @@ export class RedisRepository {
         sellerBranchCode: string;
     }): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            // 注文番号接頭辞は日付と販売者枝番号
+            // 番号接頭辞は日付と販売者枝番号
             const prefix = util.format(
                 '%s-%s',
                 // tslint:disable-next-line:no-magic-numbers
@@ -66,7 +66,7 @@ export class RedisRepository {
                                 '%s-%s',
                                 prefix,
                                 // tslint:disable-next-line:no-magic-numbers
-                                (`000000${no}`).slice(-6) // 一販売者につき一日あたり最大100000件以内の注文想定
+                                (`000000${no}`).slice(-6) // 一販売者につき一日あたり最大1000000件以内の予約想定
                             ));
                         } else {
                             // 基本的にありえないフロー

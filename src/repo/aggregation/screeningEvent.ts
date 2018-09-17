@@ -23,7 +23,7 @@ export class RedisRepository {
     public async store(aggregations: IAggregation[], ttl: number): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             const key = RedisRepository.KEY_PREFIX;
-            const filedsAndValues = aggregations.reduce((a, b) => [...a, b.id, JSON.stringify(b)], []);
+            const filedsAndValues = aggregations.reduce((a, b) => [...a, b.id, JSON.stringify(b)], <string[]>[]);
             this.redisClient.multi()
                 .hmset(key, filedsAndValues)
                 .expire(key, ttl)

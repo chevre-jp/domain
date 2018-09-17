@@ -30,7 +30,7 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
                 // actionにエラー結果を追加
                 try {
                     const actionError = { ...error, ...{ message: error.message, name: error.name } };
-                    await repos.action.giveUp(action.typeOf, action.id, actionError);
+                    await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
                 } catch (__) {
                     // 失敗したら仕方ない
                 }
@@ -40,7 +40,7 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
 
             // アクション完了
             const actionResult: factory.action.reserve.IResult = {};
-            await repos.action.complete(action.typeOf, action.id, actionResult);
+            await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
         }));
     };
 }
@@ -54,8 +54,10 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
         transaction: TransactionRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
     }) => {
-        const reserveTransaction = await
-            repos.transaction.findById(factory.transactionType.Reserve, actionAttributesList[0].purpose.id);
+        const reserveTransaction = await repos.transaction.findById({
+            typeOf: factory.transactionType.Reserve,
+            id: actionAttributesList[0].purpose.id
+        });
 
         debug('canceling reservations...', actionAttributesList);
         await Promise.all(actionAttributesList.map(async (actionAttributes) => {
@@ -83,7 +85,7 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
                 // actionにエラー結果を追加
                 try {
                     const actionError = { ...error, ...{ message: error.message, name: error.name } };
-                    await repos.action.giveUp(action.typeOf, action.id, actionError);
+                    await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
                 } catch (__) {
                     // 失敗したら仕方ない
                 }
@@ -93,7 +95,7 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
 
             // アクション完了
             const actionResult: factory.action.reserve.IResult = {};
-            await repos.action.complete(action.typeOf, action.id, actionResult);
+            await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
         }));
     };
 }
@@ -108,7 +110,7 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
         eventAvailability: ScreeningEventAvailabilityRepo;
     }) => {
         const cancelReservationTransaction = await
-            repos.transaction.findById(factory.transactionType.CancelReservation, actionAttributesList[0].purpose.id);
+            repos.transaction.findById({ typeOf: factory.transactionType.CancelReservation, id: actionAttributesList[0].purpose.id });
 
         debug('canceling reservations...', actionAttributesList);
         await Promise.all(actionAttributesList.map(async (actionAttributes) => {
@@ -136,7 +138,7 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
                 // actionにエラー結果を追加
                 try {
                     const actionError = { ...error, ...{ message: error.message, name: error.name } };
-                    await repos.action.giveUp(action.typeOf, action.id, actionError);
+                    await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
                 } catch (__) {
                     // 失敗したら仕方ない
                 }
@@ -146,7 +148,7 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
 
             // アクション完了
             const actionResult: factory.action.reserve.IResult = {};
-            await repos.action.complete(action.typeOf, action.id, actionResult);
+            await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
         }));
     };
 }
