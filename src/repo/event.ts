@@ -239,7 +239,7 @@ export class MongoRepository {
         return event;
     }
     /**
-     * 個々の上映イベントを保管する
+     * 上映イベントを保管する
      */
     public async saveScreeningEvent(params: {
         id?: string;

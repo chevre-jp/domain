@@ -1,0 +1,37 @@
+[
+    {
+        "typeOf": "VideoFormatChargeSpecification",
+        "appliesToVideoFormat": "3D",
+        "price": 300,
+        "priceCurrency": "JPY",
+        "valueAddedTaxIncluded": true
+    },
+    {
+        "typeOf": "VideoFormatChargeSpecification",
+        "appliesToVideoFormat": "IMAX",
+        "price": 1000,
+        "priceCurrency": "JPY",
+        "valueAddedTaxIncluded": true
+    },
+    {
+        "typeOf": "VideoFormatChargeSpecification",
+        "appliesToVideoFormat": "4DX",
+        "price": 500,
+        "priceCurrency": "JPY",
+        "valueAddedTaxIncluded": true
+    },
+    {
+        "typeOf": "VideoFormatChargeSpecification",
+        "appliesToVideoFormat": "TCX",
+        "price": 1000,
+        "priceCurrency": "JPY",
+        "valueAddedTaxIncluded": true
+    },
+    {
+        "typeOf": "VideoFormatChargeSpecification",
+        "appliesToVideoFormat": "MX4D",
+        "price": 1000,
+        "priceCurrency": "JPY",
+        "valueAddedTaxIncluded": true
+    }
+]

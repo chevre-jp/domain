@@ -31,6 +31,24 @@ const superEventSchema = new mongoose.Schema(
     }
 );
 
+const videoFormatSchema = new mongoose.Schema(
+    {},
+    {
+        id: false,
+        _id: false,
+        strict: false
+    }
+);
+
+const soundFormatSchema = new mongoose.Schema(
+    {},
+    {
+        id: false,
+        _id: false,
+        strict: false
+    }
+);
+
 /**
  * イベント(公演など)スキーマ
  */
@@ -52,7 +70,8 @@ const schema = new mongoose.Schema(
         startDate: Date,
         workPerformed: workPerformedSchema,
         superEvent: superEventSchema,
-        videoFormat: String,
+        videoFormat: [videoFormatSchema],
+        soundFormat: [soundFormatSchema],
         subtitleLanguage: String,
         kanaName: String,
         alternativeHeadline: String,
