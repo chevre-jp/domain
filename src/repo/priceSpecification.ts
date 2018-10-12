@@ -1,6 +1,3 @@
-// tslint:disable-next-line:no-require-imports no-var-requires
-const priceSpecifications = require('../../priceSpecifications.json');
-
 import * as factory from '../factory';
 
 /**
@@ -9,7 +6,14 @@ import * as factory from '../factory';
 export class InMemoryRepository {
     public readonly priceSpecifications: factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType>[];
     constructor() {
-        this.priceSpecifications = priceSpecifications;
+        this.priceSpecifications = [];
+        if (process.env.CHEVRE_PRICE_SPECIFICATIONS !== undefined) {
+            try {
+                this.priceSpecifications = JSON.parse(process.env.CHEVRE_PRICE_SPECIFICATIONS);
+            } catch (_) {
+                // no op
+            }
+        }
     }
     public async search<T extends factory.priceSpecificationType>(params: {
         typeOf: T;
