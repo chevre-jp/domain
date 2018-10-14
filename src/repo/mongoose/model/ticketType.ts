@@ -13,7 +13,7 @@ const schema = new mongoose.Schema(
         name: multilingualString,
         description: multilingualString,
         notes: multilingualString,
-        charge: Number // 料金
+        price: Number
     },
     {
         collection: 'ticketTypes',

@@ -8,7 +8,7 @@ import { MongoRepository as CreativeWorkRepo } from './repo/creativeWork';
 import { MongoRepository as EventRepo } from './repo/event';
 import { RedisRepository as ScreeningEventItemAvailabilityRepo } from './repo/itemAvailability/screeningEvent';
 import { MongoRepository as PlaceRepo } from './repo/place';
-import { InMemoryRepository as PriceSpecificationRepo } from './repo/priceSpecification';
+import { MongoRepository as PriceSpecificationRepo } from './repo/priceSpecification';
 import { MongoRepository as ReservationRepo } from './repo/reservation';
 import { RedisRepository as ReservationNumberRepo } from './repo/reservationNumber';
 import { MongoRepository as TaskRepo } from './repo/task';

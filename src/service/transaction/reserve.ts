@@ -7,7 +7,7 @@ import * as factory from '../../factory';
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as EventRepo } from '../../repo/event';
 import { RedisRepository as ScreeningEventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
-import { InMemoryRepository as PriceSpecificationRepo } from '../../repo/priceSpecification';
+import { MongoRepository as PriceSpecificationRepo } from '../../repo/priceSpecification';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
 import { RedisRepository as ReservationNumberRepo } from '../../repo/reservationNumber';
 import { MongoRepository as TaskRepo } from '../../repo/task';
@@ -17,7 +17,6 @@ import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 import * as ReserveService from '../reserve';
 
 const debug = createDebug('chevre-domain:service');
-
 export type IStartOperation<T> = (repos: {
     eventAvailability: ScreeningEventAvailabilityRepo;
     event: EventRepo;
@@ -72,18 +71,23 @@ export function start(
         debug('available ticket type:', ticketTypes);
 
         // 加算料金計算
-        const videoFormatChargeSpecifications = await repos.priceSpecification.search({
-            typeOf: factory.priceSpecificationType.VideoFormatChargeSpecification
-        });
         let additinalChargePrice = 0;
-        if (Array.isArray(screeningEvent.superEvent.videoFormat)) {
-            screeningEvent.superEvent.videoFormat.forEach((videoFormat) => {
-                // 価格仕様設定があれば加算
-                const specification = videoFormatChargeSpecifications.find((s) => s.appliesToVideoFormat === videoFormat.typeOf);
-                if (specification !== undefined) {
-                    additinalChargePrice += specification.price;
-                }
-            });
+        const videoFormatCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
+            typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
+            priceComponent: { typeOf: factory.priceSpecificationType.VideoFormatChargeSpecification }
+        });
+        if (videoFormatCompoundPriceSpecifications.length > 0) {
+            const videoFormatCompoundPriceSpecification = videoFormatCompoundPriceSpecifications[0];
+            const videoFormatChargeSpecifications = videoFormatCompoundPriceSpecification.priceComponent;
+            if (Array.isArray(screeningEvent.superEvent.videoFormat)) {
+                screeningEvent.superEvent.videoFormat.forEach((videoFormat) => {
+                    // 価格仕様設定があれば加算
+                    const specification = videoFormatChargeSpecifications.find((s) => s.appliesToVideoFormat === videoFormat.typeOf);
+                    if (specification !== undefined) {
+                        additinalChargePrice += specification.price;
+                    }
+                });
+            }
         }
 
         // 予約番号発行
@@ -106,7 +110,7 @@ export function start(
                     typeOf: screeningEvent.location.typeOf,
                     name: screeningEvent.location.name.ja
                 },
-                totalPrice: ticketType.charge + additinalChargePrice,
+                totalPrice: ticketType.price + additinalChargePrice,
                 priceCurrency: factory.priceCurrency.JPY,
                 ticketedSeat: offer.ticketedSeat,
                 underName: {
