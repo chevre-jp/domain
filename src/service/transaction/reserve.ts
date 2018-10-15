@@ -14,6 +14,8 @@ import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TicketTypeRepo } from '../../repo/ticketType';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
+import * as OfferService from '../offer';
+
 import * as ReserveService from '../reserve';
 
 const debug = createDebug('chevre-domain:service');
@@ -67,28 +69,9 @@ export function start(
         });
 
         // チケット存在確認
+        const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
         const ticketTypes = await repos.ticketType.findByTicketGroupId({ ticketGroupId: screeningEvent.ticketTypeGroup });
         debug('available ticket type:', ticketTypes);
-
-        // 加算料金計算
-        let additinalChargePrice = 0;
-        const videoFormatCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
-            typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
-            priceComponent: { typeOf: factory.priceSpecificationType.VideoFormatChargeSpecification }
-        });
-        if (videoFormatCompoundPriceSpecifications.length > 0) {
-            const videoFormatCompoundPriceSpecification = videoFormatCompoundPriceSpecifications[0];
-            const videoFormatChargeSpecifications = videoFormatCompoundPriceSpecification.priceComponent;
-            if (Array.isArray(screeningEvent.superEvent.videoFormat)) {
-                screeningEvent.superEvent.videoFormat.forEach((videoFormat) => {
-                    // 価格仕様設定があれば加算
-                    const specification = videoFormatChargeSpecifications.find((s) => s.appliesToVideoFormat === videoFormat.typeOf);
-                    if (specification !== undefined) {
-                        additinalChargePrice += specification.price;
-                    }
-                });
-            }
-        }
 
         // 予約番号発行
         const reservationNumber = await repos.reservationNumber.publish({
@@ -98,9 +81,23 @@ export function start(
 
         // 取引ファクトリーで新しい進行中取引オブジェクトを作成
         const tickets: factory.reservation.ITicket[] = params.object.acceptedOffer.map((offer) => {
-            const ticketType = ticketTypes.find((t) => t.id === offer.id);
+            const ticketOffer = ticketOffers.find((t) => t.id === offer.id);
+            if (ticketOffer === undefined) {
+                throw new factory.errors.NotFound('Ticket Offer');
+            }
+            const totalPrice = ticketOffer.priceSpecification.priceComponent.reduce(
+                (a, b) => a + b.price,
+                0
+            );
+            let ticketType = ticketTypes.find((t) => t.id === offer.id);
             if (ticketType === undefined) {
-                throw new factory.errors.NotFound('Ticket Type');
+                ticketType = {
+                    id: ticketOffer.id,
+                    name: ticketOffer.name,
+                    description: ticketOffer.description,
+                    notes: { ja: '', en: '' },
+                    price: totalPrice
+                };
             }
 
             return {
@@ -110,7 +107,7 @@ export function start(
                     typeOf: screeningEvent.location.typeOf,
                     name: screeningEvent.location.name.ja
                 },
-                totalPrice: ticketType.price + additinalChargePrice,
+                totalPrice: totalPrice,
                 priceCurrency: factory.priceCurrency.JPY,
                 ticketedSeat: offer.ticketedSeat,
                 underName: {
