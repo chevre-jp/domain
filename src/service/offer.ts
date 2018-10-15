@@ -79,11 +79,11 @@ export function searchScreeningEventTicketOffers(params: {
                 price: 0,
                 priceCurrency: factory.priceCurrency.JPY,
                 name: {
-                    ja: `ムビチケ ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
+                    ja: `ムビチケ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
                     en: 'Movie Ticket'
                 },
                 description: {
-                    ja: `ムビチケ ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
+                    ja: `ムビチケ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
                     en: 'Movie Ticket'
                 },
                 valueAddedTaxIncluded: true,
@@ -93,9 +93,9 @@ export function searchScreeningEventTicketOffers(params: {
                     value: 1
                 }
             };
-            const mvtkSpecifications = movieTicketTypeChargeSpecifications.filter(
-                (s) => s.appliesToMovieTicketType === movieTicketTypeCode
-            );
+            const mvtkSpecifications = movieTicketTypeChargeSpecifications
+                .filter((s) => s.appliesToMovieTicketType === movieTicketTypeCode)
+                .filter((s) => eventVideoFormatTypes.indexOf(s.appliesToVideoFormat) >= 0);
             const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
                 typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
                 priceCurrency: factory.priceCurrency.JPY,
@@ -107,11 +107,11 @@ export function searchScreeningEventTicketOffers(params: {
                 typeOf: <factory.offerType>'Offer',
                 id: `offer-by-movieticket-${movieTicketTypeCode}`,
                 name: {
-                    ja: `ムビチケ ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
+                    ja: `ムビチケ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
                     en: 'Movie Ticket'
                 },
                 description: {
-                    ja: `ムビチケ ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
+                    ja: `ムビチケ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
                     en: 'Movie Ticket'
                 },
                 valueAddedTaxIncluded: true,
