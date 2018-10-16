@@ -38,7 +38,9 @@ export function searchScreeningEventTicketOffers(params: {
         const eventSoundFormatTypes
             = (Array.isArray(event.superEvent.soundFormat)) ? event.superEvent.soundFormat.map((f) => f.typeOf) : [];
         const eventVideoFormatTypes
-            = (Array.isArray(event.superEvent.videoFormat)) ? event.superEvent.videoFormat.map((f) => f.typeOf) : [];
+            = (Array.isArray(event.superEvent.videoFormat))
+                ? event.superEvent.videoFormat.map((f) => f.typeOf)
+                : [factory.videoFormatType['2D']];
         const ticketTypes = await repos.ticketType.findByTicketGroupId({ ticketGroupId: event.ticketTypeGroup });
 
         // 価格仕様を検索する
