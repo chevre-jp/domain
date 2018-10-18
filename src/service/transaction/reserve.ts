@@ -96,7 +96,8 @@ export function start(
                     name: ticketOffer.name,
                     description: ticketOffer.description,
                     notes: { ja: '', en: '' },
-                    price: totalPrice
+                    price: totalPrice,
+                    availability: factory.itemAvailability.InStock
                 };
             }
 

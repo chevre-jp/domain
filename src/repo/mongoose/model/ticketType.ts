@@ -13,7 +13,8 @@ const schema = new mongoose.Schema(
         name: multilingualString,
         description: multilingualString,
         notes: multilingualString,
-        price: Number
+        price: Number,
+        availability: String
     },
     {
         collection: 'ticketTypes',
