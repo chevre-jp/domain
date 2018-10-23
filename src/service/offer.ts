@@ -19,6 +19,7 @@ type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     priceSpecification: PriceSpecificationRepo;
     ticketType: TicketTypeRepo;
 }) => Promise<T>;
+
 /**
  * 上映イベントに対する券種オファーを検索する
  */
@@ -56,24 +57,25 @@ export function searchScreeningEventTicketOffers(params: {
             typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
             priceComponent: { typeOf: factory.priceSpecificationType.MovieTicketTypeChargeSpecification }
         });
+
         const soundFormatChargeSpecifications =
             soundFormatCompoundPriceSpecifications.reduce<ISoundFormatChargeSpecification[]>(
                 (a, b) => [...a, ...b.priceComponent],
                 []
-            ).filter((specification) => eventSoundFormatTypes.indexOf(specification.appliesToSoundFormat) >= 0);
+            ).filter((spec) => eventSoundFormatTypes.indexOf(spec.appliesToSoundFormat) >= 0);
         const videoFormatChargeSpecifications =
             videoFormatCompoundPriceSpecifications.reduce<IVideoFormatChargeSpecification[]>(
                 (a, b) => [...a, ...b.priceComponent],
                 []
-            ).filter((specification) => eventVideoFormatTypes.indexOf(specification.appliesToVideoFormat) >= 0);
-        const movieTicketTypeChargeSpecifications =
+            ).filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
+        const movieTicketTypeChargeSpecs =
             movieTicketTypeCompoundPriceSpecifications.reduce<IMovieTicketTypeChargeSpecification[]>(
                 (a, b) => [...a, ...b.priceComponent],
                 []
-            );
-        const movieTicketTypeCodes = Array.from(new Set(
-            movieTicketTypeChargeSpecifications.map((specification) => specification.appliesToMovieTicketType)
-        ));
+            ).filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
+
+        // ムビチケ券種区分ごとにムビチケオファーを作成
+        const movieTicketTypeCodes = [...new Set(movieTicketTypeChargeSpecs.map((s) => s.appliesToMovieTicketType))];
         const movieTicketOffers = movieTicketTypeCodes.map((movieTicketTypeCode) => {
             const movieTicketType = mvtk.util.constants.TICKET_TYPE.find((ticketType) => ticketType.code === movieTicketTypeCode);
             const unitPriceSpecification: IUnitPriceSpecification = {
@@ -95,19 +97,21 @@ export function searchScreeningEventTicketOffers(params: {
                     value: 1
                 }
             };
-            const mvtkSpecifications = movieTicketTypeChargeSpecifications
-                .filter((s) => s.appliesToMovieTicketType === movieTicketTypeCode)
-                .filter((s) => eventVideoFormatTypes.indexOf(s.appliesToVideoFormat) >= 0);
+            const mvtkSpecs = movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketTypeCode);
+            const priceComponent = [
+                unitPriceSpecification,
+                ...mvtkSpecs
+            ];
             const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
                 typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
                 priceCurrency: factory.priceCurrency.JPY,
                 valueAddedTaxIncluded: true,
-                priceComponent: [unitPriceSpecification, ...mvtkSpecifications]
+                priceComponent: priceComponent
             };
 
             return {
                 typeOf: <factory.offerType>'Offer',
-                id: `offer-by-movieticket-${movieTicketTypeCode}`,
+                id: `Offer-by-movieticket-${movieTicketTypeCode}`,
                 name: {
                     ja: `ムビチケ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
                     en: 'Movie Ticket'
@@ -138,15 +142,16 @@ export function searchScreeningEventTicketOffers(params: {
                     value: 1
                 }
             };
+            const priceComponent = [
+                unitPriceSpecification,
+                ...videoFormatChargeSpecifications,
+                ...soundFormatChargeSpecifications
+            ];
             const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
                 typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
                 priceCurrency: factory.priceCurrency.JPY,
                 valueAddedTaxIncluded: true,
-                priceComponent: [
-                    unitPriceSpecification,
-                    ...videoFormatChargeSpecifications,
-                    ...soundFormatChargeSpecifications
-                ]
+                priceComponent: priceComponent
             };
 
             return {
