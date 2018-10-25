@@ -41,29 +41,36 @@ export function aggregateScreeningEvents(params: {
         const movieTheaters = await Promise.all(movieTheatersWithoutScreeningRoom.map(async (m) => {
             return repos.place.findMovieTheaterByBranchCode(m.branchCode);
         }));
+
         // 収容人数を集計
         const aggregations: IScreeningEventAggregation[] = await Promise.all(events.map(async (e) => {
+            let maximumAttendeeCapacity: number = 0;
+            let remainingAttendeeCapacity: number = 0;
+
             const movieTheater = movieTheaters.find((m) => m.branchCode === e.superEvent.location.branchCode);
             if (movieTheater === undefined) {
-                throw new Error('Movie theater not found');
+                // 基本的にありえないはずだが、万が一劇場が見つからなければcapacityは0のまま
+                console.error(new Error('Movie theater not found'));
+            } else {
+                const screeningRoom = <factory.place.movieTheater.IScreeningRoom | undefined>
+                    movieTheater.containsPlace.find((p) => p.branchCode === e.location.branchCode);
+                if (screeningRoom === undefined) {
+                    // 基本的にありえないはずだが、万が一スクリーンが見つからなければcapacityは0のまま
+                    console.error(new Error('Screening room not found'));
+                } else {
+                    maximumAttendeeCapacity = screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0);
+                    const unavailableOffers = await repos.screeningEventAvailability.findUnavailableOffersByEventId({ eventId: e.id });
+                    remainingAttendeeCapacity = maximumAttendeeCapacity - unavailableOffers.length;
+                }
             }
-            const screeningRoom = <factory.place.movieTheater.IScreeningRoom | undefined>
-                movieTheater.containsPlace.find((p) => p.branchCode === e.location.branchCode);
-            if (screeningRoom === undefined) {
-                throw new Error('Screening room not found');
-            }
-            const maximumAttendeeCapacity = screeningRoom.containsPlace.reduce(
-                (a, b) => a + b.containsPlace.length,
-                0
-            );
-            const unavailableOffers = await repos.screeningEventAvailability.findUnavailableOffersByEventId({ eventId: e.id });
 
             return {
                 id: e.id,
                 maximumAttendeeCapacity: maximumAttendeeCapacity,
-                remainingAttendeeCapacity: maximumAttendeeCapacity - unavailableOffers.length
+                remainingAttendeeCapacity: remainingAttendeeCapacity
             };
         }));
+
         // 保管
         await repos.aggregation.store(aggregations, params.ttl);
     };
