@@ -123,7 +123,12 @@ export function searchScreeningEventTicketOffers(params: {
                 valueAddedTaxIncluded: true,
                 priceCurrency: factory.priceCurrency.JPY,
                 priceSpecification: compoundPriceSpecification,
-                availability: factory.itemAvailability.InStock
+                availability: factory.itemAvailability.InStock,
+                availabilityEnds: event.offers.availabilityEnds,
+                availabilityStarts: event.offers.availabilityStarts,
+                eligibleQuantity: event.offers.eligibleQuantity,
+                validFrom: event.offers.validFrom,
+                validThrough: event.offers.validThrough
             };
         });
 
@@ -161,7 +166,12 @@ export function searchScreeningEventTicketOffers(params: {
                 description: ticketType.description,
                 priceCurrency: factory.priceCurrency.JPY,
                 priceSpecification: compoundPriceSpecification,
-                availability: ticketType.availability
+                availability: ticketType.availability,
+                availabilityEnds: event.offers.availabilityEnds,
+                availabilityStarts: event.offers.availabilityStarts,
+                eligibleQuantity: event.offers.eligibleQuantity,
+                validFrom: event.offers.validFrom,
+                validThrough: event.offers.validThrough
             };
         });
 

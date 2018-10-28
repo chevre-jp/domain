@@ -49,6 +49,15 @@ const soundFormatSchema = new mongoose.Schema(
     }
 );
 
+const offersSchema = new mongoose.Schema(
+    {},
+    {
+        id: false,
+        _id: false,
+        strict: false
+    }
+);
+
 /**
  * イベント(公演など)スキーマ
  */
@@ -75,7 +84,8 @@ const schema = new mongoose.Schema(
         subtitleLanguage: String,
         kanaName: String,
         alternativeHeadline: String,
-        ticketTypeGroup: String
+        ticketTypeGroup: String,
+        offers: offersSchema
     },
     {
         collection: 'events',
@@ -121,6 +131,50 @@ schema.index(
 );
 schema.index({ typeOf: 1, startDate: 1 });
 schema.index({ typeOf: 1, endDate: 1 });
+schema.index(
+    {
+        'offers.availabilityEnds': 1
+    },
+    {
+        partialFilterExpression: {
+            'offers.availabilityEnds': { $exists: true }
+        },
+        name: 'searchByOffersAvailabilityEnds'
+    }
+);
+schema.index(
+    {
+        'offers.availabilityStarts': 1
+    },
+    {
+        partialFilterExpression: {
+            'offers.availabilityStarts': { $exists: true }
+        },
+        name: 'searchByOffersAvailabilityStarts'
+    }
+);
+schema.index(
+    {
+        'offers.validThrough': 1
+    },
+    {
+        partialFilterExpression: {
+            'offers.validThrough': { $exists: true }
+        },
+        name: 'searchByOffersValidThrough'
+    }
+);
+schema.index(
+    {
+        'offers.validFrom': 1
+    },
+    {
+        partialFilterExpression: {
+            'offers.validFrom': { $exists: true }
+        },
+        name: 'searchByOffersValidFrom'
+    }
+);
 
 export default mongoose.model('Event', schema).on(
     'index',
