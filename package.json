@@ -13,14 +13,14 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "^1.0.0-alpha.23",
+    "@chevre/factory": "^1.0.0-alpha.25",
     "@movieticket/reserve-api-abstract-client": "^1.0.0",
-    "@types/mongoose": "^5.2.19",
+    "@types/mongoose": "^5.2.20",
     "@types/redis": "^2.8.7",
     "debug": "^3.2.6",
     "moment": "^2.22.2",
-    "moment-timezone": "^0.5.21",
-    "mongoose": "^5.3.5",
+    "moment-timezone": "^0.5.23",
+    "mongoose": "^5.3.7",
     "redis": "^2.8.0",
     "uniqid": "^5.0.3"
   },
@@ -43,7 +43,7 @@
     "rimraf": "^2.6.2",
     "sinon": "^4.5.0",
     "sinon-mongoose": "^2.2.1",
-    "snyk": "^1.104.1",
+    "snyk": "^1.105.0",
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
     "tslint-microsoft-contrib": "^5.2.1",
