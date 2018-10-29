@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Chevre Domain Library for Node.js Source: service/transaction/reserve.js</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.cosmo.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">Chevre Domain Library for Node.js</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="MongoRepository.html">MongoRepository</a></li><li><a href="RedisRepository.html">RedisRepository</a></li><li><a href="Repository.html">Repository</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#abort">abort</a></li><li><a href="global.html#action_1">action_1</a></li><li><a href="global.html#aggregateScreeningEvents">aggregateScreeningEvents</a></li><li><a href="global.html#AggregationService">AggregationService</a></li><li><a href="global.html#call">call</a></li><li><a href="global.html#cancel">cancel</a></li><li><a href="global.html#cancelPendingReservation">cancelPendingReservation</a></li><li><a href="global.html#cancelReservation">cancelReservation</a></li><li><a href="global.html#confirm">confirm</a></li><li><a href="global.html#confirmReservation">confirmReservation</a></li><li><a href="global.html#createDebug">createDebug</a></li><li><a href="global.html#default">default</a></li><li><a href="global.html#execute">execute</a></li><li><a href="global.html#executeByName">executeByName</a></li><li><a href="global.html#exportTasks">exportTasks</a></li><li><a href="global.html#exportTasksById">exportTasksById</a></li><li><a href="global.html#mongoose">mongoose</a></li><li><a href="global.html#redis">redis</a></li><li><a href="global.html#retry">retry</a></li><li><a href="global.html#schema">schema</a></li><li><a href="global.html#searchScreeningEventTicketOffers">searchScreeningEventTicketOffers</a></li><li><a href="global.html#sortOrder4executionOfTasks">sortOrder4executionOfTasks</a></li><li><a href="global.html#start">start</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			
+
+		<h1 class="page-title">Source: service/transaction/reserve.js</h1>
+    
+<section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript linenums">"use strict";
+var __awaiter = (this &amp;&amp; this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * 予約取引サービス
+ */
+const createDebug = require("debug");
+const factory = require("../../factory");
+const OfferService = require("../offer");
+const ReserveService = require("../reserve");
+const debug = createDebug('chevre-domain:service');
+/**
+ * 取引開始
+ */
+// tslint:disable-next-line:max-func-body-length
+function start(params) {
+    // tslint:disable-next-line:max-func-body-length
+    return (repos) => __awaiter(this, void 0, void 0, function* () {
+        debug('starting transaction...', params);
+        const now = new Date();
+        // イベント存在確認
+        const screeningEvent = yield repos.event.findById({
+            typeOf: factory.eventType.ScreeningEvent,
+            id: params.object.event.id
+        });
+        // チケット存在確認
+        const ticketOffers = yield OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
+        const ticketTypes = yield repos.ticketType.findByTicketGroupId({ ticketGroupId: screeningEvent.ticketTypeGroup });
+        debug('available ticket type:', ticketTypes);
+        // 予約番号発行
+        const reservationNumber = yield repos.reservationNumber.publish({
+            reserveDate: now,
+            sellerBranchCode: screeningEvent.superEvent.location.branchCode
+        });
+        // 取引ファクトリーで新しい進行中取引オブジェクトを作成
+        const tickets = params.object.acceptedOffer.map((offer) => {
+            const ticketOffer = ticketOffers.find((t) => t.id === offer.id);
+            if (ticketOffer === undefined) {
+                throw new factory.errors.NotFound('Ticket Offer');
+            }
+            const totalPrice = ticketOffer.priceSpecification.priceComponent.reduce((a, b) => a + b.price, 0);
+            let ticketType = ticketTypes.find((t) => t.id === offer.id);
+            if (ticketType === undefined) {
+                ticketType = {
+                    id: ticketOffer.id,
+                    name: ticketOffer.name,
+                    description: ticketOffer.description,
+                    notes: { ja: '', en: '' },
+                    price: totalPrice,
+                    availability: factory.itemAvailability.InStock
+                };
+            }
+            return {
+                typeOf: 'Ticket',
+                dateIssued: now,
+                issuedBy: {
+                    typeOf: screeningEvent.location.typeOf,
+                    name: screeningEvent.location.name.ja
+                },
+                totalPrice: totalPrice,
+                priceCurrency: factory.priceCurrency.JPY,
+                ticketedSeat: offer.ticketedSeat,
+                underName: {
+                    typeOf: params.agent.typeOf,
+                    name: params.agent.name
+                },
+                ticketType: ticketType
+            };
+        });
+        // 仮予約作成
+        const reservations = yield Promise.all(tickets.map((ticket, index) => __awaiter(this, void 0, void 0, function* () {
+            return createReservation({
+                id: `${reservationNumber}-${index}`,
+                reserveDate: now,
+                agent: params.agent,
+                reservationNumber: reservationNumber,
+                screeningEvent: screeningEvent,
+                reservedTicket: ticket
+            });
+        })));
+        const startParams = {
+            typeOf: factory.transactionType.Reserve,
+            agent: params.agent,
+            object: {
+                clientUser: params.object.clientUser,
+                event: screeningEvent,
+                reservations: reservations,
+                notes: params.object.notes
+            },
+            expires: params.expires
+        };
+        // 取引作成
+        let transaction;
+        try {
+            transaction = yield repos.transaction.start(startParams);
+        }
+        catch (error) {
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore next */
+            if (error.name === 'MongoError') {
+                // no op
+            }
+            throw error;
+        }
+        // 座席ロック
+        yield repos.eventAvailability.lock({
+            eventId: screeningEvent.id,
+            offers: tickets.map((ticket) => {
+                return {
+                    seatSection: ticket.ticketedSeat.seatSection,
+                    seatNumber: ticket.ticketedSeat.seatNumber
+                };
+            }),
+            expires: screeningEvent.endDate,
+            holder: transaction.id
+        });
+        // 予約作成
+        yield Promise.all(reservations.map((r) => __awaiter(this, void 0, void 0, function* () {
+            yield repos.reservation.reservationModel.create(Object.assign({}, r, { _id: r.id }));
+        })));
+        return transaction;
+    });
+}
+exports.start = start;
+function createReservation(params) {
+    return {
+        typeOf: factory.reservationType.EventReservation,
+        id: params.id,
+        additionalTicketText: params.reservedTicket.ticketType.name.ja,
+        modifiedTime: params.reserveDate,
+        numSeats: 1,
+        price: params.reservedTicket.totalPrice,
+        priceCurrency: factory.priceCurrency.JPY,
+        reservationFor: params.screeningEvent,
+        reservationNumber: params.reservationNumber,
+        reservationStatus: factory.reservationStatusType.ReservationPending,
+        reservedTicket: params.reservedTicket,
+        underName: params.agent
+    };
+}
+/**
+ * 取引確定
+ */
+function confirm(params) {
+    return (repos) => __awaiter(this, void 0, void 0, function* () {
+        debug(`confirming reserve transaction ${params.transactionId}...`);
+        // 取引存在確認
+        const transaction = yield repos.transaction.findById({
+            typeOf: factory.transactionType.Reserve,
+            id: params.transactionId
+        });
+        // 予約アクション属性作成
+        const reserveActionAttributes = transaction.object.reservations.map((r) => {
+            if (params.issuedBy !== undefined) {
+                r.reservedTicket.issuedBy = params.issuedBy;
+            }
+            // 予約者の指定があれば上書き
+            if (params.underName !== undefined) {
+                r.underName = params.underName;
+                r.reservedTicket.underName = params.underName;
+            }
+            return {
+                typeOf: factory.actionType.ReserveAction,
+                description: transaction.object.notes,
+                result: {},
+                object: r,
+                agent: transaction.agent,
+                purpose: {
+                    typeOf: transaction.typeOf,
+                    id: transaction.id
+                }
+            };
+        });
+        const potentialActions = {
+            reserve: reserveActionAttributes
+        };
+        // 取引確定
+        const result = {};
+        yield repos.transaction.confirm({
+            typeOf: factory.transactionType.Reserve,
+            id: transaction.id,
+            result: result,
+            potentialActions: potentialActions
+        });
+    });
+}
+exports.confirm = confirm;
+/**
+ * 取引中止
+ */
+function cancel(params) {
+    return (repos) => __awaiter(this, void 0, void 0, function* () {
+        // まず取引状態変更
+        const transaction = yield repos.transaction.cancel({
+            typeOf: factory.transactionType.Reserve,
+            id: params.transactionId
+        });
+        // 本来非同期でタスクが実行されるが、同期的に仮予約取消が実行されていないと、サービス利用側が困る可能性があるので、
+        // 一応同期的にもcancelPendingReservationを実行しておく
+        try {
+            const actionAttributes = transaction.object.reservations.map((r) => {
+                return {
+                    typeOf: factory.actionType.CancelAction,
+                    purpose: {
+                        typeOf: transaction.typeOf,
+                        id: transaction.id
+                    },
+                    agent: transaction.agent,
+                    object: r
+                };
+            });
+            yield ReserveService.cancelPendingReservation(actionAttributes)(repos);
+        }
+        catch (error) {
+            // no op
+        }
+    });
+}
+exports.cancel = cancel;
+/**
+ * ひとつの取引のタスクをエクスポートする
+ */
+function exportTasks(status) {
+    return (repos) => __awaiter(this, void 0, void 0, function* () {
+        const transaction = yield repos.transaction.startExportTasks({
+            typeOf: factory.transactionType.Reserve,
+            status: status
+        });
+        if (transaction === null) {
+            return;
+        }
+        // 失敗してもここでは戻さない(RUNNINGのまま待機)
+        yield exportTasksById(transaction.id)(repos);
+        yield repos.transaction.setTasksExportedById({ id: transaction.id });
+    });
+}
+exports.exportTasks = exportTasks;
+/**
+ * ID指定で取引のタスク出力
+ */
+function exportTasksById(transactionId) {
+    return (repos) => __awaiter(this, void 0, void 0, function* () {
+        const transaction = yield repos.transaction.findById({
+            typeOf: factory.transactionType.Reserve,
+            id: transactionId
+        });
+        const potentialActions = transaction.potentialActions;
+        const taskAttributes = [];
+        switch (transaction.status) {
+            case factory.transactionStatusType.Confirmed:
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if (potentialActions !== undefined) {
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (potentialActions.reserve !== undefined) {
+                        const reserveTask = {
+                            name: factory.taskName.Reserve,
+                            status: factory.taskStatus.Ready,
+                            runsAt: new Date(),
+                            remainingNumberOfTries: 10,
+                            lastTriedAt: null,
+                            numberOfTried: 0,
+                            executionResults: [],
+                            data: {
+                                actionAttributes: potentialActions.reserve
+                            }
+                        };
+                        taskAttributes.push(reserveTask);
+                    }
+                }
+                break;
+            case factory.transactionStatusType.Canceled:
+            case factory.transactionStatusType.Expired:
+                const actionAttributes = transaction.object.reservations.map((r) => {
+                    return {
+                        typeOf: factory.actionType.CancelAction,
+                        purpose: {
+                            typeOf: transaction.typeOf,
+                            id: transaction.id
+                        },
+                        agent: transaction.agent,
+                        object: r
+                    };
+                });
+                const cancelPendingReservationTask = {
+                    name: factory.taskName.CancelPendingReservation,
+                    status: factory.taskStatus.Ready,
+                    runsAt: new Date(),
+                    remainingNumberOfTries: 10,
+                    lastTriedAt: null,
+                    numberOfTried: 0,
+                    executionResults: [],
+                    data: {
+                        actionAttributes: actionAttributes
+                    }
+                };
+                taskAttributes.push(cancelPendingReservationTask);
+                break;
+            default:
+                throw new factory.errors.NotImplemented(`Transaction status "${transaction.status}" not implemented.`);
+        }
+        debug('taskAttributes prepared', taskAttributes);
+        return Promise.all(taskAttributes.map((a) => __awaiter(this, void 0, void 0, function* () { return repos.task.save(a); })));
+    });
+}
+exports.exportTasksById = exportTasksById;
+</pre>
+    </article>
+</section>
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
+	
+		on Mon Oct 29th 2018
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>
