@@ -1,4 +1,5 @@
 import { mvtk } from '@movieticket/reserve-api-abstract-client';
+import * as moment from 'moment';
 
 import { MongoRepository as EventRepo } from '../repo/event';
 import { MongoRepository as PriceSpecificationRepo } from '../repo/priceSpecification';
@@ -74,6 +75,25 @@ export function searchScreeningEventTicketOffers(params: {
                 []
             ).filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
 
+        // Defaultオファーをセット
+        let offers: factory.event.screeningEvent.IOffer = {
+            typeOf: 'Offer',
+            priceCurrency: factory.priceCurrency.JPY,
+            availabilityEnds: moment(event.endDate).toDate(),
+            availabilityStarts: moment(event.endDate).toDate(),
+            validFrom: moment(event.endDate).toDate(),
+            validThrough: moment(event.endDate).toDate(),
+            eligibleQuantity: {
+                value: 4,
+                unitCode: factory.unitCode.C62,
+                typeOf: 'QuantitativeValue'
+            }
+        };
+        // オファー設定があれば上書きする
+        if (event.offers !== undefined && event.offers !== null) {
+            offers = event.offers;
+        }
+
         // ムビチケ券種区分ごとにムビチケオファーを作成
         const movieTicketTypeCodes = [...new Set(movieTicketTypeChargeSpecs.map((s) => s.appliesToMovieTicketType))];
         const movieTicketOffers = movieTicketTypeCodes.map((movieTicketTypeCode) => {
@@ -124,15 +144,15 @@ export function searchScreeningEventTicketOffers(params: {
                 priceCurrency: factory.priceCurrency.JPY,
                 priceSpecification: compoundPriceSpecification,
                 availability: factory.itemAvailability.InStock,
-                availabilityEnds: event.offers.availabilityEnds,
-                availabilityStarts: event.offers.availabilityStarts,
-                eligibleQuantity: event.offers.eligibleQuantity,
-                validFrom: event.offers.validFrom,
-                validThrough: event.offers.validThrough
+                availabilityEnds: offers.availabilityEnds,
+                availabilityStarts: offers.availabilityStarts,
+                eligibleQuantity: offers.eligibleQuantity,
+                validFrom: offers.validFrom,
+                validThrough: offers.validThrough
             };
         });
 
-        const offers = ticketTypes.map((ticketType) => {
+        const ticketTypeOffers = ticketTypes.map((ticketType) => {
             // イベントに関係のある価格仕様に絞り、ひとつの複合価格仕様としてまとめる
             const unitPriceSpecification: IUnitPriceSpecification = {
                 typeOf: factory.priceSpecificationType.UnitPriceSpecification,
@@ -167,14 +187,14 @@ export function searchScreeningEventTicketOffers(params: {
                 priceCurrency: factory.priceCurrency.JPY,
                 priceSpecification: compoundPriceSpecification,
                 availability: ticketType.availability,
-                availabilityEnds: event.offers.availabilityEnds,
-                availabilityStarts: event.offers.availabilityStarts,
-                eligibleQuantity: event.offers.eligibleQuantity,
-                validFrom: event.offers.validFrom,
-                validThrough: event.offers.validThrough
+                availabilityEnds: offers.availabilityEnds,
+                availabilityStarts: offers.availabilityStarts,
+                eligibleQuantity: offers.eligibleQuantity,
+                validFrom: offers.validFrom,
+                validThrough: offers.validThrough
             };
         });
 
-        return [...offers, ...movieTicketOffers];
+        return [...ticketTypeOffers, ...movieTicketOffers];
     };
 }
