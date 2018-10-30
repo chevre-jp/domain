@@ -67,7 +67,9 @@ const schema = new mongoose.Schema(
             required: true
         },
         reservedTicket: reservedTicketSchema,
-        underName: underNameSchema
+        underName: underNameSchema,
+        checkedIn: { type: Boolean, default: false },
+        attended: { type: Boolean, default: false }
     },
     {
         collection: 'reservations',
@@ -83,6 +85,27 @@ const schema = new mongoose.Schema(
         toJSON: { getters: true },
         toObject: { getters: true }
     }
+);
+
+schema.index(
+    { typeOf: 1 },
+    { name: 'searchByTypeOf' }
+);
+schema.index(
+    { reservationNumber: 1 },
+    { name: 'searchByReservationNumber' }
+);
+schema.index(
+    { reservationStatus: 1 },
+    { name: 'searchByReservationStatus' }
+);
+schema.index(
+    { checkedIn: 1 },
+    { name: 'searchByCheckedIn' }
+);
+schema.index(
+    { attended: 1 },
+    { name: 'searchByAttended' }
 );
 
 export default mongoose.model('Reservation', schema).on(

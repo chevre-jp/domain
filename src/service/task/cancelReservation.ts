@@ -2,6 +2,7 @@ import * as factory from '../../factory';
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { RedisRepository as ScreeningEventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
+import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
 import * as ReserveService from '../reserve';
@@ -20,11 +21,14 @@ export function call(data: factory.task.cancelReservation.IData): IOperation<voi
         }
         const actionRepo = new ActionRepo(settings.connection);
         const reservationRepo = new ReservationRepo(settings.connection);
+        const taskRepo = new TaskRepo(settings.connection);
         const transactionRepo = new TransactionRepo(settings.connection);
         const eventAvailabilityRepo = new ScreeningEventAvailabilityRepo(settings.redisClient);
+
         await ReserveService.cancelReservation(data.actionAttributes)({
             action: actionRepo,
             reservation: reservationRepo,
+            task: taskRepo,
             transaction: transactionRepo,
             eventAvailability: eventAvailabilityRepo
         });

@@ -197,7 +197,9 @@ function createReservation(params: {
         reservationNumber: params.reservationNumber,
         reservationStatus: factory.reservationStatusType.ReservationPending,
         reservedTicket: params.reservedTicket,
-        underName: params.agent
+        underName: params.agent,
+        checkedIn: false,
+        attended: false
     };
 }
 

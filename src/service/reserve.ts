@@ -7,6 +7,7 @@ import * as factory from '../factory';
 import { MongoRepository as ActionRepo } from '../repo/action';
 import { RedisRepository as ScreeningEventAvailabilityRepo } from '../repo/itemAvailability/screeningEvent';
 import { MongoRepository as ReservationRepo } from '../repo/reservation';
+import { MongoRepository as TaskRepo } from '../repo/task';
 import { MongoRepository as TransactionRepo } from '../repo/transaction';
 
 const debug = createDebug('chevre-domain:service');
@@ -18,6 +19,7 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
     return async (repos: {
         action: ActionRepo;
         reservation: ReservationRepo;
+        task: TaskRepo;
     }) => {
         await Promise.all(actionAttributesList.map(async (actionAttributes) => {
             // アクション開始
@@ -42,8 +44,21 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
             const actionResult: factory.action.reserve.IResult = {};
             await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
         }));
+
+        const aggregateTask: factory.task.aggregateScreeningEvent.IAttributes = {
+            name: factory.taskName.AggregateScreeningEvent,
+            status: factory.taskStatus.Ready,
+            runsAt: new Date(), // なるはやで実行
+            remainingNumberOfTries: 10,
+            lastTriedAt: null,
+            numberOfTried: 0,
+            executionResults: [],
+            data: actionAttributesList[0].object.reservationFor
+        };
+        await repos.task.save(aggregateTask);
     };
 }
+
 /**
  * 進行中の予約をキャンセルする
  */
@@ -99,6 +114,7 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
         }));
     };
 }
+
 /**
  * 予約をキャンセルする
  */
@@ -106,6 +122,7 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
     return async (repos: {
         action: ActionRepo;
         reservation: ReservationRepo;
+        task: TaskRepo;
         transaction: TransactionRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
     }) => {
@@ -150,5 +167,17 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
             const actionResult: factory.action.reserve.IResult = {};
             await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
         }));
+
+        const aggregateTask: factory.task.aggregateScreeningEvent.IAttributes = {
+            name: factory.taskName.AggregateScreeningEvent,
+            status: factory.taskStatus.Ready,
+            runsAt: new Date(), // なるはやで実行
+            remainingNumberOfTries: 10,
+            lastTriedAt: null,
+            numberOfTried: 0,
+            executionResults: [],
+            data: actionAttributesList[0].object.reservationFor
+        };
+        await repos.task.save(aggregateTask);
     };
 }

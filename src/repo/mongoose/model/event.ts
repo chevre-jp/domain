@@ -85,7 +85,11 @@ const schema = new mongoose.Schema(
         kanaName: String,
         alternativeHeadline: String,
         ticketTypeGroup: String,
-        offers: offersSchema
+        offers: offersSchema,
+        maximumAttendeeCapacity: { type: Number, default: 0 },
+        remainingAttendeeCapacity: { type: Number, default: 0 },
+        checkInCount: { type: Number, default: 0 },
+        attendeeCount: { type: Number, default: 0 }
     },
     {
         collection: 'events',

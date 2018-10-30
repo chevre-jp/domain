@@ -12,6 +12,7 @@ export class MongoRepository {
     constructor(connection: Connection) {
         this.reservationModel = connection.model(reservationModel.modelName);
     }
+
     public static CREATE_EVENT_RESERVATION_MONGO_CONDITIONS(params: factory.reservation.event.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [
@@ -65,6 +66,7 @@ export class MongoRepository {
 
         return andConditions;
     }
+
     public async countScreeningEventReservations(
         params: factory.reservation.event.ISearchConditions
     ): Promise<number> {
@@ -75,6 +77,7 @@ export class MongoRepository {
         ).setOptions({ maxTimeMS: 10000 })
             .exec();
     }
+
     /**
      * 上映イベント予約を検索する
      */
@@ -103,6 +106,7 @@ export class MongoRepository {
 
         return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
     }
+
     /**
      * IDで上映イベント予約を検索する
      */
@@ -123,6 +127,10 @@ export class MongoRepository {
 
         return doc.toObject();
     }
+
+    /**
+     * 予約確定
+     */
     public async confirm(params: factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent>) {
         await this.reservationModel.findByIdAndUpdate(
             params.id,
@@ -137,11 +145,49 @@ export class MongoRepository {
             }
         });
     }
+
+    /**
+     * 予約取消
+     */
     public async cancel(params: { id: string }) {
         await this.reservationModel.findByIdAndUpdate(
             params.id,
             {
                 reservationStatus: factory.reservationStatusType.ReservationCancelled,
+                modifiedTime: new Date()
+            }
+        ).exec().then((doc) => {
+            if (doc === null) {
+                throw new factory.errors.NotFound('Reservation');
+            }
+        });
+    }
+
+    /**
+     * 発券する
+     */
+    public async checkIn(params: { id: string }) {
+        await this.reservationModel.findByIdAndUpdate(
+            params.id,
+            {
+                checkedIn: true,
+                modifiedTime: new Date()
+            }
+        ).exec().then((doc) => {
+            if (doc === null) {
+                throw new factory.errors.NotFound('Reservation');
+            }
+        });
+    }
+
+    /**
+     * 入場する
+     */
+    public async attend(params: { id: string }) {
+        await this.reservationModel.findByIdAndUpdate(
+            params.id,
+            {
+                attended: true,
                 modifiedTime: new Date()
             }
         ).exec().then((doc) => {
