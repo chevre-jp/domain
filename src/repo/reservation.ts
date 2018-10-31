@@ -166,34 +166,38 @@ export class MongoRepository {
     /**
      * 発券する
      */
-    public async checkIn(params: { id: string }) {
-        await this.reservationModel.findByIdAndUpdate(
+    public async checkIn(params: { id: string }): Promise<factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent>> {
+        const doc = await this.reservationModel.findByIdAndUpdate(
             params.id,
             {
                 checkedIn: true,
                 modifiedTime: new Date()
-            }
-        ).exec().then((doc) => {
-            if (doc === null) {
-                throw new factory.errors.NotFound('Reservation');
-            }
-        });
+            },
+            { new: true }
+        ).exec();
+        if (doc === null) {
+            throw new factory.errors.NotFound('Reservation');
+        }
+
+        return doc.toObject();
     }
 
     /**
      * 入場する
      */
-    public async attend(params: { id: string }) {
-        await this.reservationModel.findByIdAndUpdate(
+    public async attend(params: { id: string }): Promise<factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent>> {
+        const doc = await this.reservationModel.findByIdAndUpdate(
             params.id,
             {
                 attended: true,
                 modifiedTime: new Date()
-            }
-        ).exec().then((doc) => {
-            if (doc === null) {
-                throw new factory.errors.NotFound('Reservation');
-            }
-        });
+            },
+            { new: true }
+        ).exec();
+        if (doc === null) {
+            throw new factory.errors.NotFound('Reservation');
+        }
+
+        return doc.toObject();
     }
 }
