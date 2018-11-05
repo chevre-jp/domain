@@ -11,6 +11,15 @@ const copyrightHolderSchema = new mongoose.Schema(
     }
 );
 
+const offersSchema = new mongoose.Schema(
+    {},
+    {
+        id: false,
+        _id: false,
+        strict: false
+    }
+);
+
 /**
  * 作品スキーマ
  */
@@ -29,7 +38,8 @@ const schema = new mongoose.Schema(
         license: String,
         thumbnailUrl: String,
         duration: String,
-        contentRating: String
+        contentRating: String,
+        offers: offersSchema
     },
     {
         collection: 'creativeWorks',

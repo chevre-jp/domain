@@ -111,11 +111,13 @@ export function searchScreeningEventTicketOffers(params: {
                     priceCurrency: factory.priceCurrency.JPY,
                     name: {
                         ja: `ムビチケ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
-                        en: 'Movie Ticket'
+                        en: 'Movie Ticket',
+                        kr: 'Movie Ticket'
                     },
                     description: {
                         ja: `ムビチケ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
-                        en: 'Movie Ticket'
+                        en: 'Movie Ticket',
+                        kr: 'Movie Ticket'
                     },
                     valueAddedTaxIncluded: true,
                     referenceQuantity: {
@@ -141,11 +143,13 @@ export function searchScreeningEventTicketOffers(params: {
                     id: `Offer-by-movieticket-${movieTicketTypeCode}`,
                     name: {
                         ja: `ムビチケ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
-                        en: 'Movie Ticket'
+                        en: 'Movie Ticket',
+                        kr: 'Movie Ticket'
                     },
                     description: {
                         ja: `ムビチケ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
-                        en: 'Movie Ticket'
+                        en: 'Movie Ticket',
+                        kr: 'Movie Ticket'
                     },
                     valueAddedTaxIncluded: true,
                     priceCurrency: factory.priceCurrency.JPY,

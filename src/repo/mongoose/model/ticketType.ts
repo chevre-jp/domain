@@ -13,8 +13,20 @@ const schema = new mongoose.Schema(
         name: multilingualString,
         description: multilingualString,
         notes: multilingualString,
+        acceptedPaymentMethod: [String],
+        availability: String,
+        availabilityEnds: Date,
+        availabilityStarts: Date,
+        availableAtOrFrom: mongoose.SchemaTypes.Mixed,
         price: Number,
-        availability: String
+        priceCurrency: String,
+        eligibleCustomerType: mongoose.SchemaTypes.Mixed,
+        eligibleDuration: mongoose.SchemaTypes.Mixed,
+        eligibleQuantity: mongoose.SchemaTypes.Mixed,
+        eligibleRegion: mongoose.SchemaTypes.Mixed,
+        priceSpecification: mongoose.SchemaTypes.Mixed,
+        validFrom: Date,
+        validThrough: Date
     },
     {
         collection: 'ticketTypes',

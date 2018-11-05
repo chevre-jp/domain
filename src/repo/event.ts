@@ -156,6 +156,16 @@ export class MongoRepository {
                 });
             }
         }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (Array.isArray(params.ticketTypeGroups)) {
+            andConditions.push({
+                ticketTypeGroup: {
+                    $exists: true,
+                    $in: params.ticketTypeGroups
+                }
+            });
+        }
 
         return andConditions;
     }
