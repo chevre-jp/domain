@@ -96,7 +96,7 @@ export function start(
                     id: ticketOffer.id,
                     name: ticketOffer.name,
                     description: ticketOffer.description,
-                    notes: { ja: '', en: '' },
+                    alternateName: ticketOffer.name,
                     price: totalPrice,
                     priceCurrency: factory.priceCurrency.JPY,
                     availability: factory.itemAvailability.InStock,
