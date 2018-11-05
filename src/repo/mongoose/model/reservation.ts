@@ -107,6 +107,55 @@ schema.index(
     { attended: 1 },
     { name: 'searchByAttended' }
 );
+schema.index(
+    { modifiedTime: 1 },
+    { name: 'searchByModifiedTime' }
+);
+schema.index(
+    { 'reservationFor.typeOf': 1 },
+    {
+        name: 'searchByReservationForTypeOf',
+        partialFilterExpression: {
+            'reservationFor.typeOf': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'reservationFor.id': 1 },
+    {
+        name: 'searchByReservationForId',
+        partialFilterExpression: {
+            'reservationFor.id': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'reservationFor.startDate': 1 },
+    {
+        name: 'searchByReservationForStartDate',
+        partialFilterExpression: {
+            'reservationFor.startDate': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'reservationFor.endDate': 1 },
+    {
+        name: 'searchByReservationForEndDate',
+        partialFilterExpression: {
+            'reservationFor.endDate': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'reservationFor.superEvent.id': 1 },
+    {
+        name: 'searchByReservationForSuperEventId',
+        partialFilterExpression: {
+            'reservationFor.superEvent.id': { $exists: true }
+        }
+    }
+);
 
 export default mongoose.model('Reservation', schema).on(
     'index',

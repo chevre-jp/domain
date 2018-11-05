@@ -13,6 +13,7 @@ export class MongoRepository {
         this.reservationModel = connection.model(reservationModel.modelName);
     }
 
+    // tslint:disable-next-line:max-func-body-length
     public static CREATE_EVENT_RESERVATION_MONGO_CONDITIONS(params: factory.reservation.event.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [
@@ -55,12 +56,91 @@ export class MongoRepository {
         if (params.reservationFor !== undefined) {
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
-            if (params.reservationFor.typeOf !== undefined
-                && params.reservationFor.id !== undefined) {
+            if (params.reservationFor.typeOf !== undefined) {
                 andConditions.push(
-                    { 'reservationFor.typeOf': params.reservationFor.typeOf },
-                    { 'reservationFor.id': params.reservationFor.id }
+                    {
+                        'reservationFor.typeOf': {
+                            $exists: true,
+                            $eq: params.reservationFor.typeOf
+                        }
+                    }
                 );
+            }
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.reservationFor.id !== undefined) {
+                andConditions.push(
+                    {
+                        'reservationFor.id': {
+                            $exists: true,
+                            $eq: params.reservationFor.id
+                        }
+                    }
+                );
+            }
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (Array.isArray(params.reservationFor.ids)) {
+                andConditions.push(
+                    {
+                        'reservationFor.id': {
+                            $exists: true,
+                            $in: params.reservationFor.ids
+                        }
+                    }
+                );
+            }
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.reservationFor.startFrom instanceof Date) {
+                andConditions.push(
+                    {
+                        'reservationFor.startDate': {
+                            $exists: true,
+                            $gte: params.reservationFor.startFrom
+                        }
+                    }
+                );
+            }
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.reservationFor.startThrough instanceof Date) {
+                andConditions.push(
+                    {
+                        'reservationFor.startDate': {
+                            $exists: true,
+                            $lt: params.reservationFor.startThrough
+                        }
+                    }
+                );
+            }
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.reservationFor.superEvent !== undefined) {
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if (params.reservationFor.superEvent.id !== undefined) {
+                    andConditions.push(
+                        {
+                            'reservationFor.superEvent.id': {
+                                $exists: true,
+                                $eq: params.reservationFor.superEvent.id
+                            }
+                        }
+                    );
+                }
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if (Array.isArray(params.reservationFor.superEvent.ids)) {
+                    andConditions.push(
+                        {
+                            'reservationFor.superEvent.id': {
+                                $exists: true,
+                                $in: params.reservationFor.superEvent.ids
+                            }
+                        }
+                    );
+                }
             }
         }
 

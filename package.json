@@ -13,7 +13,7 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "^1.0.0-alpha.29",
+    "@chevre/factory": "^1.0.0-alpha.30",
     "@movieticket/reserve-api-abstract-client": "^1.0.0",
     "@types/mongoose": "^5.3.1",
     "@types/redis": "^2.8.7",
