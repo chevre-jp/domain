@@ -70,6 +70,7 @@ const schema = new mongoose.Schema(
         },
         identifier: String,
         name: MultilingualStringSchemaType,
+        alternateName: MultilingualStringSchemaType,
         description: MultilingualStringSchemaType,
         doorTime: Date,
         duration: String,
@@ -177,6 +178,17 @@ schema.index(
             'offers.validFrom': { $exists: true }
         },
         name: 'searchByOffersValidFrom'
+    }
+);
+schema.index(
+    {
+        ticketTypeGroup: 1
+    },
+    {
+        partialFilterExpression: {
+            ticketTypeGroup: { $exists: true }
+        },
+        name: 'searchByTicketTypeGroup'
     }
 );
 

@@ -31,6 +31,7 @@ const schema = new mongoose.Schema(
         },
         identifier: String,
         name: String,
+        alternateName: String,
         description: String,
         copyrightHolder: copyrightHolderSchema,
         copyrightYear: Number,

@@ -13,14 +13,14 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "^1.0.0-alpha.30",
+    "@chevre/factory": "^1.0.0-alpha.31",
     "@movieticket/reserve-api-abstract-client": "^1.0.0",
     "@types/mongoose": "^5.3.1",
     "@types/redis": "^2.8.7",
     "debug": "^3.2.6",
     "moment": "^2.22.2",
     "moment-timezone": "^0.5.23",
-    "mongoose": "^5.3.9",
+    "mongoose": "^5.3.10",
     "redis": "^2.8.0",
     "uniqid": "^5.0.3"
   },

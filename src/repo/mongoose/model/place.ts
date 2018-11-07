@@ -51,6 +51,7 @@ const schema = new mongoose.Schema(
             required: true
         },
         name: MultilingualStringSchemaType,
+        alternateName: MultilingualStringSchemaType,
         description: MultilingualStringSchemaType,
         address: MultilingualStringSchemaType,
         branchCode: String,
