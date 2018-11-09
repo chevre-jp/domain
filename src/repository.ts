@@ -3,7 +3,6 @@
  * リポジトリー
  */
 import { MongoRepository as ActionRepo } from './repo/action';
-import { RedisRepository as ScreeningEventAggregationRepo } from './repo/aggregation/screeningEvent';
 import { MongoRepository as CreativeWorkRepo } from './repo/creativeWork';
 import { MongoRepository as EventRepo } from './repo/event';
 import { RedisRepository as ScreeningEventItemAvailabilityRepo } from './repo/itemAvailability/screeningEvent';
@@ -26,7 +25,6 @@ export class Task extends TaskRepo { }
 export class TicketType extends TicketTypeRepo { }
 export class Transaction extends TransactionRepo { }
 export namespace aggregation {
-    export class ScreeningEvent extends ScreeningEventAggregationRepo { }
 }
 export namespace itemAvailability {
     export class ScreeningEvent extends ScreeningEventItemAvailabilityRepo { }
