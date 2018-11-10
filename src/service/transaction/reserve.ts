@@ -104,6 +104,15 @@ export function start(
                         typeOf: 'QuantitativeValue',
                         value: 1,
                         unitCode: factory.unitCode.C62
+                    },
+                    accounting: {
+                        typeOf: 'Accounting',
+                        accountsReceivable: totalPrice,
+                        operatingRevenue: {
+                            typeOf: 'AccountTitle',
+                            identifier: '',
+                            name: ''
+                        }
                     }
                 };
             }

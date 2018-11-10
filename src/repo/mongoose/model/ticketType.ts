@@ -4,6 +4,15 @@ import multilingualString from '../schemaTypes/multilingualString';
 
 const safe = { j: true, w: 'majority', wtimeout: 10000 };
 
+const accountingSchema = new mongoose.Schema(
+    {},
+    {
+        id: false,
+        _id: false,
+        strict: false
+    }
+);
+
 /**
  * 券種スキーマ
  */
@@ -24,9 +33,11 @@ const schema = new mongoose.Schema(
         eligibleDuration: mongoose.SchemaTypes.Mixed,
         eligibleQuantity: mongoose.SchemaTypes.Mixed,
         eligibleRegion: mongoose.SchemaTypes.Mixed,
+        eligibleMovieTicketType: String,
         priceSpecification: mongoose.SchemaTypes.Mixed,
         validFrom: Date,
-        validThrough: Date
+        validThrough: Date,
+        accounting: accountingSchema
     },
     {
         collection: 'ticketTypes',

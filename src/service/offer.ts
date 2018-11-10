@@ -1,4 +1,3 @@
-import { mvtk } from '@movieticket/reserve-api-abstract-client';
 import * as moment from 'moment';
 
 import { MongoRepository as EventRepo } from '../repo/event';
@@ -21,7 +20,7 @@ type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     ticketType: TicketTypeRepo;
 }) => Promise<T>;
 
-const DEFAULT_ELIGIBLE_QUANTITY_VALUE = 4;
+const DEFAULT_ELIGIBLE_QUANTITY_VALUE = 1;
 
 /**
  * 上映イベントに対する券種オファーを検索する
@@ -61,6 +60,7 @@ export function searchScreeningEventTicketOffers(params: {
             priceComponent: { typeOf: factory.priceSpecificationType.MovieTicketTypeChargeSpecification }
         });
 
+        // イベントに関係のある価格仕様に絞り、ひとつの複合価格仕様としてまとめる
         const soundFormatChargeSpecifications =
             soundFormatCompoundPriceSpecifications.reduce<ISoundFormatChargeSpecification[]>(
                 (a, b) => [...a, ...b.priceComponent],
@@ -96,40 +96,72 @@ export function searchScreeningEventTicketOffers(params: {
             offers = event.offers;
         }
 
-        // ムビチケが決済方法として許可されていれば、ムビチケ券種区分ごとにムビチケオファーを作成
-        const movieTicketOffers: factory.event.screeningEvent.ITicketOffer[] = [];
+        // ムビチケが決済方法として許可されていれば、ムビチケオファーを作成
+        let movieTicketOffers: factory.event.screeningEvent.ITicketOffer[] = [];
         const movieTicketPaymentAccepted = event.superEvent.offers === undefined
             || event.superEvent.offers.acceptedPaymentMethod === undefined
             || event.superEvent.offers.acceptedPaymentMethod.indexOf(factory.paymentMethodType.MovieTicket) >= 0;
         if (movieTicketPaymentAccepted) {
-            const movieTicketTypeCodes = [...new Set(movieTicketTypeChargeSpecs.map((s) => s.appliesToMovieTicketType))];
-            movieTicketOffers.push(...movieTicketTypeCodes.map((movieTicketTypeCode) => {
-                const movieTicketType = mvtk.util.constants.TICKET_TYPE.find((ticketType) => ticketType.code === movieTicketTypeCode);
+            movieTicketOffers = ticketTypes
+                .filter((ticketType) => ticketType.eligibleMovieTicketType !== undefined)
+                .map((ticketType) => {
+                    const movieTicketType = <string>ticketType.eligibleMovieTicketType;
+                    const unitPriceSpecification: IUnitPriceSpecification = {
+                        typeOf: factory.priceSpecificationType.UnitPriceSpecification,
+                        price: ticketType.price,
+                        priceCurrency: factory.priceCurrency.JPY,
+                        name: ticketType.name,
+                        description: ticketType.description,
+                        valueAddedTaxIncluded: true,
+                        referenceQuantity: ticketType.eligibleQuantity
+                    };
+                    const mvtkSpecs = movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketType);
+                    const priceComponent = [
+                        unitPriceSpecification,
+                        ...mvtkSpecs
+                    ];
+                    const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
+                        typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
+                        priceCurrency: factory.priceCurrency.JPY,
+                        valueAddedTaxIncluded: true,
+                        priceComponent: priceComponent
+                    };
+
+                    return {
+                        typeOf: <factory.offerType>'Offer',
+                        id: ticketType.id,
+                        name: ticketType.name,
+                        description: ticketType.description,
+                        valueAddedTaxIncluded: true,
+                        priceCurrency: factory.priceCurrency.JPY,
+                        priceSpecification: compoundPriceSpecification,
+                        availability: factory.itemAvailability.InStock,
+                        availabilityEnds: offers.availabilityEnds,
+                        availabilityStarts: offers.availabilityStarts,
+                        eligibleQuantity: offers.eligibleQuantity,
+                        validFrom: offers.validFrom,
+                        validThrough: offers.validThrough
+                    };
+                });
+        }
+
+        // ムビチケ以外のオファーを作成
+        const ticketTypeOffers = ticketTypes
+            .filter((ticketType) => ticketType.eligibleMovieTicketType === undefined)
+            .map((ticketType) => {
                 const unitPriceSpecification: IUnitPriceSpecification = {
                     typeOf: factory.priceSpecificationType.UnitPriceSpecification,
-                    price: 0,
+                    price: ticketType.price,
                     priceCurrency: factory.priceCurrency.JPY,
-                    name: {
-                        ja: `ムビチケ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
-                        en: 'Movie Ticket',
-                        kr: 'Movie Ticket'
-                    },
-                    description: {
-                        ja: `ムビチケ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
-                        en: 'Movie Ticket',
-                        kr: 'Movie Ticket'
-                    },
+                    name: ticketType.name,
+                    description: ticketType.description,
                     valueAddedTaxIncluded: true,
-                    referenceQuantity: {
-                        typeOf: 'QuantitativeValue',
-                        unitCode: factory.unitCode.C62,
-                        value: 1
-                    }
+                    referenceQuantity: ticketType.eligibleQuantity
                 };
-                const mvtkSpecs = movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketTypeCode);
                 const priceComponent = [
                     unitPriceSpecification,
-                    ...mvtkSpecs
+                    ...videoFormatChargeSpecifications,
+                    ...soundFormatChargeSpecifications
                 ];
                 const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
                     typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
@@ -140,72 +172,19 @@ export function searchScreeningEventTicketOffers(params: {
 
                 return {
                     typeOf: <factory.offerType>'Offer',
-                    id: `Offer-by-movieticket-${movieTicketTypeCode}`,
-                    name: {
-                        ja: `ムビチケ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
-                        en: 'Movie Ticket',
-                        kr: 'Movie Ticket'
-                    },
-                    description: {
-                        ja: `ムビチケ${(movieTicketType !== undefined) ? movieTicketType.name : ''}`,
-                        en: 'Movie Ticket',
-                        kr: 'Movie Ticket'
-                    },
-                    valueAddedTaxIncluded: true,
+                    id: ticketType.id,
+                    name: ticketType.name,
+                    description: ticketType.description,
                     priceCurrency: factory.priceCurrency.JPY,
                     priceSpecification: compoundPriceSpecification,
-                    availability: factory.itemAvailability.InStock,
+                    availability: ticketType.availability,
                     availabilityEnds: offers.availabilityEnds,
                     availabilityStarts: offers.availabilityStarts,
                     eligibleQuantity: offers.eligibleQuantity,
                     validFrom: offers.validFrom,
                     validThrough: offers.validThrough
                 };
-            }));
-        }
-
-        const ticketTypeOffers = ticketTypes.map((ticketType) => {
-            // イベントに関係のある価格仕様に絞り、ひとつの複合価格仕様としてまとめる
-            const unitPriceSpecification: IUnitPriceSpecification = {
-                typeOf: factory.priceSpecificationType.UnitPriceSpecification,
-                price: ticketType.price,
-                priceCurrency: factory.priceCurrency.JPY,
-                name: ticketType.name,
-                description: ticketType.description,
-                valueAddedTaxIncluded: true,
-                referenceQuantity: {
-                    typeOf: 'QuantitativeValue',
-                    unitCode: factory.unitCode.C62,
-                    value: 1
-                }
-            };
-            const priceComponent = [
-                unitPriceSpecification,
-                ...videoFormatChargeSpecifications,
-                ...soundFormatChargeSpecifications
-            ];
-            const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
-                typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
-                priceCurrency: factory.priceCurrency.JPY,
-                valueAddedTaxIncluded: true,
-                priceComponent: priceComponent
-            };
-
-            return {
-                typeOf: <factory.offerType>'Offer',
-                id: ticketType.id,
-                name: ticketType.name,
-                description: ticketType.description,
-                priceCurrency: factory.priceCurrency.JPY,
-                priceSpecification: compoundPriceSpecification,
-                availability: ticketType.availability,
-                availabilityEnds: offers.availabilityEnds,
-                availabilityStarts: offers.availabilityStarts,
-                eligibleQuantity: offers.eligibleQuantity,
-                validFrom: offers.validFrom,
-                validThrough: offers.validThrough
-            };
-        });
+            });
 
         return [...ticketTypeOffers, ...movieTicketOffers];
     };

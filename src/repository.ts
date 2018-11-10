@@ -2,6 +2,7 @@
 /**
  * リポジトリー
  */
+import { MongoRepository as AccountTitleRepo } from './repo/accountTitle';
 import { MongoRepository as ActionRepo } from './repo/action';
 import { MongoRepository as CreativeWorkRepo } from './repo/creativeWork';
 import { MongoRepository as EventRepo } from './repo/event';
@@ -14,6 +15,7 @@ import { MongoRepository as TaskRepo } from './repo/task';
 import { MongoRepository as TicketTypeRepo } from './repo/ticketType';
 import { MongoRepository as TransactionRepo } from './repo/transaction';
 
+export class AccountTitle extends AccountTitleRepo { }
 export class Action extends ActionRepo { }
 export class CreativeWork extends CreativeWorkRepo { }
 export class Event extends EventRepo { }
