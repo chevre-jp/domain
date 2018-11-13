@@ -75,18 +75,16 @@ export function start(
 /**
  * 取引確定
  */
-export function confirm(params: {
-    transactionId: string;
-}): ITransactionOperation<void> {
+export function confirm(params: { id: string }): ITransactionOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        debug(`confirming reserve transaction ${params.transactionId}...`);
+        debug(`confirming reserve transaction ${params.id}...`);
 
         // 取引存在確認
         const transaction = await repos.transaction.findById({
             typeOf: factory.transactionType.CancelReservation,
-            id: params.transactionId
+            id: params.id
         });
         const reserveTransaction = transaction.object.transaction;
 
@@ -138,7 +136,7 @@ export function exportTasks(status: factory.transactionStatusType) {
         }
 
         // 失敗してもここでは戻さない(RUNNINGのまま待機)
-        await exportTasksById(transaction.id)(repos);
+        await exportTasksById(transaction)(repos);
 
         await repos.transaction.setTasksExportedById({ id: transaction.id });
     };
@@ -147,16 +145,14 @@ export function exportTasks(status: factory.transactionStatusType) {
 /**
  * ID指定で取引のタスク出力
  */
-export function exportTasksById(
-    transactionId: string
-): ITaskAndTransactionOperation<factory.task.ITask[]> {
+export function exportTasksById(params: { id: string }): ITaskAndTransactionOperation<factory.task.ITask[]> {
     return async (repos: {
         task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
         const transaction = await repos.transaction.findById({
             typeOf: factory.transactionType.CancelReservation,
-            id: transactionId
+            id: params.id
         });
         const potentialActions = transaction.potentialActions;
 

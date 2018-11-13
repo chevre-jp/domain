@@ -222,31 +222,34 @@ function createReservation(params: {
 /**
  * 取引確定
  */
-export function confirm(params: {
-    transactionId: string;
-    issuedBy?: factory.reservation.IUnderName;
-    underName?: factory.reservation.IUnderName;
-}): ITransactionOperation<void> {
+export function confirm(params: factory.transaction.reserve.IConfirmParams): ITransactionOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        debug(`confirming reserve transaction ${params.transactionId}...`);
+        debug(`confirming reserve transaction ${params.id}...`);
 
         // 取引存在確認
         const transaction = await repos.transaction.findById({
             typeOf: factory.transactionType.Reserve,
-            id: params.transactionId
+            id: params.id
         });
 
         // 予約アクション属性作成
-        const reserveActionAttributes: factory.action.reserve.IAttributes[] = transaction.object.reservations.map((r) => {
-            if (params.issuedBy !== undefined) {
-                r.reservedTicket.issuedBy = params.issuedBy;
-            }
-            // 予約者の指定があれば上書き
-            if (params.underName !== undefined) {
-                r.underName = params.underName;
-                r.reservedTicket.underName = params.underName;
+        const reserveActionAttributes: factory.action.reserve.IAttributes[] = transaction.object.reservations.map((reservation) => {
+            if (params.object !== undefined) {
+                // 予約属性の指定があれば上書き
+                const confirmingReservation = params.object.reservations.find((r) => r.id === reservation.id);
+                if (confirmingReservation !== undefined) {
+                    if (confirmingReservation.reservedTicket !== undefined) {
+                        if (confirmingReservation.reservedTicket.issuedBy !== undefined) {
+                            reservation.reservedTicket.issuedBy = confirmingReservation.reservedTicket.issuedBy;
+                        }
+                    }
+                    if (confirmingReservation.underName !== undefined) {
+                        reservation.underName = confirmingReservation.underName;
+                        reservation.reservedTicket.underName = confirmingReservation.underName;
+                    }
+                }
             }
 
             return {
@@ -254,7 +257,7 @@ export function confirm(params: {
                 description: transaction.object.notes,
                 result: {
                 },
-                object: r,
+                object: reservation,
                 agent: transaction.agent,
                 purpose: {
                     typeOf: transaction.typeOf,
@@ -280,9 +283,7 @@ export function confirm(params: {
 /**
  * 取引中止
  */
-export function cancel(params: {
-    transactionId: string;
-}): ICancelOperation<void> {
+export function cancel(params: { id: string }): ICancelOperation<void> {
     return async (repos: {
         action: ActionRepo;
         reservation: ReservationRepo;
@@ -292,7 +293,7 @@ export function cancel(params: {
         // まず取引状態変更
         const transaction = await repos.transaction.cancel({
             typeOf: factory.transactionType.Reserve,
-            id: params.transactionId
+            id: params.id
         });
 
         // 本来非同期でタスクが実行されるが、同期的に仮予約取消が実行されていないと、サービス利用側が困る可能性があるので、
@@ -333,7 +334,7 @@ export function exportTasks(status: factory.transactionStatusType) {
         }
 
         // 失敗してもここでは戻さない(RUNNINGのまま待機)
-        await exportTasksById(transaction.id)(repos);
+        await exportTasksById(transaction)(repos);
 
         await repos.transaction.setTasksExportedById({ id: transaction.id });
     };
@@ -342,16 +343,14 @@ export function exportTasks(status: factory.transactionStatusType) {
 /**
  * ID指定で取引のタスク出力
  */
-export function exportTasksById(
-    transactionId: string
-): ITaskAndTransactionOperation<factory.task.ITask[]> {
+export function exportTasksById(params: { id: string }): ITaskAndTransactionOperation<factory.task.ITask[]> {
     return async (repos: {
         task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
         const transaction = await repos.transaction.findById({
             typeOf: factory.transactionType.Reserve,
-            id: transactionId
+            id: params.id
         });
         const potentialActions = transaction.potentialActions;
 
