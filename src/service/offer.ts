@@ -1,5 +1,3 @@
-import * as moment from 'moment';
-
 import { MongoRepository as EventRepo } from '../repo/event';
 import { MongoRepository as PriceSpecificationRepo } from '../repo/priceSpecification';
 import { MongoRepository as TicketTypeRepo } from '../repo/ticketType';
@@ -20,8 +18,6 @@ type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     ticketType: TicketTypeRepo;
 }) => Promise<T>;
 
-const DEFAULT_ELIGIBLE_QUANTITY_VALUE = 1;
-
 /**
  * 上映イベントに対する券種オファーを検索する
  */
@@ -38,6 +34,7 @@ export function searchScreeningEventTicketOffers(params: {
             typeOf: factory.eventType.ScreeningEvent,
             id: params.eventId
         });
+        const superEvent = await repos.event.findById(event.superEvent);
         const eventSoundFormatTypes
             = (Array.isArray(event.superEvent.soundFormat)) ? event.superEvent.soundFormat.map((f) => f.typeOf) : [];
         const eventVideoFormatTypes
@@ -77,33 +74,18 @@ export function searchScreeningEventTicketOffers(params: {
                 []
             ).filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
 
-        // Defaultオファーをセット
-        let offers: factory.event.screeningEvent.IOffer = {
-            typeOf: 'Offer',
-            priceCurrency: factory.priceCurrency.JPY,
-            availabilityEnds: moment(event.endDate).toDate(),
-            availabilityStarts: moment(event.endDate).toDate(),
-            validFrom: moment(event.endDate).toDate(),
-            validThrough: moment(event.endDate).toDate(),
-            eligibleQuantity: {
-                value: DEFAULT_ELIGIBLE_QUANTITY_VALUE,
-                unitCode: factory.unitCode.C62,
-                typeOf: 'QuantitativeValue'
-            }
+        const eventOffers = {
+            ...superEvent.offers,
+            ...event.offers
         };
-        // オファー設定があれば上書きする
-        if (event.offers !== undefined && event.offers !== null) {
-            offers = event.offers;
-        }
 
         // ムビチケが決済方法として許可されていれば、ムビチケオファーを作成
         let movieTicketOffers: factory.event.screeningEvent.ITicketOffer[] = [];
-        const movieTicketPaymentAccepted = event.superEvent.offers === undefined
-            || event.superEvent.offers.acceptedPaymentMethod === undefined
-            || event.superEvent.offers.acceptedPaymentMethod.indexOf(factory.paymentMethodType.MovieTicket) >= 0;
+        const movieTicketPaymentAccepted = eventOffers.acceptedPaymentMethod === undefined
+            || eventOffers.acceptedPaymentMethod.indexOf(factory.paymentMethodType.MovieTicket) >= 0;
         if (movieTicketPaymentAccepted) {
             movieTicketOffers = ticketTypes
-                .filter((ticketType) => ticketType.eligibleMovieTicketType !== undefined)
+                .filter((ticketType) => ticketType.eligibleMovieTicketType !== undefined && ticketType.eligibleMovieTicketType !== '')
                 .map((ticketType) => {
                     const movieTicketType = <string>ticketType.eligibleMovieTicketType;
                     const unitPriceSpecification: IUnitPriceSpecification = {
@@ -136,18 +118,18 @@ export function searchScreeningEventTicketOffers(params: {
                         priceCurrency: factory.priceCurrency.JPY,
                         priceSpecification: compoundPriceSpecification,
                         availability: factory.itemAvailability.InStock,
-                        availabilityEnds: offers.availabilityEnds,
-                        availabilityStarts: offers.availabilityStarts,
-                        eligibleQuantity: offers.eligibleQuantity,
-                        validFrom: offers.validFrom,
-                        validThrough: offers.validThrough
+                        availabilityEnds: eventOffers.availabilityEnds,
+                        availabilityStarts: eventOffers.availabilityStarts,
+                        eligibleQuantity: eventOffers.eligibleQuantity,
+                        validFrom: eventOffers.validFrom,
+                        validThrough: eventOffers.validThrough
                     };
                 });
         }
 
         // ムビチケ以外のオファーを作成
         const ticketTypeOffers = ticketTypes
-            .filter((ticketType) => ticketType.eligibleMovieTicketType === undefined)
+            .filter((ticketType) => ticketType.eligibleMovieTicketType === undefined || ticketType.eligibleMovieTicketType === '')
             .map((ticketType) => {
                 const unitPriceSpecification: IUnitPriceSpecification = {
                     typeOf: factory.priceSpecificationType.UnitPriceSpecification,
@@ -178,11 +160,11 @@ export function searchScreeningEventTicketOffers(params: {
                     priceCurrency: factory.priceCurrency.JPY,
                     priceSpecification: compoundPriceSpecification,
                     availability: ticketType.availability,
-                    availabilityEnds: offers.availabilityEnds,
-                    availabilityStarts: offers.availabilityStarts,
-                    eligibleQuantity: offers.eligibleQuantity,
-                    validFrom: offers.validFrom,
-                    validThrough: offers.validThrough
+                    availabilityEnds: eventOffers.availabilityEnds,
+                    availabilityStarts: eventOffers.availabilityStarts,
+                    eligibleQuantity: eventOffers.eligibleQuantity,
+                    validFrom: eventOffers.validFrom,
+                    validThrough: eventOffers.validThrough
                 };
             });
 

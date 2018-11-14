@@ -13,13 +13,13 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "^1.0.0-alpha.35",
+    "@chevre/factory": "^1.0.0-alpha.37",
     "@types/mongoose": "^5.3.1",
     "@types/redis": "^2.8.7",
     "debug": "^3.2.6",
     "moment": "^2.22.2",
     "moment-timezone": "^0.5.23",
-    "mongoose": "^5.3.10",
+    "mongoose": "^5.3.12",
     "redis": "^2.8.0",
     "uniqid": "^5.0.3"
   },
@@ -42,7 +42,7 @@
     "rimraf": "^2.6.2",
     "sinon": "^4.5.0",
     "sinon-mongoose": "^2.2.1",
-    "snyk": "^1.108.0",
+    "snyk": "^1.108.2",
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
     "tslint-microsoft-contrib": "^5.2.1",
