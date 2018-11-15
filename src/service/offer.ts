@@ -4,8 +4,6 @@ import { MongoRepository as TicketTypeRepo } from '../repo/ticketType';
 
 import * as factory from '../factory';
 
-type IUnitPriceSpecification =
-    factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>;
 type IMovieTicketTypeChargeSpecification =
     factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.MovieTicketTypeChargeSpecification>;
 type ISoundFormatChargeSpecification =
@@ -19,7 +17,7 @@ type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
 }) => Promise<T>;
 
 /**
- * 上映イベントに対する券種オファーを検索する
+ * 上映イベントに対するオファーを検索する
  */
 export function searchScreeningEventTicketOffers(params: {
     eventId: string;
@@ -85,86 +83,55 @@ export function searchScreeningEventTicketOffers(params: {
             || eventOffers.acceptedPaymentMethod.indexOf(factory.paymentMethodType.MovieTicket) >= 0;
         if (movieTicketPaymentAccepted) {
             movieTicketOffers = ticketTypes
-                .filter((ticketType) => ticketType.eligibleMovieTicketType !== undefined && ticketType.eligibleMovieTicketType !== '')
-                .map((ticketType) => {
-                    const movieTicketType = <string>ticketType.eligibleMovieTicketType;
-                    const unitPriceSpecification: IUnitPriceSpecification = {
-                        typeOf: factory.priceSpecificationType.UnitPriceSpecification,
-                        price: ticketType.price,
-                        priceCurrency: factory.priceCurrency.JPY,
-                        name: ticketType.name,
-                        description: ticketType.description,
-                        valueAddedTaxIncluded: true,
-                        referenceQuantity: ticketType.eligibleQuantity
-                    };
+                .filter((t) => {
+                    return t.priceSpecification.appliesToMovieTicketType !== undefined
+                        && t.priceSpecification.appliesToMovieTicketType !== '';
+                })
+                .map((t) => {
+                    const movieTicketType = <string>t.priceSpecification.appliesToMovieTicketType;
                     const mvtkSpecs = movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketType);
-                    const priceComponent = [
-                        unitPriceSpecification,
-                        ...mvtkSpecs
-                    ];
                     const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
                         typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
                         priceCurrency: factory.priceCurrency.JPY,
                         valueAddedTaxIncluded: true,
-                        priceComponent: priceComponent
+                        priceComponent: [
+                            t.priceSpecification,
+                            ...mvtkSpecs
+                        ]
                     };
 
                     return {
-                        typeOf: <factory.offerType>'Offer',
-                        id: ticketType.id,
-                        name: ticketType.name,
-                        description: ticketType.description,
-                        valueAddedTaxIncluded: true,
-                        priceCurrency: factory.priceCurrency.JPY,
-                        priceSpecification: compoundPriceSpecification,
-                        availability: factory.itemAvailability.InStock,
-                        availabilityEnds: eventOffers.availabilityEnds,
-                        availabilityStarts: eventOffers.availabilityStarts,
+                        ...eventOffers,
+                        ...t,
                         eligibleQuantity: eventOffers.eligibleQuantity,
-                        validFrom: eventOffers.validFrom,
-                        validThrough: eventOffers.validThrough
+                        priceSpecification: compoundPriceSpecification
                     };
                 });
         }
 
         // ムビチケ以外のオファーを作成
         const ticketTypeOffers = ticketTypes
-            .filter((ticketType) => ticketType.eligibleMovieTicketType === undefined || ticketType.eligibleMovieTicketType === '')
-            .map((ticketType) => {
-                const unitPriceSpecification: IUnitPriceSpecification = {
-                    typeOf: factory.priceSpecificationType.UnitPriceSpecification,
-                    price: ticketType.price,
-                    priceCurrency: factory.priceCurrency.JPY,
-                    name: ticketType.name,
-                    description: ticketType.description,
-                    valueAddedTaxIncluded: true,
-                    referenceQuantity: ticketType.eligibleQuantity
-                };
-                const priceComponent = [
-                    unitPriceSpecification,
-                    ...videoFormatChargeSpecifications,
-                    ...soundFormatChargeSpecifications
-                ];
+            .filter((t) => {
+                return t.priceSpecification.appliesToMovieTicketType === undefined
+                    || t.priceSpecification.appliesToMovieTicketType === '';
+            })
+            .map((t) => {
                 const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
                     typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
                     priceCurrency: factory.priceCurrency.JPY,
                     valueAddedTaxIncluded: true,
-                    priceComponent: priceComponent
+                    priceComponent: [
+                        t.priceSpecification,
+                        ...videoFormatChargeSpecifications,
+                        ...soundFormatChargeSpecifications
+                    ]
                 };
 
                 return {
-                    typeOf: <factory.offerType>'Offer',
-                    id: ticketType.id,
-                    name: ticketType.name,
-                    description: ticketType.description,
-                    priceCurrency: factory.priceCurrency.JPY,
-                    priceSpecification: compoundPriceSpecification,
-                    availability: ticketType.availability,
-                    availabilityEnds: eventOffers.availabilityEnds,
-                    availabilityStarts: eventOffers.availabilityStarts,
+                    ...eventOffers,
+                    ...t,
                     eligibleQuantity: eventOffers.eligibleQuantity,
-                    validFrom: eventOffers.validFrom,
-                    validThrough: eventOffers.validThrough
+                    priceSpecification: compoundPriceSpecification
                 };
             });
 

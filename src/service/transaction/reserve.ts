@@ -97,21 +97,26 @@ export function start(
                     name: ticketOffer.name,
                     description: ticketOffer.description,
                     alternateName: ticketOffer.name,
-                    price: totalPrice,
                     priceCurrency: factory.priceCurrency.JPY,
                     availability: factory.itemAvailability.InStock,
-                    eligibleQuantity: {
-                        typeOf: 'QuantitativeValue',
-                        value: 1,
-                        unitCode: factory.unitCode.C62
-                    },
-                    accounting: {
-                        typeOf: 'Accounting',
-                        accountsReceivable: totalPrice,
-                        operatingRevenue: {
-                            typeOf: 'AccountTitle',
-                            identifier: '',
-                            name: ''
+                    priceSpecification: {
+                        typeOf: factory.priceSpecificationType.UnitPriceSpecification,
+                        price: totalPrice,
+                        priceCurrency: factory.priceCurrency.JPY,
+                        valueAddedTaxIncluded: true,
+                        referenceQuantity: {
+                            typeOf: 'QuantitativeValue',
+                            value: 1,
+                            unitCode: factory.unitCode.C62
+                        },
+                        accounting: {
+                            typeOf: 'Accounting',
+                            accountsReceivable: totalPrice,
+                            operatingRevenue: {
+                                typeOf: 'AccountTitle',
+                                identifier: '',
+                                name: ''
+                            }
                         }
                     }
                 };

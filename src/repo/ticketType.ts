@@ -73,7 +73,14 @@ export class MongoRepository {
                 return <factory.ticketType.ITicketTypeGroup>doc.toObject();
             });
 
-        return this.ticketTypeModel.find({ _id: { $in: ticketTypeGroup.ticketTypes } }).exec()
+        return this.ticketTypeModel.find(
+            { _id: { $in: ticketTypeGroup.ticketTypes } },
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        ).exec()
             .then((docs) => docs.map((doc) => <factory.ticketType.ITicketType>doc.toObject()));
     }
     /**

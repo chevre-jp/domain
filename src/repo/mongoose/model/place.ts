@@ -82,6 +82,15 @@ const schema = new mongoose.Schema(
     }
 );
 
+schema.index(
+    { createdAt: 1 },
+    { name: 'searchByCreatedAt' }
+);
+schema.index(
+    { updatedAt: 1 },
+    { name: 'searchByUpdatedAt' }
+);
+
 // 劇場検索に使用
 schema.index(
     { branchCode: 1, typeOf: 1 }

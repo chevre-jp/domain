@@ -19,6 +19,7 @@ const accountingSchema = new mongoose.Schema(
 const schema = new mongoose.Schema(
     {
         _id: String,
+        typeOf: String,
         name: multilingualString,
         description: multilingualString,
         alternateName: multilingualString,
@@ -51,6 +52,15 @@ const schema = new mongoose.Schema(
         toJSON: { getters: true },
         toObject: { getters: true }
     }
+);
+
+schema.index(
+    { createdAt: 1 },
+    { name: 'searchByCreatedAt' }
+);
+schema.index(
+    { updatedAt: 1 },
+    { name: 'searchByUpdatedAt' }
 );
 
 export default mongoose.model('TicketType', schema).on(

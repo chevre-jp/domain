@@ -50,6 +50,15 @@ const schema = new mongoose.Schema(
     }
 );
 
+schema.index(
+    { createdAt: 1 },
+    { name: 'searchByCreatedAt' }
+);
+schema.index(
+    { updatedAt: 1 },
+    { name: 'searchByUpdatedAt' }
+);
+
 // 取引のタスク検索に使用
 schema.index(
     { 'data.transactionId': 1 },
