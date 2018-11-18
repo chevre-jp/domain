@@ -62,6 +62,14 @@ schema.index(
     { updatedAt: 1 },
     { name: 'searchByUpdatedAt' }
 );
+schema.index(
+    { 'priceSpecification.price': 1 },
+    {
+        partialFilterExpression: {
+            'priceSpecification.price': { $exists: true }
+        }
+    }
+);
 
 export default mongoose.model('TicketType', schema).on(
     'index',

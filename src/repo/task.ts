@@ -12,7 +12,7 @@ const sortOrder4executionOfTasks = {
     runsAt: 1 // 実行予定日時の早さ優先
 };
 /**
- * タスクレポジトリー
+ * タスクリポジトリ
  */
 export class MongoRepository {
     public readonly taskModel: typeof taskModel;

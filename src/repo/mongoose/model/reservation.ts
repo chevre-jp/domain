@@ -10,6 +10,14 @@ const bookingAgentSchema = new mongoose.Schema(
         strict: false
     }
 );
+const priceSchema = new mongoose.Schema(
+    {},
+    {
+        id: false,
+        _id: false,
+        strict: false
+    }
+);
 const reservationForSchema = new mongoose.Schema(
     {},
     {
@@ -54,7 +62,7 @@ const schema = new mongoose.Schema(
         modifiedTime: Date,
         modifyReservationUrl: String,
         numSeats: Number,
-        price: Number,
+        price: priceSchema,
         priceCurrency: String,
         programMembershipUsed: String,
         reservationFor: reservationForSchema,

@@ -11,6 +11,7 @@ import { MongoRepository as PlaceRepo } from './repo/place';
 import { MongoRepository as PriceSpecificationRepo } from './repo/priceSpecification';
 import { MongoRepository as ReservationRepo } from './repo/reservation';
 import { RedisRepository as ReservationNumberRepo } from './repo/reservationNumber';
+import { MongoRepository as ServiceTypeRepo } from './repo/serviceType';
 import { MongoRepository as TaskRepo } from './repo/task';
 import { MongoRepository as TicketTypeRepo } from './repo/ticketType';
 import { MongoRepository as TransactionRepo } from './repo/transaction';
@@ -23,6 +24,7 @@ export class Place extends PlaceRepo { }
 export class PriceSpecification extends PriceSpecificationRepo { }
 export class Reservation extends ReservationRepo { }
 export class ReservationNumber extends ReservationNumberRepo { }
+export class ServiceType extends ServiceTypeRepo { }
 export class Task extends TaskRepo { }
 export class TicketType extends TicketTypeRepo { }
 export class Transaction extends TransactionRepo { }

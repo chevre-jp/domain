@@ -70,7 +70,7 @@ export function start(
 
         // チケット存在確認
         const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
-        const ticketTypes = await repos.ticketType.findByTicketGroupId({ ticketGroupId: screeningEvent.ticketTypeGroup });
+        const ticketTypes = await repos.ticketType.findByTicketGroupId({ ticketGroupId: screeningEvent.offers.category.id });
         debug('available ticket type:', ticketTypes);
 
         // 予約番号発行
@@ -80,65 +80,55 @@ export function start(
         });
 
         // 取引ファクトリーで新しい進行中取引オブジェクトを作成
-        const tickets: factory.reservation.ITicket[] = params.object.acceptedOffer.map((offer) => {
-            const ticketOffer = ticketOffers.find((t) => t.id === offer.id);
-            if (ticketOffer === undefined) {
-                throw new factory.errors.NotFound('Ticket Offer');
-            }
-            const totalPrice = ticketOffer.priceSpecification.priceComponent.reduce(
-                (a, b) => a + b.price,
-                0
-            );
-            let ticketType = ticketTypes.find((t) => t.id === offer.id);
-            if (ticketType === undefined) {
-                ticketType = {
-                    typeOf: 'Offer',
-                    id: ticketOffer.id,
-                    name: ticketOffer.name,
-                    description: ticketOffer.description,
-                    alternateName: ticketOffer.name,
-                    priceCurrency: factory.priceCurrency.JPY,
-                    availability: factory.itemAvailability.InStock,
-                    priceSpecification: {
-                        typeOf: factory.priceSpecificationType.UnitPriceSpecification,
-                        price: totalPrice,
-                        priceCurrency: factory.priceCurrency.JPY,
-                        valueAddedTaxIncluded: true,
-                        referenceQuantity: {
-                            typeOf: 'QuantitativeValue',
-                            value: 1,
-                            unitCode: factory.unitCode.C62
-                        },
-                        accounting: {
-                            typeOf: 'Accounting',
-                            accountsReceivable: totalPrice,
-                            operatingRevenue: {
-                                typeOf: 'AccountTitle',
-                                identifier: '',
-                                name: ''
-                            }
-                        }
-                    }
-                };
-            }
+        const tickets: factory.reservation.ITicket<factory.reservation.event.IPriceSpecification>[] =
+            params.object.acceptedOffer.map((offer) => {
+                const ticketOffer = ticketOffers.find((t) => t.id === offer.id);
+                if (ticketOffer === undefined) {
+                    throw new factory.errors.NotFound('Ticket Offer');
+                }
 
-            return {
-                typeOf: <factory.reservation.TicketType>'Ticket',
-                dateIssued: now,
-                issuedBy: {
-                    typeOf: screeningEvent.location.typeOf,
-                    name: screeningEvent.location.name.ja
-                },
-                totalPrice: totalPrice,
-                priceCurrency: factory.priceCurrency.JPY,
-                ticketedSeat: offer.ticketedSeat,
-                underName: {
-                    typeOf: params.agent.typeOf,
-                    name: params.agent.name
-                },
-                ticketType: ticketType
-            };
-        });
+                let ticketType = ticketTypes.find((t) => t.id === offer.id);
+                // 基本的に券種でID管理されていないオファーは存在しないが、念のため管理されていないケースに対応
+                if (ticketType === undefined) {
+                    const unitPriceSpec
+                        = <factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>>
+                        ticketOffer.priceSpecification.priceComponent.find((spec) => {
+                            return spec.typeOf === factory.priceSpecificationType.UnitPriceSpecification;
+                        });
+                    if (unitPriceSpec === undefined) {
+                        throw new factory.errors.Argument('acceptedOffer', `UnitPriceSpecification for ${offer.id} Not Found`);
+                    }
+
+                    ticketType = {
+                        typeOf: 'Offer',
+                        id: ticketOffer.id,
+                        name: ticketOffer.name,
+                        description: ticketOffer.description,
+                        alternateName: ticketOffer.name,
+                        priceCurrency: factory.priceCurrency.JPY,
+                        availability: factory.itemAvailability.InStock,
+                        priceSpecification: unitPriceSpec
+                    };
+                }
+
+                return {
+                    typeOf: <factory.reservation.TicketType>'Ticket',
+                    dateIssued: now,
+                    issuedBy: {
+                        typeOf: screeningEvent.location.typeOf,
+                        name: screeningEvent.location.name.ja
+                    },
+                    totalPrice: ticketOffer.priceSpecification,
+                    priceCurrency: factory.priceCurrency.JPY,
+                    ticketedSeat: offer.ticketedSeat,
+                    underName: {
+                        typeOf: params.agent.typeOf,
+                        name: params.agent.name
+                    },
+                    ticketType: ticketType
+                };
+            });
+
         // 仮予約作成
         const reservations = await Promise.all(tickets.map(async (ticket, index) => {
             return createReservation({
@@ -204,7 +194,7 @@ function createReservation(params: {
     agent: factory.transaction.reserve.IAgent;
     reservationNumber: string;
     screeningEvent: factory.event.screeningEvent.IEvent;
-    reservedTicket: factory.reservation.ITicket;
+    reservedTicket: factory.reservation.ITicket<factory.reservation.event.IPriceSpecification>;
 }): factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent> {
     return {
         typeOf: factory.reservationType.EventReservation,
