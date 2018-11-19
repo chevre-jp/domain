@@ -1,0 +1,27 @@
+[
+    {
+        "typeOf": "ServiceType",
+        "id": "0001",
+        "name": "通常興行"
+    },
+    {
+        "typeOf": "ServiceType",
+        "id": "0002",
+        "name": "本興行"
+    },
+    {
+        "typeOf": "ServiceType",
+        "id": "0003",
+        "name": "特別公演"
+    },
+    {
+        "typeOf": "ServiceType",
+        "id": "0004",
+        "name": "レイトショー"
+    },
+    {
+        "typeOf": "ServiceType",
+        "id": "0005",
+        "name": "レディースデイ"
+    }
+]

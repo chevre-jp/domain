@@ -86,7 +86,6 @@ const schema = new mongoose.Schema(
         dubLanguage: mongoose.SchemaTypes.Mixed,
         kanaName: String,
         alternativeHeadline: String,
-        ticketTypeGroup: String,
         offers: offersSchema,
         maximumAttendeeCapacity: { type: Number, default: 0 },
         remainingAttendeeCapacity: { type: Number, default: 0 },
@@ -192,13 +191,13 @@ schema.index(
 );
 schema.index(
     {
-        ticketTypeGroup: 1
+        'offers.category.id': 1
     },
     {
         partialFilterExpression: {
-            ticketTypeGroup: { $exists: true }
+            'offers.category.id': { $exists: true }
         },
-        name: 'searchByTicketTypeGroup'
+        name: 'searchByOffersCategoryId'
     }
 );
 

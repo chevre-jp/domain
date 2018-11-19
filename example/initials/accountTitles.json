@@ -1,0 +1,41 @@
+[
+    {
+        "identifier": "1000",
+        "category": {
+            "category": {
+                "identifier": "1000",
+                "name": "有料券"
+            },
+            "identifier": "1000",
+            "name": "有料券"
+        },
+        "name": "有料券",
+        "typeOf": "AccountTitle"
+    },
+    {
+        "identifier": "3000",
+        "category": {
+            "category": {
+                "identifier": "3000",
+                "name": "無料券"
+            },
+            "identifier": "3000",
+            "name": "無料券"
+        },
+        "name": "無料券",
+        "typeOf": "AccountTitle"
+    },
+    {
+        "identifier": "901",
+        "category": {
+            "category": {
+                "identifier": "901",
+                "name": "ムビチケ一般"
+            },
+            "identifier": "901",
+            "name": "ムビチケ一般"
+        },
+        "name": "ムビチケ一般",
+        "typeOf": "AccountTitle"
+    }
+]

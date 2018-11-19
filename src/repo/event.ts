@@ -160,7 +160,7 @@ export class MongoRepository {
         /* istanbul ignore else */
         if (Array.isArray(params.ticketTypeGroups)) {
             andConditions.push({
-                ticketTypeGroup: {
+                'offers.category.id': {
                     $exists: true,
                     $in: params.ticketTypeGroups
                 }
