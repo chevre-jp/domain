@@ -7,6 +7,7 @@ import * as factory from '../../factory';
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as EventRepo } from '../../repo/event';
 import { RedisRepository as ScreeningEventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
+import { MongoRepository as PlaceRepo } from '../../repo/place';
 import { MongoRepository as PriceSpecificationRepo } from '../../repo/priceSpecification';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
 import { RedisRepository as ReservationNumberRepo } from '../../repo/reservationNumber';
@@ -22,6 +23,7 @@ const debug = createDebug('chevre-domain:service');
 export type IStartOperation<T> = (repos: {
     eventAvailability: ScreeningEventAvailabilityRepo;
     event: EventRepo;
+    place: PlaceRepo;
     priceSpecification: PriceSpecificationRepo;
     reservation: ReservationRepo;
     reservationNumber: ReservationNumberRepo;
@@ -53,6 +55,7 @@ export function start(
     return async (repos: {
         eventAvailability: ScreeningEventAvailabilityRepo;
         event: EventRepo;
+        place: PlaceRepo;
         priceSpecification: PriceSpecificationRepo;
         reservation: ReservationRepo;
         reservationNumber: ReservationNumberRepo;
@@ -72,6 +75,19 @@ export function start(
         const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
         const ticketTypes = await repos.ticketType.findByTicketGroupId({ ticketGroupId: screeningEvent.offers.category.id });
         debug('available ticket type:', ticketTypes);
+
+        // 座席情報取得
+        const movieTheater = await repos.place.findMovieTheaterByBranchCode({ branchCode: screeningEvent.superEvent.location.branchCode });
+        const screeningRoom = <factory.place.movieTheater.IScreeningRoom | undefined>movieTheater.containsPlace.find(
+            (p) => p.branchCode === screeningEvent.location.branchCode
+        );
+        if (screeningRoom === undefined) {
+            throw new factory.errors.NotFound(
+                'Screening Room',
+                `Event location 'Screening Room ${screeningEvent.location.branchCode}' not found`
+            );
+        }
+        const screeningRoomSections = screeningRoom.containsPlace;
 
         // 予約番号発行
         const reservationNumber = await repos.reservationNumber.publish({
@@ -111,6 +127,18 @@ export function start(
                     };
                 }
 
+                const screeningRoomSection = screeningRoomSections.find((section) => section.branchCode === offer.ticketedSeat.seatSection);
+                if (screeningRoomSection === undefined) {
+                    throw new factory.errors.NotFound(
+                        'Screening Room Section',
+                        `Screening room section ${offer.ticketedSeat.seatSection} not found`
+                    );
+                }
+                const seat = screeningRoomSection.containsPlace.find((p) => p.branchCode === offer.ticketedSeat.seatNumber);
+                if (seat === undefined) {
+                    throw new factory.errors.NotFound('Seat', `Seat ${offer.ticketedSeat.seatNumber} not found`);
+                }
+
                 return {
                     typeOf: <factory.reservation.TicketType>'Ticket',
                     dateIssued: now,
@@ -120,7 +148,7 @@ export function start(
                     },
                     totalPrice: ticketOffer.priceSpecification,
                     priceCurrency: factory.priceCurrency.JPY,
-                    ticketedSeat: offer.ticketedSeat,
+                    ticketedSeat: { ...offer.ticketedSeat, ...seat },
                     underName: {
                         typeOf: params.agent.typeOf,
                         name: params.agent.name

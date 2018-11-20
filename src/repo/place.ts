@@ -4,22 +4,15 @@ import placeModel from './mongoose/model/place';
 import * as factory from '../factory';
 
 /**
- * 場所抽象リポジトリー
- */
-export abstract class Repository {
-    public abstract async saveMovieTheater(movieTheater: factory.place.movieTheater.IPlace): Promise<void>;
-    public abstract async searchMovieTheaters(searchConditions: {}): Promise<factory.place.movieTheater.IPlaceWithoutScreeningRoom[]>;
-    public abstract async findMovieTheaterByBranchCode(branchCode: string): Promise<factory.place.movieTheater.IPlace>;
-}
-
-/**
  * 場所リポジトリー
  */
 export class MongoRepository {
     public readonly placeModel: typeof placeModel;
+
     constructor(connection: Connection) {
         this.placeModel = connection.model(placeModel.modelName);
     }
+
     public static CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params: factory.place.movieTheater.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [
@@ -41,19 +34,21 @@ export class MongoRepository {
 
         return andConditions;
     }
+
     /**
      * 劇場を保管する
      */
-    public async saveMovieTheater(movieTheater: factory.place.movieTheater.IPlace) {
+    public async saveMovieTheater(params: factory.place.movieTheater.IPlace) {
         await this.placeModel.findOneAndUpdate(
             {
                 typeOf: factory.placeType.MovieTheater,
-                branchCode: movieTheater.branchCode
+                branchCode: params.branchCode
             },
-            movieTheater,
+            params,
             { upsert: true }
         ).exec();
     }
+
     public async countMovieTheaters(params: factory.place.movieTheater.ISearchConditions): Promise<number> {
         const conditions = MongoRepository.CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params);
 
@@ -62,6 +57,7 @@ export class MongoRepository {
         ).setOptions({ maxTimeMS: 10000 })
             .exec();
     }
+
     /**
      * 劇場検索
      */
@@ -92,16 +88,17 @@ export class MongoRepository {
 
         return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
     }
+
     /**
      * 枝番号で劇場検索
      */
-    public async findMovieTheaterByBranchCode(
-        branchCode: string
-    ): Promise<factory.place.movieTheater.IPlace> {
+    public async findMovieTheaterByBranchCode(params: {
+        branchCode: string;
+    }): Promise<factory.place.movieTheater.IPlace> {
         const doc = await this.placeModel.findOne(
             {
                 typeOf: factory.placeType.MovieTheater,
-                branchCode: branchCode
+                branchCode: params.branchCode
             },
             {
                 __v: 0,
@@ -109,9 +106,8 @@ export class MongoRepository {
                 updatedAt: 0
             }
         ).exec();
-
         if (doc === null) {
-            throw new factory.errors.NotFound('movieTheater');
+            throw new factory.errors.NotFound('Movie Theater');
         }
 
         return <factory.place.movieTheater.IPlace>doc.toObject();
