@@ -67,6 +67,62 @@ schema.index(
     { name: 'searchByUpdatedAt' }
 );
 
+schema.index(
+    {
+        identifier: 1
+    },
+    {
+        partialFilterExpression: {
+            identifier: { $exists: true }
+        },
+        name: 'searchByIdentifier'
+    }
+);
+schema.index(
+    {
+        name: 1
+    },
+    {
+        partialFilterExpression: {
+            name: { $exists: true }
+        },
+        name: 'searchByName'
+    }
+);
+schema.index(
+    {
+        datePublished: 1
+    },
+    {
+        partialFilterExpression: {
+            datePublished: { $exists: true }
+        },
+        name: 'searchByDatePublished'
+    }
+);
+schema.index(
+    {
+        'offers.availabilityEnds': 1
+    },
+    {
+        partialFilterExpression: {
+            'offers.availabilityEnds': { $exists: true }
+        },
+        name: 'searchByOffersAvailabilityEnds'
+    }
+);
+schema.index(
+    {
+        'offers.availabilityStarts': 1
+    },
+    {
+        partialFilterExpression: {
+            'offers.availabilityStarts': { $exists: true }
+        },
+        name: 'searchByOffersAvailabilityStarts'
+    }
+);
+
 export default mongoose.model('CreativeWork', schema).on(
     'index',
     // tslint:disable-next-line:no-single-line-block-comment

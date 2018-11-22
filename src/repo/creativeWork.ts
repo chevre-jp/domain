@@ -25,14 +25,71 @@ export class MongoRepository implements Repository {
             }
         ];
         if (params.identifier !== undefined) {
-            andConditions.push({ identifier: new RegExp(params.identifier, 'i') });
+            andConditions.push({
+                identifier: {
+                    $exists: true,
+                    $regex: new RegExp(params.identifier, 'i')
+                }
+            });
         }
         if (params.name !== undefined) {
-            andConditions.push({ name: new RegExp(params.name, 'i') });
+            andConditions.push({
+                name: {
+                    $exists: true,
+                    $regex: new RegExp(params.name, 'i')
+                }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.datePublishedFrom !== undefined) {
+            andConditions.push({
+                datePublished: {
+                    $exists: true,
+                    $gte: params.datePublishedFrom
+                }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.datePublishedThrough !== undefined) {
+            andConditions.push({
+                datePublished: {
+                    $exists: true,
+                    $lte: params.datePublishedThrough
+                }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.offers !== undefined) {
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.offers.availableFrom instanceof Date) {
+                andConditions.push({
+                    'offers.availabilityEnds': {
+                        $exists: true,
+                        $gt: params.offers.availableFrom
+                    }
+                });
+            }
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.offers.availableThrough instanceof Date) {
+                andConditions.push({
+                    'offers.availabilityStarts': {
+                        $exists: true,
+                        $lt: params.offers.availableThrough
+                    }
+                });
+            }
         }
 
         return andConditions;
     }
+
     /**
      * 映画作品を保管する
      */
@@ -46,8 +103,9 @@ export class MongoRepository implements Repository {
             { upsert: true }
         ).exec();
     }
+
     /**
-     * IDで映画作品を検索する
+     * 識別子で映画作品を検索する
      */
     public async findMovieByIdentifier(params: {
         identifier: string;
@@ -69,6 +127,7 @@ export class MongoRepository implements Repository {
 
         return doc.toObject();
     }
+
     public async countMovies(params: factory.creativeWork.movie.ISearchConditions): Promise<number> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
 
@@ -77,6 +136,7 @@ export class MongoRepository implements Repository {
         ).setOptions({ maxTimeMS: 10000 })
             .exec();
     }
+
     /**
      * 映画作品を検索する
      */
@@ -103,6 +163,7 @@ export class MongoRepository implements Repository {
 
         return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
     }
+
     /**
      * 映画作品を削除する
      */
