@@ -81,6 +81,13 @@ export class MongoRepository {
                 ]
             });
         }
+        if (Array.isArray(params.ticketTypes)) {
+            andConditions.push({
+                ticketTypes: {
+                    $in: params.ticketTypes
+                }
+            });
+        }
 
         return andConditions;
     }

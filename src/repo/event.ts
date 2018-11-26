@@ -155,16 +155,16 @@ export class MongoRepository {
                     }
                 });
             }
-        }
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (Array.isArray(params.ticketTypeGroups)) {
-            andConditions.push({
-                'offers.category.id': {
-                    $exists: true,
-                    $in: params.ticketTypeGroups
-                }
-            });
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (Array.isArray(params.offers.ids)) {
+                andConditions.push({
+                    'offers.id': {
+                        $exists: true,
+                        $in: params.offers.ids
+                    }
+                });
+            }
         }
 
         return andConditions;

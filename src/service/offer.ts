@@ -39,7 +39,7 @@ export function searchScreeningEventTicketOffers(params: {
             = (Array.isArray(event.superEvent.videoFormat))
                 ? event.superEvent.videoFormat.map((f) => f.typeOf)
                 : [factory.videoFormatType['2D']];
-        const ticketTypes = await repos.ticketType.findByTicketGroupId({ ticketGroupId: event.offers.category.id });
+        const ticketTypes = await repos.ticketType.findByTicketGroupId({ ticketGroupId: event.offers.id });
 
         // 価格仕様を検索する
         const soundFormatCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({

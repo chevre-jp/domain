@@ -19,7 +19,8 @@ const schema = new mongoose.Schema(
             type: String,
             ref: TicketType.modelName,
             required: true
-        }]
+        }],
+        itemOffered: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'ticketTypeGroups',

@@ -24,7 +24,7 @@ export class MongoRepository {
             (doc) => <factory.task.ITask>doc.toObject()
         );
     }
-    public async executeOneByName(taskName: factory.taskName): Promise<factory.task.ITask> {
+    public async executeOneByName(taskName: factory.taskName): Promise<factory.task.ITask | null> {
         const doc = await this.taskModel.findOneAndUpdate(
             {
                 status: factory.taskStatus.Ready,
@@ -41,9 +41,8 @@ export class MongoRepository {
             },
             { new: true }
         ).sort(sortOrder4executionOfTasks).exec();
-
         if (doc === null) {
-            throw new factory.errors.NotFound('executable task');
+            return null;
         }
 
         return <factory.task.ITask>doc.toObject();
@@ -62,9 +61,8 @@ export class MongoRepository {
             { multi: true }
         ).exec();
     }
-    public async abortOne(intervalInMinutes: number): Promise<factory.task.ITask> {
+    public async abortOne(intervalInMinutes: number): Promise<factory.task.ITask | null> {
         const lastTriedAtShoudBeLessThan = moment().add(-intervalInMinutes, 'minutes').toDate();
-
         const doc = await this.taskModel.findOneAndUpdate(
             {
                 status: factory.taskStatus.Running,
@@ -76,9 +74,8 @@ export class MongoRepository {
             },
             { new: true }
         ).exec();
-
         if (doc === null) {
-            throw new factory.errors.NotFound('abortable task');
+            return null;
         }
 
         return <factory.task.ITask>doc.toObject();

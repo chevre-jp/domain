@@ -73,7 +73,7 @@ export function start(
 
         // チケット存在確認
         const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
-        const ticketTypes = await repos.ticketType.findByTicketGroupId({ ticketGroupId: screeningEvent.offers.category.id });
+        const ticketTypes = await repos.ticketType.findByTicketGroupId({ ticketGroupId: screeningEvent.offers.id });
         debug('available ticket type:', ticketTypes);
 
         // 座席情報取得

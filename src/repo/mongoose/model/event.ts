@@ -70,12 +70,15 @@ const schema = new mongoose.Schema(
         },
         identifier: String,
         name: MultilingualStringSchemaType,
+        additionalProperty: mongoose.SchemaTypes.Mixed,
         alternateName: MultilingualStringSchemaType,
+        alternativeHeadline: MultilingualStringSchemaType,
         description: MultilingualStringSchemaType,
         doorTime: Date,
         duration: String,
         endDate: Date,
         eventStatus: String,
+        headline: MultilingualStringSchemaType,
         location: locationSchema,
         startDate: Date,
         workPerformed: workPerformedSchema,
@@ -85,7 +88,6 @@ const schema = new mongoose.Schema(
         subtitleLanguage: mongoose.SchemaTypes.Mixed,
         dubLanguage: mongoose.SchemaTypes.Mixed,
         kanaName: String,
-        alternativeHeadline: String,
         offers: offersSchema,
         maximumAttendeeCapacity: { type: Number, default: 0 },
         remainingAttendeeCapacity: { type: Number, default: 0 },
@@ -191,13 +193,13 @@ schema.index(
 );
 schema.index(
     {
-        'offers.category.id': 1
+        'offers.id': 1
     },
     {
         partialFilterExpression: {
-            'offers.category.id': { $exists: true }
+            'offers.id': { $exists: true }
         },
-        name: 'searchByOffersCategoryId'
+        name: 'searchByOffersId'
     }
 );
 
