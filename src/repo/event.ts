@@ -74,14 +74,14 @@ export class MongoRepository {
         /* istanbul ignore else */
         if (params.inSessionFrom !== undefined) {
             andConditions.push({
-                endDate: { $gt: params.inSessionFrom }
+                endDate: { $gte: params.inSessionFrom }
             });
         }
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.inSessionThrough !== undefined) {
             andConditions.push({
-                startDate: { $lt: params.inSessionThrough }
+                startDate: { $lte: params.inSessionThrough }
             });
         }
         // tslint:disable-next-line:no-single-line-block-comment
@@ -95,7 +95,7 @@ export class MongoRepository {
         /* istanbul ignore else */
         if (params.startThrough !== undefined) {
             andConditions.push({
-                startDate: { $lt: params.startThrough }
+                startDate: { $lte: params.startThrough }
             });
         }
         // tslint:disable-next-line:no-single-line-block-comment
@@ -109,7 +109,7 @@ export class MongoRepository {
         /* istanbul ignore else */
         if (params.endThrough !== undefined) {
             andConditions.push({
-                endDate: { $lt: params.endThrough }
+                endDate: { $lte: params.endThrough }
             });
         }
         // tslint:disable-next-line:no-single-line-block-comment
@@ -121,7 +121,7 @@ export class MongoRepository {
                 andConditions.push({
                     'offers.availabilityEnds': {
                         $exists: true,
-                        $gt: params.offers.availableFrom
+                        $gte: params.offers.availableFrom
                     }
                 });
             }
@@ -131,7 +131,7 @@ export class MongoRepository {
                 andConditions.push({
                     'offers.availabilityStarts': {
                         $exists: true,
-                        $lt: params.offers.availableThrough
+                        $lte: params.offers.availableThrough
                     }
                 });
             }
@@ -141,7 +141,7 @@ export class MongoRepository {
                 andConditions.push({
                     'offers.validThrough': {
                         $exists: true,
-                        $gt: params.offers.validFrom
+                        $gte: params.offers.validFrom
                     }
                 });
             }
@@ -151,7 +151,7 @@ export class MongoRepository {
                 andConditions.push({
                     'offers.validFrom': {
                         $exists: true,
-                        $lt: params.offers.validThrough
+                        $lte: params.offers.validThrough
                     }
                 });
             }

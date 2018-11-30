@@ -121,7 +121,7 @@ function createScreeingEvents() {
         // イベントシリーズをランダム選定
         const eventSeries = eventSeriesList[Math.floor(Math.random() * eventSeriesList.length)];
         // 上映ルームをランダム選定
-        const movieTheater = await placeRepo.findMovieTheaterByBranchCode(eventSeries.location.branchCode);
+        const movieTheater = await placeRepo.findMovieTheaterByBranchCode({ branchCode: eventSeries.location.branchCode });
         const screeningRooms = movieTheater.containsPlace;
         const screeningRoom = screeningRooms[Math.floor(Math.random() * screeningRooms.length)];
         const maximumAttendeeCapacity = screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0);
@@ -135,6 +135,8 @@ function createScreeingEvents() {
         const startDate = moment(doorTime).add(10, 'minutes').toDate();
         const endDate = moment(startDate).add(duration, 'minutes').toDate();
         const offers = {
+            id: ticketTypeGroup.id,
+            name: ticketTypeGroup.name,
             typeOf: 'Offer',
             priceCurrency: domain.factory.priceCurrency.JPY,
             availabilityEnds: endDate,
@@ -145,10 +147,6 @@ function createScreeingEvents() {
                 maxValue: 4,
                 unitCode: domain.factory.unitCode.C62,
                 typeOf: 'QuantitativeValue'
-            },
-            category: {
-                id: ticketTypeGroup.id,
-                name: ticketTypeGroup.name
             },
             itemOffered: {
                 serviceType: {

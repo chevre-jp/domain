@@ -20,8 +20,10 @@
             "ja": "通常興行",
             "en": "General"
         },
-        "serviceType": {
-            "id": "0001"
+        "itemOffered": {
+            "serviceType": {
+                "id": "0001"
+            }
         }
     },
     {
@@ -45,8 +47,10 @@
             "ja": "本興行",
             "en": "Main"
         },
-        "serviceType": {
-            "id": "0002"
+        "itemOffered": {
+            "serviceType": {
+                "id": "0002"
+            }
         }
     },
     {
@@ -70,8 +74,10 @@
             "ja": "特別公演",
             "en": "Special"
         },
-        "serviceType": {
-            "id": "0003"
+        "itemOffered": {
+            "serviceType": {
+                "id": "0003"
+            }
         }
     },
     {
@@ -95,8 +101,10 @@
             "ja": "レイトショー",
             "en": "Late"
         },
-        "serviceType": {
-            "id": "0004"
+        "itemOffered": {
+            "serviceType": {
+                "id": "0004"
+            }
         }
     },
     {
@@ -120,8 +128,10 @@
             "ja": "レディースデイ",
             "en": "Ladies Day"
         },
-        "serviceType": {
-            "id": "0005"
+        "itemOffered": {
+            "serviceType": {
+                "id": "0005"
+            }
         }
     }
 ]

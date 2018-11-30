@@ -29,7 +29,7 @@
                 "accountsReceivable": 1800
             }
         },
-        "indicatorColor": "rgb(51, 51, 51)"
+        "color": "rgb(51, 51, 51)"
     },
     {
         "id": "1002",
@@ -61,7 +61,7 @@
                 "accountsReceivable": 1100
             }
         },
-        "indicatorColor": "rgb(51, 51, 51)"
+        "color": "rgb(51, 51, 51)"
     },
     {
         "id": "1003",
@@ -93,7 +93,7 @@
                 "accountsReceivable": 1000
             }
         },
-        "indicatorColor": "rgb(51, 51, 51)"
+        "color": "rgb(51, 51, 51)"
     },
     {
         "id": "1004",
@@ -125,7 +125,7 @@
                 "accountsReceivable": 1000
             }
         },
-        "indicatorColor": "rgb(51, 51, 51)"
+        "color": "rgb(51, 51, 51)"
     },
     {
         "id": "1005",
@@ -157,7 +157,7 @@
                 "accountsReceivable": 2200
             }
         },
-        "indicatorColor": "rgb(51, 51, 51)"
+        "color": "rgb(51, 51, 51)"
     },
     {
         "id": "1006",
@@ -189,7 +189,7 @@
                 "accountsReceivable": 1000
             }
         },
-        "indicatorColor": "rgb(51, 51, 51)"
+        "color": "rgb(51, 51, 51)"
     },
     {
         "id": "1007",
@@ -221,7 +221,7 @@
                 "accountsReceivable": 1000
             }
         },
-        "indicatorColor": "rgb(51, 51, 51)"
+        "color": "rgb(51, 51, 51)"
     },
     {
         "id": "1008",
@@ -253,7 +253,7 @@
                 "accountsReceivable": 1500
             }
         },
-        "indicatorColor": "rgb(51, 51, 51)"
+        "color": "rgb(51, 51, 51)"
     },
     {
         "id": "1009",
@@ -285,7 +285,7 @@
                 "accountsReceivable": 1000
             }
         },
-        "indicatorColor": "rgb(51, 51, 51)"
+        "color": "rgb(51, 51, 51)"
     },
     {
         "id": "1010",
@@ -317,7 +317,7 @@
                 "accountsReceivable": 1300
             }
         },
-        "indicatorColor": "rgb(51, 51, 51)"
+        "color": "rgb(51, 51, 51)"
     },
     {
         "id": "3001",
@@ -349,7 +349,7 @@
                 "accountsReceivable": 1800
             }
         },
-        "indicatorColor": "rgb(51, 51, 51)"
+        "color": "rgb(51, 51, 51)"
     },
     {
         "id": "901",
@@ -382,6 +382,6 @@
                 "accountsReceivable": 1400
             }
         },
-        "indicatorColor": "rgb(51, 51, 51)"
+        "color": "rgb(51, 51, 51)"
     }
 ]
