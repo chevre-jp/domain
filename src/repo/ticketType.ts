@@ -58,6 +58,24 @@ export class MongoRepository {
                     }
                 });
             }
+            if (params.priceSpecification.accounting !== undefined) {
+                if (typeof params.priceSpecification.accounting.maxAccountsReceivable === 'number') {
+                    andConditions.push({
+                        'priceSpecification.accounting.accountsReceivable': {
+                            $exists: true,
+                            $lte: params.priceSpecification.accounting.maxAccountsReceivable
+                        }
+                    });
+                }
+                if (typeof params.priceSpecification.accounting.minAccountsReceivable === 'number') {
+                    andConditions.push({
+                        'priceSpecification.accounting.accountsReceivable': {
+                            $exists: true,
+                            $gte: params.priceSpecification.accounting.minAccountsReceivable
+                        }
+                    });
+                }
+            }
         }
 
         return andConditions;

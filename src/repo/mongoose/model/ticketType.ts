@@ -73,6 +73,14 @@ schema.index(
         }
     }
 );
+schema.index(
+    { 'priceSpecification.accounting.accountsReceivable': 1 },
+    {
+        partialFilterExpression: {
+            'priceSpecification.accounting.accountsReceivable': { $exists: true }
+        }
+    }
+);
 
 export default mongoose.model('TicketType', schema).on(
     'index',
