@@ -84,8 +84,12 @@ export function searchScreeningEventTicketOffers(params: {
         if (movieTicketPaymentAccepted) {
             movieTicketOffers = ticketTypes
                 .filter((t) => {
-                    return t.priceSpecification.appliesToMovieTicketType !== undefined
-                        && t.priceSpecification.appliesToMovieTicketType !== '';
+                    const movieTicketType = t.priceSpecification.appliesToMovieTicketType;
+
+                    return movieTicketType !== undefined
+                        && movieTicketType !== ''
+                        // 万が一ムビチケチャージ仕様が存在しないオファーは除外する
+                        && movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketType).length > 0;
                 })
                 .map((t) => {
                     const movieTicketType = <string>t.priceSpecification.appliesToMovieTicketType;
