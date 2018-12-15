@@ -13,7 +13,7 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "^1.0.0-alpha.49",
+    "@chevre/factory": "^1.0.0-alpha.50",
     "@types/mongoose": "^5.3.5",
     "@types/redis": "^2.8.8",
     "debug": "^3.2.6",

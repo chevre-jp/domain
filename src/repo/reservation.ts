@@ -32,6 +32,15 @@ export class MongoRepository {
         }
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
+        if (Array.isArray(params.reservationNumbers)) {
+            andConditions.push({
+                reservationNumber: {
+                    $in: params.reservationNumbers
+                }
+            });
+        }
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
         if (Array.isArray(params.reservationStatuses)) {
             andConditions.push({
                 reservationStatus: { $in: params.reservationStatuses }
@@ -244,22 +253,27 @@ export class MongoRepository {
     }
 
     /**
-     * 発券する
+     * チェックイン(発券)する
      */
-    public async checkIn(params: { id: string }): Promise<factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent>> {
-        const doc = await this.reservationModel.findByIdAndUpdate(
-            params.id,
+    public async checkIn(params: {
+        id?: string;
+        reservationNumber?: string;
+    }): Promise<void> {
+        const conditions: any[] = [];
+        if (params.id !== undefined) {
+            conditions.push({ _id: params.id });
+        }
+        if (params.reservationNumber !== undefined) {
+            conditions.push({ reservationNumber: params.reservationNumber });
+        }
+
+        await this.reservationModel.updateMany(
+            { $and: conditions },
             {
                 checkedIn: true,
                 modifiedTime: new Date()
-            },
-            { new: true }
+            }
         ).exec();
-        if (doc === null) {
-            throw new factory.errors.NotFound('Reservation');
-        }
-
-        return doc.toObject();
     }
 
     /**
