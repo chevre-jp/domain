@@ -99,6 +99,48 @@ schema.index(
     { updatedAt: 1 },
     { name: 'searchByUpdatedAt' }
 );
+schema.index(
+    { typeOf: 1 },
+    { name: 'searchByTypeOf' }
+);
+schema.index(
+    { status: 1 },
+    { name: 'searchByStatus' }
+);
+schema.index(
+    { agent: 1 },
+    { name: 'searchByAgent' }
+);
+schema.index(
+    { startDate: 1 },
+    { name: 'searchByStartDate' }
+);
+schema.index(
+    { endDate: 1 },
+    {
+        name: 'searchByEndDate',
+        partialFilterExpression: {
+            endDate: { $exists: true }
+        }
+    }
+);
+schema.index(
+    { expires: 1 },
+    { name: 'searchByExpires' }
+);
+schema.index(
+    { tasksExportationStatus: 1 },
+    { name: 'searchByTasksExportationStatus' }
+);
+schema.index(
+    { tasksExportedAt: 1 },
+    {
+        name: 'searchByTasksExportedAt',
+        partialFilterExpression: {
+            tasksExportedAt: { $exists: true }
+        }
+    }
+);
 
 // タスクエクスポート時の検索で使用
 schema.index(

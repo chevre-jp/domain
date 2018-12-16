@@ -58,6 +58,35 @@ schema.index(
     { updatedAt: 1 },
     { name: 'searchByUpdatedAt' }
 );
+schema.index(
+    { name: 1 },
+    { name: 'searchByName' }
+);
+schema.index(
+    { status: 1 },
+    { name: 'searchByStatus' }
+);
+schema.index(
+    { runsAt: 1 },
+    { name: 'searchByRunsAt' }
+);
+schema.index(
+    { lastTriedAt: 1 },
+    {
+        name: 'searchByLastTriedAt',
+        partialFilterExpression: {
+            lastTriedAt: { $type: 'date' }
+        }
+    }
+);
+schema.index(
+    { remainingNumberOfTries: 1 },
+    { name: 'searchByRemainingNumberOfTries' }
+);
+schema.index(
+    { numberOfTried: 1 },
+    { name: 'searchByNumberOfTried' }
+);
 
 // 取引のタスク検索に使用
 schema.index(
