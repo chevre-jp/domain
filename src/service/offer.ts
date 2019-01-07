@@ -28,8 +28,7 @@ export function searchScreeningEventTicketOffers(params: {
         priceSpecification: PriceSpecificationRepo;
         ticketType: TicketTypeRepo;
     }) => {
-        const event = await repos.event.findById({
-            typeOf: factory.eventType.ScreeningEvent,
+        const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
             id: params.eventId
         });
         const superEvent = await repos.event.findById(event.superEvent);

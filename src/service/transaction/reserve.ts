@@ -66,8 +66,7 @@ export function start(
         const now = new Date();
 
         // イベント存在確認
-        const screeningEvent = await repos.event.findById({
-            typeOf: factory.eventType.ScreeningEvent,
+        const screeningEvent = await repos.event.findById<factory.eventType.ScreeningEvent>({
             id: params.object.event.id
         });
 

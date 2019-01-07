@@ -94,7 +94,7 @@ export function aggregateScreeningEvent(params: {
         reservation: ReservationRepo;
     }) => {
         // 集計対象イベント検索
-        const event = await repos.event.findById(params);
+        const event = await repos.event.findById<factory.eventType.ScreeningEvent>(params);
 
         // 全予約検索
         const limit = 100;
