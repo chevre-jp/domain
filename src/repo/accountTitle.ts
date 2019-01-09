@@ -19,8 +19,8 @@ export class MongoRepository {
             { typeOf: 'AccountTitle' }
         ];
 
-        if (params.identifier !== undefined) {
-            andConditions.push({ identifier: params.identifier });
+        if (params.codeValue !== undefined) {
+            andConditions.push({ codeValue: params.codeValue });
         }
 
         return andConditions;
@@ -29,31 +29,11 @@ export class MongoRepository {
     public async save(params: factory.accountTitle.IAccountTitle) {
         await this.accountTitleModel.findOneAndUpdate(
             {
-                identifier: params.identifier
+                codeValue: params.codeValue
             },
             params,
             { upsert: true }
         ).exec();
-    }
-
-    public async findMovieByIdentifier(params: {
-        identifier: string;
-    }): Promise<factory.accountTitle.IAccountTitle> {
-        const doc = await this.accountTitleModel.findOne(
-            {
-                identifier: params.identifier
-            },
-            {
-                __v: 0,
-                createdAt: 0,
-                updatedAt: 0
-            }
-        ).exec();
-        if (doc === null) {
-            throw new factory.errors.NotFound('Movie');
-        }
-
-        return doc.toObject();
     }
 
     public async count(params: factory.accountTitle.ISearchConditions): Promise<number> {
@@ -89,12 +69,12 @@ export class MongoRepository {
         return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
     }
 
-    public async deleteByIdentifier(params: {
-        identifier: string;
+    public async deleteByCodeValue(params: {
+        codeValue: string;
     }) {
         await this.accountTitleModel.findOneAndRemove(
             {
-                identifier: params.identifier
+                codeValue: params.codeValue
             }
         ).exec();
     }

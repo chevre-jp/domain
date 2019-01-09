@@ -2,15 +2,6 @@ import * as mongoose from 'mongoose';
 
 const safe = { j: true, w: 'majority', wtimeout: 10000 };
 
-const categorySchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
 /**
  * 勘定科目スキーマ
  */
@@ -20,11 +11,13 @@ const schema = new mongoose.Schema(
             type: String,
             required: true
         },
-        identifier: String,
+        codeValue: String,
+        alternateName: String,
         name: String,
         description: String,
-        alternateName: String,
-        category: categorySchema
+        inCodeSet: mongoose.SchemaTypes.Mixed,
+        hasCategoryCode: mongoose.SchemaTypes.Mixed,
+        additionalProperty: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'accountTitles',

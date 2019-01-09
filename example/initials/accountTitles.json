@@ -1,41 +1,1126 @@
 [
     {
-        "identifier": "1000",
-        "category": {
-            "category": {
-                "identifier": "1000",
-                "name": "有料券"
+        "codeValue": "10",
+        "name": "興行収入",
+        "typeOf": "AccountTitle",
+        "hasCategoryCode": [
+            {
+                "typeOf": "AccountTitle",
+                "codeValue": "100",
+                "name": "通常券",
+                "description": null,
+                "hasCategoryCode": [
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1100",
+                        "name": "特別50"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1101",
+                        "name": "特別49"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1102",
+                        "name": "特別48"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1103",
+                        "name": "特別47"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1104",
+                        "name": "特別46"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1105",
+                        "name": "特別45"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1106",
+                        "name": "特別44"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1107",
+                        "name": "特別43"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1108",
+                        "name": "特別42"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1109",
+                        "name": "特別41"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1110",
+                        "name": "特別40"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1111",
+                        "name": "特別39"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1112",
+                        "name": "特別38"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1113",
+                        "name": "特別37"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1114",
+                        "name": "特別36"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1115",
+                        "name": "特別35"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1116",
+                        "name": "特別34"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1117",
+                        "name": "特別33"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1118",
+                        "name": "特別32"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1119",
+                        "name": "特別31"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1120",
+                        "name": "特別30"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1121",
+                        "name": "特別29"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1122",
+                        "name": "特別28"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1123",
+                        "name": "特別27"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1124",
+                        "name": "特別26"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1125",
+                        "name": "特別25"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1126",
+                        "name": "特別24"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1127",
+                        "name": "特別23"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1128",
+                        "name": "特別22"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1129",
+                        "name": "特別21"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1130",
+                        "name": "特別20"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1131",
+                        "name": "特別19"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1210",
+                        "name": "一般18"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1215",
+                        "name": "大学15"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1220",
+                        "name": "高校生10"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1225",
+                        "name": "中/小10"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1230",
+                        "name": "幼児10"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1235",
+                        "name": "シニア11"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1240",
+                        "name": "障がい者10"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1245",
+                        "name": "夫婦50割11"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1250",
+                        "name": "ファーストデー11"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1255",
+                        "name": "映画の日10"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1300",
+                        "name": "割引17"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1301",
+                        "name": "割引16"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1302",
+                        "name": "割引15"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1303",
+                        "name": "割引14"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1304",
+                        "name": "割引13"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1305",
+                        "name": "割引12"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1306",
+                        "name": "割引11"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1307",
+                        "name": "割引10"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1308",
+                        "name": "割引9"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1309",
+                        "name": "割引8"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1310",
+                        "name": "割引7"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1311",
+                        "name": "割引6"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1312",
+                        "name": "割引5"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1450",
+                        "name": "お直り20"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1451",
+                        "name": "お直り19"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1452",
+                        "name": "お直り18"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1453",
+                        "name": "お直り17"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1454",
+                        "name": "お直り16"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1455",
+                        "name": "お直り15"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1456",
+                        "name": "お直り14"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1457",
+                        "name": "お直り13"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1458",
+                        "name": "お直り12"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1459",
+                        "name": "お直り11"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1460",
+                        "name": "お直り10"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1461",
+                        "name": "お直り9"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1462",
+                        "name": "お直り8"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1463",
+                        "name": "お直り7"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1464",
+                        "name": "お直り6"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1465",
+                        "name": "お直り5"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1466",
+                        "name": "お直り4"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1467",
+                        "name": "お直り3"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1468",
+                        "name": "お直り2"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1469",
+                        "name": "お直り1"
+                    }
+                ]
             },
-            "identifier": "1000",
-            "name": "有料券"
-        },
-        "name": "有料券",
-        "typeOf": "AccountTitle"
+            {
+                "typeOf": "AccountTitle",
+                "codeValue": "300",
+                "name": "株招券",
+                "hasCategoryCode": [
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1500",
+                        "name": "株主"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1501",
+                        "name": "株総"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1502",
+                        "name": "アカデミー"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1503",
+                        "name": "社員"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1504",
+                        "name": "モニター"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1505",
+                        "name": "招待"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1506",
+                        "name": "試写会"
+                    }
+                ]
+            },
+            {
+                "typeOf": "AccountTitle",
+                "codeValue": "200",
+                "name": "前売券",
+                "hasCategoryCode": [
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1650",
+                        "name": "ライブV50"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1651",
+                        "name": "ライブV49"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1652",
+                        "name": "ライブV48"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1653",
+                        "name": "ライブV47"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1654",
+                        "name": "ライブV46"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1655",
+                        "name": "ライブV45"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1656",
+                        "name": "ライブV44"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1657",
+                        "name": "ライブV43"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1658",
+                        "name": "ライブV42"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1659",
+                        "name": "ライブV41"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1660",
+                        "name": "ライブV40"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1661",
+                        "name": "ライブV39"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1662",
+                        "name": "ライブV38"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1663",
+                        "name": "ライブV37"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1664",
+                        "name": "ライブV36"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1665",
+                        "name": "ライブV35"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1666",
+                        "name": "ライブV34"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1667",
+                        "name": "ライブV33"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1668",
+                        "name": "ライブV32"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1669",
+                        "name": "ライブV31"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1670",
+                        "name": "ライブV30"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1750",
+                        "name": "プレイガイド40"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1751",
+                        "name": "プレイガイド39"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1752",
+                        "name": "プレイガイド38"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1753",
+                        "name": "プレイガイド37"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1754",
+                        "name": "プレイガイド36"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1755",
+                        "name": "プレイガイド35"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1756",
+                        "name": "プレイガイド34"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1757",
+                        "name": "プレイガイド33"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1758",
+                        "name": "プレイガイド32"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1759",
+                        "name": "プレイガイド31"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1760",
+                        "name": "プレイガイド30"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1761",
+                        "name": "プレイガイド29"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1762",
+                        "name": "プレイガイド28"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1763",
+                        "name": "プレイガイド27"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1764",
+                        "name": "プレイガイド26"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1765",
+                        "name": "プレイガイド25"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1766",
+                        "name": "プレイガイド24"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1767",
+                        "name": "プレイガイド23"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1768",
+                        "name": "プレイガイド22"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1769",
+                        "name": "プレイガイド21"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1770",
+                        "name": "プレイガイド20"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1771",
+                        "name": "プレイガイド19"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1772",
+                        "name": "プレイガイド18"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1773",
+                        "name": "プレイガイド17"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1774",
+                        "name": "プレイガイド16"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1775",
+                        "name": "プレイガイド15"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1776",
+                        "name": "プレイガイド14"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1777",
+                        "name": "プレイガイド13"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1778",
+                        "name": "プレイガイド12"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1779",
+                        "name": "プレイガイド11"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1780",
+                        "name": "プレイガイド10"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1781",
+                        "name": "プレイガイド9"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1782",
+                        "name": "プレイガイド8"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1783",
+                        "name": "プレイガイド7"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1784",
+                        "name": "プレイガイド6"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1785",
+                        "name": "プレイガイド5"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1810",
+                        "name": "全国券30"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1811",
+                        "name": "全国券29"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1812",
+                        "name": "全国券28"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1813",
+                        "name": "全国券27"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1814",
+                        "name": "全国券26"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1815",
+                        "name": "全国券25"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1816",
+                        "name": "全国券24"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1817",
+                        "name": "全国券23"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1818",
+                        "name": "全国券22"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1819",
+                        "name": "全国券21"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1820",
+                        "name": "全国券20"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1821",
+                        "name": "全国券19"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1822",
+                        "name": "全国券18"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1823",
+                        "name": "全国券17"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1825",
+                        "name": "全国券16"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1830",
+                        "name": "全国券15"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1835",
+                        "name": "全国券14"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1840",
+                        "name": "全国券14"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1845",
+                        "name": "全国券13"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1850",
+                        "name": "全国券12"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1855",
+                        "name": "全国券11"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1860",
+                        "name": "全国券10"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1865",
+                        "name": "全国券09"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1870",
+                        "name": "全国券08"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1875",
+                        "name": "全国券07"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1880",
+                        "name": "全国券06"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1885",
+                        "name": "全国券05"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1910",
+                        "name": "ムビチケ30"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1911",
+                        "name": "ムビチケ29"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1912",
+                        "name": "ムビチケ28"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1913",
+                        "name": "ムビチケ27"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1914",
+                        "name": "ムビチケ26"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1915",
+                        "name": "ムビチケ25"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1916",
+                        "name": "ムビチケ24"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1917",
+                        "name": "ムビチケ23"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1918",
+                        "name": "ムビチケ22"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1919",
+                        "name": "ムビチケ21"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1920",
+                        "name": "ムビチケ20"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1921",
+                        "name": "ムビチケ19"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1922",
+                        "name": "ムビチケ18"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1923",
+                        "name": "ムビチケ17"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1924",
+                        "name": "ムビチケ16"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1925",
+                        "name": "ムビチケ15"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1930",
+                        "name": "ムビチケ14"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1935",
+                        "name": "ムビチケ13"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1940",
+                        "name": "ムビチケ12"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1945",
+                        "name": "ムビチケ12"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1950",
+                        "name": "ムビチケ11"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1955",
+                        "name": "ムビチケ10"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1960",
+                        "name": "ムビチケ09"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1965",
+                        "name": "ムビチケ08"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1970",
+                        "name": "ムビチケ07"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1975",
+                        "name": "ムビチケ07"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1980",
+                        "name": "ムビチケ06"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "1985",
+                        "name": "ムビチケ05"
+                    }
+                ]
+            }
+        ]
     },
     {
-        "identifier": "3000",
-        "category": {
-            "category": {
-                "identifier": "3000",
-                "name": "無料券"
-            },
-            "identifier": "3000",
-            "name": "無料券"
-        },
-        "name": "無料券",
-        "typeOf": "AccountTitle"
+        "codeValue": "20",
+        "name": "コンセッション収入",
+        "typeOf": "AccountTitle",
+        "hasCategoryCode": [
+            {
+                "typeOf": "AccountTitle",
+                "codeValue": "310",
+                "name": "コンセッション収入",
+                "hasCategoryCode": [
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "3101",
+                        "name": "コンセッション収入"
+                    }
+                ]
+            }
+        ]
     },
     {
-        "identifier": "901",
-        "category": {
-            "category": {
-                "identifier": "901",
-                "name": "ムビチケ一般"
+        "codeValue": "30",
+        "name": "物販収入",
+        "typeOf": "AccountTitle",
+        "hasCategoryCode": [
+            {
+                "typeOf": "AccountTitle",
+                "codeValue": "320",
+                "name": "物販収入",
+                "hasCategoryCode": [
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "3201",
+                        "name": "プログラム収入"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "3202",
+                        "name": "キャラクター収入"
+                    }
+                ]
             },
-            "identifier": "901",
-            "name": "ムビチケ一般"
-        },
-        "name": "ムビチケ一般",
-        "typeOf": "AccountTitle"
+            {
+                "typeOf": "AccountTitle",
+                "codeValue": "330",
+                "name": "関連収入",
+                "hasCategoryCode": [
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "3301",
+                        "name": "チケット物販収入"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "3390",
+                        "name": "その他物販収入"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "codeValue": "40",
+        "name": "前受金",
+        "typeOf": "AccountTitle",
+        "hasCategoryCode": [
+            {
+                "typeOf": "AccountTitle",
+                "codeValue": "410",
+                "name": "前売券販売",
+                "hasCategoryCode": [
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "4101",
+                        "name": "全国紙券販売"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "4102",
+                        "name": "ムビチケ券販売"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "codeValue": "50",
+        "name": "雑収入",
+        "typeOf": "AccountTitle",
+        "hasCategoryCode": [
+            {
+                "typeOf": "AccountTitle",
+                "codeValue": "510",
+                "name": "現金過剰金",
+                "hasCategoryCode": [
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "5101",
+                        "name": "現金過剰金チケット"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "5102",
+                        "name": "現金過剰金コンセ"
+                    }
+                ]
+            },
+            {
+                "typeOf": "AccountTitle",
+                "codeValue": "520",
+                "name": "金券過剰金",
+                "hasCategoryCode": [
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "5201",
+                        "name": "金券過剰金チケット"
+                    },
+                    {
+                        "typeOf": "AccountTitle",
+                        "codeValue": "5202",
+                        "name": "金券過剰金コンセ"
+                    }
+                ]
+            }
+        ]
     }
 ]
