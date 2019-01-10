@@ -41,6 +41,42 @@ schema.index(
     { updatedAt: 1 },
     { name: 'searchByUpdatedAt' }
 );
+schema.index(
+    {
+        codeValue: 1
+    },
+    {
+        name: 'searchByCodeValue',
+        unique: true,
+        partialFilterExpression: {
+            codeValue: { $exists: true }
+        }
+    }
+);
+schema.index(
+    {
+        'hasCategoryCode.codeValue': 1
+    },
+    {
+        name: 'searchByHasCategoryCodeCodeValue',
+        unique: true,
+        partialFilterExpression: {
+            'hasCategoryCode.codeValue': { $exists: true }
+        }
+    }
+);
+schema.index(
+    {
+        'hasCategoryCode.hasCategoryCode.codeValue': 1
+    },
+    {
+        name: 'searchByHasCategoryCodeHasCategoryCodeCodeValue',
+        unique: true,
+        partialFilterExpression: {
+            'hasCategoryCode.hasCategoryCode.codeValue': { $exists: true }
+        }
+    }
+);
 
 export default mongoose.model('AccountTitle', schema).on(
     'index',
