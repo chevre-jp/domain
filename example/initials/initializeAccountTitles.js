@@ -8,10 +8,7 @@ async function main() {
     const accountTitleRepo = new domain.repository.AccountTitle(domain.mongoose.connection);
 
     await accountTitleRepo.accountTitleModel.deleteMany({}).exec();
-
-    await Promise.all(accountTitles.map(async (accountTitle) => {
-        await accountTitleRepo.save(accountTitle);
-    }));
+    await accountTitleRepo.accountTitleModel.create(accountTitles);
 
     await domain.mongoose.disconnect();
 }
