@@ -66,24 +66,31 @@ export function start(
         const now = new Date();
 
         // イベント存在確認
-        const screeningEvent = await repos.event.findById<factory.eventType.ScreeningEvent>({
+        const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
             id: params.object.event.id
         });
+        const eventOffers = <factory.event.screeningEvent.IOffer>event.offers;
+
+        const serviceOutput = eventOffers.itemOffered.serviceOutput;
+        // 指定席のみかどうか
+        const reservedSeatsOnly = !(serviceOutput !== undefined
+            && serviceOutput.reservedTicket !== undefined
+            && serviceOutput.reservedTicket.ticketedSeat === undefined);
 
         // チケット存在確認
         const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
-        const ticketTypes = await repos.ticketType.findByTicketGroupId({ ticketGroupId: screeningEvent.offers.id });
+        const ticketTypes = await repos.ticketType.findByTicketGroupId({ ticketGroupId: eventOffers.id });
         debug('available ticket type:', ticketTypes);
 
         // 座席情報取得
-        const movieTheater = await repos.place.findMovieTheaterByBranchCode({ branchCode: screeningEvent.superEvent.location.branchCode });
+        const movieTheater = await repos.place.findMovieTheaterByBranchCode({ branchCode: event.superEvent.location.branchCode });
         const screeningRoom = <factory.place.movieTheater.IScreeningRoom | undefined>movieTheater.containsPlace.find(
-            (p) => p.branchCode === screeningEvent.location.branchCode
+            (p) => p.branchCode === event.location.branchCode
         );
         if (screeningRoom === undefined) {
             throw new factory.errors.NotFound(
                 'Screening Room',
-                `Event location 'Screening Room ${screeningEvent.location.branchCode}' not found`
+                `Event location 'Screening Room ${event.location.branchCode}' not found`
             );
         }
         const screeningRoomSections = screeningRoom.containsPlace;
@@ -91,7 +98,7 @@ export function start(
         // 予約番号発行
         const reservationNumber = await repos.reservationNumber.publish({
             reserveDate: now,
-            sellerBranchCode: screeningEvent.superEvent.location.branchCode
+            sellerBranchCode: event.superEvent.location.branchCode
         });
 
         // 取引ファクトリーで新しい進行中取引オブジェクトを作成
@@ -126,28 +133,42 @@ export function start(
                     };
                 }
 
-                const screeningRoomSection = screeningRoomSections.find((section) => section.branchCode === offer.ticketedSeat.seatSection);
-                if (screeningRoomSection === undefined) {
-                    throw new factory.errors.NotFound(
-                        'Screening Room Section',
-                        `Screening room section ${offer.ticketedSeat.seatSection} not found`
+                const acceptedTicketedSeat = offer.ticketedSeat;
+                let ticketedSeat: factory.reservation.ISeat | undefined;
+
+                if (reservedSeatsOnly) {
+                    // 指定席のみの場合、座席指定が必須
+                    if (acceptedTicketedSeat === undefined) {
+                        throw new factory.errors.ArgumentNull('offer.ticketedSeat');
+                    }
+
+                    const screeningRoomSection = screeningRoomSections.find(
+                        (section) => section.branchCode === acceptedTicketedSeat.seatSection
                     );
-                }
-                const seat = screeningRoomSection.containsPlace.find((p) => p.branchCode === offer.ticketedSeat.seatNumber);
-                if (seat === undefined) {
-                    throw new factory.errors.NotFound('Seat', `Seat ${offer.ticketedSeat.seatNumber} not found`);
+                    if (screeningRoomSection === undefined) {
+                        throw new factory.errors.NotFound(
+                            'Screening Room Section',
+                            `Screening room section ${acceptedTicketedSeat.seatSection} not found`
+                        );
+                    }
+                    const seat = screeningRoomSection.containsPlace.find((p) => p.branchCode === acceptedTicketedSeat.seatNumber);
+                    if (seat === undefined) {
+                        throw new factory.errors.NotFound('Seat', `Seat ${acceptedTicketedSeat.seatNumber} not found`);
+                    }
+
+                    ticketedSeat = { ...acceptedTicketedSeat, ...seat };
                 }
 
                 return {
                     typeOf: <factory.reservation.TicketType>'Ticket',
                     dateIssued: now,
                     issuedBy: {
-                        typeOf: screeningEvent.location.typeOf,
-                        name: screeningEvent.location.name.ja
+                        typeOf: event.location.typeOf,
+                        name: event.location.name.ja
                     },
                     totalPrice: ticketOffer.priceSpecification,
                     priceCurrency: factory.priceCurrency.JPY,
-                    ticketedSeat: { ...offer.ticketedSeat, ...seat },
+                    ticketedSeat: ticketedSeat,
                     underName: {
                         typeOf: params.agent.typeOf,
                         name: params.agent.name
@@ -163,7 +184,7 @@ export function start(
                 reserveDate: now,
                 agent: params.agent,
                 reservationNumber: reservationNumber,
-                screeningEvent: screeningEvent,
+                screeningEvent: event,
                 reservedTicket: ticket
             });
         }));
@@ -172,9 +193,8 @@ export function start(
             agent: params.agent,
             object: {
                 clientUser: params.object.clientUser,
-                event: screeningEvent,
-                reservations: reservations,
-                notes: params.object.notes
+                event: event,
+                reservations: reservations
             },
             expires: params.expires
         };
@@ -193,18 +213,21 @@ export function start(
             throw error;
         }
 
-        // 座席ロック
-        await repos.eventAvailability.lock({
-            eventId: screeningEvent.id,
-            offers: tickets.map((ticket) => {
-                return {
-                    seatSection: ticket.ticketedSeat.seatSection,
-                    seatNumber: ticket.ticketedSeat.seatNumber
-                };
-            }),
-            expires: screeningEvent.endDate,
-            holder: transaction.id
-        });
+        // 指定席イベントであれば、座席ロック
+        if (reservedSeatsOnly) {
+            await repos.eventAvailability.lock({
+                eventId: event.id,
+                offers: tickets.map((t) => {
+                    // 指定席のみの場合、上記処理によってticketedSeatの存在は保証されている
+                    return {
+                        seatSection: (<factory.reservation.ISeat>t.ticketedSeat).seatSection,
+                        seatNumber: (<factory.reservation.ISeat>t.ticketedSeat).seatNumber
+                    };
+                }),
+                expires: event.endDate,
+                holder: transaction.id
+            });
+        }
 
         // 予約作成
         await Promise.all(reservations.map(async (r) => {
@@ -276,7 +299,6 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
 
             return {
                 typeOf: <factory.actionType.ReserveAction>factory.actionType.ReserveAction,
-                description: transaction.object.notes,
                 result: {
                 },
                 object: reservation,

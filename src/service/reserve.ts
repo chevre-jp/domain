@@ -85,16 +85,19 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
                 await repos.reservation.cancel({ id: reservation.id });
 
                 // 予約取引がまだ座席を保持していれば座席ロック解除
-                const lockKey = {
-                    eventId: reservation.reservationFor.id,
-                    offer: {
-                        seatNumber: reservation.reservedTicket.ticketedSeat.seatNumber,
-                        seatSection: reservation.reservedTicket.ticketedSeat.seatSection
+                const ticketedSeat = reservation.reservedTicket.ticketedSeat;
+                if (ticketedSeat !== undefined) {
+                    const lockKey = {
+                        eventId: reservation.reservationFor.id,
+                        offer: {
+                            seatNumber: ticketedSeat.seatNumber,
+                            seatSection: ticketedSeat.seatSection
+                        }
+                    };
+                    const holder = await repos.eventAvailability.getHolder(lockKey);
+                    if (holder === reserveTransaction.id) {
+                        await repos.eventAvailability.unlock(lockKey);
                     }
-                };
-                const holder = await repos.eventAvailability.getHolder(lockKey);
-                if (holder === reserveTransaction.id) {
-                    await repos.eventAvailability.unlock(lockKey);
                 }
             } catch (error) {
                 // actionにエラー結果を追加
@@ -140,16 +143,19 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
                 await repos.reservation.cancel({ id: reservation.id });
 
                 // 予約取引がまだ座席を保持していれば座席ロック解除
-                const lockKey = {
-                    eventId: reservation.reservationFor.id,
-                    offer: {
-                        seatNumber: reservation.reservedTicket.ticketedSeat.seatNumber,
-                        seatSection: reservation.reservedTicket.ticketedSeat.seatSection
+                const ticketedSeat = reservation.reservedTicket.ticketedSeat;
+                if (ticketedSeat !== undefined) {
+                    const lockKey = {
+                        eventId: reservation.reservationFor.id,
+                        offer: {
+                            seatNumber: ticketedSeat.seatNumber,
+                            seatSection: ticketedSeat.seatSection
+                        }
+                    };
+                    const holder = await repos.eventAvailability.getHolder(lockKey);
+                    if (holder === cancelReservationTransaction.object.transaction.id) {
+                        await repos.eventAvailability.unlock(lockKey);
                     }
-                };
-                const holder = await repos.eventAvailability.getHolder(lockKey);
-                if (holder === cancelReservationTransaction.object.transaction.id) {
-                    await repos.eventAvailability.unlock(lockKey);
                 }
             } catch (error) {
                 // actionにエラー結果を追加

@@ -47,9 +47,7 @@ async function main() {
     await Promise.all(serviceTypes.map(async (serviceType) => {
         await serviceTypeRepo.save(serviceType);
     }));
-    await Promise.all(accountTitles.map(async (accountTitle) => {
-        await accountTitleRepo.save(accountTitle);
-    }));
+    await accountTitleRepo.accountTitleModel.create(accountTitles);
     await Promise.all(ticketTypes.map(async (ticketType) => {
         await ticketTypeRepo.createTicketType(ticketType);
     }));
