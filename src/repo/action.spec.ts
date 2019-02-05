@@ -3,6 +3,7 @@
  * アクションリポジトリーテスト
  */
 import { } from 'mocha';
+import * as mongoose from 'mongoose';
 import * as assert from 'power-assert';
 import * as sinon from 'sinon';
 import { } from 'sinon-mongoose';
@@ -21,7 +22,7 @@ describe('start()', () => {
 
     it('アクションオブジェクトが返却されるはず', async () => {
         const params = {};
-        const repository = new domain.repository.Action(domain.mongoose.connection);
+        const repository = new domain.repository.Action(mongoose.connection);
         sandbox.mock(repository.actionModel).expects('create').once()
             .resolves(new repository.actionModel());
 
@@ -39,7 +40,7 @@ describe('complete()', () => {
     it('アクションが存在すればオブジェクトが返却されるはず', async () => {
         const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
         const actionResult = {};
-        const repository = new domain.repository.Action(domain.mongoose.connection);
+        const repository = new domain.repository.Action(mongoose.connection);
         sandbox.mock(repository.actionModel).expects('findOneAndUpdate').once()
             .chain('exec').resolves(new repository.actionModel());
 
@@ -55,7 +56,7 @@ describe('complete()', () => {
     it('アクションが存在しなければNotFoundエラーとなるはず', async () => {
         const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
         const actionResult = {};
-        const repository = new domain.repository.Action(domain.mongoose.connection);
+        const repository = new domain.repository.Action(mongoose.connection);
         sandbox.mock(repository.actionModel).expects('findOneAndUpdate').once()
             .chain('exec').resolves(null);
 
@@ -76,7 +77,7 @@ describe('cancel()', () => {
 
     it('アクションが存在すればオブジェクトが返却されるはず', async () => {
         const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
-        const repository = new domain.repository.Action(domain.mongoose.connection);
+        const repository = new domain.repository.Action(mongoose.connection);
         sandbox.mock(repository.actionModel).expects('findOneAndUpdate').once()
             .chain('exec').resolves(new repository.actionModel());
 
@@ -90,7 +91,7 @@ describe('cancel()', () => {
 
     it('アクションが存在しなければNotFoundエラーとなるはず', async () => {
         const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
-        const repository = new domain.repository.Action(domain.mongoose.connection);
+        const repository = new domain.repository.Action(mongoose.connection);
         sandbox.mock(repository.actionModel).expects('findOneAndUpdate').once()
             .chain('exec').resolves(null);
 
@@ -111,7 +112,7 @@ describe('giveUp()', () => {
     it('アクションが存在すればオブジェクトが返却されるはず', async () => {
         const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
         const error = {};
-        const repository = new domain.repository.Action(domain.mongoose.connection);
+        const repository = new domain.repository.Action(mongoose.connection);
         sandbox.mock(repository.actionModel).expects('findOneAndUpdate').once()
             .chain('exec').resolves(new repository.actionModel());
 
@@ -127,7 +128,7 @@ describe('giveUp()', () => {
     it('アクションが存在しなければNotFoundエラーとなるはず', async () => {
         const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
         const error = {};
-        const repository = new domain.repository.Action(domain.mongoose.connection);
+        const repository = new domain.repository.Action(mongoose.connection);
         sandbox.mock(repository.actionModel).expects('findOneAndUpdate').once()
             .chain('exec').resolves(null);
 
@@ -148,7 +149,7 @@ describe('findById()', () => {
 
     it('アクションが存在すればオブジェクトが返却されるはず', async () => {
         const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
-        const repository = new domain.repository.Action(domain.mongoose.connection);
+        const repository = new domain.repository.Action(mongoose.connection);
         sandbox.mock(repository.actionModel).expects('findOne').once()
             .chain('exec').resolves(new repository.actionModel());
 
@@ -162,7 +163,7 @@ describe('findById()', () => {
 
     it('アクションが存在しなければNotFoundエラーとなるはず', async () => {
         const action = { typeOf: domain.factory.actionType.ReserveAction, id: 'actionId' };
-        const repository = new domain.repository.Action(domain.mongoose.connection);
+        const repository = new domain.repository.Action(mongoose.connection);
         sandbox.mock(repository.actionModel).expects('findOne').once()
             .chain('exec').resolves(null);
 
