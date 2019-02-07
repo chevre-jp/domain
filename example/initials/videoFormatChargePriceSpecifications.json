@@ -1,0 +1,43 @@
+[
+    {
+        "typeOf": "CompoundPriceSpecification",
+        "valueAddedTaxIncluded": true,
+        "priceComponent": [
+            {
+                "typeOf": "VideoFormatChargeSpecification",
+                "appliesToVideoFormat": "3D",
+                "price": 1300,
+                "priceCurrency": "JPY",
+                "valueAddedTaxIncluded": true
+            },
+            {
+                "typeOf": "VideoFormatChargeSpecification",
+                "appliesToVideoFormat": "IMAX",
+                "price": 0,
+                "priceCurrency": "JPY",
+                "valueAddedTaxIncluded": true
+            },
+            {
+                "typeOf": "VideoFormatChargeSpecification",
+                "appliesToVideoFormat": "4DX",
+                "price": 0,
+                "priceCurrency": "JPY",
+                "valueAddedTaxIncluded": true
+            },
+            {
+                "typeOf": "VideoFormatChargeSpecification",
+                "appliesToVideoFormat": "TCX",
+                "price": 0,
+                "priceCurrency": "JPY",
+                "valueAddedTaxIncluded": true
+            },
+            {
+                "typeOf": "VideoFormatChargeSpecification",
+                "appliesToVideoFormat": "MX4D",
+                "price": 0,
+                "priceCurrency": "JPY",
+                "valueAddedTaxIncluded": true
+            }
+        ]
+    }
+]
