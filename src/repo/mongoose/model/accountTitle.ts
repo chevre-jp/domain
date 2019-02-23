@@ -17,6 +17,8 @@ const schema = new mongoose.Schema(
         description: String,
         inCodeSet: mongoose.SchemaTypes.Mixed,
         hasCategoryCode: mongoose.SchemaTypes.Mixed,
+        inDefinedTermSet: mongoose.SchemaTypes.Mixed,
+        hasDefinedTerm: mongoose.SchemaTypes.Mixed,
         additionalProperty: mongoose.SchemaTypes.Mixed
     },
     {
