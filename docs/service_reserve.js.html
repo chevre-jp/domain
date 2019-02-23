@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Chevre Domain Library for Node.js Source: service/reserve.js</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.cosmo.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">Chevre Domain Library for Node.js</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="MongoRepository.html">MongoRepository</a></li><li><a href="RedisRepository.html">RedisRepository</a></li><li><a href="Repository.html">Repository</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#abort">abort</a></li><li><a href="global.html#accountTitle_1">accountTitle_1</a></li><li><a href="global.html#aggregateScreeningEvent">aggregateScreeningEvent</a></li><li><a href="global.html#AggregationService">AggregationService</a></li><li><a href="global.html#call">call</a></li><li><a href="global.html#cancel">cancel</a></li><li><a href="global.html#cancelPendingReservation">cancelPendingReservation</a></li><li><a href="global.html#cancelReservation">cancelReservation</a></li><li><a href="global.html#confirm">confirm</a></li><li><a href="global.html#confirmReservation">confirmReservation</a></li><li><a href="global.html#createDebug">createDebug</a></li><li><a href="global.html#default">default</a></li><li><a href="global.html#execute">execute</a></li><li><a href="global.html#executeByName">executeByName</a></li><li><a href="global.html#exportTasks">exportTasks</a></li><li><a href="global.html#exportTasksById">exportTasksById</a></li><li><a href="global.html#redis">redis</a></li><li><a href="global.html#retry">retry</a></li><li><a href="global.html#schema">schema</a></li><li><a href="global.html#searchScreeningEventTicketOffers">searchScreeningEventTicketOffers</a></li><li><a href="global.html#sortOrder4executionOfTasks">sortOrder4executionOfTasks</a></li><li><a href="global.html#start">start</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			
+
+		<h1 class="page-title">Source: service/reserve.js</h1>
+    
+<section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript linenums">"use strict";
+var __awaiter = (this &amp;&amp; this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * 予約サービス
+ */
+const createDebug = require("debug");
+const factory = require("../factory");
+const debug = createDebug('chevre-domain:service');
+/**
+ * 予約を確定する
+ */
+function confirmReservation(actionAttributesList) {
+    return (repos) => __awaiter(this, void 0, void 0, function* () {
+        yield Promise.all(actionAttributesList.map((actionAttributes) => __awaiter(this, void 0, void 0, function* () {
+            // アクション開始
+            const action = yield repos.action.start(actionAttributes);
+            try {
+                // 予約を確定状態に変更する
+                yield repos.reservation.confirm(actionAttributes.object);
+            }
+            catch (error) {
+                // actionにエラー結果を追加
+                try {
+                    const actionError = Object.assign({}, error, { message: error.message, name: error.name });
+                    yield repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
+                }
+                catch (__) {
+                    // 失敗したら仕方ない
+                }
+                throw error;
+            }
+            // アクション完了
+            const actionResult = {};
+            yield repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+        })));
+        const aggregateTask = {
+            name: factory.taskName.AggregateScreeningEvent,
+            status: factory.taskStatus.Ready,
+            runsAt: new Date(),
+            remainingNumberOfTries: 10,
+            lastTriedAt: null,
+            numberOfTried: 0,
+            executionResults: [],
+            data: actionAttributesList[0].object.reservationFor
+        };
+        yield repos.task.save(aggregateTask);
+    });
+}
+exports.confirmReservation = confirmReservation;
+/**
+ * 進行中の予約をキャンセルする
+ */
+function cancelPendingReservation(actionAttributesList) {
+    return (repos) => __awaiter(this, void 0, void 0, function* () {
+        const reserveTransaction = yield repos.transaction.findById({
+            typeOf: factory.transactionType.Reserve,
+            id: actionAttributesList[0].purpose.id
+        });
+        debug('canceling reservations...', actionAttributesList);
+        yield Promise.all(actionAttributesList.map((actionAttributes) => __awaiter(this, void 0, void 0, function* () {
+            // アクション開始
+            const action = yield repos.action.start(actionAttributes);
+            try {
+                // 予約をキャンセル状態に変更する
+                const reservation = actionAttributes.object;
+                yield repos.reservation.cancel({ id: reservation.id });
+                // 予約取引がまだ座席を保持していれば座席ロック解除
+                const ticketedSeat = reservation.reservedTicket.ticketedSeat;
+                if (ticketedSeat !== undefined) {
+                    const lockKey = {
+                        eventId: reservation.reservationFor.id,
+                        offer: {
+                            seatNumber: ticketedSeat.seatNumber,
+                            seatSection: ticketedSeat.seatSection
+                        }
+                    };
+                    const holder = yield repos.eventAvailability.getHolder(lockKey);
+                    if (holder === reserveTransaction.id) {
+                        yield repos.eventAvailability.unlock(lockKey);
+                    }
+                }
+            }
+            catch (error) {
+                // actionにエラー結果を追加
+                try {
+                    const actionError = Object.assign({}, error, { message: error.message, name: error.name });
+                    yield repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
+                }
+                catch (__) {
+                    // 失敗したら仕方ない
+                }
+                throw error;
+            }
+            // アクション完了
+            const actionResult = {};
+            yield repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+        })));
+    });
+}
+exports.cancelPendingReservation = cancelPendingReservation;
+/**
+ * 予約をキャンセルする
+ */
+function cancelReservation(actionAttributesList) {
+    return (repos) => __awaiter(this, void 0, void 0, function* () {
+        const cancelReservationTransaction = yield repos.transaction.findById({ typeOf: factory.transactionType.CancelReservation, id: actionAttributesList[0].purpose.id });
+        debug('canceling reservations...', actionAttributesList);
+        yield Promise.all(actionAttributesList.map((actionAttributes) => __awaiter(this, void 0, void 0, function* () {
+            // アクション開始
+            const action = yield repos.action.start(actionAttributes);
+            try {
+                // 予約をキャンセル状態に変更する
+                const reservation = actionAttributes.object;
+                yield repos.reservation.cancel({ id: reservation.id });
+                // 予約取引がまだ座席を保持していれば座席ロック解除
+                const ticketedSeat = reservation.reservedTicket.ticketedSeat;
+                if (ticketedSeat !== undefined) {
+                    const lockKey = {
+                        eventId: reservation.reservationFor.id,
+                        offer: {
+                            seatNumber: ticketedSeat.seatNumber,
+                            seatSection: ticketedSeat.seatSection
+                        }
+                    };
+                    const holder = yield repos.eventAvailability.getHolder(lockKey);
+                    if (holder === cancelReservationTransaction.object.transaction.id) {
+                        yield repos.eventAvailability.unlock(lockKey);
+                    }
+                }
+            }
+            catch (error) {
+                // actionにエラー結果を追加
+                try {
+                    const actionError = Object.assign({}, error, { message: error.message, name: error.name });
+                    yield repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
+                }
+                catch (__) {
+                    // 失敗したら仕方ない
+                }
+                throw error;
+            }
+            // アクション完了
+            const actionResult = {};
+            yield repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+        })));
+        const aggregateTask = {
+            name: factory.taskName.AggregateScreeningEvent,
+            status: factory.taskStatus.Ready,
+            runsAt: new Date(),
+            remainingNumberOfTries: 10,
+            lastTriedAt: null,
+            numberOfTried: 0,
+            executionResults: [],
+            data: actionAttributesList[0].object.reservationFor
+        };
+        yield repos.task.save(aggregateTask);
+    });
+}
+exports.cancelReservation = cancelReservation;
+</pre>
+    </article>
+</section>
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
+	
+		on Sat Feb 23rd 2019
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>
