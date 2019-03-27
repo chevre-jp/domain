@@ -4,7 +4,7 @@ import placeModel from './mongoose/model/place';
 import * as factory from '../factory';
 
 /**
- * 場所リポジトリー
+ * 場所リポジトリ
  */
 export class MongoRepository {
     public readonly placeModel: typeof placeModel;

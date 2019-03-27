@@ -1,16 +1,22 @@
+const mongoose = require('mongoose');
+
 const domain = require('../../lib');
 
-const accountTitles = require('./accountTitles');
+let accountTitles = require('./accountTitles');
 
 async function main() {
-    await domain.mongoose.connect(process.env.MONGOLAB_URI);
+    await mongoose.connect(process.env.MONGOLAB_URI);
 
-    const accountTitleRepo = new domain.repository.AccountTitle(domain.mongoose.connection);
+    const accountTitleRepo = new domain.repository.AccountTitle(mongoose.connection);
 
     await accountTitleRepo.accountTitleModel.deleteMany({}).exec();
-    await accountTitleRepo.accountTitleModel.create(accountTitles);
 
-    await domain.mongoose.disconnect();
+    for (const accountTitle of accountTitles) {
+        await accountTitleRepo.accountTitleModel.create(accountTitle);
+        console.log('accountTitle created', accountTitle.codeValue);
+    }
+
+    // await mongoose.disconnect();
 }
 
 main().then(console.log).catch(console.error);

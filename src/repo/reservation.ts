@@ -5,7 +5,7 @@ import reservationModel from './mongoose/model/reservation';
 import * as factory from '../factory';
 
 /**
- * 予約リポジトリー
+ * 予約リポジトリ
  */
 export class MongoRepository {
     public readonly reservationModel: typeof reservationModel;

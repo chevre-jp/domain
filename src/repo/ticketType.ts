@@ -5,7 +5,7 @@ import TicketTypeModel from './mongoose/model/ticketType';
 import TicketTypeGroupModel from './mongoose/model/ticketTypeGroup';
 
 /**
- * Mongoリポジトリー
+ * Mongoリポジトリ
  */
 export class MongoRepository {
     public readonly ticketTypeModel: typeof TicketTypeModel;

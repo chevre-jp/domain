@@ -84,8 +84,10 @@ export function searchScreeningEventTicketOffers(params: {
             || eventOffers.acceptedPaymentMethod.indexOf(factory.paymentMethodType.MovieTicket) >= 0;
         if (movieTicketPaymentAccepted) {
             movieTicketOffers = ticketTypes
+                .filter((t) => t.priceSpecification !== undefined)
                 .filter((t) => {
-                    const movieTicketType = t.priceSpecification.appliesToMovieTicketType;
+                    const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
+                    const movieTicketType = spec.appliesToMovieTicketType;
 
                     return movieTicketType !== undefined
                         && movieTicketType !== ''
@@ -93,14 +95,16 @@ export function searchScreeningEventTicketOffers(params: {
                         && movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketType).length > 0;
                 })
                 .map((t) => {
-                    const movieTicketType = <string>t.priceSpecification.appliesToMovieTicketType;
+                    const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
+
+                    const movieTicketType = <string>spec.appliesToMovieTicketType;
                     const mvtkSpecs = movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketType);
                     const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
                         typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
                         priceCurrency: factory.priceCurrency.JPY,
                         valueAddedTaxIncluded: true,
                         priceComponent: [
-                            t.priceSpecification,
+                            spec,
                             ...mvtkSpecs
                         ]
                     };
@@ -116,17 +120,22 @@ export function searchScreeningEventTicketOffers(params: {
 
         // ムビチケ以外のオファーを作成
         const ticketTypeOffers = ticketTypes
+            .filter((t) => t.priceSpecification !== undefined)
             .filter((t) => {
-                return t.priceSpecification.appliesToMovieTicketType === undefined
-                    || t.priceSpecification.appliesToMovieTicketType === '';
+                const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
+
+                return spec.appliesToMovieTicketType === undefined
+                    || spec.appliesToMovieTicketType === '';
             })
             .map((t) => {
+                const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
+
                 const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
                     typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
                     priceCurrency: factory.priceCurrency.JPY,
                     valueAddedTaxIncluded: true,
                     priceComponent: [
-                        t.priceSpecification,
+                        spec,
                         ...videoFormatChargeSpecifications,
                         ...soundFormatChargeSpecifications
                     ]

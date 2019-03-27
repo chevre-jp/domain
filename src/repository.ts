@@ -1,6 +1,6 @@
 // tslint:disable:max-classes-per-file completed-docs
 /**
- * リポジトリー
+ * リポジトリ
  */
 import { MongoRepository as AccountTitleRepo } from './repo/accountTitle';
 import { MongoRepository as ActionRepo } from './repo/action';

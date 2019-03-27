@@ -8,7 +8,7 @@ import * as factory from '../factory';
 const debug = createDebug('chevre-domain:repo');
 
 /**
- * Redisリポジトリー
+ * Redisリポジトリ
  */
 export class RedisRepository {
     public static REDIS_KEY_PREFIX: string = 'chevre:reservationNumber';

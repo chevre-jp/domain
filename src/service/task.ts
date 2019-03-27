@@ -20,7 +20,7 @@ export interface IConnectionSettings {
 }
 export interface ISettings extends IConnectionSettings {
     /**
-     * タスクリポジトリー
+     * タスクリポジトリ
      */
     taskRepo: TaskRepo;
 }

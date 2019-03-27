@@ -119,22 +119,26 @@ schema.index(
     { name: 'searchByUpdatedAt' }
 );
 
-// 上映イベント検索に使用
+schema.index(
+    { typeOf: 1, startDate: 1 },
+    { name: 'searchByTypeOf' }
+);
+
 schema.index(
     {
-        typeOf: 1,
-        'superEvent.location.branchCode': 1
+        'superEvent.location.branchCode': 1,
+        startDate: 1
     },
     {
         partialFilterExpression: {
             'superEvent.location.branchCode': { $exists: true }
         },
-        name: 'searchScreeningEventsByLocationBranchCode'
+        name: 'searchBySuperEventLocationBranchCode'
     }
 );
+
 schema.index(
     {
-        typeOf: 1,
         'superEvent.workPerformed.identifier': 1,
         startDate: 1
     },
@@ -142,64 +146,107 @@ schema.index(
         partialFilterExpression: {
             'superEvent.workPerformed.identifier': { $exists: true }
         },
-        name: 'searchScreeningEventsByWorkPerformedIdentifier'
+        name: 'searchBySuperEventWorkPerformedIdentifier'
     }
 );
-schema.index({ typeOf: 1, startDate: 1 });
-schema.index({ typeOf: 1, endDate: 1 });
+
+schema.index(
+    { startDate: 1 },
+    { name: 'searchByStartDate' }
+);
+
+schema.index(
+    { endDate: 1, startDate: 1 },
+    { name: 'searchByEndDate' }
+);
+
 schema.index(
     {
-        'offers.availabilityEnds': 1
+        'offers.availabilityEnds': 1,
+        startDate: 1
     },
     {
         partialFilterExpression: {
             'offers.availabilityEnds': { $exists: true }
         },
-        name: 'searchByOffersAvailabilityEnds'
+        name: 'searchByOffersAvailabilityEnds-v2'
     }
 );
+
 schema.index(
     {
-        'offers.availabilityStarts': 1
+        'offers.availabilityStarts': 1,
+        startDate: 1
     },
     {
         partialFilterExpression: {
             'offers.availabilityStarts': { $exists: true }
         },
-        name: 'searchByOffersAvailabilityStarts'
+        name: 'searchByOffersAvailabilityStarts-v2'
     }
 );
+
 schema.index(
     {
-        'offers.validThrough': 1
+        'offers.validThrough': 1,
+        startDate: 1
     },
     {
         partialFilterExpression: {
             'offers.validThrough': { $exists: true }
         },
-        name: 'searchByOffersValidThrough'
+        name: 'searchByOffersValidThrough-v2'
     }
 );
+
 schema.index(
     {
-        'offers.validFrom': 1
+        'offers.validFrom': 1,
+        startDate: 1
     },
     {
         partialFilterExpression: {
             'offers.validFrom': { $exists: true }
         },
-        name: 'searchByOffersValidFrom'
+        name: 'searchByOffersValidFrom-v2'
     }
 );
+
 schema.index(
     {
-        'offers.id': 1
+        'offers.id': 1,
+        startDate: 1
     },
     {
         partialFilterExpression: {
             'offers.id': { $exists: true }
         },
-        name: 'searchByOffersId'
+        name: 'searchByOffersId-v2'
+    }
+);
+
+schema.index(
+    {
+        'offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat.typeOf': 1,
+        startDate: 1
+    },
+    {
+        partialFilterExpression: {
+            'offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat.typeOf': { $exists: true }
+        },
+        name: 'searchByOffersItemOfferedServiceOutputReservedTicketTicketedSeatTypeOf'
+    }
+);
+schema.index(
+    {
+        'offers.itemOffered.serviceType.id': 1,
+        startDate: 1
+    },
+    {
+        partialFilterExpression: {
+            'offers.itemOffered.serviceType.id': { $exists: true }
+        },
+        name: 'searchByOffersItemOfferedServiceTypeId'
     }
 );
 

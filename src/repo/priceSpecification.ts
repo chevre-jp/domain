@@ -4,7 +4,7 @@ import * as factory from '../factory';
 import priceSpecificationModel from './mongoose/model/priceSpecification';
 
 /**
- * 価格仕様リポジトリー
+ * 価格仕様リポジトリ
  */
 export class MongoRepository {
     public readonly priceSpecificationModel: typeof priceSpecificationModel;

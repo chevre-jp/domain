@@ -5,7 +5,7 @@ import * as factory from '../factory';
 import eventModel from './mongoose/model/event';
 
 /**
- * イベントリポジトリー
+ * イベントリポジトリ
  */
 export class MongoRepository {
     public readonly eventModel: typeof eventModel;
@@ -173,7 +173,50 @@ export class MongoRepository {
                             }
                         });
                     }
+
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (params.offers.itemOffered !== undefined) {
+                        // tslint:disable-next-line:no-single-line-block-comment
+                        /* istanbul ignore else */
+                        if (params.offers.itemOffered.serviceOutput !== undefined) {
+                            // tslint:disable-next-line:no-single-line-block-comment
+                            /* istanbul ignore else */
+                            if (params.offers.itemOffered.serviceOutput.reservedTicket !== undefined) {
+                                // tslint:disable-next-line:no-single-line-block-comment
+                                /* istanbul ignore else */
+                                if (params.offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat !== undefined) {
+                                    // tslint:disable-next-line:no-single-line-block-comment
+                                    /* istanbul ignore else */
+                                    if (Array.isArray(params.offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat.typeOfs)) {
+                                        andConditions.push({
+                                            'offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat.typeOf': {
+                                                $exists: true,
+                                                $in: params.offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat.typeOfs
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        }
+
+                        // tslint:disable-next-line:no-single-line-block-comment
+                        /* istanbul ignore else */
+                        if (params.offers.itemOffered.serviceType !== undefined) {
+                            // tslint:disable-next-line:no-single-line-block-comment
+                            /* istanbul ignore else */
+                            if (Array.isArray(params.offers.itemOffered.serviceType.ids)) {
+                                andConditions.push({
+                                    'offers.itemOffered.serviceType.id': {
+                                        $exists: true,
+                                        $in: params.offers.itemOffered.serviceType.ids
+                                    }
+                                });
+                            }
+                        }
+                    }
                 }
+
                 break;
 
             case factory.eventType.ScreeningEventSeries:
@@ -266,6 +309,7 @@ export class MongoRepository {
                 }
 
                 break;
+
             default:
         }
 
