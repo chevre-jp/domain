@@ -33,3 +33,20 @@ export namespace aggregation {
 export namespace itemAvailability {
     export class ScreeningEvent extends ScreeningEventItemAvailabilityRepo { }
 }
+
+import { MongoRepository as BoxOfficeTypeRepo } from './repo/boxOfficeType';
+import { MongoRepository as DistributionsRepo } from './repo/distributions';
+import { MongoRepository as SubjectRepo } from './repo/subject';
+
+/**
+ * @deprecated 東映ローカライズなのでそのうち廃止
+ */
+export class BoxOfficeType extends BoxOfficeTypeRepo { }
+/**
+ * @deprecated 東映ローカライズなのでそのうち廃止
+ */
+export class Distributions extends DistributionsRepo { }
+/**
+ * @deprecated 東映ローカライズなのでそのうち廃止
+ */
+export class Subject extends SubjectRepo { }

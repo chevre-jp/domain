@@ -13,7 +13,7 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "1.0.0-alpha.68",
+    "@chevre/factory": "1.0.0-alpha.69",
     "@types/redis": "^2.8.10",
     "debug": "^3.2.6",
     "moment": "^2.24.0",
