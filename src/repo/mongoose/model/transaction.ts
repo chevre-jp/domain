@@ -99,88 +99,65 @@ schema.index(
     { updatedAt: 1 },
     { name: 'searchByUpdatedAt' }
 );
+
 schema.index(
-    { typeOf: 1 },
-    { name: 'searchByTypeOf' }
+    { typeOf: 1, startDate: -1 },
+    { name: 'searchByTypeOf-v2' }
 );
+
 schema.index(
-    { status: 1 },
-    { name: 'searchByStatus' }
+    { status: 1, startDate: -1 },
+    { name: 'searchByStatus-v2' }
 );
+
 schema.index(
-    { agent: 1 },
-    { name: 'searchByAgent' }
+    { startDate: -1 },
+    { name: 'searchByStartDate-v2' }
 );
+
 schema.index(
-    { startDate: 1 },
-    { name: 'searchByStartDate' }
-);
-schema.index(
-    { endDate: 1 },
+    { endDate: 1, startDate: -1 },
     {
-        name: 'searchByEndDate',
+        name: 'searchByEndDate-v2',
         partialFilterExpression: {
             endDate: { $exists: true }
         }
     }
 );
+
 schema.index(
-    { expires: 1 },
-    { name: 'searchByExpires' }
+    { expires: 1, startDate: -1 },
+    { name: 'searchByExpires-v2' }
 );
+
 schema.index(
-    { tasksExportationStatus: 1 },
-    { name: 'searchByTasksExportationStatus' }
+    { tasksExportationStatus: 1, startDate: -1 },
+    { name: 'searchByTasksExportationStatus-v2' }
 );
+
 schema.index(
-    { tasksExportedAt: 1 },
+    { tasksExportedAt: 1, startDate: -1 },
     {
-        name: 'searchByTasksExportedAt',
+        name: 'searchByTasksExportedAt-v2',
         partialFilterExpression: {
             tasksExportedAt: { $exists: true }
         }
     }
 );
 
-// タスクエクスポート時の検索で使用
 schema.index(
-    { tasksExportationStatus: 1, status: 1 }
+    { typeOf: 1, status: 1, tasksExportationStatus: 1 },
+    { name: 'startExportTasks' }
 );
 
-// 取引期限切れ確認等に使用
 schema.index(
-    { status: 1, expires: 1 }
+    { tasksExportationStatus: 1, updatedAt: 1 },
+    { name: 'reexportTasks' }
 );
 
-// 実行中タスクエクスポート監視に使用
 schema.index(
-    { tasksExportationStatus: 1, updatedAt: 1 }
-);
-
-// 取引進行中は、基本的にIDとステータスで参照する
-schema.index(
-    { status: 1, typeOf: 1, _id: 1 }
-);
-
-// 許可証でユニークに
-schema.index(
-    {
-        'object.passportToken': 1
-    },
-    {
-        unique: true,
-        partialFilterExpression: {
-            'object.passportToken': { $exists: true }
-        }
-    }
-);
-
-// 取引タイプ指定で取得する場合に使用
-schema.index(
-    {
-        typeOf: 1,
-        _id: 1
-    }
+    { status: 1, expires: 1 },
+    { name: 'makeExpired' }
 );
 
 export default mongoose.model('Transaction', schema).on(

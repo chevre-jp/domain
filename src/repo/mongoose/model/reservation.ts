@@ -105,69 +105,79 @@ schema.index(
 );
 
 schema.index(
-    { typeOf: 1 },
-    { name: 'searchByTypeOf' }
+    { typeOf: 1, modifiedTime: -1 },
+    { name: 'searchByTypeOf-v2' }
 );
+
 schema.index(
-    { reservationNumber: 1 },
-    { name: 'searchByReservationNumber' }
+    { reservationNumber: 1, modifiedTime: -1 },
+    { name: 'searchByReservationNumber-v2' }
 );
+
 schema.index(
-    { reservationStatus: 1 },
-    { name: 'searchByReservationStatus' }
+    { reservationStatus: 1, modifiedTime: -1 },
+    { name: 'searchByReservationStatus-v2' }
 );
+
 schema.index(
-    { checkedIn: 1 },
-    { name: 'searchByCheckedIn' }
+    { checkedIn: 1, modifiedTime: -1 },
+    { name: 'searchByCheckedIn-v2' }
 );
+
 schema.index(
-    { attended: 1 },
-    { name: 'searchByAttended' }
+    { attended: 1, modifiedTime: -1 },
+    { name: 'searchByAttended-v2' }
 );
+
 schema.index(
-    { modifiedTime: 1 },
-    { name: 'searchByModifiedTime' }
+    { modifiedTime: -1 },
+    { name: 'searchByModifiedTime-v2' }
 );
+
 schema.index(
-    { 'reservationFor.typeOf': 1 },
+    { 'reservationFor.typeOf': 1, modifiedTime: -1 },
     {
-        name: 'searchByReservationForTypeOf',
+        name: 'searchByReservationForTypeOf-v2',
         partialFilterExpression: {
             'reservationFor.typeOf': { $exists: true }
         }
     }
 );
+
 schema.index(
-    { 'reservationFor.id': 1 },
+    { 'reservationFor.id': 1, modifiedTime: -1 },
     {
-        name: 'searchByReservationForId',
+        name: 'searchByReservationForId-v2',
         partialFilterExpression: {
             'reservationFor.id': { $exists: true }
         }
     }
 );
+
 schema.index(
-    { 'reservationFor.startDate': 1 },
+    { 'reservationFor.startDate': 1, modifiedTime: -1 },
     {
-        name: 'searchByReservationForStartDate',
+        name: 'searchByReservationForStartDate-v2',
         partialFilterExpression: {
             'reservationFor.startDate': { $exists: true }
         }
     }
 );
+
 schema.index(
-    { 'reservationFor.endDate': 1 },
+    { 'reservationFor.endDate': 1, modifiedTime: -1 },
     {
-        name: 'searchByReservationForEndDate',
+        name: 'searchByReservationForEndDate-v2',
         partialFilterExpression: {
             'reservationFor.endDate': { $exists: true }
         }
     }
 );
+
 schema.index(
-    { 'reservationFor.superEvent.id': 1 },
+    { 'reservationFor.superEvent.id': 1, modifiedTime: -1 },
     {
-        name: 'searchByReservationForSuperEventId',
+        name: 'searchByReservationForSuperEventId-v2',
         partialFilterExpression: {
             'reservationFor.superEvent.id': { $exists: true }
         }
