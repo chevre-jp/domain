@@ -70,12 +70,6 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    public async getBoxOfficeType(): Promise<factory.boxOfficeType.IBoxOfficeType[]> {
-        const query = this.boxOfficeTypeModel.find({});
-
-        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
-    }
-
     public async countBoxOfficeType(params: factory.boxOfficeType.ISearchConditions): Promise<number> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
 

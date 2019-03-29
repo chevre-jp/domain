@@ -37,15 +37,12 @@ export class MongoRepository {
      */
     public async save(params: factory.serviceType.IServiceType): Promise<factory.serviceType.IServiceType> {
         const doc = await this.serviceTypeModel.findOneAndUpdate(
-            {
-                typeOf: 'ServiceType',
-                _id: params.id
-            },
+            { _id: params.id },
             params,
             { upsert: true, new: true }
         ).exec();
         if (doc === null) {
-            throw new factory.errors.NotFound('ServiceType');
+            throw new factory.errors.NotFound(this.serviceTypeModel.modelName);
         }
 
         return doc.toObject();
@@ -85,10 +82,7 @@ export class MongoRepository {
         id: string;
     }): Promise<factory.serviceType.IServiceType> {
         const doc = await this.serviceTypeModel.findOne(
-            {
-                typeOf: 'ServiceType',
-                _id: params.id
-            },
+            { _id: params.id },
             {
                 __v: 0,
                 createdAt: 0,
@@ -96,9 +90,20 @@ export class MongoRepository {
             }
         ).exec();
         if (doc === null) {
-            throw new factory.errors.NotFound('ServiceType');
+            throw new factory.errors.NotFound(this.serviceTypeModel.modelName);
         }
 
         return doc.toObject();
+    }
+
+    /**
+     * 削除する
+     */
+    public async deleteById(params: {
+        id: string;
+    }): Promise<void> {
+        await this.serviceTypeModel.findOneAndRemove(
+            { _id: params.id }
+        ).exec();
     }
 }
