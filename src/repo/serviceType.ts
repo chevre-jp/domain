@@ -15,7 +15,7 @@ export class MongoRepository {
 
     public static CREATE_MONGO_CONDITIONS(params: factory.serviceType.ISearchConditions) {
         // MongoDB検索条件
-        const andConditions: any[] = [{ typeOf: 'ServiceType' }];
+        const andConditions: any[] = [];
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -40,7 +40,8 @@ export class MongoRepository {
             { _id: params.id },
             params,
             { upsert: true, new: true }
-        ).exec();
+        )
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound(this.serviceTypeModel.modelName);
         }
@@ -51,7 +52,9 @@ export class MongoRepository {
     public async count(params: factory.serviceType.ISearchConditions): Promise<number> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
 
-        return this.serviceTypeModel.countDocuments({ $and: conditions }).setOptions({ maxTimeMS: 10000 }).exec();
+        return this.serviceTypeModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
+            .setOptions({ maxTimeMS: 10000 })
+            .exec();
     }
 
     /**
@@ -62,7 +65,7 @@ export class MongoRepository {
     ): Promise<factory.serviceType.IServiceType[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.serviceTypeModel.find(
-            { $and: conditions },
+            (conditions.length > 0) ? { $and: conditions } : {},
             {
                 __v: 0,
                 createdAt: 0,
@@ -72,10 +75,19 @@ export class MongoRepository {
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit).skip(params.limit * (params.page - 1));
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
         }
 
-        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
+
+        return query.setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
     public async findById(params: {
@@ -88,7 +100,8 @@ export class MongoRepository {
                 createdAt: 0,
                 updatedAt: 0
             }
-        ).exec();
+        )
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound(this.serviceTypeModel.modelName);
         }
@@ -104,6 +117,7 @@ export class MongoRepository {
     }): Promise<void> {
         await this.serviceTypeModel.findOneAndRemove(
             { _id: params.id }
-        ).exec();
+        )
+            .exec();
     }
 }

@@ -37,6 +37,11 @@ schema.index(
     { name: 'searchByUpdatedAt' }
 );
 
+schema.index(
+    { name: 1, _id: 1 },
+    { name: 'searchByName' }
+);
+
 export default mongoose.model('ServiceType', schema).on(
     'index',
     // tslint:disable-next-line:no-single-line-block-comment
