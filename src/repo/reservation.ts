@@ -9,18 +9,18 @@ import * as factory from '../factory';
  */
 export class MongoRepository {
     public readonly reservationModel: typeof reservationModel;
+
     constructor(connection: Connection) {
         this.reservationModel = connection.model(reservationModel.modelName);
     }
 
     // tslint:disable-next-line:max-func-body-length
-    public static CREATE_EVENT_RESERVATION_MONGO_CONDITIONS(params: factory.reservation.event.ISearchConditions) {
+    public static CREATE_MONGO_CONDITIONS<T extends factory.reservationType>(params: factory.reservation.ISearchConditions<T>) {
         // MongoDB検索条件
         const andConditions: any[] = [
-            {
-                typeOf: factory.reservationType.EventReservation
-            }
+            { typeOf: params.typeOf }
         ];
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (Array.isArray(params.ids)) {
@@ -60,6 +60,7 @@ export class MongoRepository {
                 modifiedTime: { $lte: params.modifiedThrough }
             });
         }
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.reservationFor !== undefined) {
@@ -75,6 +76,7 @@ export class MongoRepository {
                     }
                 );
             }
+
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
             if (params.reservationFor.id !== undefined) {
@@ -87,6 +89,7 @@ export class MongoRepository {
                     }
                 );
             }
+
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
             if (Array.isArray(params.reservationFor.ids)) {
@@ -99,6 +102,7 @@ export class MongoRepository {
                     }
                 );
             }
+
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
             if (params.reservationFor.startFrom instanceof Date) {
@@ -111,6 +115,7 @@ export class MongoRepository {
                     }
                 );
             }
+
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
             if (params.reservationFor.startThrough instanceof Date) {
@@ -123,6 +128,7 @@ export class MongoRepository {
                     }
                 );
             }
+
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
             if (params.reservationFor.superEvent !== undefined) {
@@ -156,52 +162,58 @@ export class MongoRepository {
         return andConditions;
     }
 
-    public async countScreeningEventReservations(
-        params: factory.reservation.event.ISearchConditions
+    /**
+     * 汎用予約カウント
+     */
+    public async count<T extends factory.reservationType>(
+        params: factory.reservation.ISearchConditions<T>
     ): Promise<number> {
-        const conditions = MongoRepository.CREATE_EVENT_RESERVATION_MONGO_CONDITIONS(params);
+        const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
 
-        return this.reservationModel.countDocuments(
-            { $and: conditions }
-        ).setOptions({ maxTimeMS: 10000 })
+        return this.reservationModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
+            .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
 
     /**
-     * 上映イベント予約を検索する
+     * 汎用予約検索
      */
-    public async searchScreeningEventReservations(
-        params: factory.reservation.event.ISearchConditions
-    ): Promise<factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent>[]> {
-        const conditions = MongoRepository.CREATE_EVENT_RESERVATION_MONGO_CONDITIONS(params);
+    public async search<T extends factory.reservationType>(
+        params: factory.reservation.ISearchConditions<T>
+    ): Promise<factory.reservation.IReservation<factory.reservationType.EventReservation>[]> {
+        const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.reservationModel.find(
-            { $and: conditions },
+            (conditions.length > 0) ? { $and: conditions } : {},
             {
                 __v: 0,
                 createdAt: 0,
                 updatedAt: 0
             }
         );
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
             query.limit(params.limit).skip(params.limit * (params.page - 1));
         }
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.sort !== undefined) {
             query.sort(params.sort);
         }
 
-        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
+        return query.setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
     /**
-     * IDで上映イベント予約を検索する
+     * IDで予約検索
      */
-    public async findScreeningEventReservationById(params: {
+    public async findById<T extends factory.reservationType>(params: {
         id: string;
-    }): Promise<factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent>> {
+    }): Promise<factory.reservation.IReservation<T>> {
         const doc = await this.reservationModel.findById(
             params.id,
             {
@@ -209,9 +221,10 @@ export class MongoRepository {
                 createdAt: 0,
                 updatedAt: 0
             }
-        ).exec();
+        )
+            .exec();
         if (doc === null) {
-            throw new factory.errors.NotFound('Reservation');
+            throw new factory.errors.NotFound(this.reservationModel.modelName);
         }
 
         return doc.toObject();
@@ -220,7 +233,7 @@ export class MongoRepository {
     /**
      * 予約確定
      */
-    public async confirm(params: factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent>) {
+    public async confirm(params: factory.reservation.IReservation<factory.reservationType>) {
         await this.reservationModel.findByIdAndUpdate(
             params.id,
             {
@@ -228,11 +241,13 @@ export class MongoRepository {
                 reservationStatus: factory.reservationStatusType.ReservationConfirmed,
                 modifiedTime: new Date()
             }
-        ).exec().then((doc) => {
-            if (doc === null) {
-                throw new factory.errors.NotFound('Reservation');
-            }
-        });
+        )
+            .exec()
+            .then((doc) => {
+                if (doc === null) {
+                    throw new factory.errors.NotFound(this.reservationModel.modelName);
+                }
+            });
     }
 
     /**
@@ -245,11 +260,13 @@ export class MongoRepository {
                 reservationStatus: factory.reservationStatusType.ReservationCancelled,
                 modifiedTime: new Date()
             }
-        ).exec().then((doc) => {
-            if (doc === null) {
-                throw new factory.errors.NotFound('Reservation');
-            }
-        });
+        )
+            .exec()
+            .then((doc) => {
+                if (doc === null) {
+                    throw new factory.errors.NotFound(this.reservationModel.modelName);
+                }
+            });
     }
 
     /**
@@ -260,9 +277,11 @@ export class MongoRepository {
         reservationNumber?: string;
     }): Promise<void> {
         const conditions: any[] = [];
+
         if (params.id !== undefined) {
             conditions.push({ _id: params.id });
         }
+
         if (params.reservationNumber !== undefined) {
             conditions.push({ reservationNumber: params.reservationNumber });
         }
@@ -273,13 +292,14 @@ export class MongoRepository {
                 checkedIn: true,
                 modifiedTime: new Date()
             }
-        ).exec();
+        )
+            .exec();
     }
 
     /**
      * 入場する
      */
-    public async attend(params: { id: string }): Promise<factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent>> {
+    public async attend(params: { id: string }): Promise<factory.reservation.IReservation<factory.reservationType>> {
         const doc = await this.reservationModel.findByIdAndUpdate(
             params.id,
             {
@@ -287,9 +307,10 @@ export class MongoRepository {
                 modifiedTime: new Date()
             },
             { new: true }
-        ).exec();
+        )
+            .exec();
         if (doc === null) {
-            throw new factory.errors.NotFound('Reservation');
+            throw new factory.errors.NotFound(this.reservationModel.modelName);
         }
 
         return doc.toObject();

@@ -102,7 +102,7 @@ export function start(
         });
 
         // 取引ファクトリーで新しい進行中取引オブジェクトを作成
-        const tickets: factory.reservation.ITicket<factory.reservation.event.IPriceSpecification>[] =
+        const tickets: factory.reservation.ITicket<factory.reservationType>[] =
             params.object.acceptedOffer.map((offer) => {
                 const ticketOffer = ticketOffers.find((t) => t.id === offer.id);
                 if (ticketOffer === undefined) {
@@ -134,7 +134,7 @@ export function start(
                 }
 
                 const acceptedTicketedSeat = offer.ticketedSeat;
-                let ticketedSeat: factory.reservation.ISeat | undefined;
+                let ticketedSeat: factory.reservation.ISeat<factory.reservationType> | undefined;
 
                 if (reservedSeatsOnly) {
                     // 指定席のみの場合、座席指定が必須
@@ -160,7 +160,7 @@ export function start(
                 }
 
                 return {
-                    typeOf: <factory.reservation.TicketType>'Ticket',
+                    typeOf: <factory.reservation.TicketType<factory.reservationType>>'Ticket',
                     dateIssued: now,
                     issuedBy: {
                         typeOf: event.location.typeOf,
@@ -220,8 +220,8 @@ export function start(
                 offers: tickets.map((t) => {
                     // 指定席のみの場合、上記処理によってticketedSeatの存在は保証されている
                     return {
-                        seatSection: (<factory.reservation.ISeat>t.ticketedSeat).seatSection,
-                        seatNumber: (<factory.reservation.ISeat>t.ticketedSeat).seatNumber
+                        seatSection: (<factory.reservation.ISeat<factory.reservationType>>t.ticketedSeat).seatSection,
+                        seatNumber: (<factory.reservation.ISeat<factory.reservationType>>t.ticketedSeat).seatNumber
                     };
                 }),
                 expires: event.endDate,
@@ -244,8 +244,8 @@ function createReservation(params: {
     agent: factory.transaction.reserve.IAgent;
     reservationNumber: string;
     screeningEvent: factory.event.screeningEvent.IEvent;
-    reservedTicket: factory.reservation.ITicket<factory.reservation.event.IPriceSpecification>;
-}): factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent> {
+    reservedTicket: factory.reservation.ITicket<factory.reservationType>;
+}): factory.reservation.IReservation<factory.reservationType.EventReservation> {
     return {
         typeOf: factory.reservationType.EventReservation,
         id: params.id,

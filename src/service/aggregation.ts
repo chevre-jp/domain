@@ -100,12 +100,13 @@ export function aggregateScreeningEvent(params: {
         const limit = 100;
         let page = 0;
         let numData: number = limit;
-        const confirmedReservations: factory.reservation.event.IReservation<factory.event.screeningEvent.IEvent>[] = [];
+        const confirmedReservations: factory.reservation.IReservation<factory.reservationType.EventReservation>[] = [];
         while (numData === limit) {
             page += 1;
-            const reservations = await repos.reservation.searchScreeningEventReservations({
+            const reservations = await repos.reservation.search<factory.reservationType.EventReservation>({
                 limit: limit,
                 page: page,
+                typeOf: factory.reservationType.EventReservation,
                 reservationFor: { typeOf: factory.eventType.ScreeningEvent, id: event.id },
                 reservationStatuses: [factory.reservationStatusType.ReservationConfirmed]
             });

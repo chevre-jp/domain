@@ -16,7 +16,8 @@ export function countTicketTypePerEvent(
     return async (repos: {
         reservation: ReservationRepo;
     }) => {
-        const reservations = await repos.reservation.searchScreeningEventReservations({
+        const reservations = await repos.reservation.search<factory.reservationType.EventReservation>({
+            typeOf: factory.reservationType.EventReservation,
             reservationFor: {
                 superEvent: params.id !== undefined ? { id: params.id } : undefined,
                 startFrom: params.startFrom,
