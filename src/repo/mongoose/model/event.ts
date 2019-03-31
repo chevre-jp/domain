@@ -125,28 +125,52 @@ schema.index(
 );
 
 schema.index(
+    { eventStatus: 1, startDate: 1 },
+    { name: 'searchByEventStatus' }
+);
+
+schema.index(
+    { name: 1, startDate: 1 },
+    { name: 'searchByName' }
+);
+
+schema.index(
+    { 'superEvent.id': 1, startDate: 1 },
     {
-        'superEvent.location.branchCode': 1,
-        startDate: 1
-    },
-    {
+        name: 'searchBySuperEventId',
         partialFilterExpression: {
-            'superEvent.location.branchCode': { $exists: true }
-        },
-        name: 'searchBySuperEventLocationBranchCode'
+            'superEvent.id': { $exists: true }
+        }
     }
 );
 
 schema.index(
+    { 'superEvent.location.branchCode': 1, startDate: 1 },
     {
-        'superEvent.workPerformed.identifier': 1,
-        startDate: 1
-    },
+        name: 'searchBySuperEventLocationBranchCode',
+        partialFilterExpression: {
+            'superEvent.location.branchCode': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'superEvent.workPerformed.identifier': 1, startDate: 1 },
     {
+        name: 'searchBySuperEventWorkPerformedIdentifier',
         partialFilterExpression: {
             'superEvent.workPerformed.identifier': { $exists: true }
-        },
-        name: 'searchBySuperEventWorkPerformedIdentifier'
+        }
+    }
+);
+
+schema.index(
+    { 'workPerformed.identifier': 1, startDate: 1 },
+    {
+        name: 'searchByWorkPerformedIdentifier',
+        partialFilterExpression: {
+            'workPerformed.identifier': { $exists: true }
+        }
     }
 );
 
@@ -161,67 +185,52 @@ schema.index(
 );
 
 schema.index(
+    { 'offers.availabilityEnds': 1, startDate: 1 },
     {
-        'offers.availabilityEnds': 1,
-        startDate: 1
-    },
-    {
+        name: 'searchByOffersAvailabilityEnds-v2',
         partialFilterExpression: {
             'offers.availabilityEnds': { $exists: true }
-        },
-        name: 'searchByOffersAvailabilityEnds-v2'
+        }
     }
 );
 
 schema.index(
+    { 'offers.availabilityStarts': 1, startDate: 1 },
     {
-        'offers.availabilityStarts': 1,
-        startDate: 1
-    },
-    {
+        name: 'searchByOffersAvailabilityStarts-v2',
         partialFilterExpression: {
             'offers.availabilityStarts': { $exists: true }
-        },
-        name: 'searchByOffersAvailabilityStarts-v2'
+        }
     }
 );
 
 schema.index(
+    { 'offers.validThrough': 1, startDate: 1 },
     {
-        'offers.validThrough': 1,
-        startDate: 1
-    },
-    {
+        name: 'searchByOffersValidThrough-v2',
         partialFilterExpression: {
             'offers.validThrough': { $exists: true }
-        },
-        name: 'searchByOffersValidThrough-v2'
+        }
     }
 );
 
 schema.index(
+    { 'offers.validFrom': 1, startDate: 1 },
     {
-        'offers.validFrom': 1,
-        startDate: 1
-    },
-    {
+        name: 'searchByOffersValidFrom-v2',
         partialFilterExpression: {
             'offers.validFrom': { $exists: true }
-        },
-        name: 'searchByOffersValidFrom-v2'
+        }
     }
 );
 
 schema.index(
+    { 'offers.id': 1, startDate: 1 },
     {
-        'offers.id': 1,
-        startDate: 1
-    },
-    {
+        name: 'searchByOffersId-v2',
         partialFilterExpression: {
             'offers.id': { $exists: true }
-        },
-        name: 'searchByOffersId-v2'
+        }
     }
 );
 
