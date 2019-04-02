@@ -50,7 +50,7 @@ export class MongoRepository {
                 typeOf: factory.placeType.MovieTheater,
                 branchCode: params.branchCode
             },
-            { ...params, _id: undefined },
+            params,
             { upsert: true }
         ).exec();
     }
