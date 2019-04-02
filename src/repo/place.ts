@@ -20,6 +20,7 @@ export class MongoRepository {
                 typeOf: factory.placeType.MovieTheater
             }
         ];
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.name !== undefined) {
@@ -27,7 +28,12 @@ export class MongoRepository {
                 $or: [
                     { 'name.ja': new RegExp(params.name, 'i') },
                     { 'name.en': new RegExp(params.name, 'i') },
-                    { kanaName: new RegExp(params.name, 'i') }
+                    {
+                        kanaName: {
+                            $exists: true,
+                            $regex: new RegExp(params.name, 'i')
+                        }
+                    }
                 ]
             });
         }
@@ -44,7 +50,7 @@ export class MongoRepository {
                 typeOf: factory.placeType.MovieTheater,
                 branchCode: params.branchCode
             },
-            params,
+            { ...params, _id: undefined },
             { upsert: true }
         ).exec();
     }
@@ -54,7 +60,8 @@ export class MongoRepository {
 
         return this.placeModel.countDocuments(
             { $and: conditions }
-        ).setOptions({ maxTimeMS: 10000 })
+        )
+            .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
 
@@ -75,18 +82,22 @@ export class MongoRepository {
                 containsPlace: 0
             }
         );
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
             query.limit(params.limit).skip(params.limit * (params.page - 1));
         }
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.sort !== undefined) {
             query.sort(params.sort);
         }
 
-        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
+        return query.setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
     /**
@@ -98,7 +109,10 @@ export class MongoRepository {
         const doc = await this.placeModel.findOne(
             {
                 typeOf: factory.placeType.MovieTheater,
-                branchCode: params.branchCode
+                branchCode: {
+                    $exists: true,
+                    $eq: params.branchCode
+                }
             },
             {
                 __v: 0,
@@ -107,9 +121,9 @@ export class MongoRepository {
             }
         ).exec();
         if (doc === null) {
-            throw new factory.errors.NotFound('Movie Theater');
+            throw new factory.errors.NotFound(this.placeModel.modelName);
         }
 
-        return <factory.place.movieTheater.IPlace>doc.toObject();
+        return doc.toObject();
     }
 }

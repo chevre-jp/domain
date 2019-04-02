@@ -43,7 +43,8 @@ const schema = new mongoose.Schema(
         thumbnailUrl: String,
         duration: String,
         contentRating: String,
-        offers: offersSchema
+        offers: offersSchema,
+        additionalProperty: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'creativeWorks',

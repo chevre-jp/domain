@@ -77,7 +77,8 @@ const schema = new mongoose.Schema(
         reservedTicket: reservedTicketSchema,
         underName: underNameSchema,
         checkedIn: { type: Boolean, default: false },
-        attended: { type: Boolean, default: false }
+        attended: { type: Boolean, default: false },
+        additionalProperty: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'reservations',

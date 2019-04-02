@@ -10,7 +10,8 @@ const schema = new mongoose.Schema(
         _id: String,
         typeOf: String,
         name: String,
-        description: String
+        description: String,
+        additionalProperty: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'serviceTypes',

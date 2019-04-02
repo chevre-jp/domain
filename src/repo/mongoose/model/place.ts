@@ -64,7 +64,8 @@ const schema = new mongoose.Schema(
         sameAs: String,
         url: String,
         kanaName: String,
-        offers: offersSchema
+        offers: offersSchema,
+        additionalProperty: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'places',
@@ -91,9 +92,36 @@ schema.index(
     { name: 'searchByUpdatedAt' }
 );
 
-// 劇場検索に使用
 schema.index(
-    { branchCode: 1, typeOf: 1 }
+    { typeOf: 1, createdAt: 1 },
+    { name: 'searchByTypeOf' }
+);
+
+schema.index(
+    { branchCode: 1, createdAt: 1 },
+    {
+        name: 'searchByBranchCode',
+        partialFilterExpression: {
+            branchCode: { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { name: 1, createdAt: 1 },
+    {
+        name: 'searchByName'
+    }
+);
+
+schema.index(
+    { kanaName: 1, createdAt: 1 },
+    {
+        name: 'searchByKanaName',
+        partialFilterExpression: {
+            kanaName: { $exists: true }
+        }
+    }
 );
 
 export default mongoose.model('Place', schema).on(
