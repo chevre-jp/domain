@@ -245,6 +245,7 @@ function createReservation(params: {
     reservationNumber: string;
     screeningEvent: factory.event.screeningEvent.IEvent;
     reservedTicket: factory.reservation.ITicket<factory.reservationType>;
+    // additionalProperty: factory.propertyValue.IPropertyValue<string>[];
 }): factory.reservation.IReservation<factory.reservationType.EventReservation> {
     return {
         typeOf: factory.reservationType.EventReservation,
@@ -261,6 +262,7 @@ function createReservation(params: {
         underName: params.agent,
         checkedIn: false,
         attended: false
+        // additionalProperty: params.additionalProperty
     };
 }
 
@@ -284,23 +286,40 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
             if (params.object !== undefined) {
                 // 予約属性の指定があれば上書き
                 const confirmingReservation = params.object.reservations.find((r) => r.id === reservation.id);
+
                 if (confirmingReservation !== undefined) {
-                    if (confirmingReservation.reservedTicket !== undefined) {
-                        if (confirmingReservation.reservedTicket.issuedBy !== undefined) {
-                            reservation.reservedTicket.issuedBy = confirmingReservation.reservedTicket.issuedBy;
-                        }
+                    if (typeof confirmingReservation.additionalTicketText === 'string') {
+                        reservation.additionalTicketText = confirmingReservation.additionalTicketText;
                     }
+
+                    if (Array.isArray(confirmingReservation.additionalProperty)) {
+                        reservation.additionalProperty = confirmingReservation.additionalProperty;
+                    }
+
                     if (confirmingReservation.underName !== undefined) {
                         reservation.underName = confirmingReservation.underName;
                         reservation.reservedTicket.underName = confirmingReservation.underName;
+                    }
+
+                    if (confirmingReservation.reservedTicket !== undefined) {
+                        if (typeof confirmingReservation.reservedTicket.ticketToken === 'string') {
+                            reservation.reservedTicket.ticketToken = confirmingReservation.reservedTicket.ticketToken;
+                        }
+
+                        if (confirmingReservation.reservedTicket.issuedBy !== undefined) {
+                            reservation.reservedTicket.issuedBy = confirmingReservation.reservedTicket.issuedBy;
+                        }
+
+                        if (confirmingReservation.reservedTicket.underName !== undefined) {
+                            reservation.reservedTicket.underName = confirmingReservation.reservedTicket.underName;
+                        }
                     }
                 }
             }
 
             return {
                 typeOf: <factory.actionType.ReserveAction>factory.actionType.ReserveAction,
-                result: {
-                },
+                result: {},
                 object: reservation,
                 agent: transaction.agent,
                 purpose: {
