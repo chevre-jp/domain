@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Chevre Domain Library for Node.js Index</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.cosmo.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">Chevre Domain Library for Node.js</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="Distributions.html">Distributions</a></li><li><a href="MongoRepository.html">MongoRepository</a></li><li><a href="RedisRepository.html">RedisRepository</a></li><li><a href="Repository.html">Repository</a></li><li><a href="Subject.html">Subject</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#abort">abort</a></li><li><a href="global.html#accountTitle_1">accountTitle_1</a></li><li><a href="global.html#aggregateScreeningEvent">aggregateScreeningEvent</a></li><li><a href="global.html#AggregationService">AggregationService</a></li><li><a href="global.html#call">call</a></li><li><a href="global.html#cancel">cancel</a></li><li><a href="global.html#cancelPendingReservation">cancelPendingReservation</a></li><li><a href="global.html#cancelReservation">cancelReservation</a></li><li><a href="global.html#confirm">confirm</a></li><li><a href="global.html#confirmReservation">confirmReservation</a></li><li><a href="global.html#countTicketTypePerEvent">countTicketTypePerEvent</a></li><li><a href="global.html#createDebug">createDebug</a></li><li><a href="global.html#default">default</a></li><li><a href="global.html#execute">execute</a></li><li><a href="global.html#executeByName">executeByName</a></li><li><a href="global.html#exportTasks">exportTasks</a></li><li><a href="global.html#exportTasksById">exportTasksById</a></li><li><a href="global.html#redis">redis</a></li><li><a href="global.html#retry">retry</a></li><li><a href="global.html#schema">schema</a></li><li><a href="global.html#searchScreeningEventTicketOffers">searchScreeningEventTicketOffers</a></li><li><a href="global.html#sortOrder4executionOfTasks">sortOrder4executionOfTasks</a></li><li><a href="global.html#start">start</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-8">
+	
+		<div id="main">
+			
+
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+
+
+
+
+
+    <section class="readme-section">
+        <article><h1>Chevre Domain Library for Node.js</h1><p><a href="https://www.npmjs.com/package/@chevre/domain"><img src="https://img.shields.io/npm/v/@chevre/domain.svg" alt="npm (scoped)"></a><br><a href="https://circleci.com/gh/chevre-jp/domain"><img src="https://circleci.com/gh/chevre-jp/domain.svg?style=svg" alt="CircleCI"></a><br><a href="https://coveralls.io/github/chevre-jp/domain?branch=master"><img src="https://coveralls.io/repos/github/chevre-jp/domain/badge.svg?branch=master" alt="Coverage Status"></a><br><a href="https://david-dm.org/chevre-jp/domain"><img src="https://img.shields.io/david/chevre-jp/domain.svg" alt="Dependency Status"></a><br><a href="https://snyk.io/test/github/chevre-jp/domain?targetFile=package.json"><img src="https://snyk.io/test/github/chevre-jp/domain/badge.svg?targetFile=package.json" alt="Known Vulnerabilities"></a><br><a href="https://nodei.co/npm/@chevre/domain/"><img src="https://img.shields.io/npm/dm/@chevre/domain.svg" alt="npm"></a></p>
+<p>元祖興行パッケージオンラインチケットシステムのドメインモデルをnode.jsで使いやすいようにまとめたパッケージです。</p>
+<h2>Table of contents</h2><ul>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#code-samples">Code Samples</a></li>
+<li><a href="#license">License</a></li>
+</ul>
+<h2>Usage</h2><pre class="prettyprint source lang-shell"><code>npm install --save @chevre/domain</code></pre><pre class="prettyprint source lang-Javascript"><code>const chevre = require(&quot;@chevre/chevredomain&quot;);</code></pre><p>前提として、mongooseでdefault connectionを確保することと、redis情報をセットすることが必要。</p>
+<ul>
+<li>mongoose default connection</li>
+</ul>
+<pre class="prettyprint source lang-Javascript"><code>chevre.mongoose.connect();</code></pre><h3>Environment variables</h3><table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Required</th>
+<th>Value</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DEBUG</code></td>
+<td>false</td>
+<td>chevre-domain:*</td>
+<td>Debug</td>
+</tr>
+<tr>
+<td><code>CHEVRE_PERFORMANCE_STATUSES_REDIS_PORT</code></td>
+<td>true</td>
+<td></td>
+<td>パフォーマンス空席状況保管RedisCache接続情報</td>
+</tr>
+<tr>
+<td><code>CHEVRE_PERFORMANCE_STATUSES_REDIS_HOST</code></td>
+<td>true</td>
+<td></td>
+<td>パフォーマンス空席状況保管RedisCache接続情報</td>
+</tr>
+<tr>
+<td><code>CHEVRE_PERFORMANCE_STATUSES_REDIS_KEY</code></td>
+<td>true</td>
+<td></td>
+<td>パフォーマンス空席状況保管RedisCache接続情報</td>
+</tr>
+</tbody>
+</table>
+<h2>Code Samples</h2><p>Code sample are <a href="https://github.com/chevre-jp/domain/tree/master/example">here</a>.</p>
+<h2>License</h2><p>ISC</p></article>
+    </section>
+
+
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+		<div class="col-md-3">
+			<div id="toc" class="col-md-3 hidden-xs hidden-sm hidden-md"></div>
+		</div>
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
+	
+		on Wed Apr 3rd 2019
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>
