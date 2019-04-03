@@ -164,3 +164,96 @@ export function aggregateScreeningEvent(params: {
         ).exec();
     };
 }
+
+type ICountTicketTypePerEventOperation<T> = (repos: {
+    reservation: ReservationRepo;
+}) => Promise<T>;
+
+/**
+ * 上映イベント+チケット集計インターフェース
+ */
+export type IEventWithTicketTypeCount = factory.event.IEvent<factory.eventType.ScreeningEvent> & {
+    saleTicketCount: number;
+    preSaleTicketCount: number;
+    freeTicketCount: number;
+};
+
+export interface ICountTicketTypePerEventResult {
+    totalCount: number;
+    data: IEventWithTicketTypeCount[];
+}
+
+export interface ICountTicketTypePerEventConditions {
+    /**
+     * 上映イベントシーリズID
+     */
+    id?: string;
+    /**
+     * 開始日 FROM
+     */
+    startFrom?: Date;
+    /**
+     * 開始日 TO
+     */
+    startThrough?: Date;
+    limit: number;
+    page: number;
+}
+
+/**
+ * @deprecated 東映ローカライズなのでそのうち廃止
+ */
+export function countTicketTypePerEvent(
+    params: ICountTicketTypePerEventConditions
+): ICountTicketTypePerEventOperation<ICountTicketTypePerEventResult> {
+    // tslint:disable-next-line:max-func-body-length
+    return async (repos: {
+        reservation: ReservationRepo;
+    }) => {
+        // 予約を検索
+        const reservations = await repos.reservation.search<factory.reservationType.EventReservation>({
+            typeOf: factory.reservationType.EventReservation,
+            reservationFor: {
+                superEvent: params.id !== undefined ? { id: params.id } : undefined,
+                startFrom: params.startFrom,
+                startThrough: params.startThrough
+            }
+        });
+
+        let events: IEventWithTicketTypeCount[] = [];
+        reservations.forEach((r) => {
+            if (events.find((e) => e.id === r.reservationFor.id) === undefined) {
+                events.push({
+                    ...r.reservationFor,
+                    freeTicketCount: 0,
+                    saleTicketCount: 0,
+                    preSaleTicketCount: 0
+                });
+            }
+            for (const event of events) {
+                if (event.id === r.reservationFor.id) {
+                    if (r.reservedTicket.ticketType.category !== undefined) {
+                        switch (r.reservedTicket.ticketType.category.id) {
+                            case factory.ticketTypeCategory.Default:
+                                event.saleTicketCount += 1;
+                                break;
+                            case factory.ticketTypeCategory.Advance:
+                                event.preSaleTicketCount += 1;
+                                break;
+                            case factory.ticketTypeCategory.Free:
+                                event.freeTicketCount += 1;
+                                break;
+                            default: // 何もしない
+                        }
+                    }
+                }
+            }
+        });
+        events = events.sort((a, b) => (a.startDate < b.startDate ? -1 : 1));
+
+        return {
+            totalCount: events.length,
+            data: events.slice(params.limit * (params.page - 1), params.limit * params.page)
+        };
+    };
+}

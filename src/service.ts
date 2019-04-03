@@ -14,10 +14,3 @@ export namespace transaction {
     export import cancelReservation = CancelReservationTransactionService;
     export import reserve = ReserveTransactionService;
 }
-
-import * as EventService from './service/event';
-
-/**
- * @deprecated 東映ローカライズなのでそのうち廃止
- */
-export import event = EventService;

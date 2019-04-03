@@ -13,7 +13,7 @@ export class MongoRepository {
     constructor(connection: mongoose.Connection) {
         this.distributionsModel = connection.model(distributionsModel.modelName);
     }
-    public static CREATE_MONGO_CONDITIONS(params: factory.distributions.distribute.ISearchConditions) {
+    public static CREATE_MONGO_CONDITIONS(params: factory.distributor.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [
             { _id: { $exists: true } }
@@ -38,7 +38,7 @@ export class MongoRepository {
     public async updateDistribution(params: {
         id: string;
         name: string;
-    }): Promise<factory.distributions.distribute.IDistributions> {
+    }): Promise<factory.distributor.IDistributor> {
         const doc = await this.distributionsModel.findOneAndUpdate(
             { _id: params.id },
             { name: params.name },
@@ -57,7 +57,7 @@ export class MongoRepository {
     public async createDistribution(params: {
         id: string;
         name: string;
-    }): Promise<factory.distributions.distribute.IDistributions> {
+    }): Promise<factory.distributor.IDistributor> {
         const doc = await this.distributionsModel.create({
             _id: params.id,
             name: params.name
@@ -66,13 +66,13 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    public async getDistributions(): Promise<factory.distributions.distribute.IDistributions[]> {
+    public async getDistributions(): Promise<factory.distributor.IDistributor[]> {
         const query = this.distributionsModel.find({});
 
         return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
     }
 
-    public async countDistributions(params: factory.distributions.distribute.ISearchConditions): Promise<number> {
+    public async countDistributions(params: factory.distributor.ISearchConditions): Promise<number> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
 
         return this.distributionsModel.countDocuments(
@@ -84,8 +84,8 @@ export class MongoRepository {
      * 配給を検索する
      */
     public async searchDistributions(
-        params: factory.distributions.distribute.ISearchConditions
-    ): Promise<factory.distributions.distribute.IDistributions[]> {
+        params: factory.distributor.ISearchConditions
+    ): Promise<factory.distributor.IDistributor[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.distributionsModel.find(
             { $and: conditions },
@@ -108,7 +108,7 @@ export class MongoRepository {
      */
     public async findById(params: {
         id: string;
-    }): Promise<factory.distributions.distribute.IDistributions> {
+    }): Promise<factory.distributor.IDistributor> {
         const event = await this.distributionsModel.findOne(
             {
                 _id: params.id
