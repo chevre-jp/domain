@@ -108,16 +108,16 @@ export class MongoRepository {
                     });
                 }
             }
+        }
 
-            if (params.category !== undefined) {
-                if (Array.isArray(params.category.ids)) {
-                    andConditions.push({
-                        'category.id': {
-                            $exists: true,
-                            $in: params.category.ids
-                        }
-                    });
-                }
+        if (params.category !== undefined) {
+            if (Array.isArray(params.category.ids)) {
+                andConditions.push({
+                    'category.id': {
+                        $exists: true,
+                        $in: params.category.ids
+                    }
+                });
             }
         }
 
