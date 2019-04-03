@@ -65,19 +65,63 @@ schema.index(
     { updatedAt: 1 },
     { name: 'searchByUpdatedAt' }
 );
+
 schema.index(
-    { 'priceSpecification.price': 1 },
+    { 'priceSpecification.price': 1, _id: 1 },
     {
+        name: 'searchByPriceSpecificationPrice',
         partialFilterExpression: {
             'priceSpecification.price': { $exists: true }
         }
     }
 );
+
 schema.index(
-    { 'priceSpecification.accounting.accountsReceivable': 1 },
+    { 'priceSpecification.referenceQuantity.value': 1, _id: 1 },
     {
+        name: 'searchByPriceSpecificationReferenceQuantityValue',
+        partialFilterExpression: {
+            'priceSpecification.referenceQuantity.value': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'priceSpecification.accounting.accountsReceivable': 1, _id: 1 },
+    {
+        name: 'searchByPriceSpecificationAccountingAccountsReceivable',
         partialFilterExpression: {
             'priceSpecification.accounting.accountsReceivable': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { name: 1, _id: 1 },
+    {
+        name: 'searchByName',
+        partialFilterExpression: {
+            name: { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { alternateName: 1, _id: 1 },
+    {
+        name: 'searchByAlternateName',
+        partialFilterExpression: {
+            alternateName: { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'category.id': 1, _id: 1 },
+    {
+        name: 'searchCategoryId',
+        partialFilterExpression: {
+            'category.id': { $exists: true }
         }
     }
 );

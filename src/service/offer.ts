@@ -1,6 +1,6 @@
 import { MongoRepository as EventRepo } from '../repo/event';
+import { MongoRepository as OfferRepo } from '../repo/offer';
 import { MongoRepository as PriceSpecificationRepo } from '../repo/priceSpecification';
-import { MongoRepository as TicketTypeRepo } from '../repo/ticketType';
 
 import * as factory from '../factory';
 
@@ -13,7 +13,7 @@ type IVideoFormatChargeSpecification =
 type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     event: EventRepo;
     priceSpecification: PriceSpecificationRepo;
-    ticketType: TicketTypeRepo;
+    offer: OfferRepo;
 }) => Promise<T>;
 
 /**
@@ -26,7 +26,7 @@ export function searchScreeningEventTicketOffers(params: {
     return async (repos: {
         event: EventRepo;
         priceSpecification: PriceSpecificationRepo;
-        ticketType: TicketTypeRepo;
+        offer: OfferRepo;
     }) => {
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
             id: params.eventId
@@ -40,7 +40,7 @@ export function searchScreeningEventTicketOffers(params: {
             = (Array.isArray(event.superEvent.videoFormat))
                 ? event.superEvent.videoFormat.map((f) => f.typeOf)
                 : [factory.videoFormatType['2D']];
-        const ticketTypes = await repos.ticketType.findByTicketGroupId({ ticketGroupId: screeningEventOffers.id });
+        const availableOffers = await repos.offer.findByOfferCatalogId({ offerCatalog: screeningEventOffers });
 
         // 価格仕様を検索する
         const soundFormatCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
@@ -86,7 +86,7 @@ export function searchScreeningEventTicketOffers(params: {
         const movieTicketPaymentAccepted = eventOffers.acceptedPaymentMethod === undefined
             || eventOffers.acceptedPaymentMethod.indexOf(factory.paymentMethodType.MovieTicket) >= 0;
         if (movieTicketPaymentAccepted) {
-            movieTicketOffers = ticketTypes
+            movieTicketOffers = availableOffers
                 .filter((t) => t.priceSpecification !== undefined)
                 .filter((t) => {
                     const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
@@ -122,7 +122,7 @@ export function searchScreeningEventTicketOffers(params: {
         }
 
         // ムビチケ以外のオファーを作成
-        const ticketTypeOffers = ticketTypes
+        const ticketTypeOffers = availableOffers
             .filter((t) => t.priceSpecification !== undefined)
             .filter((t) => {
                 const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;

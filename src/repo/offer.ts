@@ -1,28 +1,25 @@
 import { Connection } from 'mongoose';
 
 import * as factory from '../factory';
-import TicketTypeModel from './mongoose/model/ticketType';
-import TicketTypeGroupModel from './mongoose/model/ticketTypeGroup';
+import OfferModel from './mongoose/model/offer';
+import OfferCatalogModel from './mongoose/model/offerCatalog';
 
 /**
  * 券種リポジトリ
  */
 export class MongoRepository {
-    public readonly ticketTypeModel: typeof TicketTypeModel;
-    public readonly ticketTypeGroupModel: typeof TicketTypeGroupModel;
+    public readonly offerModel: typeof OfferModel;
+    public readonly offerCatalogModel: typeof OfferCatalogModel;
 
     constructor(connection: Connection) {
-        this.ticketTypeModel = connection.model(TicketTypeModel.modelName);
-        this.ticketTypeGroupModel = connection.model(TicketTypeGroupModel.modelName);
+        this.offerModel = connection.model(OfferModel.modelName);
+        this.offerCatalogModel = connection.model(OfferCatalogModel.modelName);
     }
 
-    public static CREATE_TICKET_TYPE_MONGO_CONDITIONS(params: factory.ticketType.ITicketTypeSearchConditions) {
+    // tslint:disable-next-line:max-func-body-length
+    public static CREATE_OFFER_MONGO_CONDITIONS(params: factory.ticketType.ITicketTypeSearchConditions) {
         // MongoDB検索条件
-        const andConditions: any[] = [
-            {
-                _id: { $exists: true }
-            }
-        ];
+        const andConditions: any[] = [];
 
         if (params.id !== undefined) {
             andConditions.push({ _id: new RegExp(params.id, 'i') });
@@ -35,8 +32,30 @@ export class MongoRepository {
         if (params.name !== undefined) {
             andConditions.push({
                 $or: [
-                    { 'name.ja': new RegExp(params.name, 'i') },
-                    { 'name.en': new RegExp(params.name, 'i') }
+                    {
+                        'name.ja': {
+                            $exists: true,
+                            $regex: new RegExp(params.name, 'i')
+                        }
+                    },
+                    {
+                        'name.en': {
+                            $exists: true,
+                            $regex: new RegExp(params.name, 'i')
+                        }
+                    },
+                    {
+                        'alternateName.ja': {
+                            $exists: true,
+                            $regex: new RegExp(params.name, 'i')
+                        }
+                    },
+                    {
+                        'alternateName.en': {
+                            $exists: true,
+                            $regex: new RegExp(params.name, 'i')
+                        }
+                    }
                 ]
             });
         }
@@ -50,6 +69,7 @@ export class MongoRepository {
                     }
                 });
             }
+
             if (typeof params.priceSpecification.minPrice === 'number') {
                 andConditions.push({
                     'priceSpecification.price': {
@@ -58,6 +78,7 @@ export class MongoRepository {
                     }
                 });
             }
+
             if (params.priceSpecification.accounting !== undefined) {
                 if (typeof params.priceSpecification.accounting.maxAccountsReceivable === 'number') {
                     andConditions.push({
@@ -76,18 +97,37 @@ export class MongoRepository {
                     });
                 }
             }
+
+            if (params.priceSpecification.referenceQuantity !== undefined) {
+                if (typeof params.priceSpecification.referenceQuantity.value === 'number') {
+                    andConditions.push({
+                        'priceSpecification.referenceQuantity.value': {
+                            $exists: true,
+                            $eq: params.priceSpecification.referenceQuantity.value
+                        }
+                    });
+                }
+            }
+
+            if (params.category !== undefined) {
+                if (Array.isArray(params.category.ids)) {
+                    andConditions.push({
+                        'category.id': {
+                            $exists: true,
+                            $in: params.category.ids
+                        }
+                    });
+                }
+            }
         }
 
         return andConditions;
     }
 
-    public static CREATE_TICKET_TYPE_GROUP_MONGO_CONDITIONS(params: factory.ticketType.ITicketTypeGroupSearchConditions) {
+    public static CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params: factory.ticketType.ITicketTypeGroupSearchConditions) {
         // MongoDB検索条件
-        const andConditions: any[] = [
-            {
-                _id: { $exists: true }
-            }
-        ];
+        const andConditions: any[] = [];
+
         if (params.id !== undefined) {
             andConditions.push({ _id: new RegExp(params.id, 'i') });
         }
@@ -110,9 +150,13 @@ export class MongoRepository {
         return andConditions;
     }
 
-    public async findByTicketGroupId(params: { ticketGroupId: string }): Promise<factory.ticketType.ITicketType[]> {
-        const ticketTypeGroup = await this.ticketTypeGroupModel.findById(
-            params.ticketGroupId,
+    public async findByOfferCatalogId(params: {
+        offerCatalog: {
+            id: string;
+        };
+    }): Promise<factory.ticketType.ITicketType[]> {
+        const ticketTypeGroup = await this.offerCatalogModel.findById(
+            params.offerCatalog.id,
             {
                 __v: 0,
                 createdAt: 0,
@@ -125,10 +169,10 @@ export class MongoRepository {
                     throw new factory.errors.NotFound('Ticket type group');
                 }
 
-                return <factory.ticketType.ITicketTypeGroup>doc.toObject();
+                return doc.toObject();
             });
 
-        return this.ticketTypeModel.find(
+        return this.offerModel.find(
             { _id: { $in: ticketTypeGroup.ticketTypes } },
             {
                 __v: 0,
@@ -137,22 +181,22 @@ export class MongoRepository {
             }
         )
             .exec()
-            .then((docs) => docs.map((doc) => <factory.ticketType.ITicketType>doc.toObject()));
+            .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
     /**
      * 券種グループを作成する
      */
-    public async createTicketTypeGroup(params: factory.ticketType.ITicketTypeGroup): Promise<factory.ticketType.ITicketTypeGroup> {
-        const doc = await this.ticketTypeGroupModel.create({ ...params, _id: params.id });
+    public async createOfferCatalog(params: factory.ticketType.ITicketTypeGroup): Promise<factory.ticketType.ITicketTypeGroup> {
+        const doc = await this.offerCatalogModel.create({ ...params, _id: params.id });
 
         return doc.toObject();
     }
 
-    public async findTicketTypeGroupById(params: {
+    public async findOfferCatalogById(params: {
         id: string;
     }): Promise<factory.ticketType.ITicketTypeGroup> {
-        const doc = await this.ticketTypeGroupModel.findOne(
+        const doc = await this.offerCatalogModel.findOne(
             {
                 _id: params.id
             },
@@ -173,11 +217,9 @@ export class MongoRepository {
     public async countTicketTypeGroups(
         params: factory.ticketType.ITicketTypeGroupSearchConditions
     ): Promise<number> {
-        const conditions = MongoRepository.CREATE_TICKET_TYPE_GROUP_MONGO_CONDITIONS(params);
+        const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
 
-        return this.ticketTypeGroupModel.countDocuments(
-            { $and: conditions }
-        )
+        return this.offerCatalogModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
             .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
@@ -185,12 +227,12 @@ export class MongoRepository {
     /**
      * 券種グループを検索する
      */
-    public async searchTicketTypeGroups(
+    public async searchOfferCatalogs(
         params: factory.ticketType.ITicketTypeGroupSearchConditions
     ): Promise<factory.ticketType.ITicketTypeGroup[]> {
-        const conditions = MongoRepository.CREATE_TICKET_TYPE_GROUP_MONGO_CONDITIONS(params);
-        const query = this.ticketTypeGroupModel.find(
-            { $and: conditions },
+        const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
+        const query = this.offerCatalogModel.find(
+            (conditions.length > 0) ? { $and: conditions } : {},
             {
                 __v: 0,
                 createdAt: 0,
@@ -211,8 +253,8 @@ export class MongoRepository {
     /**
      * 券種グループを更新する
      */
-    public async updateTicketTypeGroup(params: factory.ticketType.ITicketTypeGroup): Promise<void> {
-        const doc = await this.ticketTypeGroupModel.findOneAndUpdate(
+    public async updateOfferCatalog(params: factory.ticketType.ITicketTypeGroup): Promise<void> {
+        const doc = await this.offerCatalogModel.findOneAndUpdate(
             {
                 _id: params.id
             },
@@ -228,10 +270,10 @@ export class MongoRepository {
     /**
      * 券種グループを削除する
      */
-    public async deleteTicketTypeGroup(params: {
+    public async deleteOfferCatalog(params: {
         id: string;
     }) {
-        await this.ticketTypeGroupModel.findOneAndRemove(
+        await this.offerCatalogModel.findOneAndRemove(
             {
                 _id: params.id
             }
@@ -242,16 +284,16 @@ export class MongoRepository {
     /**
      * 券種を作成する
      */
-    public async createTicketType(params: factory.ticketType.ITicketType): Promise<factory.ticketType.ITicketType> {
-        const doc = await this.ticketTypeModel.create({ ...params, _id: params.id });
+    public async createOffer(params: factory.ticketType.ITicketType): Promise<factory.ticketType.ITicketType> {
+        const doc = await this.offerModel.create({ ...params, _id: params.id });
 
         return doc.toObject();
     }
 
-    public async findTicketTypeById(params: {
+    public async findOfferById(params: {
         id: string;
     }): Promise<factory.ticketType.ITicketType> {
-        const doc = await this.ticketTypeModel.findOne(
+        const doc = await this.offerModel.findOne(
             {
                 _id: params.id
             },
@@ -269,14 +311,12 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    public async countTicketTypes(
+    public async countOffers(
         params: factory.ticketType.ITicketTypeSearchConditions
     ): Promise<number> {
-        const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
+        const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
 
-        return this.ticketTypeModel.countDocuments(
-            { $and: conditions }
-        )
+        return this.offerModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
             .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
@@ -284,12 +324,12 @@ export class MongoRepository {
     /**
      * 券種を検索する
      */
-    public async searchTicketTypes(
+    public async searchOffers(
         params: factory.ticketType.ITicketTypeSearchConditions
     ): Promise<factory.ticketType.ITicketType[]> {
-        const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
-        const query = this.ticketTypeModel.find(
-            { $and: conditions },
+        const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
+        const query = this.offerModel.find(
+            (conditions.length > 0) ? { $and: conditions } : {},
             {
                 __v: 0,
                 createdAt: 0,
@@ -315,8 +355,8 @@ export class MongoRepository {
     /**
      * 券種を更新する
      */
-    public async updateTicketType(params: factory.ticketType.ITicketType): Promise<void> {
-        const doc = await this.ticketTypeModel.findOneAndUpdate(
+    public async updateOffer(params: factory.ticketType.ITicketType): Promise<void> {
+        const doc = await this.offerModel.findOneAndUpdate(
             {
                 _id: params.id
             },
@@ -332,10 +372,10 @@ export class MongoRepository {
     /**
      * 券種を削除する
      */
-    public async deleteTicketType(params: {
+    public async deleteOffer(params: {
         id: string;
     }) {
-        await this.ticketTypeModel.findOneAndRemove(
+        await this.offerModel.findOneAndRemove(
             {
                 _id: params.id
             }

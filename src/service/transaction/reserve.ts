@@ -7,12 +7,12 @@ import * as factory from '../../factory';
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as EventRepo } from '../../repo/event';
 import { RedisRepository as ScreeningEventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
+import { MongoRepository as OfferRepo } from '../../repo/offer';
 import { MongoRepository as PlaceRepo } from '../../repo/place';
 import { MongoRepository as PriceSpecificationRepo } from '../../repo/priceSpecification';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
 import { RedisRepository as ReservationNumberRepo } from '../../repo/reservationNumber';
 import { MongoRepository as TaskRepo } from '../../repo/task';
-import { MongoRepository as TicketTypeRepo } from '../../repo/ticketType';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
 import * as OfferService from '../offer';
@@ -23,12 +23,12 @@ const debug = createDebug('chevre-domain:service');
 export type IStartOperation<T> = (repos: {
     eventAvailability: ScreeningEventAvailabilityRepo;
     event: EventRepo;
+    offer: OfferRepo;
     place: PlaceRepo;
     priceSpecification: PriceSpecificationRepo;
     reservation: ReservationRepo;
     reservationNumber: ReservationNumberRepo;
     transaction: TransactionRepo;
-    ticketType: TicketTypeRepo;
 }) => Promise<T>;
 export type ICancelOperation<T> = (repos: {
     action: ActionRepo;
@@ -55,12 +55,12 @@ export function start(
     return async (repos: {
         eventAvailability: ScreeningEventAvailabilityRepo;
         event: EventRepo;
+        offer: OfferRepo;
         place: PlaceRepo;
         priceSpecification: PriceSpecificationRepo;
         reservation: ReservationRepo;
         reservationNumber: ReservationNumberRepo;
         transaction: TransactionRepo;
-        ticketType: TicketTypeRepo;
     }) => {
         debug('starting transaction...', params);
         const now = new Date();
@@ -79,8 +79,8 @@ export function start(
 
         // チケット存在確認
         const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
-        const ticketTypes = await repos.ticketType.findByTicketGroupId({ ticketGroupId: eventOffers.id });
-        debug('available ticket type:', ticketTypes);
+        const availableOffers = await repos.offer.findByOfferCatalogId({ offerCatalog: eventOffers });
+        debug('availableOffers:', availableOffers);
 
         // 座席情報取得
         const movieTheater = await repos.place.findMovieTheaterByBranchCode({ branchCode: event.superEvent.location.branchCode });
@@ -109,7 +109,7 @@ export function start(
                     throw new factory.errors.NotFound('Ticket Offer');
                 }
 
-                let ticketType = ticketTypes.find((t) => t.id === offer.id);
+                let ticketType = availableOffers.find((o) => o.id === offer.id);
                 // 基本的に券種でID管理されていないオファーは存在しないが、念のため管理されていないケースに対応
                 if (ticketType === undefined) {
                     const unitPriceSpec
