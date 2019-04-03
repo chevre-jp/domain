@@ -67,7 +67,7 @@ schema.index(
 );
 
 schema.index(
-    { 'priceSpecification.price': 1, _id: 1 },
+    { 'priceSpecification.price': 1 },
     {
         name: 'searchByPriceSpecificationPrice',
         partialFilterExpression: {
@@ -77,7 +77,7 @@ schema.index(
 );
 
 schema.index(
-    { 'priceSpecification.referenceQuantity.value': 1, _id: 1 },
+    { 'priceSpecification.referenceQuantity.value': 1, 'priceSpecification.price': 1 },
     {
         name: 'searchByPriceSpecificationReferenceQuantityValue',
         partialFilterExpression: {
@@ -87,7 +87,7 @@ schema.index(
 );
 
 schema.index(
-    { 'priceSpecification.accounting.accountsReceivable': 1, _id: 1 },
+    { 'priceSpecification.accounting.accountsReceivable': 1, 'priceSpecification.price': 1 },
     {
         name: 'searchByPriceSpecificationAccountingAccountsReceivable',
         partialFilterExpression: {
@@ -97,7 +97,7 @@ schema.index(
 );
 
 schema.index(
-    { name: 1, _id: 1 },
+    { name: 1, 'priceSpecification.price': 1 },
     {
         name: 'searchByName',
         partialFilterExpression: {
@@ -107,7 +107,7 @@ schema.index(
 );
 
 schema.index(
-    { alternateName: 1, _id: 1 },
+    { alternateName: 1, 'priceSpecification.price': 1 },
     {
         name: 'searchByAlternateName',
         partialFilterExpression: {
@@ -117,7 +117,7 @@ schema.index(
 );
 
 schema.index(
-    { 'category.id': 1, _id: 1 },
+    { 'category.id': 1, 'priceSpecification.price': 1 },
     {
         name: 'searchCategoryId',
         partialFilterExpression: {
