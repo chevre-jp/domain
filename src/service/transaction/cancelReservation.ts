@@ -143,7 +143,7 @@ export function exportTasks(status: factory.transactionStatusType) {
 }
 
 /**
- * ID指定で取引のタスク出力
+ * 取引タスク出力
  */
 export function exportTasksById(params: { id: string }): ITaskAndTransactionOperation<factory.task.ITask[]> {
     return async (repos: {
@@ -170,6 +170,7 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                             status: factory.taskStatus.Ready,
                             runsAt: new Date(), // なるはやで実行
                             remainingNumberOfTries: 10,
+                            // tslint:disable-next-line:no-null-keyword
                             lastTriedAt: null,
                             numberOfTried: 0,
                             executionResults: [],

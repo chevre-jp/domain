@@ -8,14 +8,16 @@ import * as factory from '../factory';
 const debug = createDebug('chevre-domain:repo');
 
 /**
- * Redisリポジトリ
+ * 予約番号リポジトリ
  */
 export class RedisRepository {
     public static REDIS_KEY_PREFIX: string = 'chevre:reservationNumber';
     public readonly redisClient: redis.RedisClient;
+
     constructor(redisClient: redis.RedisClient) {
         this.redisClient = redisClient;
     }
+
     /**
      * 発行する
      */
@@ -35,11 +37,15 @@ export class RedisRepository {
                 '%s-%s',
                 // tslint:disable-next-line:no-magic-numbers
                 params.sellerBranchCode,
-                moment(params.reserveDate).tz('Asia/Tokyo').format('YYMMDD')
+                moment(params.reserveDate)
+                    .tz('Asia/Tokyo')
+                    .format('YYMMDD')
             );
             const now = moment();
             // 一日ごとにカウントアップするので、データ保管期間は一日あれば十分
-            const TTL = moment(now).add(1, 'day').diff(now, 'seconds');
+            const TTL = moment(now)
+                .add(1, 'day')
+                .diff(now, 'seconds');
             debug(`TTL:${TTL} seconds`);
             const key = util.format(
                 '%s:%s',

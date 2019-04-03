@@ -101,7 +101,8 @@ export class MongoRepository implements Repository {
             },
             movie,
             { upsert: true }
-        ).exec();
+        )
+            .exec();
     }
 
     /**
@@ -120,7 +121,8 @@ export class MongoRepository implements Repository {
                 createdAt: 0,
                 updatedAt: 0
             }
-        ).exec();
+        )
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound('Movie');
         }
@@ -133,7 +135,8 @@ export class MongoRepository implements Repository {
 
         return this.creativeWorkModel.countDocuments(
             { $and: conditions }
-        ).setOptions({ maxTimeMS: 10000 })
+        )
+            .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
 
@@ -153,7 +156,8 @@ export class MongoRepository implements Repository {
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit).skip(params.limit * (params.page - 1));
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
         }
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -161,7 +165,9 @@ export class MongoRepository implements Repository {
             query.sort(params.sort);
         }
 
-        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
+        return query.setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
     /**
@@ -175,6 +181,7 @@ export class MongoRepository implements Repository {
                 identifier: params.identifier,
                 typeOf: factory.creativeWorkType.Movie
             }
-        ).exec();
+        )
+            .exec();
     }
 }

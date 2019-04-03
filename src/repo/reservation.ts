@@ -194,7 +194,8 @@ export class MongoRepository {
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit).skip(params.limit * (params.page - 1));
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
         }
 
         // tslint:disable-next-line:no-single-line-block-comment
@@ -208,9 +209,6 @@ export class MongoRepository {
             .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
-    /**
-     * IDで予約検索
-     */
     public async findById<T extends factory.reservationType>(params: {
         id: string;
     }): Promise<factory.reservation.IReservation<T>> {

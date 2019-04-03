@@ -5,7 +5,7 @@ import TicketTypeModel from './mongoose/model/ticketType';
 import TicketTypeGroupModel from './mongoose/model/ticketTypeGroup';
 
 /**
- * Mongoリポジトリ
+ * 券種リポジトリ
  */
 export class MongoRepository {
     public readonly ticketTypeModel: typeof TicketTypeModel;
@@ -118,7 +118,8 @@ export class MongoRepository {
                 createdAt: 0,
                 updatedAt: 0
             }
-        ).exec()
+        )
+            .exec()
             .then((doc) => {
                 if (doc === null) {
                     throw new factory.errors.NotFound('Ticket type group');
@@ -134,7 +135,8 @@ export class MongoRepository {
                 createdAt: 0,
                 updatedAt: 0
             }
-        ).exec()
+        )
+            .exec()
             .then((docs) => docs.map((doc) => <factory.ticketType.ITicketType>doc.toObject()));
     }
 
@@ -147,9 +149,6 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    /**
-     * IDで件券種グループを検索する
-     */
     public async findTicketTypeGroupById(params: {
         id: string;
     }): Promise<factory.ticketType.ITicketTypeGroup> {
@@ -162,7 +161,8 @@ export class MongoRepository {
                 createdAt: 0,
                 updatedAt: 0
             }
-        ).exec();
+        )
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound('Ticket type group');
         }
@@ -177,7 +177,8 @@ export class MongoRepository {
 
         return this.ticketTypeGroupModel.countDocuments(
             { $and: conditions }
-        ).setOptions({ maxTimeMS: 10000 })
+        )
+            .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
 
@@ -197,7 +198,8 @@ export class MongoRepository {
             }
         );
         if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit).skip(params.limit * (params.page - 1));
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
         }
 
         return query.sort({ _id: 1 })
@@ -216,7 +218,8 @@ export class MongoRepository {
             },
             params,
             { upsert: false, new: true }
-        ).exec();
+        )
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound('Ticket type group');
         }
@@ -232,7 +235,8 @@ export class MongoRepository {
             {
                 _id: params.id
             }
-        ).exec();
+        )
+            .exec();
     }
 
     /**
@@ -244,9 +248,6 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    /**
-     * IDで件券種を検索する
-     */
     public async findTicketTypeById(params: {
         id: string;
     }): Promise<factory.ticketType.ITicketType> {
@@ -259,7 +260,8 @@ export class MongoRepository {
                 createdAt: 0,
                 updatedAt: 0
             }
-        ).exec();
+        )
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound('Ticket type group');
         }
@@ -274,7 +276,8 @@ export class MongoRepository {
 
         return this.ticketTypeModel.countDocuments(
             { $and: conditions }
-        ).setOptions({ maxTimeMS: 10000 })
+        )
+            .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
 
@@ -294,7 +297,8 @@ export class MongoRepository {
             }
         );
         if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit).skip(params.limit * (params.page - 1));
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
         }
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -318,7 +322,8 @@ export class MongoRepository {
             },
             params,
             { upsert: false, new: true }
-        ).exec();
+        )
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound('Ticket type');
         }
@@ -334,6 +339,7 @@ export class MongoRepository {
             {
                 _id: params.id
             }
-        ).exec();
+        )
+            .exec();
     }
 }

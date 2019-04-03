@@ -23,9 +23,11 @@ export interface ILockKey {
 export class RedisRepository {
     public static KEY_PREFIX: string = 'chevre:itemAvailability:screeningEvent';
     public readonly redisClient: redis.RedisClient;
+
     constructor(redisClient: redis.RedisClient) {
         this.redisClient = redisClient;
     }
+
     /**
      * 座席をロックする
      */
@@ -41,7 +43,8 @@ export class RedisRepository {
         });
 
         const results = await new Promise<any[]>((resolve, reject) => {
-            multi.expireat(key, moment(lockKey.expires).unix())
+            multi.expireat(key, moment(lockKey.expires)
+                .unix())
                 .exec((err, reply) => {
                     debug('reply:', reply);
                     if (err !== null) {
@@ -53,11 +56,12 @@ export class RedisRepository {
         });
 
         const lockedFields: string[] = [];
-        results.slice(0, fields.length).forEach((r, index) => {
-            if (r === 1) {
-                lockedFields.push(fields[index]);
-            }
-        });
+        results.slice(0, fields.length)
+            .forEach((r, index) => {
+                if (r === 1) {
+                    lockedFields.push(fields[index]);
+                }
+            });
         debug('locked fields:', lockedFields);
         const lockedAll = lockedFields.length === fields.length;
         debug('lockedAll?', lockedAll);
@@ -81,6 +85,7 @@ export class RedisRepository {
             throw new factory.errors.AlreadyInUse('', [], 'Seat number already hold');
         }
     }
+
     /**
      * 座席ロックを解除する
      */
@@ -103,6 +108,7 @@ export class RedisRepository {
                 });
         });
     }
+
     /**
      * 空席でない座席を検索する
      */
@@ -117,18 +123,20 @@ export class RedisRepository {
                 } else {
                     let offers: IOffer[] = [];
                     if (reply !== null) {
-                        offers = Object.keys(reply).map((field) => {
-                            const seatSection = field.split(':')[0];
-                            const seatNumber = field.split(':')[1];
+                        offers = Object.keys(reply)
+                            .map((field) => {
+                                const seatSection = field.split(':')[0];
+                                const seatNumber = field.split(':')[1];
 
-                            return { seatSection, seatNumber };
-                        });
+                                return { seatSection, seatNumber };
+                            });
                     }
                     resolve(offers);
                 }
             });
         });
     }
+
     /**
      * 保持者を取得する
      */

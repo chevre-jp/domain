@@ -61,17 +61,20 @@ export function searchScreeningEventTicketOffers(params: {
             soundFormatCompoundPriceSpecifications.reduce<ISoundFormatChargeSpecification[]>(
                 (a, b) => [...a, ...b.priceComponent],
                 []
-            ).filter((spec) => eventSoundFormatTypes.indexOf(spec.appliesToSoundFormat) >= 0);
+            )
+                .filter((spec) => eventSoundFormatTypes.indexOf(spec.appliesToSoundFormat) >= 0);
         const videoFormatChargeSpecifications =
             videoFormatCompoundPriceSpecifications.reduce<IVideoFormatChargeSpecification[]>(
                 (a, b) => [...a, ...b.priceComponent],
                 []
-            ).filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
+            )
+                .filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
         const movieTicketTypeChargeSpecs =
             movieTicketTypeCompoundPriceSpecifications.reduce<IMovieTicketTypeChargeSpecification[]>(
                 (a, b) => [...a, ...b.priceComponent],
                 []
-            ).filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
+            )
+                .filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
 
         const eventOffers = {
             ...superEvent.offers,

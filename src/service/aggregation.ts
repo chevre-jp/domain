@@ -161,7 +161,8 @@ export function aggregateScreeningEvent(params: {
             },
             aggregation,
             { new: true }
-        ).exec();
+        )
+            .exec();
     };
 }
 

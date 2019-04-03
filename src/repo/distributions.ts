@@ -43,7 +43,8 @@ export class MongoRepository {
             { _id: params.id },
             { name: params.name },
             { upsert: false, new: true }
-        ).exec();
+        )
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound('Distribution');
         }
@@ -69,7 +70,9 @@ export class MongoRepository {
     public async getDistributions(): Promise<factory.distributor.IDistributor[]> {
         const query = this.distributionsModel.find({});
 
-        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
+        return query.setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
     public async countDistributions(params: factory.distributor.ISearchConditions): Promise<number> {
@@ -77,7 +80,8 @@ export class MongoRepository {
 
         return this.distributionsModel.countDocuments(
             { $and: conditions }
-        ).setOptions({ maxTimeMS: 10000 })
+        )
+            .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
     /**
@@ -98,14 +102,15 @@ export class MongoRepository {
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit).skip(params.limit * (params.page - 1));
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
         }
 
-        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
+        return query.setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
     }
-    /**
-     * IDで配給を取得する
-     */
+
     public async findById(params: {
         id: string;
     }): Promise<factory.distributor.IDistributor> {
@@ -118,15 +123,17 @@ export class MongoRepository {
                 createdAt: 0,
                 updatedAt: 0
             }
-        ).exec();
+        )
+            .exec();
         if (event === null) {
             throw new factory.errors.NotFound('Distribution');
         }
 
         return event.toObject();
     }
+
     /**
-     * IDで配給を削除する
+     * 配給削除
      */
     public async deleteById(params: {
         id: string;
@@ -135,6 +142,7 @@ export class MongoRepository {
             {
                 _id: params.id
             }
-        ).exec();
+        )
+            .exec();
     }
 }

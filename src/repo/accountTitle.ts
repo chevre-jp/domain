@@ -4,7 +4,7 @@ import { Connection } from 'mongoose';
 import AccountTitleModel from './mongoose/model/accountTitle';
 
 /**
- * Mongoリポジトリ
+ * 科目リポジトリ
  */
 export class MongoRepository {
     public readonly accountTitleModel: typeof AccountTitleModel;

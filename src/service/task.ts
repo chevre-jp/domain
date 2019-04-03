@@ -37,6 +37,7 @@ export const ABORT_REPORT_SUBJECT = 'Task aborted !!!';
 export function executeByName(taskName: factory.taskName): IExecuteOperation<void> {
     return async (settings: ISettings) => {
         // 未実行のタスクを取得
+        // tslint:disable-next-line:no-null-keyword
         let task: factory.task.ITask | null = null;
         try {
             task = await settings.taskRepo.executeOneByName(taskName);

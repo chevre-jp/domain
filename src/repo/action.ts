@@ -12,6 +12,7 @@ export class MongoRepository {
     constructor(connection: Connection) {
         this.actionModel = connection.model(ActionModel.modelName);
     }
+
     /**
      * アクション開始
      */
@@ -20,8 +21,10 @@ export class MongoRepository {
             ...attributes,
             actionStatus: factory.actionStatusType.ActiveActionStatus,
             startDate: new Date()
-        }).then((doc) => doc.toObject());
+        })
+            .then((doc) => doc.toObject());
     }
+
     /**
      * アクション完了
      */
@@ -41,13 +44,16 @@ export class MongoRepository {
                 endDate: new Date()
             },
             { new: true }
-        ).select({ __v: 0, createdAt: 0, updatedAt: 0 }).exec();
+        )
+            .select({ __v: 0, createdAt: 0, updatedAt: 0 })
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound(this.actionModel.modelName);
         }
 
         return doc.toObject();
     }
+
     /**
      * アクション取消
      */
@@ -62,13 +68,16 @@ export class MongoRepository {
             },
             { actionStatus: factory.actionStatusType.CanceledActionStatus },
             { new: true }
-        ).select({ __v: 0, createdAt: 0, updatedAt: 0 }).exec();
+        )
+            .select({ __v: 0, createdAt: 0, updatedAt: 0 })
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound(this.actionModel.modelName);
         }
 
         return doc.toObject();
     }
+
     /**
      * アクション失敗
      */
@@ -88,16 +97,16 @@ export class MongoRepository {
                 endDate: new Date()
             },
             { new: true }
-        ).select({ __v: 0, createdAt: 0, updatedAt: 0 }).exec();
+        )
+            .select({ __v: 0, createdAt: 0, updatedAt: 0 })
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound(this.actionModel.modelName);
         }
 
         return doc.toObject();
     }
-    /**
-     * IDで取得する
-     */
+
     public async findById<T extends factory.actionType>(params: {
         typeOf: T;
         id: string;
@@ -107,7 +116,9 @@ export class MongoRepository {
                 typeOf: params.typeOf,
                 _id: params.id
             }
-        ).select({ __v: 0, createdAt: 0, updatedAt: 0 }).exec();
+        )
+            .select({ __v: 0, createdAt: 0, updatedAt: 0 })
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound(this.actionModel.modelName);
         }

@@ -99,11 +99,10 @@ export class MongoRepository {
             startDate: new Date(),
             endDate: undefined,
             tasksExportationStatus: factory.transactionTasksExportationStatus.Unexported
-        }).then((doc) => doc.toObject());
+        })
+            .then((doc) => doc.toObject());
     }
-    /**
-     * IDで取引を取得する
-     */
+
     public async findById<T extends factory.transactionType>(params: {
         typeOf: T;
         id: string;
@@ -111,7 +110,8 @@ export class MongoRepository {
         const doc = await this.transactionModel.findOne({
             _id: params.id,
             typeOf: params.typeOf
-        }).exec();
+        })
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound('Transaction');
         }
@@ -129,7 +129,8 @@ export class MongoRepository {
             _id: params.id,
             typeOf: params.typeOf,
             status: factory.transactionStatusType.InProgress
-        }).exec();
+        })
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound('Transaction');
         }
@@ -158,7 +159,8 @@ export class MongoRepository {
                 potentialActions: params.potentialActions // resultを更新
             },
             { new: true }
-        ).exec();
+        )
+            .exec();
         // NotFoundであれば取引状態確認
         if (doc === null) {
             const transaction = await this.findById({ typeOf: params.typeOf, id: params.id });
@@ -191,7 +193,10 @@ export class MongoRepository {
             },
             { tasksExportationStatus: factory.transactionTasksExportationStatus.Exporting },
             { new: true }
-        ).exec().then((doc) => (doc === null) ? null : doc.toObject());
+        )
+            .exec()
+            // tslint:disable-next-line:no-null-keyword
+            .then((doc) => (doc === null) ? null : doc.toObject());
     }
     /**
      * タスクエクスポートリトライ
@@ -201,12 +206,17 @@ export class MongoRepository {
         await this.transactionModel.findOneAndUpdate(
             {
                 tasksExportationStatus: factory.transactionTasksExportationStatus.Exporting,
-                updatedAt: { $lt: moment().add(-params.intervalInMinutes, 'minutes').toISOString() }
+                updatedAt: {
+                    $lt: moment()
+                        .add(-params.intervalInMinutes, 'minutes')
+                        .toISOString()
+                }
             },
             {
                 tasksExportationStatus: factory.transactionTasksExportationStatus.Unexported
             }
-        ).exec();
+        )
+            .exec();
     }
     /**
      * set task status exported by transaction id
@@ -217,15 +227,18 @@ export class MongoRepository {
             params.id,
             {
                 tasksExportationStatus: factory.transactionTasksExportationStatus.Exported,
-                tasksExportedAt: moment().toDate()
+                tasksExportedAt: moment()
+                    .toDate()
             }
-        ).exec();
+        )
+            .exec();
     }
     /**
      * 取引を期限切れにする
      */
     public async makeExpired(): Promise<void> {
-        const endDate = moment().toDate();
+        const endDate = moment()
+            .toDate();
 
         // ステータスと期限を見て更新
         await this.transactionModel.update(
@@ -238,7 +251,8 @@ export class MongoRepository {
                 endDate: endDate
             },
             { multi: true }
-        ).exec();
+        )
+            .exec();
     }
     /**
      * 取引を中止する
@@ -247,7 +261,8 @@ export class MongoRepository {
         typeOf: T;
         id: string;
     }): Promise<factory.transaction.ITransaction<T>> {
-        const endDate = moment().toDate();
+        const endDate = moment()
+            .toDate();
 
         // 進行中ステータスの取引を中止する
         const doc = await this.transactionModel.findOneAndUpdate(
@@ -261,7 +276,8 @@ export class MongoRepository {
                 endDate: endDate
             },
             { new: true }
-        ).exec();
+        )
+            .exec();
         // NotFoundであれば取引状態確認
         if (doc === null) {
             const transaction = await this.findById<T>(params);
@@ -284,7 +300,8 @@ export class MongoRepository {
 
         return this.transactionModel.countDocuments(
             { $and: conditions }
-        ).setOptions({ maxTimeMS: 10000 })
+        )
+            .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
     /**
@@ -305,7 +322,8 @@ export class MongoRepository {
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit).skip(params.limit * (params.page - 1));
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
         }
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -313,6 +331,8 @@ export class MongoRepository {
             query.sort(params.sort);
         }
 
-        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
+        return query.setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
     }
 }

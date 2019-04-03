@@ -52,7 +52,8 @@ export class MongoRepository {
             },
             params,
             { upsert: true }
-        ).exec();
+        )
+            .exec();
     }
 
     public async countMovieTheaters(params: factory.place.movieTheater.ISearchConditions): Promise<number> {
@@ -86,7 +87,8 @@ export class MongoRepository {
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit).skip(params.limit * (params.page - 1));
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
         }
 
         // tslint:disable-next-line:no-single-line-block-comment
@@ -119,7 +121,8 @@ export class MongoRepository {
                 createdAt: 0,
                 updatedAt: 0
             }
-        ).exec();
+        )
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound(this.placeModel.modelName);
         }

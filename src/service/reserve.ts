@@ -50,6 +50,7 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
             status: factory.taskStatus.Ready,
             runsAt: new Date(), // なるはやで実行
             remainingNumberOfTries: 10,
+            // tslint:disable-next-line:no-null-keyword
             lastTriedAt: null,
             numberOfTried: 0,
             executionResults: [],
@@ -179,6 +180,7 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
             status: factory.taskStatus.Ready,
             runsAt: new Date(), // なるはやで実行
             remainingNumberOfTries: 10,
+            // tslint:disable-next-line:no-null-keyword
             lastTriedAt: null,
             numberOfTried: 0,
             executionResults: [],
