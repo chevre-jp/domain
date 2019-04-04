@@ -63,7 +63,7 @@ const schema = new mongoose.Schema(
         id: true,
         read: 'primaryPreferred',
         safe: safe,
-        strict: true,
+        strict: false, // まだ型検討中なので柔軟に
         useNestedStrict: true,
         timestamps: {
             createdAt: 'createdAt',
@@ -84,21 +84,64 @@ schema.index(
 );
 
 schema.index(
+    { price: 1 },
     {
-        typeOf: 1
-    },
-    {
-        name: 'searchByTypeOf'
+        name: 'searchByPrice',
+        partialFilterExpression: {
+            price: { $exists: true }
+        }
     }
 );
+
 schema.index(
-    {
-        'priceComponent.typeOf': 1
-    },
+    { 'priceComponent.typeOf': 1 },
     {
         name: 'searchByPriceComponentTypeOf',
         partialFilterExpression: {
             'priceComponent.typeOf': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { typeOf: 1, price: 1 },
+    {
+        name: 'searchByTypeOf-v2',
+        partialFilterExpression: {
+            price: { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { appliesToSoundFormat: 1, price: 1 },
+    {
+        name: 'searchByAppliesToSoundFormat',
+        partialFilterExpression: {
+            appliesToSoundFormat: { $exists: true },
+            price: { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { appliesToVideoFormat: 1, price: 1 },
+    {
+        name: 'searchByAppliesToVideoFormat',
+        partialFilterExpression: {
+            appliesToVideoFormat: { $exists: true },
+            price: { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { appliesToMovieTicketType: 1, price: 1 },
+    {
+        name: 'searchByAppliesToMovieTicketType',
+        partialFilterExpression: {
+            appliesToMovieTicketType: { $exists: true },
+            price: { $exists: true }
         }
     }
 );
