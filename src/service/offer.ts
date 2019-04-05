@@ -4,12 +4,12 @@ import { MongoRepository as PriceSpecificationRepo } from '../repo/priceSpecific
 
 import * as factory from '../factory';
 
-type IMovieTicketTypeChargeSpecification =
-    factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.MovieTicketTypeChargeSpecification>;
-type ISoundFormatChargeSpecification =
-    factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.SoundFormatChargeSpecification>;
-type IVideoFormatChargeSpecification =
-    factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.VideoFormatChargeSpecification>;
+// type IMovieTicketTypeChargeSpecification =
+//     factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.MovieTicketTypeChargeSpecification>;
+// type ISoundFormatChargeSpecification =
+//     factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.SoundFormatChargeSpecification>;
+// type IVideoFormatChargeSpecification =
+//     factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.VideoFormatChargeSpecification>;
 type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     event: EventRepo;
     priceSpecification: PriceSpecificationRepo;
@@ -43,38 +43,58 @@ export function searchScreeningEventTicketOffers(params: {
         const availableOffers = await repos.offer.findByOfferCatalogId({ offerCatalog: screeningEventOffers });
 
         // 価格仕様を検索する
-        const soundFormatCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
-            typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
-            priceComponent: { typeOf: factory.priceSpecificationType.SoundFormatChargeSpecification }
-        });
-        const videoFormatCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
-            typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
-            priceComponent: { typeOf: factory.priceSpecificationType.VideoFormatChargeSpecification }
-        });
-        const movieTicketTypeCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
-            typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
-            priceComponent: { typeOf: factory.priceSpecificationType.MovieTicketTypeChargeSpecification }
-        });
+        // const soundFormatCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
+        //     typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
+        //     priceComponent: { typeOf: factory.priceSpecificationType.SoundFormatChargeSpecification }
+        // });
+        // const videoFormatCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
+        //     typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
+        //     priceComponent: { typeOf: factory.priceSpecificationType.VideoFormatChargeSpecification }
+        // });
+        // const movieTicketTypeCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
+        //     typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
+        //     priceComponent: { typeOf: factory.priceSpecificationType.MovieTicketTypeChargeSpecification }
+        // });
 
         // イベントに関係のある価格仕様に絞り、ひとつの複合価格仕様としてまとめる
+        // const soundFormatChargeSpecifications =
+        //     soundFormatCompoundPriceSpecifications.reduce<ISoundFormatChargeSpecification[]>(
+        //         (a, b) => [...a, ...b.priceComponent],
+        //         []
+        //     )
+        //         .filter((spec) => eventSoundFormatTypes.indexOf(spec.appliesToSoundFormat) >= 0);
+
         const soundFormatChargeSpecifications =
-            soundFormatCompoundPriceSpecifications.reduce<ISoundFormatChargeSpecification[]>(
-                (a, b) => [...a, ...b.priceComponent],
-                []
-            )
-                .filter((spec) => eventSoundFormatTypes.indexOf(spec.appliesToSoundFormat) >= 0);
+            await repos.priceSpecification.search<factory.priceSpecificationType.SoundFormatChargeSpecification>({
+                typeOf: factory.priceSpecificationType.SoundFormatChargeSpecification,
+                appliesToSoundFormats: eventSoundFormatTypes
+            });
+
+        // const videoFormatChargeSpecifications =
+        //     videoFormatCompoundPriceSpecifications.reduce<IVideoFormatChargeSpecification[]>(
+        //         (a, b) => [...a, ...b.priceComponent],
+        //         []
+        //     )
+        //         .filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
+
         const videoFormatChargeSpecifications =
-            videoFormatCompoundPriceSpecifications.reduce<IVideoFormatChargeSpecification[]>(
-                (a, b) => [...a, ...b.priceComponent],
-                []
-            )
-                .filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
+            await repos.priceSpecification.search<factory.priceSpecificationType.VideoFormatChargeSpecification>({
+                typeOf: factory.priceSpecificationType.VideoFormatChargeSpecification,
+                appliesToVideoFormats: eventVideoFormatTypes
+            });
+
+        // const movieTicketTypeChargeSpecs =
+        //     movieTicketTypeCompoundPriceSpecifications.reduce<IMovieTicketTypeChargeSpecification[]>(
+        //         (a, b) => [...a, ...b.priceComponent],
+        //         []
+        //     )
+        //         .filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
+
         const movieTicketTypeChargeSpecs =
-            movieTicketTypeCompoundPriceSpecifications.reduce<IMovieTicketTypeChargeSpecification[]>(
-                (a, b) => [...a, ...b.priceComponent],
-                []
-            )
-                .filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
+            await repos.priceSpecification.search<factory.priceSpecificationType.MovieTicketTypeChargeSpecification>({
+                typeOf: factory.priceSpecificationType.MovieTicketTypeChargeSpecification,
+                appliesToVideoFormats: eventVideoFormatTypes
+            });
 
         const eventOffers = {
             ...superEvent.offers,

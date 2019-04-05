@@ -146,6 +146,17 @@ schema.index(
     }
 );
 
+schema.index(
+    { 'appliesToMovieTicket.serviceType': 1, price: 1 },
+    {
+        name: 'searchByAppliesToMovieTicketServiceType',
+        partialFilterExpression: {
+            'appliesToMovieTicket.serviceType': { $exists: true },
+            price: { $exists: true }
+        }
+    }
+);
+
 export default mongoose.model('PriceSpecification', schema)
     .on(
         'index',
