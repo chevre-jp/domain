@@ -63,7 +63,7 @@ const schema = new mongoose.Schema(
         id: true,
         read: 'primaryPreferred',
         safe: safe,
-        strict: true,
+        strict: false,
         useNestedStrict: true,
         timestamps: {
             createdAt: 'createdAt',
