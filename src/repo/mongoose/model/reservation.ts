@@ -185,6 +185,96 @@ schema.index(
     }
 );
 
+schema.index(
+    { 'reservedTicket.ticketedSeat.seatNumber': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservedTicketTicketedSeatSeatNumber',
+        partialFilterExpression: {
+            'reservedTicket.ticketedSeat.seatNumber': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'reservedTicket.ticketedSeat.seatRow': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservedTicketTicketedSeatSeatRow',
+        partialFilterExpression: {
+            'reservedTicket.ticketedSeat.seatRow': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'reservedTicket.ticketedSeat.seatSection': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservedTicketTicketedSeatSeatSection',
+        partialFilterExpression: {
+            'reservedTicket.ticketedSeat.seatSection': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'reservedTicket.ticketType.id': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservedTicketTicketTypeId',
+        partialFilterExpression: {
+            'reservedTicket.ticketType.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'reservedTicket.ticketType.category.id': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservedTicketTicketTypeCategoryId',
+        partialFilterExpression: {
+            'reservedTicket.ticketType.category.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'underName.id': 1, modifiedTime: -1 },
+    {
+        name: 'searchByUnderNameId',
+        partialFilterExpression: {
+            'underName.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'underName.email': 1, modifiedTime: -1 },
+    {
+        name: 'searchByUnderNameEmail',
+        partialFilterExpression: {
+            'underName.email': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'underName.name': 1, modifiedTime: -1 },
+    {
+        name: 'searchByUnderNameName',
+        partialFilterExpression: {
+            'underName.name': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'underName.telephone': 1, modifiedTime: -1 },
+    {
+        name: 'searchByUnderNameTelephone',
+        partialFilterExpression: {
+            'underName.telephone': { $exists: true }
+        }
+    }
+);
+
 export default mongoose.model('Reservation', schema)
     .on(
         'index',

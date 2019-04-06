@@ -14,7 +14,7 @@ export class MongoRepository {
         this.reservationModel = connection.model(reservationModel.modelName);
     }
 
-    // tslint:disable-next-line:max-func-body-length
+    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     public static CREATE_MONGO_CONDITIONS<T extends factory.reservationType>(params: factory.reservation.ISearchConditions<T>) {
         // MongoDB検索条件
         const andConditions: any[] = [
@@ -156,6 +156,135 @@ export class MongoRepository {
                         }
                     );
                 }
+            }
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.reservedTicket !== undefined) {
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.reservedTicket.ticketType !== undefined) {
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if (Array.isArray(params.reservedTicket.ticketType.ids)) {
+                    andConditions.push(
+                        {
+                            'reservedTicket.ticketType.id': {
+                                $exists: true,
+                                $in: params.reservedTicket.ticketType.ids
+                            }
+                        }
+                    );
+                }
+
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if (params.reservedTicket.ticketType.category !== undefined) {
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (Array.isArray(params.reservedTicket.ticketType.category.ids)) {
+                        andConditions.push(
+                            {
+                                'reservedTicket.ticketType.category.id': {
+                                    $exists: true,
+                                    $in: params.reservedTicket.ticketType.category.ids
+                                }
+                            }
+                        );
+                    }
+                }
+            }
+
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.reservedTicket.ticketedSeat !== undefined) {
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if (Array.isArray(params.reservedTicket.ticketedSeat.seatNumbers)) {
+                    andConditions.push(
+                        {
+                            'reservedTicket.ticketedSeat.seatNumber': {
+                                $exists: true,
+                                $in: params.reservedTicket.ticketedSeat.seatNumbers
+                            }
+                        }
+                    );
+                }
+
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if (Array.isArray(params.reservedTicket.ticketedSeat.seatRows)) {
+                    andConditions.push(
+                        {
+                            'reservedTicket.ticketedSeat.seatRow': {
+                                $exists: true,
+                                $in: params.reservedTicket.ticketedSeat.seatRows
+                            }
+                        }
+                    );
+                }
+
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if (Array.isArray(params.reservedTicket.ticketedSeat.seatSections)) {
+                    andConditions.push(
+                        {
+                            'reservedTicket.ticketedSeat.seatSection': {
+                                $exists: true,
+                                $in: params.reservedTicket.ticketedSeat.seatSections
+                            }
+                        }
+                    );
+                }
+            }
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.underName !== undefined) {
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.underName.id !== undefined) {
+                andConditions.push({
+                    'underName.id': {
+                        $exists: true,
+                        $regex: new RegExp(params.underName.id, 'i')
+                    }
+                });
+            }
+
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.underName.email !== undefined) {
+                andConditions.push({
+                    'underName.email': {
+                        $exists: true,
+                        $regex: new RegExp(params.underName.email, 'i')
+                    }
+                });
+            }
+
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.underName.name !== undefined) {
+                andConditions.push({
+                    'underName.name': {
+                        $exists: true,
+                        $regex: new RegExp(params.underName.name, 'i')
+                    }
+                });
+            }
+
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.underName.telephone !== undefined) {
+                andConditions.push({
+                    'underName.telephone': {
+                        $exists: true,
+                        $regex: new RegExp(params.underName.telephone, 'i')
+                    }
+                });
             }
         }
 
