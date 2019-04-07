@@ -28,7 +28,9 @@ async function main() {
             // name: '',
             // email: '',
             // telephone: '1234'
-        }
+        },
+        // attended: true,
+        // checkedIn: true
     });
     console.log(reservations);
     console.log(reservations.length);

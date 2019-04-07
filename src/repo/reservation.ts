@@ -288,6 +288,24 @@ export class MongoRepository {
             }
         }
 
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof params.attended === 'boolean') {
+            andConditions.push({
+                attended: params.attended
+            });
+
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof params.checkedIn === 'boolean') {
+            andConditions.push({
+                checkedIn: params.checkedIn
+            });
+
+        }
+
         return andConditions;
     }
 

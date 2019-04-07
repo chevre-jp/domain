@@ -85,7 +85,6 @@ export type IAggregateScreeningEventOperation<T> = (repos: {
  * 上映イベントデータをID指定で集計する
  */
 export function aggregateScreeningEvent(params: {
-    typeOf: factory.eventType.ScreeningEvent;
     id: string;
 }): IAggregateScreeningEventOperation<void> {
     return async (repos: {
@@ -96,25 +95,6 @@ export function aggregateScreeningEvent(params: {
         // 集計対象イベント検索
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>(params);
 
-        // 全予約検索
-        const limit = 100;
-        let page = 0;
-        let numData: number = limit;
-        const confirmedReservations: factory.reservation.IReservation<factory.reservationType.EventReservation>[] = [];
-        while (numData === limit) {
-            page += 1;
-            const reservations = await repos.reservation.search<factory.reservationType.EventReservation>({
-                limit: limit,
-                page: page,
-                typeOf: factory.reservationType.EventReservation,
-                reservationFor: { typeOf: factory.eventType.ScreeningEvent, id: event.id },
-                reservationStatuses: [factory.reservationStatusType.ReservationConfirmed]
-            });
-            numData = reservations.length;
-            debug('numData:', numData);
-            confirmedReservations.push(...reservations);
-        }
-
         // イベントの座席情報検索
         const movieTheatersWithoutScreeningRoom = await repos.place.searchMovieTheaters({});
         const movieTheaters = await Promise.all(movieTheatersWithoutScreeningRoom.map(async (m) => {
@@ -124,8 +104,8 @@ export function aggregateScreeningEvent(params: {
         // 収容人数を集計
         let maximumAttendeeCapacity: number = 0;
         let remainingAttendeeCapacity: number = 0;
-        let checkInCount: number = 0;
         let attendeeCount: number = 0;
+        let checkInCount: number = 0;
 
         const movieTheater = movieTheaters.find((m) => m.branchCode === event.superEvent.location.branchCode);
         if (movieTheater === undefined) {
@@ -138,10 +118,27 @@ export function aggregateScreeningEvent(params: {
                 // 基本的にありえないはずだが、万が一スクリーンが見つからなければcapacityは0のまま
                 console.error(new Error('Screening room not found'));
             } else {
+                const reservationCount = await repos.reservation.count<factory.reservationType.EventReservation>({
+                    typeOf: factory.reservationType.EventReservation,
+                    reservationFor: { ids: [event.id] },
+                    reservationStatuses: [factory.reservationStatusType.ReservationConfirmed]
+                });
                 maximumAttendeeCapacity = screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0);
-                remainingAttendeeCapacity = maximumAttendeeCapacity - confirmedReservations.length;
-                checkInCount = confirmedReservations.filter((r) => r.checkedIn).length;
-                attendeeCount = confirmedReservations.filter((r) => r.attended).length;
+                remainingAttendeeCapacity = maximumAttendeeCapacity - reservationCount;
+
+                attendeeCount = await repos.reservation.count({
+                    typeOf: factory.reservationType.EventReservation,
+                    reservationFor: { ids: [event.id] },
+                    reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+                    attended: true
+                });
+
+                checkInCount = await repos.reservation.count({
+                    typeOf: factory.reservationType.EventReservation,
+                    reservationFor: { ids: [event.id] },
+                    reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+                    checkedIn: true
+                });
             }
         }
 
@@ -255,6 +252,71 @@ export function countTicketTypePerEvent(
         return {
             totalCount: events.length,
             data: events.slice(params.limit * (params.page - 1), params.limit * params.page)
+        };
+    };
+}
+
+export interface IAggregateReservation {
+    checkInCount: number;
+    attendeeCount: number;
+    saleTicketCount: number;
+    advanceTicketCount: number;
+    freeTicketCount: number;
+}
+
+export function aggregateEventReservation(params: {
+    id: string;
+}) {
+    return async (repos: {
+        reservation: ReservationRepo;
+    }): Promise<IAggregateReservation> => {
+        const attendeeCount = await repos.reservation.count({
+            typeOf: factory.reservationType.EventReservation,
+            reservationFor: { ids: [params.id] },
+            reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+            attended: true
+        });
+
+        const checkInCount = await repos.reservation.count({
+            typeOf: factory.reservationType.EventReservation,
+            reservationFor: { ids: [params.id] },
+            reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+            checkedIn: true
+        });
+
+        const saleTicketCount = await repos.reservation.count({
+            typeOf: factory.reservationType.EventReservation,
+            reservationFor: { ids: [params.id] },
+            reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+            reservedTicket: {
+                ticketType: { category: { ids: [factory.ticketTypeCategory.Default] } }
+            }
+        });
+
+        const advanceTicketCount = await repos.reservation.count({
+            typeOf: factory.reservationType.EventReservation,
+            reservationFor: { ids: [params.id] },
+            reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+            reservedTicket: {
+                ticketType: { category: { ids: [factory.ticketTypeCategory.Advance] } }
+            }
+        });
+
+        const freeTicketCount = await repos.reservation.count({
+            typeOf: factory.reservationType.EventReservation,
+            reservationFor: { ids: [params.id] },
+            reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+            reservedTicket: {
+                ticketType: { category: { ids: [factory.ticketTypeCategory.Free] } }
+            }
+        });
+
+        return {
+            checkInCount,
+            attendeeCount,
+            saleTicketCount,
+            advanceTicketCount,
+            freeTicketCount
         };
     };
 }
