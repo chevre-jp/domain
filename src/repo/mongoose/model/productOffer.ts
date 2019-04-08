@@ -3,11 +3,11 @@ import * as mongoose from 'mongoose';
 import { create } from '../schema/offer';
 
 /**
- * 券種スキーマ
+ * プロダクトオファースキーマ
  */
-const schema = create({ collection: 'ticketTypes' });
+const schema = create({ collection: 'productOffers' });
 
-export default mongoose.model('TicketType', schema)
+export default mongoose.model('ProductOffer', schema)
     .on(
         'index',
         // tslint:disable-next-line:no-single-line-block-comment

@@ -3,17 +3,20 @@ import { Connection } from 'mongoose';
 import * as factory from '../factory';
 import OfferModel from './mongoose/model/offer';
 import OfferCatalogModel from './mongoose/model/offerCatalog';
+import ProductOfferModel from './mongoose/model/productOffer';
 
 /**
- * 券種リポジトリ
+ * オファーリポジトリ
  */
 export class MongoRepository {
     public readonly offerModel: typeof OfferModel;
     public readonly offerCatalogModel: typeof OfferCatalogModel;
+    public readonly productOfferModel: typeof ProductOfferModel;
 
     constructor(connection: Connection) {
         this.offerModel = connection.model(OfferModel.modelName);
         this.offerCatalogModel = connection.model(OfferCatalogModel.modelName);
+        this.productOfferModel = connection.model(ProductOfferModel.modelName);
     }
 
     // tslint:disable-next-line:max-func-body-length
@@ -166,7 +169,7 @@ export class MongoRepository {
             .exec()
             .then((doc) => {
                 if (doc === null) {
-                    throw new factory.errors.NotFound('Ticket type group');
+                    throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
                 }
 
                 return doc.toObject();
@@ -208,13 +211,13 @@ export class MongoRepository {
         )
             .exec();
         if (doc === null) {
-            throw new factory.errors.NotFound('Ticket type group');
+            throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
         }
 
         return doc.toObject();
     }
 
-    public async countTicketTypeGroups(
+    public async countOfferCatalogs(
         params: factory.ticketType.ITicketTypeGroupSearchConditions
     ): Promise<number> {
         const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
@@ -263,7 +266,7 @@ export class MongoRepository {
         )
             .exec();
         if (doc === null) {
-            throw new factory.errors.NotFound('Ticket type group');
+            throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
         }
     }
 
@@ -305,7 +308,7 @@ export class MongoRepository {
         )
             .exec();
         if (doc === null) {
-            throw new factory.errors.NotFound('Ticket type group');
+            throw new factory.errors.NotFound(this.offerModel.modelName);
         }
 
         return doc.toObject();
@@ -336,18 +339,21 @@ export class MongoRepository {
                 updatedAt: 0
             }
         );
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
             query.limit(params.limit)
                 .skip(params.limit * (params.page - 1));
         }
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.sort !== undefined) {
             query.sort(params.sort);
         }
 
-        return query.sort({ _id: 1 })
-            .setOptions({ maxTimeMS: 10000 })
+        return query.setOptions({ maxTimeMS: 10000 })
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
     }
@@ -365,7 +371,7 @@ export class MongoRepository {
         )
             .exec();
         if (doc === null) {
-            throw new factory.errors.NotFound('Ticket type');
+            throw new factory.errors.NotFound(this.offerModel.modelName);
         }
     }
 
@@ -376,6 +382,78 @@ export class MongoRepository {
         id: string;
     }) {
         await this.offerModel.findOneAndRemove(
+            {
+                _id: params.id
+            }
+        )
+            .exec();
+    }
+
+    public async createProductOffer(params: factory.offer.product.IOffer): Promise<factory.offer.product.IOffer> {
+        const doc = await this.productOfferModel.create({ ...params, _id: params.id });
+
+        return doc.toObject();
+    }
+
+    public async countProductOffers(
+        params: factory.offer.product.ISearchConditions
+    ): Promise<number> {
+        const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
+
+        return this.productOfferModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
+            .setOptions({ maxTimeMS: 10000 })
+            .exec();
+    }
+
+    public async searchProductOffers(
+        params: factory.offer.product.ISearchConditions
+    ): Promise<factory.offer.product.IOffer[]> {
+        const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
+        const query = this.productOfferModel.find(
+            (conditions.length > 0) ? { $and: conditions } : {},
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        );
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.limit !== undefined && params.page !== undefined) {
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
+
+        return query.setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
+    }
+
+    public async updateProductOffer(params: factory.offer.product.IOffer): Promise<void> {
+        const doc = await this.productOfferModel.findOneAndUpdate(
+            {
+                _id: params.id
+            },
+            params,
+            { upsert: false, new: true }
+        )
+            .exec();
+        if (doc === null) {
+            throw new factory.errors.NotFound(this.productOfferModel.modelName);
+        }
+    }
+
+    public async deleteProductOffer(params: {
+        id: string;
+    }) {
+        await this.productOfferModel.findOneAndRemove(
             {
                 _id: params.id
             }
