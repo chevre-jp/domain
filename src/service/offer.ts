@@ -1,4 +1,5 @@
 import * as COA from '@motionpicture/coa-service';
+import { format } from 'util';
 
 import { MongoRepository as EventRepo } from '../repo/event';
 import { MongoRepository as OfferRepo } from '../repo/offer';
@@ -213,7 +214,7 @@ function coaTicket2offer(params: {
     const unitPriceSpec: factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>
         = {
         typeOf: factory.priceSpecificationType.UnitPriceSpecification,
-        price: <any>undefined, // COAに定義なし
+        price: 0, // COAに定義なし
         priceCurrency: factory.priceCurrency.JPY,
         valueAddedTaxIncluded: true,
         referenceQuantity: {
@@ -231,24 +232,39 @@ function coaTicket2offer(params: {
         ? ['Member']
         : undefined;
 
+    const id = format(
+        '%s-%s-%s',
+        'COA',
+        params.theaterCode,
+        params.ticketResult.ticketCode
+    );
+
     return {
         typeOf: 'Offer',
         priceCurrency: factory.priceCurrency.JPY,
-        id: `${params.theaterCode}-${params.ticketResult.ticketCode}`,
+        id: id,
         name: {
             ja: params.ticketResult.ticketName,
-            en: params.ticketResult.ticketNameEng
+            en: (params.ticketResult.ticketNameEng !== undefined && params.ticketResult.ticketNameEng !== '')
+                ? params.ticketResult.ticketNameEng
+                : 'English Name'
         },
         description: {
             ja: '',
             en: ''
         },
+        alternateName: {
+            ja: params.ticketResult.ticketName,
+            en: (params.ticketResult.ticketNameEng !== undefined && params.ticketResult.ticketNameEng !== '')
+                ? params.ticketResult.ticketNameEng
+                : 'English Name'
+        },
         // kanaName: params.ticketResult.ticketNameKana,
         priceSpecification: unitPriceSpec,
         availability: factory.itemAvailability.InStock,
-        eligibleCustomerType: eligibleCustomerType,
-        additionalProperty: [
-            { name: 'coaInfo', value: JSON.stringify({ theaterCode: params.theaterCode, ...params.ticketResult }) }
-        ]
+        eligibleCustomerType: eligibleCustomerType
+        // additionalProperty: [
+        //     { name: 'coaInfo', value: JSON.stringify({ theaterCode: params.theaterCode, ...params.ticketResult }) }
+        // ]
     };
 }
