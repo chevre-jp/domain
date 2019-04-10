@@ -296,6 +296,7 @@ export class MongoRepository {
     public async save<T extends factory.eventType>(params: {
         id?: string;
         attributes: factory.event.IAttributes<T>;
+        upsert?: boolean;
     }): Promise<factory.event.IEvent<T>> {
         let doc: Document | null;
 
@@ -309,7 +310,7 @@ export class MongoRepository {
                     typeOf: params.attributes.typeOf
                 },
                 params.attributes,
-                { upsert: false, new: true }
+                { upsert: (params.upsert !== undefined) ? params.upsert : false, new: true }
             )
                 .exec();
 
@@ -385,5 +386,21 @@ export class MongoRepository {
         }
 
         return doc.toObject();
+    }
+
+    /**
+     * イベントをキャンセルする
+     */
+    public async cancel(params: {
+        id: string;
+    }) {
+        await this.eventModel.findOneAndUpdate(
+            {
+                _id: params.id
+            },
+            { eventStatus: factory.eventStatusType.EventCancelled },
+            { new: true }
+        )
+            .exec();
     }
 }

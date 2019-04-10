@@ -13,10 +13,12 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "1.0.0-alpha.85",
+    "@chevre/factory": "1.0.0-alpha.86",
     "@motionpicture/coa-service": "^6.0.1",
     "@types/redis": "^2.8.12",
     "debug": "^3.2.6",
+    "google-libphonenumber": "^3.2.2",
+    "lodash.difference": "^4.5.0",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.23",
     "redis": "^2.8.0",
@@ -25,6 +27,8 @@
   "description": "Chevre Domain Library for Node.js",
   "devDependencies": {
     "@types/debug": "0.0.30",
+    "@types/google-libphonenumber": "^7.4.17",
+    "@types/lodash.difference": "^4.5.6",
     "@types/mocha": "^5.2.6",
     "@types/moment-timezone": "^0.5.12",
     "@types/mongoose": "^5.3.24",

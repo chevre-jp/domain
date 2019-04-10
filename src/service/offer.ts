@@ -187,10 +187,40 @@ export function importFromCOA(params: {
     }) => {
         const ticketResults = await COA.services.master.ticket({ theaterCode: params.theaterCode });
 
-        const offers = ticketResults.map((t) => coaTicket2offer({ theaterCode: params.theaterCode, ticketResult: t }));
+        await Promise.all(ticketResults.map(async (ticketResult) => {
+            const offer = coaTicket2offer({ theaterCode: params.theaterCode, ticketResult: ticketResult });
 
-        await Promise.all(offers.map(async (offer) => {
             await repos.offer.saveOffer(offer);
+
+            const additionalProperty: factory.propertyValue.IPropertyValue<string> = {
+                name: 'coaInfo',
+                value: JSON.stringify({
+                    theaterCode: params.theaterCode, ...ticketResult
+                })
+            };
+
+            await repos.offer.offerModel.findByIdAndUpdate(
+                offer.id,
+                {
+                    $pull: {
+                        additionalProperty: { name: additionalProperty.name }
+                    }
+                }
+            )
+                .exec();
+
+            await repos.offer.offerModel.findByIdAndUpdate(
+                offer.id,
+                {
+                    $push: {
+                        additionalProperty: {
+                            $each: [additionalProperty],
+                            $position: 0
+                        }
+                    }
+                }
+            )
+                .exec();
         }));
     };
 }
@@ -211,8 +241,7 @@ function coaTicket2offer(params: {
         }]
         : undefined;
 
-    const unitPriceSpec: factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>
-        = {
+    const unitPriceSpec: factory.ticketType.IPriceSpecification = {
         typeOf: factory.priceSpecificationType.UnitPriceSpecification,
         price: 0, // COAに定義なし
         priceCurrency: factory.priceCurrency.JPY,
@@ -263,8 +292,5 @@ function coaTicket2offer(params: {
         priceSpecification: unitPriceSpec,
         availability: factory.itemAvailability.InStock,
         eligibleCustomerType: eligibleCustomerType
-        // additionalProperty: [
-        //     { name: 'coaInfo', value: JSON.stringify({ theaterCode: params.theaterCode, ...params.ticketResult }) }
-        // ]
     };
 }
