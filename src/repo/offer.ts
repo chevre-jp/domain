@@ -376,6 +376,23 @@ export class MongoRepository {
     }
 
     /**
+     * 券種を保管する
+     */
+    public async saveOffer(params: factory.ticketType.ITicketType): Promise<void> {
+        const doc = await this.offerModel.findOneAndUpdate(
+            {
+                _id: params.id
+            },
+            params,
+            { upsert: true, new: true }
+        )
+            .exec();
+        if (doc === null) {
+            throw new factory.errors.NotFound(this.offerModel.modelName);
+        }
+    }
+
+    /**
      * 券種を削除する
      */
     public async deleteOffer(params: {

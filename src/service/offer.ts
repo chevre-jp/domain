@@ -1,3 +1,5 @@
+import * as COA from '@motionpicture/coa-service';
+
 import { MongoRepository as EventRepo } from '../repo/event';
 import { MongoRepository as OfferRepo } from '../repo/offer';
 import { MongoRepository as PriceSpecificationRepo } from '../repo/priceSpecification';
@@ -173,5 +175,80 @@ export function searchScreeningEventTicketOffers(params: {
             });
 
         return [...ticketTypeOffers, ...movieTicketOffers];
+    };
+}
+
+export function importFromCOA(params: {
+    theaterCode: string;
+}) {
+    return async (repos: {
+        offer: OfferRepo;
+    }) => {
+        const ticketResults = await COA.services.master.ticket({ theaterCode: params.theaterCode });
+
+        const offers = ticketResults.map((t) => coaTicket2offer({ theaterCode: params.theaterCode, ticketResult: t }));
+
+        await Promise.all(offers.map(async (offer) => {
+            await repos.offer.saveOffer(offer);
+        }));
+    };
+}
+
+function coaTicket2offer(params: {
+    theaterCode: string;
+    ticketResult: COA.services.master.ITicketResult;
+}): factory.ticketType.ITicketType {
+    const additionalPaymentRequirements = (typeof params.ticketResult.usePoint === 'number' && params.ticketResult.usePoint > 0)
+        ? [{
+            typeOf: factory.paymentMethodType.Account,
+            totalPaymentDue: {
+                typeOf: 'MonetaryAmount',
+                value: params.ticketResult.usePoint,
+                currency: 'Point'
+            },
+            accountType: 'Point'
+        }]
+        : undefined;
+
+    const unitPriceSpec: factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>
+        = {
+        typeOf: factory.priceSpecificationType.UnitPriceSpecification,
+        price: <any>undefined, // COAに定義なし
+        priceCurrency: factory.priceCurrency.JPY,
+        valueAddedTaxIncluded: true,
+        referenceQuantity: {
+            typeOf: 'QuantitativeValue',
+            unitCode: factory.unitCode.C62
+            // value: 1
+        },
+        ...{
+            additionalPaymentRequirements: additionalPaymentRequirements
+        }
+        // appliesToMovieTicketType?: string;
+    };
+
+    const eligibleCustomerType = (params.ticketResult.flgMember === COA.services.master.FlgMember.Member)
+        ? ['Member']
+        : undefined;
+
+    return {
+        typeOf: 'Offer',
+        priceCurrency: factory.priceCurrency.JPY,
+        id: `${params.theaterCode}-${params.ticketResult.ticketCode}`,
+        name: {
+            ja: params.ticketResult.ticketName,
+            en: params.ticketResult.ticketNameEng
+        },
+        description: {
+            ja: '',
+            en: ''
+        },
+        // kanaName: params.ticketResult.ticketNameKana,
+        priceSpecification: unitPriceSpec,
+        availability: factory.itemAvailability.InStock,
+        eligibleCustomerType: eligibleCustomerType,
+        additionalProperty: [
+            { name: 'coaInfo', value: JSON.stringify({ theaterCode: params.theaterCode, ...params.ticketResult }) }
+        ]
     };
 }
