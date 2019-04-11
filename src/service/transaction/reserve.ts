@@ -274,6 +274,7 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
         transaction: TransactionRepo;
     }) => {
         debug(`confirming reserve transaction ${params.id}...`);
+        const now = new Date();
 
         // 取引存在確認
         const transaction = await repos.transaction.findById({
@@ -283,6 +284,9 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
 
         // 予約アクション属性作成
         const reserveActionAttributes: factory.action.reserve.IAttributes[] = transaction.object.reservations.map((reservation) => {
+            // 予約日時確定
+            reservation.bookingTime = now;
+
             if (params.object !== undefined) {
                 // 予約属性の指定があれば上書き
                 const confirmingReservation = params.object.reservations.find((r) => r.id === reservation.id);

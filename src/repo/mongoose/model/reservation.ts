@@ -131,6 +131,16 @@ schema.index(
 );
 
 schema.index(
+    { bookingTime: -1, modifiedTime: -1 },
+    {
+        name: 'searchByBookingTime',
+        partialFilterExpression: {
+            bookingTime: { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { modifiedTime: -1 },
     { name: 'searchByModifiedTime-v2' }
 );
