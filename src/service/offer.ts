@@ -272,6 +272,7 @@ function coaTicket2offer(params: {
         typeOf: 'Offer',
         priceCurrency: factory.priceCurrency.JPY,
         id: id,
+        identifier: params.ticketResult.ticketCode,
         name: {
             ja: params.ticketResult.ticketName,
             en: (params.ticketResult.ticketNameEng !== undefined && params.ticketResult.ticketNameEng !== '')

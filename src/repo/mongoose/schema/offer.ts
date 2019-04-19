@@ -12,6 +12,7 @@ export function create(options: mongoose.SchemaOptions) {
     const schema = new mongoose.Schema(
         {
             _id: String,
+            identifier: mongoose.SchemaTypes.Mixed,
             typeOf: String,
             name: multilingualString,
             description: multilingualString,
@@ -68,6 +69,16 @@ export function create(options: mongoose.SchemaOptions) {
             name: 'searchByPriceSpecificationPrice',
             partialFilterExpression: {
                 'priceSpecification.price': { $exists: true }
+            }
+        }
+    );
+
+    schema.index(
+        { identifier: 1, 'priceSpecification.price': 1 },
+        {
+            name: 'searchByIdentifier',
+            partialFilterExpression: {
+                identifier: { $exists: true }
             }
         }
     );

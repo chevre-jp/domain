@@ -1,4 +1,5 @@
-import { Connection } from 'mongoose';
+import { Connection, Document } from 'mongoose';
+import * as uniqid from 'uniqid';
 
 import * as factory from '../factory';
 import OfferModel from './mongoose/model/offer';
@@ -30,6 +31,14 @@ export class MongoRepository {
 
         if (Array.isArray(params.ids)) {
             andConditions.push({ _id: { $in: params.ids } });
+        }
+
+        if (params.identifier !== undefined) {
+            andConditions.push({ identifier: new RegExp(params.identifier, 'i') });
+        }
+
+        if (Array.isArray(params.identifiers)) {
+            andConditions.push({ identifier: { $in: params.identifiers } });
         }
 
         if (params.name !== undefined) {
@@ -134,6 +143,11 @@ export class MongoRepository {
         if (params.id !== undefined) {
             andConditions.push({ _id: new RegExp(params.id, 'i') });
         }
+
+        if (params.identifier !== undefined) {
+            andConditions.push({ identifier: new RegExp(params.identifier, 'i') });
+        }
+
         if (params.name !== undefined) {
             andConditions.push({
                 $or: [
@@ -188,10 +202,26 @@ export class MongoRepository {
     }
 
     /**
-     * 券種グループを作成する
+     * 券種グループを保管する
      */
-    public async createOfferCatalog(params: factory.ticketType.ITicketTypeGroup): Promise<factory.ticketType.ITicketTypeGroup> {
-        const doc = await this.offerCatalogModel.create({ ...params, _id: params.id });
+    public async saveOfferCatalog(params: factory.ticketType.ITicketTypeGroup): Promise<factory.ticketType.ITicketTypeGroup> {
+        let doc: Document | null;
+
+        if (params.id === '') {
+            const id = uniqid();
+            doc = await this.offerCatalogModel.create({ ...params, _id: id });
+        } else {
+            doc = await this.offerCatalogModel.findOneAndUpdate(
+                { _id: params.id },
+                params,
+                { upsert: false, new: true }
+            )
+                .exec();
+
+            if (doc === null) {
+                throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
+            }
+        }
 
         return doc.toObject();
     }
@@ -254,23 +284,6 @@ export class MongoRepository {
     }
 
     /**
-     * 券種グループを更新する
-     */
-    public async updateOfferCatalog(params: factory.ticketType.ITicketTypeGroup): Promise<void> {
-        const doc = await this.offerCatalogModel.findOneAndUpdate(
-            {
-                _id: params.id
-            },
-            params,
-            { upsert: false, new: true }
-        )
-            .exec();
-        if (doc === null) {
-            throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
-        }
-    }
-
-    /**
      * 券種グループを削除する
      */
     public async deleteOfferCatalog(params: {
@@ -282,15 +295,6 @@ export class MongoRepository {
             }
         )
             .exec();
-    }
-
-    /**
-     * 券種を作成する
-     */
-    public async createOffer(params: factory.ticketType.ITicketType): Promise<factory.ticketType.ITicketType> {
-        const doc = await this.offerModel.create({ ...params, _id: params.id });
-
-        return doc.toObject();
     }
 
     public async findOfferById(params: {
@@ -359,37 +363,28 @@ export class MongoRepository {
     }
 
     /**
-     * 券種を更新する
-     */
-    public async updateOffer(params: factory.ticketType.ITicketType): Promise<void> {
-        const doc = await this.offerModel.findOneAndUpdate(
-            {
-                _id: params.id
-            },
-            params,
-            { upsert: false, new: true }
-        )
-            .exec();
-        if (doc === null) {
-            throw new factory.errors.NotFound(this.offerModel.modelName);
-        }
-    }
-
-    /**
      * 券種を保管する
      */
-    public async saveOffer(params: factory.ticketType.ITicketType): Promise<void> {
-        const doc = await this.offerModel.findOneAndUpdate(
-            {
-                _id: params.id
-            },
-            params,
-            { upsert: true, new: true }
-        )
-            .exec();
-        if (doc === null) {
-            throw new factory.errors.NotFound(this.offerModel.modelName);
+    public async saveOffer(params: factory.ticketType.ITicketType): Promise<factory.ticketType.ITicketType> {
+        let doc: Document | null;
+
+        if (params.id === '') {
+            const id = uniqid();
+            doc = await this.offerModel.create({ ...params, _id: id });
+        } else {
+            doc = await this.offerModel.findOneAndUpdate(
+                { _id: params.id },
+                params,
+                { upsert: false, new: true }
+            )
+                .exec();
+
+            if (doc === null) {
+                throw new factory.errors.NotFound(this.offerModel.modelName);
+            }
         }
+
+        return doc.toObject();
     }
 
     /**
@@ -406,8 +401,24 @@ export class MongoRepository {
             .exec();
     }
 
-    public async createProductOffer(params: factory.offer.product.IOffer): Promise<factory.offer.product.IOffer> {
-        const doc = await this.productOfferModel.create({ ...params, _id: params.id });
+    public async saveProductOffer(params: factory.offer.product.IOffer): Promise<factory.offer.product.IOffer> {
+        let doc: Document | null;
+
+        if (params.id === '') {
+            const id = uniqid();
+            doc = await this.productOfferModel.create({ ...params, _id: id });
+        } else {
+            doc = await this.productOfferModel.findOneAndUpdate(
+                { _id: params.id },
+                params,
+                { upsert: false, new: true }
+            )
+                .exec();
+
+            if (doc === null) {
+                throw new factory.errors.NotFound(this.productOfferModel.modelName);
+            }
+        }
 
         return doc.toObject();
     }
@@ -451,20 +462,6 @@ export class MongoRepository {
         return query.setOptions({ maxTimeMS: 10000 })
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
-    }
-
-    public async updateProductOffer(params: factory.offer.product.IOffer): Promise<void> {
-        const doc = await this.productOfferModel.findOneAndUpdate(
-            {
-                _id: params.id
-            },
-            params,
-            { upsert: false, new: true }
-        )
-            .exec();
-        if (doc === null) {
-            throw new factory.errors.NotFound(this.productOfferModel.modelName);
-        }
     }
 
     public async deleteProductOffer(params: {

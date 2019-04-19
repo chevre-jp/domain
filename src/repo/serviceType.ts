@@ -1,4 +1,6 @@
-import { Connection } from 'mongoose';
+import { Connection, Document } from 'mongoose';
+import * as uniqid from 'uniqid';
+
 import ServiceTypeModel from './mongoose/model/serviceType';
 
 import * as factory from '../factory';
@@ -29,21 +31,32 @@ export class MongoRepository {
             andConditions.push({ _id: { $in: params.ids } });
         }
 
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (Array.isArray(params.identifiers)) {
+            andConditions.push({ identifier: { $in: params.identifiers } });
+        }
+
         return andConditions;
     }
 
-    /**
-     * 保管
-     */
     public async save(params: factory.serviceType.IServiceType): Promise<factory.serviceType.IServiceType> {
-        const doc = await this.serviceTypeModel.findOneAndUpdate(
-            { _id: params.id },
-            params,
-            { upsert: true, new: true }
-        )
-            .exec();
-        if (doc === null) {
-            throw new factory.errors.NotFound(this.serviceTypeModel.modelName);
+        let doc: Document | null;
+
+        if (params.id === '') {
+            const id = uniqid();
+            doc = await this.serviceTypeModel.create({ ...params, _id: id });
+        } else {
+            doc = await this.serviceTypeModel.findOneAndUpdate(
+                { _id: params.id },
+                params,
+                { upsert: false, new: true }
+            )
+                .exec();
+
+            if (doc === null) {
+                throw new factory.errors.NotFound(this.serviceTypeModel.modelName);
+            }
         }
 
         return doc.toObject();

@@ -463,6 +463,7 @@ export function createScreeningEventFromCOA(params: {
             serviceType: {
                 typeOf: 'ServiceType',
                 id: '',
+                identifier: '',
                 name: ''
             }
         }

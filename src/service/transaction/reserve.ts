@@ -124,6 +124,7 @@ export function start(
                     ticketType = {
                         typeOf: 'Offer',
                         id: ticketOffer.id,
+                        identifier: ticketOffer.identifier,
                         name: ticketOffer.name,
                         description: ticketOffer.description,
                         alternateName: ticketOffer.name,
