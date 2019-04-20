@@ -58,36 +58,42 @@ schema.index(
 );
 schema.index(
     {
+        'project.id': 1,
         codeValue: 1
     },
     {
-        name: 'searchByCodeValue',
+        name: 'uniqueCodeValue',
         unique: true,
         partialFilterExpression: {
+            'project.id': { $exists: true },
             codeValue: { $exists: true }
         }
     }
 );
 schema.index(
     {
+        'project.id': 1,
         'hasCategoryCode.codeValue': 1
     },
     {
-        name: 'searchByHasCategoryCodeCodeValue',
+        name: 'uniqueHasCategoryCodeCodeValue',
         unique: true,
         partialFilterExpression: {
+            'project.id': { $exists: true },
             'hasCategoryCode.codeValue': { $exists: true }
         }
     }
 );
 schema.index(
     {
+        'project.id': 1,
         'hasCategoryCode.hasCategoryCode.codeValue': 1
     },
     {
-        name: 'searchByHasCategoryCodeHasCategoryCodeCodeValue',
+        name: 'uniqueHasCategoryCodeHasCategoryCodeCodeValue',
         unique: true,
         partialFilterExpression: {
+            'project.id': { $exists: true },
             'hasCategoryCode.hasCategoryCode.codeValue': { $exists: true }
         }
     }
