@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Chevre Domain Library for Node.js Source: repo/itemAvailability/screeningEvent.js</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.cosmo.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">Chevre Domain Library for Node.js</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="Distributions.html">Distributions</a></li><li><a href="MongoRepository.html">MongoRepository</a></li><li><a href="RedisRepository.html">RedisRepository</a></li><li><a href="Repository.html">Repository</a></li><li><a href="Subject.html">Subject</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#abort">abort</a></li><li><a href="global.html#accountTitle_1">accountTitle_1</a></li><li><a href="global.html#aggregateScreeningEvent">aggregateScreeningEvent</a></li><li><a href="global.html#AggregationService">AggregationService</a></li><li><a href="global.html#call">call</a></li><li><a href="global.html#cancel">cancel</a></li><li><a href="global.html#cancelPendingReservation">cancelPendingReservation</a></li><li><a href="global.html#cancelReservation">cancelReservation</a></li><li><a href="global.html#COA">COA</a></li><li><a href="global.html#confirm">confirm</a></li><li><a href="global.html#confirmReservation">confirmReservation</a></li><li><a href="global.html#countTicketTypePerEvent">countTicketTypePerEvent</a></li><li><a href="global.html#create">create</a></li><li><a href="global.html#createDebug">createDebug</a></li><li><a href="global.html#createScreeningEventIdFromCOA">createScreeningEventIdFromCOA</a></li><li><a href="global.html#default">default</a></li><li><a href="global.html#execute">execute</a></li><li><a href="global.html#executeByName">executeByName</a></li><li><a href="global.html#exportTasks">exportTasks</a></li><li><a href="global.html#exportTasksById">exportTasksById</a></li><li><a href="global.html#importFromCOA">importFromCOA</a></li><li><a href="global.html#importMovieTheaterFromCOA">importMovieTheaterFromCOA</a></li><li><a href="global.html#matchWithXML">matchWithXML</a></li><li><a href="global.html#redis">redis</a></li><li><a href="global.html#retry">retry</a></li><li><a href="global.html#schema">schema</a></li><li><a href="global.html#searchScreeningEventTicketOffers">searchScreeningEventTicketOffers</a></li><li><a href="global.html#sortOrder4executionOfTasks">sortOrder4executionOfTasks</a></li><li><a href="global.html#start">start</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			
+
+		<h1 class="page-title">Source: repo/itemAvailability/screeningEvent.js</h1>
+    
+<section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript linenums">"use strict";
+var __awaiter = (this &amp;&amp; this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const createDebug = require("debug");
+const moment = require("moment");
+const factory = require("../../factory");
+const debug = createDebug('chevre-domain:repo');
+/**
+ * 上映イベントに対する座席ごとの在庫状況を保管するリポジトリ
+ */
+class RedisRepository {
+    constructor(redisClient) {
+        this.redisClient = redisClient;
+    }
+    /**
+     * 座席をロックする
+     */
+    lock(lockKey) {
+        return __awaiter(this, void 0, void 0, function* () {
+            debug('locking...', lockKey);
+            const key = `${RedisRepository.KEY_PREFIX}:${lockKey.eventId}`;
+            const value = lockKey.holder;
+            const multi = this.redisClient.multi();
+            const fields = lockKey.offers.map((offer) => `${offer.seatSection}:${offer.seatNumber}`);
+            fields.forEach((field) => {
+                multi.hsetnx(key, field, value);
+            });
+            const results = yield new Promise((resolve, reject) => {
+                multi.expireat(key, moment(lockKey.expires)
+                    .unix())
+                    .exec((err, reply) => {
+                    debug('reply:', reply);
+                    if (err !== null) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(reply);
+                    }
+                });
+            });
+            const lockedFields = [];
+            results.slice(0, fields.length)
+                .forEach((r, index) => {
+                if (r === 1) {
+                    lockedFields.push(fields[index]);
+                }
+            });
+            debug('locked fields:', lockedFields);
+            const lockedAll = lockedFields.length === fields.length;
+            debug('lockedAll?', lockedAll);
+            if (!lockedAll) {
+                if (lockedFields.length > 0) {
+                    // 全て仮押さえできなければ仮押さえできたものは解除
+                    yield new Promise((resolve, reject) => {
+                        this.redisClient.multi()
+                            .hdel(key, lockedFields)
+                            .exec((err, reply) => {
+                            debug('reply:', reply);
+                            if (err !== null) {
+                                reject(err);
+                            }
+                            else {
+                                resolve();
+                            }
+                        });
+                    });
+                }
+                throw new factory.errors.AlreadyInUse('', [], 'Seat number already hold');
+            }
+        });
+    }
+    /**
+     * 座席ロックを解除する
+     */
+    unlock(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const key = `${RedisRepository.KEY_PREFIX}:${params.eventId}`;
+            const field = `${params.offer.seatSection}:${params.offer.seatNumber}`;
+            yield new Promise((resolve, reject) => {
+                this.redisClient.multi()
+                    .hdel(key, field)
+                    .exec((err, reply) => {
+                    debug('reply:', reply);
+                    if (err !== null) {
+                        reject(err);
+                    }
+                    else {
+                        resolve();
+                    }
+                });
+            });
+        });
+    }
+    /**
+     * 空席でない座席を検索する
+     */
+    findUnavailableOffersByEventId(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const key = `${RedisRepository.KEY_PREFIX}:${params.eventId}`;
+            return new Promise((resolve, reject) => {
+                this.redisClient.hgetall(key, (err, reply) => {
+                    debug('reply:', reply);
+                    if (err !== null) {
+                        reject(err);
+                    }
+                    else {
+                        let offers = [];
+                        if (reply !== null) {
+                            offers = Object.keys(reply)
+                                .map((field) => {
+                                const seatSection = field.split(':')[0];
+                                const seatNumber = field.split(':')[1];
+                                return { seatSection, seatNumber };
+                            });
+                        }
+                        resolve(offers);
+                    }
+                });
+            });
+        });
+    }
+    /**
+     * 保持者を取得する
+     */
+    getHolder(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                const key = `${RedisRepository.KEY_PREFIX}:${params.eventId}`;
+                const field = `${params.offer.seatSection}:${params.offer.seatNumber}`;
+                this.redisClient.hget(key, field, (err, result) => {
+                    debug('result:', err, result);
+                    if (err !== null) {
+                        reject(err);
+                    }
+                    else {
+                        // tslint:disable-next-line:no-magic-numbers
+                        resolve(result);
+                    }
+                });
+            });
+        });
+    }
+}
+RedisRepository.KEY_PREFIX = 'chevre:itemAvailability:screeningEvent';
+exports.RedisRepository = RedisRepository;
+</pre>
+    </article>
+</section>
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
+	
+		on Sat Apr 20th 2019
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>
