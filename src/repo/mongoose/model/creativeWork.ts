@@ -25,6 +25,7 @@ const offersSchema = new mongoose.Schema(
  */
 const schema = new mongoose.Schema(
     {
+        project: mongoose.SchemaTypes.Mixed,
         typeOf: {
             type: String,
             required: true
@@ -69,6 +70,18 @@ schema.index(
 schema.index(
     { updatedAt: 1 },
     { name: 'searchByUpdatedAt' }
+);
+
+schema.index(
+    {
+        'project.id': 1
+    },
+    {
+        name: 'searchByProjectId',
+        partialFilterExpression: {
+            'project.id': { $exists: true }
+        }
+    }
 );
 
 schema.index(

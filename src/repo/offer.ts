@@ -25,6 +25,19 @@ export class MongoRepository {
         // MongoDB検索条件
         const andConditions: any[] = [];
 
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.project !== undefined) {
+            if (Array.isArray(params.project.ids)) {
+                andConditions.push({
+                    'project.id': {
+                        $exists: true,
+                        $in: params.project.ids
+                    }
+                });
+            }
+        }
+
         if (params.id !== undefined) {
             andConditions.push({ _id: new RegExp(params.id, 'i') });
         }
@@ -139,6 +152,19 @@ export class MongoRepository {
     public static CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params: factory.ticketType.ITicketTypeGroupSearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [];
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.project !== undefined) {
+            if (Array.isArray(params.project.ids)) {
+                andConditions.push({
+                    'project.id': {
+                        $exists: true,
+                        $in: params.project.ids
+                    }
+                });
+            }
+        }
 
         if (params.id !== undefined) {
             andConditions.push({ _id: new RegExp(params.id, 'i') });

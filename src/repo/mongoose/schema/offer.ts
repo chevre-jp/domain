@@ -11,6 +11,7 @@ const safe = { j: true, w: 'majority', wtimeout: 10000 };
 export function create(options: mongoose.SchemaOptions) {
     const schema = new mongoose.Schema(
         {
+            project: mongoose.SchemaTypes.Mixed,
             _id: String,
             identifier: mongoose.SchemaTypes.Mixed,
             typeOf: String,
@@ -69,6 +70,16 @@ export function create(options: mongoose.SchemaOptions) {
             name: 'searchByPriceSpecificationPrice',
             partialFilterExpression: {
                 'priceSpecification.price': { $exists: true }
+            }
+        }
+    );
+
+    schema.index(
+        { 'project.id': 1, 'priceSpecification.price': 1 },
+        {
+            name: 'searchByProjectId',
+            partialFilterExpression: {
+                'project.id': { $exists: true }
             }
         }
     );

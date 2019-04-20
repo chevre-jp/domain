@@ -126,6 +126,7 @@ export function searchScreeningEventTicketOffers(params: {
                     const movieTicketType = <string>spec.appliesToMovieTicketType;
                     const mvtkSpecs = movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketType);
                     const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
+                        project: event.project,
                         typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
                         priceCurrency: factory.priceCurrency.JPY,
                         valueAddedTaxIncluded: true,
@@ -157,6 +158,7 @@ export function searchScreeningEventTicketOffers(params: {
                 const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
 
                 const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
+                    project: event.project,
                     typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
                     priceCurrency: factory.priceCurrency.JPY,
                     valueAddedTaxIncluded: true,
@@ -180,6 +182,7 @@ export function searchScreeningEventTicketOffers(params: {
 }
 
 export function importFromCOA(params: {
+    project: factory.project.IProject;
     theaterCode: string;
 }) {
     return async (repos: {
@@ -188,7 +191,7 @@ export function importFromCOA(params: {
         const ticketResults = await COA.services.master.ticket({ theaterCode: params.theaterCode });
 
         await Promise.all(ticketResults.map(async (ticketResult) => {
-            const offer = coaTicket2offer({ theaterCode: params.theaterCode, ticketResult: ticketResult });
+            const offer = coaTicket2offer({ project: params.project, theaterCode: params.theaterCode, ticketResult: ticketResult });
 
             await repos.offer.saveOffer(offer);
 
@@ -226,6 +229,7 @@ export function importFromCOA(params: {
 }
 
 function coaTicket2offer(params: {
+    project: factory.project.IProject;
     theaterCode: string;
     ticketResult: COA.services.master.ITicketResult;
 }): factory.ticketType.ITicketType {
@@ -242,6 +246,7 @@ function coaTicket2offer(params: {
         : undefined;
 
     const unitPriceSpec: factory.ticketType.IPriceSpecification = {
+        project: params.project,
         typeOf: factory.priceSpecificationType.UnitPriceSpecification,
         price: 0, // COAに定義なし
         priceCurrency: factory.priceCurrency.JPY,
@@ -269,6 +274,7 @@ function coaTicket2offer(params: {
     );
 
     return {
+        project: params.project,
         typeOf: 'Offer',
         priceCurrency: factory.priceCurrency.JPY,
         id: id,

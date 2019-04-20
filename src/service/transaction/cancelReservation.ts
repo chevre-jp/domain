@@ -39,6 +39,7 @@ export function start(
             id: params.object.transaction.id
         });
         const startParams: factory.transaction.IStartParams<factory.transactionType.CancelReservation> = {
+            project: params.project,
             typeOf: factory.transactionType.CancelReservation,
             agent: params.agent,
             object: {
@@ -92,6 +93,7 @@ export function confirm(params: { id: string }): ITransactionOperation<void> {
         const cancelReservationActionAttributes: factory.action.cancel.reservation.IAttributes[]
             = reserveTransaction.object.reservations.map((r) => {
                 return {
+                    project: transaction.project,
                     typeOf: <factory.actionType.CancelAction>factory.actionType.CancelAction,
                     // description: transaction.object.notes,
                     result: {
@@ -166,6 +168,7 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                     /* istanbul ignore else */
                     if (potentialActions.cancelReservation !== undefined) {
                         const cancelReservationTask: factory.task.cancelReservation.IAttributes = {
+                            project: transaction.project,
                             name: factory.taskName.CancelReservation,
                             status: factory.taskStatus.Ready,
                             runsAt: new Date(), // なるはやで実行

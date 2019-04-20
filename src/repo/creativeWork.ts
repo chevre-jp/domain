@@ -24,6 +24,18 @@ export class MongoRepository implements Repository {
                 typeOf: factory.creativeWorkType.Movie
             }
         ];
+
+        if (params.project !== undefined) {
+            if (Array.isArray(params.project.ids)) {
+                andConditions.push({
+                    'project.id': {
+                        $exists: true,
+                        $in: params.project.ids
+                    }
+                });
+            }
+        }
+
         if (params.identifier !== undefined) {
             andConditions.push({
                 identifier: {

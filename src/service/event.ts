@@ -72,6 +72,7 @@ export function matchWithXML(
  * イベントをインポートする
  */
 export function importFromCOA(params: {
+    project: factory.project.IProject;
     locationBranchCode: string;
     importFrom: Date;
     importThrough: Date;
@@ -81,7 +82,10 @@ export function importFromCOA(params: {
         event: EventRepo;
         place: PlaceRepo;
     }) => {
-        const movieTheater = await importMovieTheaterFromCOA({ theaterCode: params.locationBranchCode })(repos);
+        const movieTheater = await importMovieTheaterFromCOA({
+            project: params.project,
+            theaterCode: params.locationBranchCode
+        })(repos);
 
         const place = await repos.place.findMovieTheaterByBranchCode({
             branchCode: params.locationBranchCode
@@ -179,6 +183,7 @@ export function importFromCOA(params: {
             // 永続化
             const screeningEventSerieses = await Promise.all(filmsFromCOA.map(async (filmFromCOA) => {
                 const screeningEventSeries = createScreeningEventSeriesFromCOA({
+                    project: params.project,
                     filmFromCOA: filmFromCOA,
                     movieTheater: movieTheater,
                     eirinKubuns: eirinKubuns,
@@ -260,6 +265,7 @@ export function importFromCOA(params: {
 
                     // 永続化
                     const screeningEvent = createScreeningEventFromCOA({
+                        project: params.project,
                         performanceFromCOA: scheduleFromCOA,
                         screenRoom: screenRoom,
                         superEvent: screeningEventSeries,
@@ -346,11 +352,15 @@ export function importFromCOA(params: {
 /**
  * 劇場インポート
  */
-export function importMovieTheaterFromCOA(params: { theaterCode: string }) {
+export function importMovieTheaterFromCOA(params: {
+    project: factory.project.IProject;
+    theaterCode: string;
+}) {
     return async (repos: {
         place: PlaceRepo;
     }): Promise<factory.place.movieTheater.IPlace> => {
         const movieTheater = createMovieTheaterFromCOA(
+            params.project,
             await COA.services.master.theater({ theaterCode: params.theaterCode }),
             await COA.services.master.screen({ theaterCode: params.theaterCode })
         );
@@ -371,6 +381,7 @@ export function importMovieTheaterFromCOA(params: { theaterCode: string }) {
 /* istanbul ignore next */
 // tslint:disable-next-line:max-func-body-length
 export function createScreeningEventFromCOA(params: {
+    project: factory.project.IProject;
     performanceFromCOA: COA.services.master.IScheduleResult;
     screenRoom: factory.place.movieTheater.IScreeningRoom;
     superEvent: factory.event.screeningEventSeries.IEvent;
@@ -474,6 +485,7 @@ export function createScreeningEventFromCOA(params: {
     };
 
     return {
+        project: params.project,
         typeOf: factory.eventType.ScreeningEvent,
         id: id,
         identifier: id,
@@ -481,6 +493,7 @@ export function createScreeningEventFromCOA(params: {
         eventStatus: factory.eventStatusType.EventScheduled,
         workPerformed: params.superEvent.workPerformed,
         location: {
+            project: params.project,
             typeOf: <factory.placeType.ScreeningRoom>params.screenRoom.typeOf,
             branchCode: params.screenRoom.branchCode,
             name: params.screenRoom.name
@@ -513,6 +526,7 @@ export function createScreeningEventFromCOA(params: {
 // tslint:disable-next-line:no-single-line-block-comment
 /* istanbul ignore next */
 export function createScreeningEventSeriesFromCOA(params: {
+    project: factory.project.IProject;
     filmFromCOA: COA.services.master.ITitleResult;
     movieTheater: factory.place.movieTheater.IPlace;
     eirinKubuns: COA.services.master.IKubunNameResult[];
@@ -559,6 +573,7 @@ export function createScreeningEventSeriesFromCOA(params: {
     }
 
     return {
+        project: params.project,
         typeOf: factory.eventType.ScreeningEventSeries,
         eventStatus: factory.eventStatusType.EventScheduled,
         id: id,
@@ -570,6 +585,7 @@ export function createScreeningEventSeriesFromCOA(params: {
         kanaName: params.filmFromCOA.titleNameKana,
         alternativeHeadline: params.filmFromCOA.titleNameShort,
         location: {
+            project: params.project,
             id: (params.movieTheater.id !== undefined) ? params.movieTheater.id : '',
             branchCode: params.movieTheater.branchCode,
             name: params.movieTheater.name,
@@ -584,6 +600,7 @@ export function createScreeningEventSeriesFromCOA(params: {
         videoFormat: params.eizouKubuns.filter((kubun) => kubun.kubunCode === params.filmFromCOA.kbnEizou)[0],
         soundFormat: [],
         workPerformed: {
+            project: params.project,
             identifier: params.filmFromCOA.titleCode,
             name: params.filmFromCOA.titleNameOrig,
             duration: moment.duration(params.filmFromCOA.showTime, 'm')
@@ -656,6 +673,7 @@ export function createScreeningEventSeriesId(params: {
 // tslint:disable-next-line:no-single-line-block-comment
 /* istanbul ignore next */
 export function createMovieTheaterFromCOA(
+    project: factory.project.IProject,
     theaterFromCOA: COA.services.master.ITheaterResult,
     screensFromCOA: COA.services.master.IScreenResult[]
 ): factory.place.movieTheater.IPlace {
@@ -681,6 +699,7 @@ export function createMovieTheaterFromCOA(
     }
 
     return {
+        project: project,
         id: '',
         screenCount: screensFromCOA.length,
         branchCode: theaterFromCOA.theaterCode,
@@ -690,7 +709,7 @@ export function createMovieTheaterFromCOA(
         },
         kanaName: theaterFromCOA.theaterNameKana,
         containsPlace: screensFromCOA.map((screenFromCOA) => {
-            return createScreeningRoomFromCOA(screenFromCOA);
+            return createScreeningRoomFromCOA(project, screenFromCOA);
         }),
         typeOf: factory.placeType.MovieTheater,
         telephone: formatedPhoneNumber
@@ -703,6 +722,7 @@ export function createMovieTheaterFromCOA(
 // tslint:disable-next-line:no-single-line-block-comment
 /* istanbul ignore next */
 export function createScreeningRoomFromCOA(
+    project: factory.project.IProject,
     screenFromCOA: COA.services.master.IScreenResult
 ): factory.place.movieTheater.IScreeningRoom {
     const sections: factory.place.movieTheater.IScreeningRoomSection[] = [];
@@ -711,6 +731,7 @@ export function createScreeningRoomFromCOA(
         if (sectionCodes.indexOf(seat.seatSection) < 0) {
             sectionCodes.push(seat.seatSection);
             sections.push({
+                project: project,
                 branchCode: seat.seatSection,
                 name: {
                     ja: `セクション${seat.seatSection}`,
@@ -722,12 +743,14 @@ export function createScreeningRoomFromCOA(
         }
 
         sections[sectionCodes.indexOf(seat.seatSection)].containsPlace.push({
+            project: project,
             branchCode: seat.seatNum,
             typeOf: factory.placeType.Seat
         });
     });
 
     return {
+        project: project,
         containsPlace: sections,
         branchCode: screenFromCOA.screenCode,
         name: {

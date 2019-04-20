@@ -10,6 +10,7 @@ const safe = { j: true, w: 'majority', wtimeout: 10000 };
  */
 const schema = new mongoose.Schema(
     {
+        project: mongoose.SchemaTypes.Mixed,
         _id: String,
         identifier: mongoose.SchemaTypes.Mixed,
         name: multilingualString,
@@ -45,6 +46,23 @@ schema.index(
 schema.index(
     { updatedAt: 1 },
     { name: 'searchByUpdatedAt' }
+);
+
+schema.index(
+    { identifier: 1 },
+    {
+        name: 'searchByIdentifier'
+    }
+);
+
+schema.index(
+    { 'project.id': 1, identifier: 1 },
+    {
+        name: 'searchByProjectId',
+        partialFilterExpression: {
+            'project.id': { $exists: true }
+        }
+    }
 );
 
 export default mongoose.model('TicketTypeGroup', schema)

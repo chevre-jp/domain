@@ -46,6 +46,7 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
         }));
 
         const aggregateTask: factory.task.aggregateScreeningEvent.IAttributes = {
+            project: actionAttributesList[0].project,
             name: factory.taskName.AggregateScreeningEvent,
             status: factory.taskStatus.Ready,
             runsAt: new Date(), // なるはやで実行
@@ -174,6 +175,7 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
         }));
 
         const aggregateTask: factory.task.aggregateScreeningEvent.IAttributes = {
+            project: actionAttributesList[0].project,
             name: factory.taskName.AggregateScreeningEvent,
             status: factory.taskStatus.Ready,
             runsAt: new Date(), // なるはやで実行

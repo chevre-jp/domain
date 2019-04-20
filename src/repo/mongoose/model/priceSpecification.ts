@@ -40,6 +40,7 @@ const priceComponentSchema = new mongoose.Schema(
  */
 const schema = new mongoose.Schema(
     {
+        project: mongoose.SchemaTypes.Mixed,
         typeOf: {
             type: String,
             required: true
@@ -99,6 +100,16 @@ schema.index(
         name: 'searchByPriceComponentTypeOf',
         partialFilterExpression: {
             'priceComponent.typeOf': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'project.id': 1, price: 1 },
+    {
+        name: 'searchByProjectId',
+        partialFilterExpression: {
+            'project.id': { $exists: true }
         }
     }
 );

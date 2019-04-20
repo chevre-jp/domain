@@ -7,6 +7,7 @@ const safe = { j: true, w: 'majority', wtimeout: 10000 };
  */
 const schema = new mongoose.Schema(
     {
+        project: mongoose.SchemaTypes.Mixed,
         _id: String,
         identifier: mongoose.SchemaTypes.Mixed,
         typeOf: String,
@@ -37,6 +38,16 @@ schema.index(
 schema.index(
     { updatedAt: 1 },
     { name: 'searchByUpdatedAt' }
+);
+
+schema.index(
+    { 'project.id': 1, _id: 1 },
+    {
+        name: 'searchByProjectId',
+        partialFilterExpression: {
+            'project.id': { $exists: true }
+        }
+    }
 );
 
 schema.index(

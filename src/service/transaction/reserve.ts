@@ -122,6 +122,7 @@ export function start(
                     }
 
                     ticketType = {
+                        project: params.project,
                         typeOf: 'Offer',
                         id: ticketOffer.id,
                         identifier: ticketOffer.identifier,
@@ -181,6 +182,7 @@ export function start(
         // 仮予約作成
         const reservations = await Promise.all(tickets.map(async (ticket, index) => {
             return createReservation({
+                project: params.project,
                 id: `${reservationNumber}-${index}`,
                 reserveDate: now,
                 agent: params.agent,
@@ -190,6 +192,7 @@ export function start(
             });
         }));
         const startParams: factory.transaction.IStartParams<factory.transactionType.Reserve> = {
+            project: params.project,
             typeOf: factory.transactionType.Reserve,
             agent: params.agent,
             object: {
@@ -240,6 +243,7 @@ export function start(
 }
 
 function createReservation(params: {
+    project: factory.project.IProject;
     id: string;
     reserveDate: Date;
     agent: factory.transaction.reserve.IAgent;
@@ -249,6 +253,7 @@ function createReservation(params: {
     // additionalProperty: factory.propertyValue.IPropertyValue<string>[];
 }): factory.reservation.IReservation<factory.reservationType.EventReservation> {
     return {
+        project: params.project,
         typeOf: factory.reservationType.EventReservation,
         id: params.id,
         additionalTicketText: params.reservedTicket.ticketType.name.ja,
@@ -323,6 +328,7 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
             }
 
             return {
+                project: transaction.project,
                 typeOf: <factory.actionType.ReserveAction>factory.actionType.ReserveAction,
                 result: {},
                 object: reservation,
@@ -369,6 +375,7 @@ export function cancel(params: { id: string }): ICancelOperation<void> {
         try {
             const actionAttributes: factory.action.cancel.reservation.IAttributes[] = transaction.object.reservations.map((r) => {
                 return {
+                    project: transaction.project,
                     typeOf: <factory.actionType.CancelAction>factory.actionType.CancelAction,
                     purpose: {
                         typeOf: transaction.typeOf,
@@ -432,6 +439,7 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                     /* istanbul ignore else */
                     if (potentialActions.reserve !== undefined) {
                         const reserveTask: factory.task.reserve.IAttributes = {
+                            project: transaction.project,
                             name: factory.taskName.Reserve,
                             status: factory.taskStatus.Ready,
                             runsAt: new Date(), // なるはやで実行
@@ -451,6 +459,7 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
             case factory.transactionStatusType.Expired:
                 const actionAttributes: factory.action.cancel.reservation.IAttributes[] = transaction.object.reservations.map((r) => {
                     return {
+                        project: transaction.project,
                         typeOf: <factory.actionType.CancelAction>factory.actionType.CancelAction,
                         purpose: {
                             typeOf: transaction.typeOf,
@@ -461,6 +470,7 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                     };
                 });
                 const cancelPendingReservationTask: factory.task.cancelPendingReservation.IAttributes = {
+                    project: transaction.project,
                     name: factory.taskName.CancelPendingReservation,
                     status: factory.taskStatus.Ready,
                     runsAt: new Date(), // なるはやで実行
