@@ -22,21 +22,17 @@ export class RedisRepository {
      * 発行する
      */
     public async publish(params: {
+        project: { id: string };
         /**
          * 予約日時
          */
         reserveDate: Date;
-        /**
-         * 劇場枝番号
-         */
-        sellerBranchCode: string;
     }): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             // 番号接頭辞は日付と販売者枝番号
             const prefix = util.format(
                 '%s-%s',
-                // tslint:disable-next-line:no-magic-numbers
-                params.sellerBranchCode,
+                params.project.id,
                 moment(params.reserveDate)
                     .tz('Asia/Tokyo')
                     .format('YYMMDD')

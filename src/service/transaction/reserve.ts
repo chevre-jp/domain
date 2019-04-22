@@ -97,8 +97,8 @@ export function start(
 
         // 予約番号発行
         const reservationNumber = await repos.reservationNumber.publish({
-            reserveDate: now,
-            sellerBranchCode: event.superEvent.location.branchCode
+            project: params.project,
+            reserveDate: now
         });
 
         // 取引ファクトリーで新しい進行中取引オブジェクトを作成
@@ -191,6 +191,7 @@ export function start(
                 reservedTicket: ticket
             });
         }));
+
         const startParams: factory.transaction.IStartParams<factory.transactionType.Reserve> = {
             project: params.project,
             typeOf: factory.transactionType.Reserve,
