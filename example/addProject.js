@@ -18,9 +18,9 @@ async function main() {
     const serviceTypeRepo = new domain.repository.ServiceType(mongoose.connection);
     const eventRepo = new domain.repository.Event(mongoose.connection);
     const reservationRepo = new domain.repository.Reservation(mongoose.connection);
-    // const actionRepo = new domain.repository.Action(mongoose.connection);
-    // const accountTitleRepo = new domain.repository.Task(mongoose.connection);
-    // const accountTitleRepo = new domain.repository.Transaction(mongoose.connection);
+    const actionRepo = new domain.repository.Action(mongoose.connection);
+    const taskRepo = new domain.repository.Task(mongoose.connection);
+    const transactionRepo = new domain.repository.Transaction(mongoose.connection);
 
     let result = await accountTitleRepo.accountTitleModel.updateMany({}, { project: project }).exec();
     console.log(result);
@@ -43,6 +43,12 @@ async function main() {
     result = await eventRepo.eventModel.updateMany({}, { project: project }).exec();
     console.log(result);
     result = await reservationRepo.reservationModel.updateMany({}, { project: project }).exec();
+    console.log(result);
+    result = await actionRepo.actionModel.updateMany({}, { project: project }).exec();
+    console.log(result);
+    result = await taskRepo.taskModel.updateMany({}, { project: project }).exec();
+    console.log(result);
+    result = await transactionRepo.transactionModel.updateMany({}, { project: project }).exec();
     console.log(result);
 }
 

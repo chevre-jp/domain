@@ -1,4 +1,4 @@
-import { Connection } from 'mongoose';
+import { Connection, Document } from 'mongoose';
 import creativeWorkModel from './mongoose/model/creativeWork';
 
 import * as factory from '../factory';
@@ -105,29 +105,32 @@ export class MongoRepository implements Repository {
     /**
      * 映画作品を保管する
      */
-    public async saveMovie(movie: factory.creativeWork.movie.ICreativeWork) {
-        await this.creativeWorkModel.findOneAndUpdate(
-            {
-                identifier: movie.identifier,
-                typeOf: factory.creativeWorkType.Movie
-            },
-            movie,
-            { upsert: true }
-        )
-            .exec();
+    public async saveMovie(params: factory.creativeWork.movie.ICreativeWork) {
+        let doc: Document | null;
+
+        if (params.id === '') {
+            doc = await this.creativeWorkModel.create(params);
+        } else {
+            doc = await this.creativeWorkModel.findOneAndUpdate(
+                { _id: params.id },
+                params,
+                { upsert: false, new: true }
+            )
+                .exec();
+
+            if (doc === null) {
+                throw new factory.errors.NotFound(this.creativeWorkModel.modelName);
+            }
+        }
+
+        return doc.toObject();
     }
 
-    /**
-     * 識別子で映画作品を検索する
-     */
-    public async findMovieByIdentifier(params: {
-        identifier: string;
+    public async findMovieById(params: {
+        id: string;
     }): Promise<factory.creativeWork.movie.ICreativeWork> {
         const doc = await this.creativeWorkModel.findOne(
-            {
-                typeOf: factory.creativeWorkType.Movie,
-                identifier: params.identifier
-            },
+            { _id: params.id },
             {
                 __v: 0,
                 createdAt: 0,
@@ -136,7 +139,7 @@ export class MongoRepository implements Repository {
         )
             .exec();
         if (doc === null) {
-            throw new factory.errors.NotFound('Movie');
+            throw new factory.errors.NotFound(this.creativeWorkModel.modelName);
         }
 
         return doc.toObject();
@@ -186,13 +189,10 @@ export class MongoRepository implements Repository {
      * 映画作品を削除する
      */
     public async deleteMovie(params: {
-        identifier: string;
+        id: string;
     }) {
         await this.creativeWorkModel.findOneAndRemove(
-            {
-                identifier: params.identifier,
-                typeOf: factory.creativeWorkType.Movie
-            }
+            { _id: params.id }
         )
             .exec();
     }

@@ -472,6 +472,7 @@ export function createScreeningEventFromCOA(params: {
         },
         itemOffered: {
             serviceType: {
+                project: params.project,
                 typeOf: 'ServiceType',
                 id: '',
                 identifier: '',
@@ -601,6 +602,7 @@ export function createScreeningEventSeriesFromCOA(params: {
         soundFormat: [],
         workPerformed: {
             project: params.project,
+            id: `${params.movieTheater.branchCode}-${params.filmFromCOA.titleCode}`,
             identifier: params.filmFromCOA.titleCode,
             name: params.filmFromCOA.titleNameOrig,
             duration: moment.duration(params.filmFromCOA.showTime, 'm')
