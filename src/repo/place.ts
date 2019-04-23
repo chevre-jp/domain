@@ -36,6 +36,17 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
+        if (Array.isArray(params.branchCodes)) {
+            andConditions.push({
+                branchCode: {
+                    $exists: true,
+                    $in: params.branchCodes
+                }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
         if (params.name !== undefined) {
             andConditions.push({
                 $or: [
@@ -116,19 +127,13 @@ export class MongoRepository {
     }
 
     /**
-     * 枝番号で劇場検索
+     * 劇場取得
      */
-    public async findMovieTheaterByBranchCode(params: {
-        branchCode: string;
+    public async findById(params: {
+        id: string;
     }): Promise<factory.place.movieTheater.IPlace> {
         const doc = await this.placeModel.findOne(
-            {
-                typeOf: factory.placeType.MovieTheater,
-                branchCode: {
-                    $exists: true,
-                    $eq: params.branchCode
-                }
-            },
+            { _id: params.id },
             {
                 __v: 0,
                 createdAt: 0,

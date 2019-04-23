@@ -87,9 +87,14 @@ export function importFromCOA(params: {
             theaterCode: params.locationBranchCode
         })(repos);
 
-        const place = await repos.place.findMovieTheaterByBranchCode({
-            branchCode: params.locationBranchCode
+        const searchMovieTheatersResult = await repos.place.searchMovieTheaters({
+            project: { ids: [params.project.id] },
+            branchCodes: [params.locationBranchCode]
         });
+        const place = searchMovieTheatersResult.shift();
+        if (place === undefined) {
+            throw new factory.errors.NotFound('MovieTheater');
+        }
 
         let xmlEndPoint: any;
         // tslint:disable-next-line:no-single-line-block-comment

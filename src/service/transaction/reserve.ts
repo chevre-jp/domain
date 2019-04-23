@@ -83,7 +83,7 @@ export function start(
         debug('availableOffers:', availableOffers);
 
         // 座席情報取得
-        const movieTheater = await repos.place.findMovieTheaterByBranchCode({ branchCode: event.superEvent.location.branchCode });
+        const movieTheater = await repos.place.findById({ id: event.superEvent.location.id });
         const screeningRoom = <factory.place.movieTheater.IScreeningRoom | undefined>movieTheater.containsPlace.find(
             (p) => p.branchCode === event.location.branchCode
         );

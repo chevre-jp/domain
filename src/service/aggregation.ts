@@ -98,7 +98,7 @@ export function aggregateScreeningEvent(params: {
         // イベントの座席情報検索
         const movieTheatersWithoutScreeningRoom = await repos.place.searchMovieTheaters({});
         const movieTheaters = await Promise.all(movieTheatersWithoutScreeningRoom.map(async (m) => {
-            return repos.place.findMovieTheaterByBranchCode({ branchCode: m.branchCode });
+            return repos.place.findById({ id: m.id });
         }));
 
         // 収容人数を集計
