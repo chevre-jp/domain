@@ -1,4 +1,4 @@
-import { Connection } from 'mongoose';
+import { Connection, Document } from 'mongoose';
 import placeModel from './mongoose/model/place';
 
 import * as factory from '../factory';
@@ -68,16 +68,25 @@ export class MongoRepository {
     /**
      * 劇場を保管する
      */
-    public async saveMovieTheater(params: factory.place.movieTheater.IPlace) {
-        await this.placeModel.findOneAndUpdate(
-            {
-                typeOf: factory.placeType.MovieTheater,
-                branchCode: params.branchCode
-            },
-            params,
-            { upsert: true }
-        )
-            .exec();
+    public async saveMovieTheater(params: factory.place.movieTheater.IPlace): Promise<factory.place.movieTheater.IPlace> {
+        let doc: Document | null;
+
+        if (params.id === '') {
+            doc = await this.placeModel.create(params);
+        } else {
+            doc = await this.placeModel.findOneAndUpdate(
+                { _id: params.id },
+                params,
+                { upsert: false, new: true }
+            )
+                .exec();
+
+            if (doc === null) {
+                throw new factory.errors.NotFound(this.placeModel.modelName);
+            }
+        }
+
+        return doc.toObject();
     }
 
     public async countMovieTheaters(params: factory.place.movieTheater.ISearchConditions): Promise<number> {
