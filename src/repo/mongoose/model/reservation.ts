@@ -207,6 +207,46 @@ schema.index(
 );
 
 schema.index(
+    { 'reservationFor.superEvent.workPerformed.id': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservationForSuperEventWorkPerformedId',
+        partialFilterExpression: {
+            'reservationFor.superEvent.workPerformed.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'reservationFor.superEvent.workPerformed.identifier': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservationForSuperEventWorkPerformedIdentifier',
+        partialFilterExpression: {
+            'reservationFor.superEvent.workPerformed.identifier': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'reservationFor.superEvent.location.id': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservationForSuperEventLocationId',
+        partialFilterExpression: {
+            'reservationFor.superEvent.location.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'reservationFor.superEvent.location.branchCode': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservationForSuperEventLocationBranchCode',
+        partialFilterExpression: {
+            'reservationFor.superEvent.location.branchCode': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'reservedTicket.ticketedSeat.seatNumber': 1, modifiedTime: -1 },
     {
         name: 'searchByReservedTicketTicketedSeatSeatNumber',
