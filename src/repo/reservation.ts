@@ -140,6 +140,36 @@ export class MongoRepository {
 
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
+            if (params.reservationFor.location !== undefined) {
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if (Array.isArray(params.reservationFor.location.ids)) {
+                    andConditions.push(
+                        {
+                            'reservationFor.location.id': {
+                                $exists: true,
+                                $in: params.reservationFor.location.ids
+                            }
+                        }
+                    );
+                }
+
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if (Array.isArray(params.reservationFor.location.branchCodes)) {
+                    andConditions.push(
+                        {
+                            'reservationFor.location.branchCode': {
+                                $exists: true,
+                                $in: params.reservationFor.location.branchCodes
+                            }
+                        }
+                    );
+                }
+            }
+
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
             if (params.reservationFor.startFrom instanceof Date) {
                 andConditions.push(
                     {
@@ -190,6 +220,66 @@ export class MongoRepository {
                             }
                         }
                     );
+                }
+
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if (params.reservationFor.superEvent.location !== undefined) {
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (Array.isArray(params.reservationFor.superEvent.location.ids)) {
+                        andConditions.push(
+                            {
+                                'reservationFor.superEvent.location.id': {
+                                    $exists: true,
+                                    $in: params.reservationFor.superEvent.location.ids
+                                }
+                            }
+                        );
+                    }
+
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (Array.isArray(params.reservationFor.superEvent.location.branchCodes)) {
+                        andConditions.push(
+                            {
+                                'reservationFor.superEvent.location.branchCode': {
+                                    $exists: true,
+                                    $in: params.reservationFor.superEvent.location.branchCodes
+                                }
+                            }
+                        );
+                    }
+                }
+
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if (params.reservationFor.superEvent.workPerformed !== undefined) {
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (Array.isArray(params.reservationFor.superEvent.workPerformed.ids)) {
+                        andConditions.push(
+                            {
+                                'reservationFor.superEvent.workPerformed.id': {
+                                    $exists: true,
+                                    $in: params.reservationFor.superEvent.workPerformed.ids
+                                }
+                            }
+                        );
+                    }
+
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (Array.isArray(params.reservationFor.superEvent.workPerformed.identifiers)) {
+                        andConditions.push(
+                            {
+                                'reservationFor.superEvent.workPerformed.identifier': {
+                                    $exists: true,
+                                    $in: params.reservationFor.superEvent.workPerformed.identifiers
+                                }
+                            }
+                        );
+                    }
                 }
             }
         }

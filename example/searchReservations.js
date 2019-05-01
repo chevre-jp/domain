@@ -29,6 +29,19 @@ async function main() {
             // email: '',
             // telephone: '1234'
         },
+        reservationFor: {
+            // location: { branchCodes: ['10'] },
+            superEvent: {
+                location: {
+                    // branchCodes: ['001'],
+                    // ids: ['5c09aa7ba5de53e0d4a6f8a7']
+                },
+                workPerformed: {
+                    // identifiers: ['0003'],
+                    // ids: ['5cbffd07e7f436002ccef04f']
+                }
+            }
+        }
         // attended: true,
         // checkedIn: true
     });

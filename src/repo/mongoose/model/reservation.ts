@@ -177,6 +177,26 @@ schema.index(
 );
 
 schema.index(
+    { 'reservationFor.location.id': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservationForLocationId',
+        partialFilterExpression: {
+            'reservationFor.location.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'reservationFor.location.branchCode': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservationForLocationBranchCode',
+        partialFilterExpression: {
+            'reservationFor.location.branchCode': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'reservationFor.startDate': 1, modifiedTime: -1 },
     {
         name: 'searchByReservationForStartDate-v2',
