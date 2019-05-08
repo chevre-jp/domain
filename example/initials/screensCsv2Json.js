@@ -18,14 +18,13 @@ const screens = csvDate.map((data, i) => {
                     "ja": "デフォルトセクション",
                     "en": "Default Section"
                 },
-                "containsPlace": [
-                    [...Array(numSeats)].map((_, i) => {
-                        return {
-                            "branchCode": `0000${i + 1}`.slice(-4),
-                            "typeOf": "Seat"
-                        }
-                    })
-                ],
+                "containsPlace": [...Array(numSeats)].map((_, i) => {
+                    return {
+                        "branchCode": `0000${i + 1}`.slice(-4),
+                        "typeOf": "Seat"
+                    }
+                })
+                ,
                 "typeOf": "ScreeningRoomSection"
             }
         ],
