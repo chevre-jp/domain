@@ -44,8 +44,8 @@ export function aggregateScreeningEvent(params: {
         // 収容人数を集計
         let maximumAttendeeCapacity: number | undefined;
         let remainingAttendeeCapacity: number | undefined;
-        let attendeeCount: number = 0;
-        let checkInCount: number = 0;
+        let attendeeCount: number | undefined;
+        let checkInCount: number | undefined;
 
         const screeningRoom = <factory.place.movieTheater.IScreeningRoom | undefined>
             movieTheater.containsPlace.find((p) => p.branchCode === event.location.branchCode);
@@ -79,18 +79,29 @@ export function aggregateScreeningEvent(params: {
             });
         }
 
-        const aggregation = {
-            maximumAttendeeCapacity: maximumAttendeeCapacity,
-            remainingAttendeeCapacity: remainingAttendeeCapacity,
-            checkInCount: checkInCount,
-            attendeeCount: attendeeCount
+        // 値がundefinedの場合に更新しないように注意
+        const update: any = {
+            $set: {
+                ...(maximumAttendeeCapacity !== undefined) ? { maximumAttendeeCapacity: maximumAttendeeCapacity } : undefined,
+                ...(remainingAttendeeCapacity !== undefined) ? { remainingAttendeeCapacity: remainingAttendeeCapacity } : undefined,
+                ...(checkInCount !== undefined) ? { checkInCount: checkInCount } : undefined,
+                ...(attendeeCount !== undefined) ? { attendeeCount: attendeeCount } : undefined
+            },
+            $unset: {
+                ...(!reservedSeatsAvailable)
+                    ? {
+                        maximumAttendeeCapacity: '',
+                        remainingAttendeeCapacity: ''
+                    }
+                    : undefined
+            }
         };
-        debug('aggregation:', aggregation);
+        debug('update:', update);
 
         // 保管
         await repos.event.eventModel.findOneAndUpdate(
             { _id: event.id },
-            aggregation,
+            update,
             { new: true }
         )
             .exec();
@@ -102,7 +113,7 @@ type ICountTicketTypePerEventOperation<T> = (repos: {
 }) => Promise<T>;
 
 /**
- * 上映イベント+チケット集計インターフェース
+ * イベント+チケット集計インターフェース
  */
 export type IEventWithTicketTypeCount = factory.event.IEvent<factory.eventType.ScreeningEvent> & {
     saleTicketCount: number;
@@ -117,7 +128,7 @@ export interface ICountTicketTypePerEventResult {
 
 export interface ICountTicketTypePerEventConditions {
     /**
-     * 上映イベントシーリズID
+     * イベントシーリズID
      */
     id?: string;
     /**
