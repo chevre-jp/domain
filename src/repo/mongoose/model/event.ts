@@ -90,8 +90,8 @@ const schema = new mongoose.Schema(
         dubLanguage: mongoose.SchemaTypes.Mixed,
         kanaName: String,
         offers: offersSchema,
-        maximumAttendeeCapacity: { type: Number, default: 0 },
-        remainingAttendeeCapacity: { type: Number, default: 0 },
+        maximumAttendeeCapacity: { type: Number },
+        remainingAttendeeCapacity: { type: Number },
         checkInCount: { type: Number, default: 0 },
         attendeeCount: { type: Number, default: 0 }
     },
