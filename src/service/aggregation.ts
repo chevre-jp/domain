@@ -82,19 +82,21 @@ export function aggregateScreeningEvent(params: {
         // 値がundefinedの場合に更新しないように注意
         const update: any = {
             $set: {
+                updatedAt: new Date(), // $setオブジェクトが空だとMongoエラーになるので
                 ...(maximumAttendeeCapacity !== undefined) ? { maximumAttendeeCapacity: maximumAttendeeCapacity } : undefined,
                 ...(remainingAttendeeCapacity !== undefined) ? { remainingAttendeeCapacity: remainingAttendeeCapacity } : undefined,
                 ...(checkInCount !== undefined) ? { checkInCount: checkInCount } : undefined,
                 ...(attendeeCount !== undefined) ? { attendeeCount: attendeeCount } : undefined
             },
-            $unset: {
-                ...(!reservedSeatsAvailable)
-                    ? {
+            ...(!reservedSeatsAvailable)
+                // 在庫なしイベントの場合収容人数削除
+                ? {
+                    $unset: {
                         maximumAttendeeCapacity: '',
                         remainingAttendeeCapacity: ''
                     }
-                    : undefined
-            }
+                }
+                : undefined
         };
         debug('update:', update);
 
