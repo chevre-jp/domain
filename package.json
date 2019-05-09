@@ -93,5 +93,5 @@
     "postversion": "git push origin --tags",
     "prepublishOnly": "npm run clean && npm run build && npm test && npm run doc"
   },
-  "version": "9.0.7"
+  "version": "1.0.0-alpha.94"
 }
