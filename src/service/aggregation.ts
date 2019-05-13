@@ -32,11 +32,11 @@ export function aggregateScreeningEvent(params: {
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>(params);
 
         // 座席指定イベントかどうか
-        const reservedSeatsAvailable = event.offers !== undefined
+        const reservedSeatsAvailable = !(event.offers !== undefined
             && event.offers.itemOffered !== undefined
             && event.offers.itemOffered.serviceOutput !== undefined
             && event.offers.itemOffered.serviceOutput.reservedTicket !== undefined
-            && event.offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat !== undefined;
+            && event.offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat === undefined);
 
         // 劇場取得
         const movieTheater = await repos.place.findById({ id: event.superEvent.location.id });
