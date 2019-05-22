@@ -16,11 +16,13 @@
     "@chevre/factory": "1.0.0-alpha.95",
     "@motionpicture/coa-service": "^6.0.1",
     "@types/redis": "^2.8.12",
+    "cdigit": "^2.3.4",
     "debug": "^3.2.6",
     "google-libphonenumber": "^3.2.2",
     "lodash.difference": "^4.5.0",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.23",
+    "node-fpe": "^1.0.0",
     "redis": "^2.8.0",
     "uniqid": "^5.0.3"
   },
