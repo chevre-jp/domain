@@ -43,6 +43,7 @@ export class MongoRepository {
                 }
             });
         }
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (Array.isArray(params.reservationNumbers)) {
@@ -52,6 +53,28 @@ export class MongoRepository {
                 }
             });
         }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.reservationNumber !== undefined) {
+            andConditions.push({
+                reservationNumber: {
+                    $regex: new RegExp(params.reservationNumber, 'i')
+                }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.additionalTicketText !== undefined) {
+            andConditions.push({
+                additionalTicketText: {
+                    $exists: true,
+                    $regex: new RegExp(params.additionalTicketText, 'i')
+                }
+            });
+        }
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (Array.isArray(params.reservationStatuses)) {
@@ -189,6 +212,32 @@ export class MongoRepository {
                         'reservationFor.startDate': {
                             $exists: true,
                             $lt: params.reservationFor.startThrough
+                        }
+                    }
+                );
+            }
+
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.reservationFor.endFrom instanceof Date) {
+                andConditions.push(
+                    {
+                        'reservationFor.endDate': {
+                            $exists: true,
+                            $gte: params.reservationFor.endFrom
+                        }
+                    }
+                );
+            }
+
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.reservationFor.endThrough instanceof Date) {
+                andConditions.push(
+                    {
+                        'reservationFor.endDate': {
+                            $exists: true,
+                            $lt: params.reservationFor.endThrough
                         }
                     }
                 );
@@ -411,6 +460,69 @@ export class MongoRepository {
                     }
                 });
             }
+
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.underName.givenName !== undefined) {
+                andConditions.push({
+                    'underName.givenName': {
+                        $exists: true,
+                        $regex: new RegExp(params.underName.givenName, 'i')
+                    }
+                });
+            }
+
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.underName.familyName !== undefined) {
+                andConditions.push({
+                    'underName.familyName': {
+                        $exists: true,
+                        $regex: new RegExp(params.underName.familyName, 'i')
+                    }
+                });
+            }
+
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (params.underName.identifier !== undefined) {
+                if (Array.isArray(params.underName.identifier.$all)) {
+                    andConditions.push({
+                        'underName.identifier': {
+                            $exists: true,
+                            $all: params.underName.identifier.$all
+                        }
+                    });
+                }
+
+                if (Array.isArray(params.underName.identifier.$in)) {
+                    andConditions.push({
+                        'underName.identifier': {
+                            $exists: true,
+                            $in: params.underName.identifier.$in
+                        }
+                    });
+                }
+
+                if (Array.isArray(params.underName.identifier.$nin)) {
+                    andConditions.push({
+                        'underName.identifier': {
+                            $nin: params.underName.identifier.$nin
+                        }
+                    });
+                }
+            }
+
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (Array.isArray(params.underName.identifiers)) {
+                andConditions.push({
+                    'underName.identifier': {
+                        $exists: true,
+                        $in: params.underName.identifiers
+                    }
+                });
+            }
         }
 
         // tslint:disable-next-line:no-single-line-block-comment
@@ -429,6 +541,36 @@ export class MongoRepository {
                 checkedIn: params.checkedIn
             });
 
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.additionalProperty !== undefined) {
+            if (Array.isArray(params.additionalProperty.$all)) {
+                andConditions.push({
+                    additionalProperty: {
+                        $exists: true,
+                        $all: params.additionalProperty.$all
+                    }
+                });
+            }
+
+            if (Array.isArray(params.additionalProperty.$in)) {
+                andConditions.push({
+                    additionalProperty: {
+                        $exists: true,
+                        $in: params.additionalProperty.$in
+                    }
+                });
+            }
+
+            if (Array.isArray(params.additionalProperty.$nin)) {
+                andConditions.push({
+                    additionalProperty: {
+                        $nin: params.additionalProperty.$nin
+                    }
+                });
+            }
         }
 
         return andConditions;

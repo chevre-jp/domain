@@ -157,6 +157,26 @@ schema.index(
 );
 
 schema.index(
+    { additionalTicketText: 1, modifiedTime: -1 },
+    {
+        name: 'searchByAdditionalTicketText',
+        partialFilterExpression: {
+            additionalTicketText: { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { additionalProperty: 1, modifiedTime: -1 },
+    {
+        name: 'searchByAdditionalProperty',
+        partialFilterExpression: {
+            additionalProperty: { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'reservationFor.typeOf': 1, modifiedTime: -1 },
     {
         name: 'searchByReservationForTypeOf-v2',
@@ -352,6 +372,36 @@ schema.index(
         name: 'searchByUnderNameTelephone',
         partialFilterExpression: {
             'underName.telephone': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'underName.familyName': 1, modifiedTime: -1 },
+    {
+        name: 'searchByUnderNameFamilyName',
+        partialFilterExpression: {
+            'underName.familyName': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'underName.givenName': 1, modifiedTime: -1 },
+    {
+        name: 'searchByUnderNameGivenName',
+        partialFilterExpression: {
+            'underName.givenName': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'underName.identifier': 1, modifiedTime: -1 },
+    {
+        name: 'searchByUnderNameIdentifier',
+        partialFilterExpression: {
+            'underName.identifier': { $exists: true }
         }
     }
 );
