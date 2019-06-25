@@ -72,6 +72,12 @@ export function start(
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
             id: params.object.event.id
         });
+
+        // キャンセルステータスであれば予約不可
+        if (event.eventStatus === factory.eventStatusType.EventCancelled) {
+            throw new factory.errors.Argument('Event', `Event status ${event.eventStatus}`);
+        }
+
         const eventOffers = <factory.event.screeningEvent.IOffer>event.offers;
 
         const serviceOutput = eventOffers.itemOffered.serviceOutput;

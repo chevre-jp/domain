@@ -17,6 +17,17 @@ export type IAggregateScreeningEventOperation<T> = (repos: {
     reservation: ReservationRepo;
 }) => Promise<T>;
 
+export interface IAggregateReservation {
+    typeOf: 'AggregateReservation';
+    aggregateDate: Date;
+    checkInCount?: number;
+    attendeeCount?: number;
+    reservationCount?: number;
+    saleTicketCount?: number;
+    advanceTicketCount?: number;
+    freeTicketCount?: number;
+}
+
 /**
  * イベントデータをID指定で集計する
  */
@@ -28,6 +39,8 @@ export function aggregateScreeningEvent(params: {
         place: PlaceRepo;
         reservation: ReservationRepo;
     }) => {
+        const now = new Date();
+
         // 集計対象イベント検索
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>(params);
 
@@ -46,6 +59,7 @@ export function aggregateScreeningEvent(params: {
         let remainingAttendeeCapacity: number | undefined;
         let attendeeCount: number | undefined;
         let checkInCount: number | undefined;
+        let reservationCount: number | undefined;
 
         const screeningRoom = <factory.place.movieTheater.IScreeningRoom | undefined>
             movieTheater.containsPlace.find((p) => p.branchCode === event.location.branchCode);
@@ -53,7 +67,7 @@ export function aggregateScreeningEvent(params: {
             // 基本的にありえないはずだが、万が一スクリーンが見つからなければcapacityは0のまま
             console.error(new Error('Screening room not found'));
         } else {
-            const reservationCount = await repos.reservation.count<factory.reservationType.EventReservation>({
+            reservationCount = await repos.reservation.count<factory.reservationType.EventReservation>({
                 typeOf: factory.reservationType.EventReservation,
                 reservationFor: { ids: [event.id] },
                 reservationStatuses: [factory.reservationStatusType.ReservationConfirmed]
@@ -79,10 +93,19 @@ export function aggregateScreeningEvent(params: {
             });
         }
 
+        const aggregateReservation: IAggregateReservation = {
+            typeOf: 'AggregateReservation',
+            aggregateDate: now,
+            attendeeCount,
+            checkInCount,
+            reservationCount
+        };
+
         // 値がundefinedの場合に更新しないように注意
         const update: any = {
             $set: {
                 updatedAt: new Date(), // $setオブジェクトが空だとMongoエラーになるので
+                aggregateReservation: aggregateReservation,
                 ...(maximumAttendeeCapacity !== undefined) ? { maximumAttendeeCapacity: maximumAttendeeCapacity } : undefined,
                 ...(remainingAttendeeCapacity !== undefined) ? { remainingAttendeeCapacity: remainingAttendeeCapacity } : undefined,
                 ...(checkInCount !== undefined) ? { checkInCount: checkInCount } : undefined,
@@ -110,113 +133,14 @@ export function aggregateScreeningEvent(params: {
     };
 }
 
-type ICountTicketTypePerEventOperation<T> = (repos: {
-    reservation: ReservationRepo;
-}) => Promise<T>;
-
-/**
- * イベント+チケット集計インターフェース
- */
-export type IEventWithTicketTypeCount = factory.event.IEvent<factory.eventType.ScreeningEvent> & {
-    saleTicketCount: number;
-    preSaleTicketCount: number;
-    freeTicketCount: number;
-};
-
-export interface ICountTicketTypePerEventResult {
-    totalCount: number;
-    data: IEventWithTicketTypeCount[];
-}
-
-export interface ICountTicketTypePerEventConditions {
-    /**
-     * イベントシーリズID
-     */
-    id?: string;
-    /**
-     * 開始日 FROM
-     */
-    startFrom?: Date;
-    /**
-     * 開始日 TO
-     */
-    startThrough?: Date;
-    limit: number;
-    page: number;
-}
-
-/**
- * @deprecated 東映ローカライズなのでそのうち廃止
- */
-export function countTicketTypePerEvent(
-    params: ICountTicketTypePerEventConditions
-): ICountTicketTypePerEventOperation<ICountTicketTypePerEventResult> {
-    // tslint:disable-next-line:max-func-body-length
-    return async (repos: {
-        reservation: ReservationRepo;
-    }) => {
-        // 予約を検索
-        const reservations = await repos.reservation.search<factory.reservationType.EventReservation>({
-            typeOf: factory.reservationType.EventReservation,
-            reservationFor: {
-                superEvent: params.id !== undefined ? { id: params.id } : undefined,
-                startFrom: params.startFrom,
-                startThrough: params.startThrough
-            }
-        });
-
-        let events: IEventWithTicketTypeCount[] = [];
-        reservations.forEach((r) => {
-            if (events.find((e) => e.id === r.reservationFor.id) === undefined) {
-                events.push({
-                    ...r.reservationFor,
-                    freeTicketCount: 0,
-                    saleTicketCount: 0,
-                    preSaleTicketCount: 0
-                });
-            }
-            for (const event of events) {
-                if (event.id === r.reservationFor.id) {
-                    if (r.reservedTicket.ticketType.category !== undefined) {
-                        switch (r.reservedTicket.ticketType.category.id) {
-                            case factory.ticketTypeCategory.Default:
-                                event.saleTicketCount += 1;
-                                break;
-                            case factory.ticketTypeCategory.Advance:
-                                event.preSaleTicketCount += 1;
-                                break;
-                            case factory.ticketTypeCategory.Free:
-                                event.freeTicketCount += 1;
-                                break;
-                            default: // 何もしない
-                        }
-                    }
-                }
-            }
-        });
-        events = events.sort((a, b) => (a.startDate < b.startDate ? -1 : 1));
-
-        return {
-            totalCount: events.length,
-            data: events.slice(params.limit * (params.page - 1), params.limit * params.page)
-        };
-    };
-}
-
-export interface IAggregateReservation {
-    checkInCount: number;
-    attendeeCount: number;
-    saleTicketCount: number;
-    advanceTicketCount: number;
-    freeTicketCount: number;
-}
-
 export function aggregateEventReservation(params: {
     id: string;
 }) {
     return async (repos: {
         reservation: ReservationRepo;
     }): Promise<IAggregateReservation> => {
+        const now = new Date();
+
         const attendeeCount = await repos.reservation.count({
             typeOf: factory.reservationType.EventReservation,
             reservationFor: { ids: [params.id] },
@@ -259,6 +183,8 @@ export function aggregateEventReservation(params: {
         });
 
         return {
+            typeOf: 'AggregateReservation',
+            aggregateDate: now,
             checkInCount,
             attendeeCount,
             saleTicketCount,

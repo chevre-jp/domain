@@ -93,7 +93,8 @@ const schema = new mongoose.Schema(
         maximumAttendeeCapacity: { type: Number },
         remainingAttendeeCapacity: { type: Number },
         checkInCount: { type: Number, default: 0 },
-        attendeeCount: { type: Number, default: 0 }
+        attendeeCount: { type: Number, default: 0 },
+        aggregateReservation: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'events',
