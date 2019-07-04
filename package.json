@@ -15,7 +15,8 @@
     "mongoose": "^4.10.2",
     "numeral": "^2.0.6",
     "redis": "^2.7.1",
-    "uniqid": "^4.1.1"
+    "uniqid": "^4.1.1",
+    "snyk": "^1.190.0"
   },
   "description": "This is a CHEVRE domain repository.",
   "devDependencies": {
@@ -29,7 +30,6 @@
     "nsp": "^2.6.3",
     "nyc": "^10.3.2",
     "rimraf": "^2.6.1",
-    "snyk": "^1.30.1",
     "tslint": "^5.3.2",
     "tslint-microsoft-contrib": "^5.0.0",
     "typescript": "^2.3.3"
@@ -65,8 +65,11 @@
     "prepublishOnly": "npm run clean && npm run build && npm test",
     "preversion": "npm run clean && npm run build && npm test",
     "version": "git add -A",
-    "postversion": "git push origin --tags"
+    "postversion": "git push origin --tags",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "types": "./types/lib/index.d.ts",
-  "version": "9.0.7"
+  "version": "9.0.7",
+  "snyk": true
 }
