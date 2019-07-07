@@ -115,11 +115,21 @@ export function create(options: mongoose.SchemaOptions) {
     );
 
     schema.index(
-        { name: 1, 'priceSpecification.price': 1 },
+        { 'name.ja': 1, 'priceSpecification.price': 1 },
         {
-            name: 'searchByName',
+            name: 'searchByNameJa',
             partialFilterExpression: {
-                name: { $exists: true }
+                'name.ja': { $exists: true }
+            }
+        }
+    );
+
+    schema.index(
+        { 'name.en': 1, 'priceSpecification.price': 1 },
+        {
+            name: 'searchByNameEn',
+            partialFilterExpression: {
+                'name.en': { $exists: true }
             }
         }
     );
