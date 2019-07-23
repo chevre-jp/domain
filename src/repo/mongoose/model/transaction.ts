@@ -157,6 +157,36 @@ schema.index(
 );
 
 schema.index(
+    { 'object.reservations.id': 1, startDate: -1 },
+    {
+        name: 'searchByObjectReservationsId',
+        partialFilterExpression: {
+            'object.reservations.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'object.reservations.reservationNumber': 1, startDate: -1 },
+    {
+        name: 'searchByObjectReservationsReservationNumber',
+        partialFilterExpression: {
+            'object.reservations.reservationNumber': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'object.reservations.reservationFor.id': 1, startDate: -1 },
+    {
+        name: 'searchByObjectReservationsReservationForId',
+        partialFilterExpression: {
+            'object.reservations.reservationFor.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { typeOf: 1, status: 1, tasksExportationStatus: 1 },
     { name: 'startExportTasks' }
 );
