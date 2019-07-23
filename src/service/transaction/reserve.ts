@@ -21,8 +21,6 @@ import * as ReserveService from '../reserve';
 
 const debug = createDebug('chevre-domain:service');
 
-const USE_NEW_RESERVATION_NUMBER = process.env.USE_NEW_RESERVATION_NUMBER === '1';
-
 export type IStartOperation<T> = (repos: {
     eventAvailability: ScreeningEventAvailabilityRepo;
     event: EventRepo;
@@ -106,17 +104,10 @@ export function start(
 
         // 予約番号発行
         let reservationNumber: string;
-        if (USE_NEW_RESERVATION_NUMBER) {
-            reservationNumber = await repos.reservationNumber.publishByTimestamp({
-                project: params.project,
-                reserveDate: now
-            });
-        } else {
-            reservationNumber = await repos.reservationNumber.publish({
-                project: params.project,
-                reserveDate: now
-            });
-        }
+        reservationNumber = await repos.reservationNumber.publishByTimestamp({
+            project: params.project,
+            reserveDate: now
+        });
 
         // 取引ファクトリーで新しい進行中取引オブジェクトを作成
         const tickets: factory.reservation.ITicket<factory.reservationType>[] =

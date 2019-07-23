@@ -33,18 +33,40 @@ export function start(
         transaction: TransactionRepo;
     }) => {
         debug('starting transaction...', params);
+
+        let reserveTransaction: factory.transaction.ITransaction<factory.transactionType.Reserve> | undefined;
+        let reservations: factory.reservation.IReservation<factory.reservationType.EventReservation>[] | undefined;
+
         // 予約取引存在確認
-        const reserveTransaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.Reserve,
-            id: params.object.transaction.id
-        });
+        if (params.object.transaction !== undefined) {
+            reserveTransaction = await repos.transaction.findById({
+                typeOf: factory.transactionType.Reserve,
+                id: params.object.transaction.id
+            });
+        }
+
+        // 予約存在確認
+        if (params.object.reservation !== undefined) {
+            if (params.object.reservation.id !== undefined) {
+                const reservation = await repos.reservation.findById({
+                    id: params.object.reservation.id
+                });
+                reservations = [reservation];
+            }
+        }
+
+        if (reserveTransaction === undefined && reservations === undefined) {
+            throw new factory.errors.Argument('object', 'Transaction or reservation must be specified');
+        }
+
         const startParams: factory.transaction.IStartParams<factory.transactionType.CancelReservation> = {
             project: params.project,
             typeOf: factory.transactionType.CancelReservation,
             agent: params.agent,
             object: {
                 clientUser: params.object.clientUser,
-                transaction: reserveTransaction
+                transaction: reserveTransaction,
+                reservations: reservations
             },
             expires: params.expires
         };
@@ -63,8 +85,7 @@ export function start(
             throw error;
         }
 
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO 予約ホールド
+        // 予約ホールドする？要検討...
         // await Promise.all(reservations.map(async (r) => {
         //     await repos.reservation.reservationModel.create({ ...r, _id: r.id });
         // }));
@@ -87,25 +108,31 @@ export function confirm(params: { id: string }): ITransactionOperation<void> {
             typeOf: factory.transactionType.CancelReservation,
             id: params.id
         });
-        const reserveTransaction = transaction.object.transaction;
 
-        // 予約アクション属性作成
-        const cancelReservationActionAttributes: factory.action.cancel.reservation.IAttributes[]
-            = reserveTransaction.object.reservations.map((r) => {
-                return {
-                    project: transaction.project,
-                    typeOf: <factory.actionType.CancelAction>factory.actionType.CancelAction,
-                    // description: transaction.object.notes,
-                    result: {
-                    },
-                    object: r,
-                    agent: transaction.agent,
-                    purpose: {
-                        typeOf: transaction.typeOf,
-                        id: transaction.id
-                    }
-                };
-            });
+        let targetReservations: factory.reservation.IReservation<factory.reservationType.EventReservation>[] = [];
+
+        if (transaction.object.transaction !== undefined) {
+            targetReservations = transaction.object.transaction.object.reservations;
+        } else if (Array.isArray(transaction.object.reservations)) {
+            targetReservations = transaction.object.reservations;
+        }
+
+        // 予約取消アクション属性作成
+        const cancelReservationActionAttributes = targetReservations.map((r) => {
+            return {
+                project: transaction.project,
+                typeOf: <factory.actionType.CancelAction>factory.actionType.CancelAction,
+                // description: transaction.object.notes,
+                result: {},
+                object: r,
+                agent: transaction.agent,
+                purpose: {
+                    typeOf: transaction.typeOf,
+                    id: transaction.id
+                }
+            };
+        });
+
         const potentialActions: factory.transaction.cancelReservation.IPotentialActions = {
             cancelReservation: cancelReservationActionAttributes
         };

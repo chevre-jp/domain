@@ -90,11 +90,53 @@ export class MongoRepository {
                 });
             }
         }
+
         switch (params.typeOf) {
             case factory.transactionType.CancelReservation:
                 break;
+
             case factory.transactionType.Reserve:
+                if (params.object !== undefined) {
+                    if (params.object.reservations !== undefined) {
+                        if (params.object.reservations.id !== undefined) {
+                            if (Array.isArray(params.object.reservations.id.$in)) {
+                                andConditions.push({
+                                    'object.reservations.id': {
+                                        $exists: true,
+                                        $in: params.object.reservations.id.$in
+                                    }
+                                });
+                            }
+                        }
+
+                        if (params.object.reservations.reservationNumber !== undefined) {
+                            if (Array.isArray(params.object.reservations.reservationNumber.$in)) {
+                                andConditions.push({
+                                    'object.reservations.reservationNumber': {
+                                        $exists: true,
+                                        $in: params.object.reservations.reservationNumber.$in
+                                    }
+                                });
+                            }
+                        }
+
+                        if (params.object.reservations.reservationFor !== undefined) {
+                            if (params.object.reservations.reservationFor.id !== undefined) {
+                                if (Array.isArray(params.object.reservations.reservationFor.id.$in)) {
+                                    andConditions.push({
+                                        'object.reservations.reservationFor.id': {
+                                            $exists: true,
+                                            $in: params.object.reservations.reservationFor.id.$in
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+
                 break;
+
             default:
         }
 

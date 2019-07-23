@@ -80,9 +80,7 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
             const action = await repos.action.start<factory.actionType.CancelAction>(actionAttributes);
 
             try {
-                // 予約をキャンセル状態に変更する
                 const reservation = actionAttributes.object;
-                await repos.reservation.cancel({ id: reservation.id });
 
                 // 予約取引がまだ座席を保持していれば座席ロック解除
                 const ticketedSeat = reservation.reservedTicket.ticketedSeat;
@@ -99,6 +97,9 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
                         await repos.eventAvailability.unlock(lockKey);
                     }
                 }
+
+                // 予約をキャンセル状態に変更する
+                await repos.reservation.cancel({ id: reservation.id });
             } catch (error) {
                 // actionにエラー結果を追加
                 try {
@@ -129,34 +130,43 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
         transaction: TransactionRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
     }) => {
-        const cancelReservationTransaction = await
-            repos.transaction.findById({ typeOf: factory.transactionType.CancelReservation, id: actionAttributesList[0].purpose.id });
-
         debug('canceling reservations...', actionAttributesList);
         await Promise.all(actionAttributesList.map(async (actionAttributes) => {
             // アクション開始
             const action = await repos.action.start<factory.actionType.CancelAction>(actionAttributes);
 
             try {
-                // 予約をキャンセル状態に変更する
                 const reservation = actionAttributes.object;
-                await repos.reservation.cancel({ id: reservation.id });
 
-                // 予約取引がまだ座席を保持していれば座席ロック解除
-                const ticketedSeat = reservation.reservedTicket.ticketedSeat;
-                if (ticketedSeat !== undefined) {
-                    const lockKey = {
-                        eventId: reservation.reservationFor.id,
-                        offer: {
-                            seatNumber: ticketedSeat.seatNumber,
-                            seatSection: ticketedSeat.seatSection
+                // 予約取引を検索
+                const reserveTransactions = await
+                    repos.transaction.search<factory.transactionType.Reserve>({
+                        limit: 1,
+                        typeOf: factory.transactionType.Reserve,
+                        object: { reservations: { id: { $in: [reservation.id] } } }
+                    });
+                const reserveTransaction = reserveTransactions.shift();
+
+                if (reserveTransaction !== undefined) {
+                    // 予約取引がまだ座席を保持していれば座席ロック解除
+                    const ticketedSeat = reservation.reservedTicket.ticketedSeat;
+                    if (ticketedSeat !== undefined) {
+                        const lockKey = {
+                            eventId: reservation.reservationFor.id,
+                            offer: {
+                                seatNumber: ticketedSeat.seatNumber,
+                                seatSection: ticketedSeat.seatSection
+                            }
+                        };
+                        const holder = await repos.eventAvailability.getHolder(lockKey);
+                        if (holder === reserveTransaction.id) {
+                            await repos.eventAvailability.unlock(lockKey);
                         }
-                    };
-                    const holder = await repos.eventAvailability.getHolder(lockKey);
-                    if (holder === cancelReservationTransaction.object.transaction.id) {
-                        await repos.eventAvailability.unlock(lockKey);
                     }
                 }
+
+                // 予約をキャンセル状態に変更する
+                await repos.reservation.cancel({ id: reservation.id });
             } catch (error) {
                 // actionにエラー結果を追加
                 try {
