@@ -122,6 +122,7 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
 /**
  * 予約をキャンセルする
  */
+// tslint:disable-next-line:max-func-body-length
 export function cancelReservation(actionAttributesList: factory.action.cancel.reservation.IAttributes[]) {
     return async (repos: {
         action: ActionRepo;
@@ -147,7 +148,26 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
                     });
                 const reserveTransaction = reserveTransactions.shift();
 
+                let exectedHolder: string | undefined;
+
                 if (reserveTransaction !== undefined) {
+                    exectedHolder = reserveTransaction.id;
+                } else {
+                    // 東京タワーデータ移行対応として(Chevre以降前の東京タワーデータに関しては、予約取引が存在しない)
+                    if (reservation.project !== undefined
+                        && reservation.project !== null
+                        // tslint:disable-next-line:no-magic-numbers
+                        && reservation.project.id.slice(0, 4) === 'ttts') {
+                        if (reservation.underName !== undefined && Array.isArray(reservation.underName.identifier)) {
+                            const transactionProperty = reservation.underName.identifier.find((p) => p.name === 'transaction');
+                            if (transactionProperty !== undefined) {
+                                exectedHolder = transactionProperty.value;
+                            }
+                        }
+                    }
+                }
+
+                if (exectedHolder !== undefined) {
                     // 予約取引がまだ座席を保持していれば座席ロック解除
                     const ticketedSeat = reservation.reservedTicket.ticketedSeat;
                     if (ticketedSeat !== undefined) {
@@ -159,7 +179,7 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
                             }
                         };
                         const holder = await repos.eventAvailability.getHolder(lockKey);
-                        if (holder === reserveTransaction.id) {
+                        if (holder === exectedHolder) {
                             await repos.eventAvailability.unlock(lockKey);
                         }
                     }
