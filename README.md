@@ -7,7 +7,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/chevre-jp/domain/badge.svg?targetFile=package.json)](https://snyk.io/test/github/chevre-jp/domain?targetFile=package.json)
 [![npm](https://img.shields.io/npm/dm/@chevre/domain.svg)](https://nodei.co/npm/@chevre/domain/)
 
-元祖興行パッケージオンラインチケットシステムのドメインモデルをnode.jsで使いやすいようにまとめたパッケージです。
+イベント在庫管理ドメインライブラリ
 
 ## Table of contents
 
@@ -21,26 +21,15 @@
 npm install --save @chevre/domain
 ```
 
-```Javascript
-const chevre = require("@chevre/chevredomain");
-```
-
-前提として、mongooseでdefault connectionを確保することと、redis情報をセットすることが必要。
-
-* mongoose default connection
-
-```Javascript
-chevre.mongoose.connect();
+```Node.js
+const chevre = require("@chevre/domain");
 ```
 
 ### Environment variables
 
-| Name                                     | Required | Value           | Purpose                     |
-|------------------------------------------|----------|-----------------|-----------------------------|
-| `DEBUG`                                  | false    | chevre-domain:* | Debug                       |
-| `CHEVRE_PERFORMANCE_STATUSES_REDIS_PORT` | true     |                 | パフォーマンス空席状況保管RedisCache接続情報 |
-| `CHEVRE_PERFORMANCE_STATUSES_REDIS_HOST` | true     |                 | パフォーマンス空席状況保管RedisCache接続情報 |
-| `CHEVRE_PERFORMANCE_STATUSES_REDIS_KEY`  | true     |                 | パフォーマンス空席状況保管RedisCache接続情報 |
+| Name    | Required | Value           | Purpose |
+| ------- | -------- | --------------- | ------- |
+| `DEBUG` | false    | chevre-domain:* | Debug   |
 
 ## Code Samples
 

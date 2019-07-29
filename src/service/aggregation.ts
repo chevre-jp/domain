@@ -12,6 +12,25 @@ import { MongoRepository as ReservationRepo } from '../repo/reservation';
 
 const debug = createDebug('chevre-domain:service');
 
+/**
+ * 券種カテゴリー
+ * @deprecated 本来DBで管理想定
+ */
+enum DefaultTicketTypeCategory {
+    /**
+     * 有料券
+     */
+    Default = '1',
+    /**
+     * 前売券
+     */
+    Advance = '2',
+    /**
+     * 無料券
+     */
+    Free = '3'
+}
+
 export type IAggregateScreeningEventOperation<T> = (repos: {
     event: EventRepo;
     offer: OfferRepo;
@@ -233,7 +252,7 @@ export function aggregateEventReservation(params: {
             reservationFor: { ids: [params.id] },
             reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
             reservedTicket: {
-                ticketType: { category: { ids: [factory.ticketTypeCategory.Default] } }
+                ticketType: { category: { ids: [DefaultTicketTypeCategory.Default] } }
             }
         });
 
@@ -242,7 +261,7 @@ export function aggregateEventReservation(params: {
             reservationFor: { ids: [params.id] },
             reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
             reservedTicket: {
-                ticketType: { category: { ids: [factory.ticketTypeCategory.Advance] } }
+                ticketType: { category: { ids: [DefaultTicketTypeCategory.Advance] } }
             }
         });
 
@@ -251,7 +270,7 @@ export function aggregateEventReservation(params: {
             reservationFor: { ids: [params.id] },
             reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
             reservedTicket: {
-                ticketType: { category: { ids: [factory.ticketTypeCategory.Free] } }
+                ticketType: { category: { ids: [DefaultTicketTypeCategory.Free] } }
             }
         });
 
