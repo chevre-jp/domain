@@ -8,12 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
-- mongooseをエクスポート。
-
 ### Changed
-
-- パッケージ名を変更。
-- 予約管理サービスとして再構築。
 
 ### Deprecated
 
@@ -22,3 +17,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v10.0.0 - 2019-07-29
+
+- パッケージ名を変更
+- 予約管理サービスとして再構築
