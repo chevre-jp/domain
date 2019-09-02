@@ -10,7 +10,6 @@ const agentSchema = new mongoose.Schema(
         strict: false
     }
 );
-
 const recipientSchema = new mongoose.Schema(
     {},
     {
@@ -19,16 +18,6 @@ const recipientSchema = new mongoose.Schema(
         strict: false
     }
 );
-
-const resultSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
 const errorSchema = new mongoose.Schema(
     {},
     {
@@ -37,16 +26,8 @@ const errorSchema = new mongoose.Schema(
         strict: false
     }
 );
-
-const objectSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
+const objectSchema = mongoose.SchemaTypes.Mixed;
+const resultSchema = mongoose.SchemaTypes.Mixed;
 const purposeSchema = new mongoose.Schema(
     {},
     {
@@ -55,7 +36,14 @@ const purposeSchema = new mongoose.Schema(
         strict: false
     }
 );
-
+const potentialActionsSchema = new mongoose.Schema(
+    {},
+    {
+        id: false,
+        _id: false,
+        strict: false
+    }
+);
 const locationSchema = new mongoose.Schema(
     {},
     {
@@ -64,8 +52,7 @@ const locationSchema = new mongoose.Schema(
         strict: false
     }
 );
-
-const potentialActionsSchema = new mongoose.Schema(
+const instrumentSchema = new mongoose.Schema(
     {},
     {
         id: false,
@@ -82,7 +69,6 @@ const schema = new mongoose.Schema(
         project: mongoose.SchemaTypes.Mixed,
         actionStatus: String,
         typeOf: String,
-        description: String,
         agent: agentSchema,
         recipient: recipientSchema,
         result: resultSchema,
@@ -94,7 +80,8 @@ const schema = new mongoose.Schema(
         potentialActions: potentialActionsSchema,
         amount: Number,
         fromLocation: locationSchema,
-        toLocation: locationSchema
+        toLocation: locationSchema,
+        instrument: instrumentSchema
     },
     {
         collection: 'actions',
@@ -107,8 +94,18 @@ const schema = new mongoose.Schema(
             createdAt: 'createdAt',
             updatedAt: 'updatedAt'
         },
-        toJSON: { getters: true },
-        toObject: { getters: true }
+        toJSON: {
+            getters: true,
+            virtuals: true,
+            minimize: false,
+            versionKey: false
+        },
+        toObject: {
+            getters: true,
+            virtuals: true,
+            minimize: false,
+            versionKey: false
+        }
     }
 );
 
@@ -122,9 +119,7 @@ schema.index(
 );
 
 schema.index(
-    {
-        'project.id': 1, startDate: 1
-    },
+    { 'project.id': 1, startDate: -1 },
     {
         name: 'searchByProjectId',
         partialFilterExpression: {
@@ -134,30 +129,34 @@ schema.index(
 );
 
 schema.index(
-    { typeOf: 1, _id: 1 }
+    { typeOf: 1, startDate: -1 },
+    { name: 'searchByTypeOf-v2' }
 );
 
 schema.index(
-    { 'fromLocation.accountNumber': 1, typeOf: 1 },
+    { actionStatus: 1, startDate: -1 },
+    { name: 'searchByActionStatus-v2' }
+);
+
+schema.index(
+    { startDate: -1 },
+    { name: 'searchByStartDate-v2' }
+);
+
+schema.index(
+    { endDate: -1, startDate: -1 },
     {
+        name: 'searchByEndDate-v2',
         partialFilterExpression: {
-            'fromLocation.accountNumber': { $exists: true }
+            endDate: { $exists: true }
         }
     }
 );
 
 schema.index(
-    { 'toLocation.accountNumber': 1, typeOf: 1 },
+    { 'purpose.typeOf': 1, startDate: -1 },
     {
-        partialFilterExpression: {
-            'toLocation.accountNumber': { $exists: true }
-        }
-    }
-);
-
-schema.index(
-    { 'purpose.typeOf': 1 },
-    {
+        name: 'searchByPurposeTypeOf-v2',
         partialFilterExpression: {
             'purpose.typeOf': { $exists: true }
         }
@@ -165,9 +164,42 @@ schema.index(
 );
 
 schema.index(
-    { typeOf: 1, startDate: 1, endDate: 1, actionStatus: 1 },
+    { 'purpose.id': 1, startDate: -1 },
     {
-        name: 'searchActions'
+        name: 'searchByPurposeId-v2',
+        partialFilterExpression: {
+            'purpose.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'object.typeOf': 1, startDate: -1 },
+    {
+        name: 'searchByObjectTypeOf-v2',
+        partialFilterExpression: {
+            'object.typeOf': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'result.typeOf': 1, startDate: -1 },
+    {
+        name: 'searchByResultTypeOf',
+        partialFilterExpression: {
+            'result.typeOf': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'result.id': 1, startDate: -1 },
+    {
+        name: 'searchByResultId',
+        partialFilterExpression: {
+            'result.id': { $exists: true }
+        }
     }
 );
 

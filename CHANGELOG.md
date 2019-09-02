@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 予約確定アクションのポストアクションに予約通知アクションを追加
 - 予約取消アクションのポストアクションに予約通知アクションを追加
+- アクションスキーマ柔軟性拡張
+- タスクサービスのエラーハンドリング拡張
 
 ### Deprecated
 

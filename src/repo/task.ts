@@ -99,12 +99,22 @@ export class MongoRepository {
             );
     }
 
-    public async executeOneByName(taskName: factory.taskName): Promise<factory.task.ITask | null> {
+    public async executeOneByName<T extends factory.taskName>(params: {
+        project?: { id: string };
+        name: T;
+    }): Promise<factory.task.ITask | null> {
         const doc = await this.taskModel.findOneAndUpdate(
             {
+                ...(params.project !== undefined)
+                    ? {
+                        'project.id': {
+                            $exists: true,
+                            $eq: params.project.id
+                        }
+                    } : undefined,
                 status: factory.taskStatus.Ready,
                 runsAt: { $lt: new Date() },
-                name: taskName
+                name: params.name
             },
             {
                 status: factory.taskStatus.Running, // 実行中に変更
@@ -123,15 +133,26 @@ export class MongoRepository {
             return null;
         }
 
-        return <factory.task.ITask>doc.toObject();
+        return doc.toObject();
     }
 
-    public async retry(intervalInMinutes: number) {
+    public async retry(params: {
+        project?: { id: string };
+        intervalInMinutes: number;
+    }) {
         const lastTriedAtShoudBeLessThan = moment()
-            .add(-intervalInMinutes, 'minutes')
+            .add(-params.intervalInMinutes, 'minutes')
             .toDate();
+
         await this.taskModel.update(
             {
+                ...(params.project !== undefined)
+                    ? {
+                        'project.id': {
+                            $exists: true,
+                            $eq: params.project.id
+                        }
+                    } : undefined,
                 status: factory.taskStatus.Running,
                 lastTriedAt: {
                     $type: 'date',
@@ -147,12 +168,23 @@ export class MongoRepository {
             .exec();
     }
 
-    public async abortOne(intervalInMinutes: number): Promise<factory.task.ITask | null> {
+    public async abortOne(params: {
+        project?: { id: string };
+        intervalInMinutes: number;
+    }): Promise<factory.task.ITask | null> {
         const lastTriedAtShoudBeLessThan = moment()
-            .add(-intervalInMinutes, 'minutes')
+            .add(-params.intervalInMinutes, 'minutes')
             .toDate();
+
         const doc = await this.taskModel.findOneAndUpdate(
             {
+                ...(params.project !== undefined)
+                    ? {
+                        'project.id': {
+                            $exists: true,
+                            $eq: params.project.id
+                        }
+                    } : undefined,
                 status: factory.taskStatus.Running,
                 lastTriedAt: {
                     $type: 'date',
@@ -171,7 +203,7 @@ export class MongoRepository {
             return null;
         }
 
-        return <factory.task.ITask>doc.toObject();
+        return doc.toObject();
     }
 
     public async pushExecutionResultById(
