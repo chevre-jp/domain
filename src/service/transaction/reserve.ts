@@ -285,10 +285,10 @@ function createReservation(params: {
  * 取引確定
  */
 export function confirm(params: factory.transaction.reserve.IConfirmParams): ITransactionOperation<void> {
+    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        debug(`confirming reserve transaction ${params.id}...`);
         const now = new Date();
 
         // 取引存在確認
@@ -336,12 +336,42 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
                 }
             }
 
+            let informReservationActions: factory.action.reserve.IInformReservation[] = [];
+            // 予約通知アクションの指定があれば設定
+            if (params.potentialActions !== undefined
+                && params.potentialActions.reserve !== undefined
+                && params.potentialActions.reserve.potentialActions !== undefined
+                && Array.isArray(params.potentialActions.reserve.potentialActions.informReservation)) {
+                informReservationActions = params.potentialActions.reserve.potentialActions.informReservation.map((a) => {
+                    return {
+                        project: transaction.project,
+                        typeOf: factory.actionType.InformAction,
+                        agent: (reservation.reservedTicket.issuedBy !== undefined)
+                            ? reservation.reservedTicket.issuedBy
+                            : transaction.project,
+                        recipient: {
+                            typeOf: transaction.agent.typeOf,
+                            name: transaction.agent.name,
+                            ...a.recipient
+                        },
+                        object: reservation,
+                        purpose: {
+                            typeOf: transaction.typeOf,
+                            id: transaction.id
+                        }
+                    };
+                });
+            }
+
             return {
                 project: transaction.project,
                 typeOf: <factory.actionType.ReserveAction>factory.actionType.ReserveAction,
                 result: {},
                 object: reservation,
                 agent: transaction.agent,
+                potentialActions: {
+                    informReservation: informReservationActions
+                },
                 purpose: {
                     typeOf: transaction.typeOf,
                     id: transaction.id

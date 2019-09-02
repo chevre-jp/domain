@@ -8,7 +8,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- 通知サービスを追加
+
 ### Changed
+
+- 予約確定アクションのポストアクションに予約通知アクションを追加
+- 予約取消アクションのポストアクションに予約通知アクションを追加
 
 ### Deprecated
 

@@ -645,40 +645,52 @@ export class MongoRepository {
     /**
      * 予約確定
      */
-    public async confirm(params: factory.reservation.IReservation<factory.reservationType>) {
-        await this.reservationModel.findByIdAndUpdate(
+    public async confirm<T extends factory.reservationType>(
+        params: factory.reservation.IReservation<T>
+    ): Promise<factory.reservation.IReservation<T>> {
+        const doc = await this.reservationModel.findByIdAndUpdate(
             params.id,
             {
                 ...params,
                 reservationStatus: factory.reservationStatusType.ReservationConfirmed,
                 modifiedTime: new Date()
+            },
+            {
+                new: true
             }
         )
-            .exec()
-            .then((doc) => {
-                if (doc === null) {
-                    throw new factory.errors.NotFound(this.reservationModel.modelName);
-                }
-            });
+            .select({ __v: 0, createdAt: 0, updatedAt: 0 })
+            .exec();
+        if (doc === null) {
+            throw new factory.errors.NotFound(this.reservationModel.modelName);
+        }
+
+        return doc.toObject();
     }
 
     /**
      * 予約取消
      */
-    public async cancel(params: { id: string }) {
-        await this.reservationModel.findByIdAndUpdate(
+    public async cancel<T extends factory.reservationType>(
+        params: { id: string }
+    ): Promise<factory.reservation.IReservation<T>> {
+        const doc = await this.reservationModel.findByIdAndUpdate(
             params.id,
             {
                 reservationStatus: factory.reservationStatusType.ReservationCancelled,
                 modifiedTime: new Date()
+            },
+            {
+                new: true
             }
         )
-            .exec()
-            .then((doc) => {
-                if (doc === null) {
-                    throw new factory.errors.NotFound(this.reservationModel.modelName);
-                }
-            });
+            .select({ __v: 0, createdAt: 0, updatedAt: 0 })
+            .exec();
+        if (doc === null) {
+            throw new factory.errors.NotFound(this.reservationModel.modelName);
+        }
+
+        return doc.toObject();
     }
 
     /**
