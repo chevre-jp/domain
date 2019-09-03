@@ -22,12 +22,12 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
         task: TaskRepo;
     }) => {
         await Promise.all(actionAttributesList.map(async (actionAttributes) => {
-            // アクション開始
+            let reservation = actionAttributes.object;
             const action = await repos.action.start<factory.actionType.ReserveAction>(actionAttributes);
 
             try {
                 // 予約を確定状態に変更する
-                await repos.reservation.confirm(actionAttributes.object);
+                reservation = await repos.reservation.confirm(actionAttributes.object);
             } catch (error) {
                 // actionにエラー結果を追加
                 try {
@@ -43,6 +43,8 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
             // アクション完了
             const actionResult: factory.action.reserve.IResult = {};
             await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+
+            await onConfirmed(actionAttributes, reservation)(repos);
         }));
 
         const aggregateTask: factory.task.aggregateScreeningEvent.IAttributes = {
@@ -56,6 +58,52 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
             data: actionAttributesList[0].object.reservationFor
         };
         await repos.task.save(aggregateTask);
+    };
+}
+
+/**
+ * 予約確定後のアクション
+ */
+function onConfirmed(
+    actionAttributes: factory.action.reserve.IAttributes,
+    reservation: factory.reservation.IReservation<any>
+) {
+    return async (repos: {
+        task: TaskRepo;
+    }) => {
+        const potentialActions = actionAttributes.potentialActions;
+        const now = new Date();
+
+        const taskAttributes: factory.task.IAttributes[] = [];
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (potentialActions !== undefined) {
+            if (Array.isArray(potentialActions.informReservation)) {
+                taskAttributes.push(...potentialActions.informReservation.map(
+                    (a): factory.task.triggerWebhook.IAttributes => {
+                        return {
+                            project: a.project,
+                            name: factory.taskName.TriggerWebhook,
+                            status: factory.taskStatus.Ready,
+                            runsAt: now, // なるはやで実行
+                            remainingNumberOfTries: 10,
+                            numberOfTried: 0,
+                            executionResults: [],
+                            data: {
+                                ...a,
+                                object: reservation
+                            }
+                        };
+                    })
+                );
+            }
+        }
+
+        // タスク保管
+        await Promise.all(taskAttributes.map(async (taskAttribute) => {
+            return repos.task.save(taskAttribute);
+        }));
     };
 }
 
@@ -133,12 +181,10 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
     }) => {
         debug('canceling reservations...', actionAttributesList);
         await Promise.all(actionAttributesList.map(async (actionAttributes) => {
-            // アクション開始
+            let reservation = actionAttributes.object;
             const action = await repos.action.start<factory.actionType.CancelAction>(actionAttributes);
 
             try {
-                const reservation = actionAttributes.object;
-
                 // 予約取引を検索
                 const reserveTransactions = await
                     repos.transaction.search<factory.transactionType.Reserve>({
@@ -186,7 +232,7 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
                 }
 
                 // 予約をキャンセル状態に変更する
-                await repos.reservation.cancel({ id: reservation.id });
+                reservation = await repos.reservation.cancel({ id: reservation.id });
             } catch (error) {
                 // actionにエラー結果を追加
                 try {
@@ -199,9 +245,10 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
                 throw error;
             }
 
-            // アクション完了
             const actionResult: factory.action.reserve.IResult = {};
             await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+
+            await onCanceled(actionAttributes, reservation)(repos);
         }));
 
         const aggregateTask: factory.task.aggregateScreeningEvent.IAttributes = {
@@ -215,5 +262,51 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
             data: actionAttributesList[0].object.reservationFor
         };
         await repos.task.save(aggregateTask);
+    };
+}
+
+/**
+ * 予約取消後のアクション
+ */
+function onCanceled(
+    actionAttributes: factory.action.cancel.reservation.IAttributes,
+    reservation: factory.reservation.IReservation<any>
+) {
+    return async (repos: {
+        task: TaskRepo;
+    }) => {
+        const potentialActions = actionAttributes.potentialActions;
+        const now = new Date();
+
+        const taskAttributes: factory.task.IAttributes[] = [];
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (potentialActions !== undefined) {
+            if (Array.isArray(potentialActions.informReservation)) {
+                taskAttributes.push(...potentialActions.informReservation.map(
+                    (a): factory.task.triggerWebhook.IAttributes => {
+                        return {
+                            project: a.project,
+                            name: factory.taskName.TriggerWebhook,
+                            status: factory.taskStatus.Ready,
+                            runsAt: now, // なるはやで実行
+                            remainingNumberOfTries: 10,
+                            numberOfTried: 0,
+                            executionResults: [],
+                            data: {
+                                ...a,
+                                object: reservation
+                            }
+                        };
+                    })
+                );
+            }
+        }
+
+        // タスク保管
+        await Promise.all(taskAttributes.map(async (taskAttribute) => {
+            return repos.task.save(taskAttribute);
+        }));
     };
 }

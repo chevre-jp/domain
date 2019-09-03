@@ -97,12 +97,10 @@ export function start(
 /**
  * 取引確定
  */
-export function confirm(params: { id: string }): ITransactionOperation<void> {
+export function confirm(params: factory.transaction.cancelReservation.IConfirmParams): ITransactionOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        debug(`confirming reserve transaction ${params.id}...`);
-
         // 取引存在確認
         const transaction = await repos.transaction.findById({
             typeOf: factory.transactionType.CancelReservation,
@@ -119,6 +117,33 @@ export function confirm(params: { id: string }): ITransactionOperation<void> {
 
         // 予約取消アクション属性作成
         const cancelReservationActionAttributes = targetReservations.map((r) => {
+            let informReservationActions: factory.action.cancel.reservation.IInformReservation[] = [];
+            // 予約通知アクションの指定があれば設定
+            if (params.potentialActions !== undefined
+                && params.potentialActions.cancelReservation !== undefined
+                && params.potentialActions.cancelReservation.potentialActions !== undefined
+                && Array.isArray(params.potentialActions.cancelReservation.potentialActions.informReservation)) {
+                informReservationActions = params.potentialActions.cancelReservation.potentialActions.informReservation.map((a) => {
+                    return {
+                        project: transaction.project,
+                        typeOf: factory.actionType.InformAction,
+                        agent: (r.reservedTicket.issuedBy !== undefined)
+                            ? r.reservedTicket.issuedBy
+                            : transaction.project,
+                        recipient: {
+                            typeOf: transaction.agent.typeOf,
+                            name: transaction.agent.name,
+                            ...a.recipient
+                        },
+                        object: r,
+                        purpose: {
+                            typeOf: transaction.typeOf,
+                            id: transaction.id
+                        }
+                    };
+                });
+            }
+
             return {
                 project: transaction.project,
                 typeOf: <factory.actionType.CancelAction>factory.actionType.CancelAction,
@@ -126,6 +151,9 @@ export function confirm(params: { id: string }): ITransactionOperation<void> {
                 result: {},
                 object: r,
                 agent: transaction.agent,
+                potentialActions: {
+                    informReservation: informReservationActions
+                },
                 purpose: {
                     typeOf: transaction.typeOf,
                     id: transaction.id

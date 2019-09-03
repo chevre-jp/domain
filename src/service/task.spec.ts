@@ -7,9 +7,11 @@ import * as assert from 'power-assert';
 import * as sinon from 'sinon';
 import * as domain from '../index';
 
-import * as ReserveTask from './task/reserve';
+import { MongoRepository as TaskRepo } from '../repo/task';
+import * as TriggerWebhookTask from './task/triggerWebhook';
 
 let sandbox: sinon.SinonSandbox;
+const project = { typeOf: <'Project'>'Project', id: 'projectId' };
 
 before(() => {
     sandbox = sinon.createSandbox();
@@ -22,18 +24,29 @@ describe('executeByName()', () => {
 
     it('未実行タスクが存在すれば、実行されるはず', async () => {
         const task = {
+            project: project,
             id: 'id',
-            name: domain.factory.taskName.Reserve,
+            name: domain.factory.taskName.TriggerWebhook,
             data: { datakey: 'dataValue' },
             status: domain.factory.taskStatus.Running
         };
-        const taskRepo = new domain.repository.Task(mongoose.connection);
-        sandbox.mock(taskRepo).expects('executeOneByName').once().withArgs(task.name).resolves(task);
-        sandbox.mock(ReserveTask).expects('call').once().withArgs(task.data).returns(async () => Promise.resolve());
-        sandbox.mock(taskRepo).expects('pushExecutionResultById').once().withArgs(task.id, domain.factory.taskStatus.Executed).resolves();
 
-        const result = await domain.service.task.executeByName(task.name)({
-            taskRepo: taskRepo,
+        sandbox.mock(TaskRepo.prototype)
+            .expects('executeOneByName')
+            .once()
+            .resolves(task);
+        sandbox.mock(TriggerWebhookTask)
+            .expects('call')
+            .once()
+            .withArgs(task.data)
+            .returns(async () => Promise.resolve());
+        sandbox.mock(TaskRepo.prototype)
+            .expects('pushExecutionResultById')
+            .once()
+            .withArgs(task.id, domain.factory.taskStatus.Executed)
+            .resolves();
+
+        const result = await domain.service.task.executeByName(task)({
             connection: mongoose.connection
         });
 
@@ -42,15 +55,18 @@ describe('executeByName()', () => {
     });
 
     it('未実行タスクが存在しなければ、実行されないはず', async () => {
-        const taskName = domain.factory.taskName.Reserve;
-        const taskRepo = new domain.repository.Task(mongoose.connection);
+        const taskName = domain.factory.taskName.TriggerWebhook;
 
-        sandbox.mock(taskRepo).expects('executeOneByName').once()
-            .withArgs(taskName).rejects(new domain.factory.errors.NotFound('task'));
-        sandbox.mock(domain.service.task).expects('execute').never();
+        sandbox.mock(TaskRepo.prototype)
+            .expects('executeOneByName')
+            .once()
+            // tslint:disable-next-line:no-null-keyword
+            .resolves(null);
+        sandbox.mock(domain.service.task)
+            .expects('execute')
+            .never();
 
-        const result = await domain.service.task.executeByName(taskName)({
-            taskRepo: taskRepo,
+        const result = await domain.service.task.executeByName({ project: project, name: taskName })({
             connection: mongoose.connection
         });
 
@@ -68,10 +84,12 @@ describe('retry()', () => {
         const INTERVAL = 10;
         const taskRepo = new domain.repository.Task(mongoose.connection);
 
-        sandbox.mock(taskRepo).expects('retry').once()
-            .withArgs(INTERVAL).resolves();
+        sandbox.mock(taskRepo)
+            .expects('retry')
+            .once()
+            .resolves();
 
-        const result = await domain.service.task.retry(INTERVAL)({ task: taskRepo });
+        const result = await domain.service.task.retry({ project: project, intervalInMinutes: INTERVAL })({ task: taskRepo });
 
         assert.equal(result, undefined);
         sandbox.verify();
@@ -91,9 +109,18 @@ describe('abort()', () => {
         };
         const taskRepo = new domain.repository.Task(mongoose.connection);
 
-        sandbox.mock(taskRepo).expects('abortOne').once().withArgs(INTERVAL).resolves(task);
+        sandbox.mock(taskRepo)
+            .expects('abortOne')
+            .once()
+            .resolves(task);
+        sandbox.mock(domain.service.notification)
+            .expects('report2developers')
+            .once()
+            .withArgs(domain.service.task.ABORT_REPORT_SUBJECT)
+            .returns(async () => Promise.resolve());
 
-        const result = await domain.service.task.abort(INTERVAL)({ task: taskRepo });
+        const result = await domain.service.task.abort({ project: project, intervalInMinutes: INTERVAL })({ task: taskRepo });
+
         assert.equal(result, undefined);
         sandbox.verify();
     });
@@ -107,19 +134,26 @@ describe('execute()', () => {
     it('存在するタスク名であれば、完了ステータスへ変更されるはず', async () => {
         const task = {
             id: 'id',
-            name: domain.factory.taskName.Reserve,
+            name: domain.factory.taskName.TriggerWebhook,
             data: { datakey: 'dataValue' },
             status: domain.factory.taskStatus.Running
         };
-        const taskRepo = new domain.repository.Task(mongoose.connection);
 
-        sandbox.mock(ReserveTask).expects('call').once().withArgs(task.data).returns(async () => Promise.resolve());
-        sandbox.mock(taskRepo).expects('pushExecutionResultById').once().withArgs(task.id, domain.factory.taskStatus.Executed).resolves();
+        sandbox.mock(TriggerWebhookTask)
+            .expects('call')
+            .once()
+            .withArgs(task.data)
+            .returns(async () => Promise.resolve());
+        sandbox.mock(TaskRepo.prototype)
+            .expects('pushExecutionResultById')
+            .once()
+            .withArgs(task.id, domain.factory.taskStatus.Executed)
+            .resolves();
 
         const result = await domain.service.task.execute(<any>task)({
-            taskRepo: taskRepo,
             connection: mongoose.connection
         });
+
         assert.equal(result, undefined);
         sandbox.verify();
     });
@@ -131,14 +165,17 @@ describe('execute()', () => {
             data: { datakey: 'dataValue' },
             status: domain.factory.taskStatus.Running
         };
-        const taskRepo = new domain.repository.Task(mongoose.connection);
 
-        sandbox.mock(taskRepo).expects('pushExecutionResultById').once().withArgs(task.id, task.status).resolves();
+        sandbox.mock(TaskRepo.prototype)
+            .expects('pushExecutionResultById')
+            .once()
+            .withArgs(task.id, task.status)
+            .resolves();
 
         const result = await domain.service.task.execute(<any>task)({
-            taskRepo: taskRepo,
             connection: mongoose.connection
         });
+
         assert.equal(result, undefined);
         sandbox.verify();
     });
