@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v11.0.1 - 2019-09-03
+
+### Fixed
+
+- 予約が存在しない場合に保留中予約取消タスクが失敗しないように調整
+
 ## v11.0.0 - 2019-09-03
 
 ### Added

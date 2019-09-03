@@ -146,8 +146,11 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
                     }
                 }
 
-                // 予約をキャンセル状態に変更する
-                await repos.reservation.cancel({ id: reservation.id });
+                // 予約が存在すればキャンセル状態に変更する
+                const reservationCount = await repos.reservation.count({ typeOf: reservation.typeOf, ids: [reservation.id] });
+                if (reservationCount > 0) {
+                    await repos.reservation.cancel({ id: reservation.id });
+                }
             } catch (error) {
                 // actionにエラー結果を追加
                 try {
