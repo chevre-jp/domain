@@ -207,7 +207,10 @@ export function start(
             object: {
                 clientUser: params.object.clientUser,
                 event: event,
-                reservations: reservations
+                reservations: reservations,
+                ...{
+                    reservationNumber: reservationNumber
+                }
             },
             expires: params.expires
         };
@@ -216,6 +219,215 @@ export function start(
         let transaction: factory.transaction.reserve.ITransaction;
         try {
             transaction = await repos.transaction.start<factory.transactionType.Reserve>(startParams);
+        } catch (error) {
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore next */
+            if (error.name === 'MongoError') {
+                // no op
+            }
+
+            throw error;
+        }
+
+        // 指定席イベントであれば、座席ロック
+        if (reservedSeatsOnly) {
+            await repos.eventAvailability.lock({
+                eventId: event.id,
+                offers: tickets.map((t) => {
+                    // 指定席のみの場合、上記処理によってticketedSeatの存在は保証されている
+                    return {
+                        seatSection: (<factory.reservation.ISeat<factory.reservationType>>t.ticketedSeat).seatSection,
+                        seatNumber: (<factory.reservation.ISeat<factory.reservationType>>t.ticketedSeat).seatNumber
+                    };
+                }),
+                expires: event.endDate,
+                holder: transaction.id
+            });
+        }
+
+        // 予約作成
+        await Promise.all(reservations.map(async (r) => {
+            await repos.reservation.reservationModel.create({ ...r, _id: r.id });
+        }));
+
+        return transaction;
+    };
+}
+
+/**
+ * 予約追加
+ */
+// tslint:disable-next-line:max-func-body-length
+export function addReservations(params: {
+    id: string;
+    object: factory.transaction.reserve.IObjectWithoutDetail;
+}): IStartOperation<factory.transaction.reserve.ITransaction> {
+    // tslint:disable-next-line:max-func-body-length
+    return async (repos: {
+        eventAvailability: ScreeningEventAvailabilityRepo;
+        event: EventRepo;
+        offer: OfferRepo;
+        place: PlaceRepo;
+        priceSpecification: PriceSpecificationRepo;
+        reservation: ReservationRepo;
+        reservationNumber: ReservationNumberRepo;
+        transaction: TransactionRepo;
+    }) => {
+        const now = new Date();
+
+        // 取引存在確認
+        let transaction = await repos.transaction.findById({
+            typeOf: factory.transactionType.Reserve,
+            id: params.id
+        });
+
+        // イベント存在確認
+        const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
+            id: params.object.event.id
+        });
+
+        // キャンセルステータスであれば予約不可
+        if (event.eventStatus === factory.eventStatusType.EventCancelled) {
+            throw new factory.errors.Argument('Event', `Event status ${event.eventStatus}`);
+        }
+
+        const eventOffers = <factory.event.screeningEvent.IOffer>event.offers;
+
+        const serviceOutput = eventOffers.itemOffered.serviceOutput;
+        // 指定席のみかどうか
+        const reservedSeatsOnly = !(serviceOutput !== undefined
+            && serviceOutput.reservedTicket !== undefined
+            && serviceOutput.reservedTicket.ticketedSeat === undefined);
+
+        // チケット存在確認
+        const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
+        const availableOffers = await repos.offer.findByOfferCatalogId({ offerCatalog: eventOffers });
+
+        // 座席情報取得
+        const movieTheater = await repos.place.findById({ id: event.superEvent.location.id });
+        const screeningRoom = <factory.place.movieTheater.IScreeningRoom | undefined>movieTheater.containsPlace.find(
+            (p) => p.branchCode === event.location.branchCode
+        );
+        if (screeningRoom === undefined) {
+            throw new factory.errors.NotFound(
+                'Screening Room',
+                `Event location 'Screening Room ${event.location.branchCode}' not found`
+            );
+        }
+        const screeningRoomSections = screeningRoom.containsPlace;
+
+        // 予約番号
+        const reservationNumber: string = (<any>transaction.object).reservationNumber;
+
+        // 取引ファクトリーで新しい進行中取引オブジェクトを作成
+        const tickets: factory.reservation.ITicket<factory.reservationType>[] =
+            params.object.acceptedOffer.map((offer) => {
+                const ticketOffer = ticketOffers.find((t) => t.id === offer.id);
+                if (ticketOffer === undefined) {
+                    throw new factory.errors.NotFound('Ticket Offer');
+                }
+
+                let ticketType = availableOffers.find((o) => o.id === offer.id);
+                // 基本的に券種でID管理されていないオファーは存在しないが、念のため管理されていないケースに対応
+                if (ticketType === undefined) {
+                    const unitPriceSpec
+                        = <factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>>
+                        ticketOffer.priceSpecification.priceComponent.find((spec) => {
+                            return spec.typeOf === factory.priceSpecificationType.UnitPriceSpecification;
+                        });
+                    if (unitPriceSpec === undefined) {
+                        throw new factory.errors.Argument('acceptedOffer', `UnitPriceSpecification for ${offer.id} Not Found`);
+                    }
+
+                    ticketType = {
+                        project: transaction.project,
+                        typeOf: 'Offer',
+                        id: ticketOffer.id,
+                        identifier: ticketOffer.identifier,
+                        name: ticketOffer.name,
+                        description: ticketOffer.description,
+                        alternateName: ticketOffer.name,
+                        priceCurrency: factory.priceCurrency.JPY,
+                        availability: factory.itemAvailability.InStock,
+                        priceSpecification: unitPriceSpec
+                    };
+                }
+
+                const acceptedTicketedSeat = offer.ticketedSeat;
+                let ticketedSeat: factory.reservation.ISeat<factory.reservationType> | undefined;
+
+                if (reservedSeatsOnly) {
+                    // 指定席のみの場合、座席指定が必須
+                    if (acceptedTicketedSeat === undefined) {
+                        throw new factory.errors.ArgumentNull('offer.ticketedSeat');
+                    }
+
+                    const screeningRoomSection = screeningRoomSections.find(
+                        (section) => section.branchCode === acceptedTicketedSeat.seatSection
+                    );
+                    if (screeningRoomSection === undefined) {
+                        throw new factory.errors.NotFound(
+                            'Screening Room Section',
+                            `Screening room section ${acceptedTicketedSeat.seatSection} not found`
+                        );
+                    }
+                    const seat = screeningRoomSection.containsPlace.find((p) => p.branchCode === acceptedTicketedSeat.seatNumber);
+                    if (seat === undefined) {
+                        throw new factory.errors.NotFound('Seat', `Seat ${acceptedTicketedSeat.seatNumber} not found`);
+                    }
+
+                    ticketedSeat = { ...acceptedTicketedSeat, ...seat };
+                }
+
+                return {
+                    typeOf: <factory.reservation.TicketType<factory.reservationType>>'Ticket',
+                    dateIssued: now,
+                    issuedBy: {
+                        typeOf: event.location.typeOf,
+                        name: event.location.name.ja
+                    },
+                    totalPrice: ticketOffer.priceSpecification,
+                    priceCurrency: factory.priceCurrency.JPY,
+                    ticketedSeat: ticketedSeat,
+                    underName: {
+                        typeOf: transaction.agent.typeOf,
+                        name: transaction.agent.name
+                    },
+                    ticketType: ticketType
+                };
+            });
+
+        // 仮予約作成
+        const reservations = await Promise.all(tickets.map(async (ticket, index) => {
+            return createReservation({
+                project: transaction.project,
+                id: `${reservationNumber}-${index}`,
+                reserveDate: now,
+                agent: transaction.agent,
+                reservationNumber: reservationNumber,
+                screeningEvent: event,
+                reservedTicket: ticket
+            });
+        }));
+
+        // 取引に予約追加
+        try {
+            transaction = await repos.transaction.transactionModel.findOneAndUpdate(
+                { _id: transaction.id },
+                {
+                    'object.event': event,
+                    'object.reservations': reservations
+                },
+                { new: true }
+            )
+                .exec()
+                .then((doc) => {
+                    if (doc === null) {
+                        throw new factory.errors.NotFound('Transaction');
+                    }
+
+                    return doc.toObject();
+                });
         } catch (error) {
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore next */
