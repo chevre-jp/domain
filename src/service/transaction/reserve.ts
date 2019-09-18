@@ -328,14 +328,16 @@ function createTicket(params: {
             name: params.event.location.name.ja
         },
         priceCurrency: factory.priceCurrency.JPY,
-        ticketedSeat: ticketedSeat,
         ticketType: ticketType,
         totalPrice: ticketOffer.priceSpecification,
         typeOf: <factory.reservation.TicketType<factory.reservationType>>'Ticket',
         underName: {
             typeOf: params.transaction.agent.typeOf,
             name: params.transaction.agent.name
-        }
+        },
+        ...(ticketedSeat !== undefined)
+            ? { ticketedSeat: ticketedSeat }
+            : {}
     };
 }
 
