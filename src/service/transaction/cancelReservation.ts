@@ -48,7 +48,7 @@ export function start(
         // 予約存在確認
         if (params.object.reservation !== undefined) {
             if (params.object.reservation.id !== undefined) {
-                const reservation = await repos.reservation.findById({
+                const reservation = await repos.reservation.findById<factory.reservationType.EventReservation>({
                     id: params.object.reservation.id
                 });
                 reservations = [reservation];
@@ -109,7 +109,8 @@ export function confirm(params: factory.transaction.cancelReservation.IConfirmPa
 
         let targetReservations: factory.reservation.IReservation<factory.reservationType.EventReservation>[] = [];
 
-        if (transaction.object.transaction !== undefined) {
+        if (transaction.object.transaction !== undefined
+            && Array.isArray(transaction.object.transaction.object.reservations)) {
             targetReservations = transaction.object.transaction.object.reservations;
         } else if (Array.isArray(transaction.object.reservations)) {
             targetReservations = transaction.object.reservations;

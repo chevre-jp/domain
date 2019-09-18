@@ -13,7 +13,7 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "^1.1.0",
+    "@chevre/factory": "2.0.0-alpha.2",
     "@motionpicture/coa-service": "^6.0.1",
     "@types/redis": "^2.8.13",
     "cdigit": "^2.3.6",

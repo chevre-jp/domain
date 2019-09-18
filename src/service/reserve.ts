@@ -27,7 +27,7 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
 
             try {
                 // 予約を確定状態に変更する
-                reservation = await repos.reservation.confirm(actionAttributes.object);
+                reservation = await repos.reservation.confirm<factory.reservationType.EventReservation>(actionAttributes.object);
             } catch (error) {
                 // actionにエラー結果を追加
                 try {
@@ -114,16 +114,11 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
     return async (repos: {
         action: ActionRepo;
         reservation: ReservationRepo;
-        transaction: TransactionRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
     }) => {
-        const reserveTransaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.Reserve,
-            id: actionAttributesList[0].purpose.id
-        });
-
-        debug('canceling reservations...', actionAttributesList);
         await Promise.all(actionAttributesList.map(async (actionAttributes) => {
+            const reserveTransactionId = actionAttributes.purpose.id;
+
             // アクション開始
             const action = await repos.action.start<factory.actionType.CancelAction>(actionAttributes);
 
@@ -141,13 +136,16 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
                         }
                     };
                     const holder = await repos.eventAvailability.getHolder(lockKey);
-                    if (holder === reserveTransaction.id) {
+                    if (holder === reserveTransactionId) {
                         await repos.eventAvailability.unlock(lockKey);
                     }
                 }
 
                 // 予約が存在すればキャンセル状態に変更する
-                const reservationCount = await repos.reservation.count({ typeOf: reservation.typeOf, ids: [reservation.id] });
+                const reservationCount = await repos.reservation.count({
+                    typeOf: <factory.reservationType.EventReservation>reservation.typeOf,
+                    ids: [reservation.id]
+                });
                 if (reservationCount > 0) {
                     await repos.reservation.cancel({ id: reservation.id });
                 }
@@ -235,7 +233,7 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
                 }
 
                 // 予約をキャンセル状態に変更する
-                reservation = await repos.reservation.cancel({ id: reservation.id });
+                reservation = await repos.reservation.cancel<factory.reservationType.EventReservation>({ id: reservation.id });
             } catch (error) {
                 // actionにエラー結果を追加
                 try {
