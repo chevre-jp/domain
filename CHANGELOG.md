@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 予約取引の予約番号発行プロセスと仮予約プロセスを分離
 - 予約インターフェースの汎用性拡張
 - install [@motionpicture/coa-service@7.0.0](https://www.npmjs.com/package/@motionpicture/coa-service)
+- [Redisクライアント](https://www.npmjs.com/package/redis)をpeerDependenciesへ変更
 
 ### Deprecated
 
