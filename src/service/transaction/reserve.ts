@@ -132,9 +132,20 @@ export function addReservations(params: {
             throw new factory.errors.ArgumentNull('object.event');
         }
 
-        const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
-            id: params.object.event.id
-        });
+        const event = await repos.event.findById<factory.eventType.ScreeningEvent>(
+            {
+                id: params.object.event.id
+            },
+            {
+                // 予約データに不要な属性は取得しない
+                aggregateReservation: 0,
+                aggregateOffer: 0,
+                attendeeCount: 0,
+                checkInCount: 0,
+                maximumAttendeeCapacity: 0,
+                remainingAttendeeCapacity: 0
+            }
+        );
 
         // キャンセルステータスであれば予約不可
         if (event.eventStatus === factory.eventStatusType.EventCancelled) {
