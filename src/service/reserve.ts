@@ -1,16 +1,13 @@
 /**
  * 予約サービス
  */
-import * as createDebug from 'debug';
-
 import * as factory from '../factory';
+
 import { MongoRepository as ActionRepo } from '../repo/action';
 import { RedisRepository as ScreeningEventAvailabilityRepo } from '../repo/itemAvailability/screeningEvent';
 import { MongoRepository as ReservationRepo } from '../repo/reservation';
 import { MongoRepository as TaskRepo } from '../repo/task';
 import { MongoRepository as TransactionRepo } from '../repo/transaction';
-
-const debug = createDebug('chevre-domain:service');
 
 /**
  * 予約を確定する
@@ -31,7 +28,7 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
             } catch (error) {
                 // actionにエラー結果を追加
                 try {
-                    const actionError = { ...error, ...{ message: error.message, name: error.name } };
+                    const actionError = { ...error, message: error.message, name: error.name };
                     await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
                 } catch (__) {
                     // 失敗したら仕方ない
@@ -152,7 +149,7 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
             } catch (error) {
                 // actionにエラー結果を追加
                 try {
-                    const actionError = { ...error, ...{ message: error.message, name: error.name } };
+                    const actionError = { ...error, message: error.message, name: error.name };
                     await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
                 } catch (__) {
                     // 失敗したら仕方ない
@@ -180,7 +177,6 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
         transaction: TransactionRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
     }) => {
-        debug('canceling reservations...', actionAttributesList);
         await Promise.all(actionAttributesList.map(async (actionAttributes) => {
             let reservation = actionAttributes.object;
             const action = await repos.action.start<factory.actionType.CancelAction>(actionAttributes);
@@ -237,7 +233,7 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
             } catch (error) {
                 // actionにエラー結果を追加
                 try {
-                    const actionError = { ...error, ...{ message: error.message, name: error.name } };
+                    const actionError = { ...error, message: error.message, name: error.name };
                     await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
                 } catch (__) {
                     // 失敗したら仕方ない

@@ -1,7 +1,7 @@
 /**
  * 予約取引サービス
  */
-import * as createDebug from 'debug';
+import * as moment from 'moment';
 
 import * as factory from '../../factory';
 import { MongoRepository as ActionRepo } from '../../repo/action';
@@ -18,8 +18,6 @@ import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 import * as OfferService from '../offer';
 
 import * as ReserveService from '../reserve';
-
-const debug = createDebug('chevre-domain:service');
 
 export type IStartOperation<T> = (repos: {
     reservationNumber: ReservationNumberRepo;
@@ -66,23 +64,23 @@ export function start(
         const now = new Date();
 
         // 予約番号発行
-        let reservationNumber: string;
-        reservationNumber = await repos.reservationNumber.publishByTimestamp({
+        const reservationNumber = await repos.reservationNumber.publishByTimestamp({
             project: params.project,
             reserveDate: now
         });
+
+        const reservationPackage: factory.transaction.reserve.IObject = {
+            // clientUser: params.object.clientUser,
+            project: params.project,
+            reservationNumber: reservationNumber,
+            typeOf: factory.reservationType.ReservationPackage
+        };
 
         const startParams: factory.transaction.IStartParams<factory.transactionType.Reserve> = {
             project: params.project,
             typeOf: factory.transactionType.Reserve,
             agent: params.agent,
-            object: {
-                clientUser: params.object.clientUser,
-                id: '',
-                project: params.project,
-                reservationNumber: reservationNumber,
-                typeOf: factory.reservationType.ReservationPackage
-            },
+            object: reservationPackage,
             expires: params.expires
         };
 
@@ -198,7 +196,7 @@ export function addReservations(params: {
                 reserveDate: now,
                 agent: transaction.agent,
                 reservationNumber: reservationNumber,
-                screeningEvent: event,
+                reservationFor: event,
                 reservedTicket: ticket
             });
         }));
@@ -209,8 +207,6 @@ export function addReservations(params: {
                 typeOf: factory.transactionType.Reserve,
                 id: transaction.id,
                 object: {
-                    clientUser: params.object.clientUser,
-                    id: '',
                     project: transaction.project,
                     event: event,
                     reservationFor: event,
@@ -231,16 +227,27 @@ export function addReservations(params: {
 
         // 指定席イベントであれば、座席ロック
         if (reservedSeatsOnly) {
+            const offers: {
+                seatSection: string;
+                seatNumber: string;
+            }[] = tickets.map((t) => {
+                // 指定席のみの場合、上記処理によってticketedSeatの存在は保証されている
+                if (t.ticketedSeat === undefined) {
+                    throw new factory.errors.ServiceUnavailable('Reserved seat required');
+                }
+
+                return {
+                    seatSection: t.ticketedSeat.seatSection,
+                    seatNumber: t.ticketedSeat.seatNumber
+                };
+            });
+
             await repos.eventAvailability.lock({
                 eventId: event.id,
-                offers: tickets.map((t) => {
-                    // 指定席のみの場合、上記処理によってticketedSeatの存在は保証されている
-                    return {
-                        seatSection: (<factory.reservation.ISeat<factory.reservationType>>t.ticketedSeat).seatSection,
-                        seatNumber: (<factory.reservation.ISeat<factory.reservationType>>t.ticketedSeat).seatNumber
-                    };
-                }),
-                expires: event.endDate,
+                offers: offers,
+                expires: moment(event.endDate)
+                    .add(1, 'month')
+                    .toDate(),
                 holder: transaction.id
             });
         }
@@ -347,7 +354,7 @@ function createReservation(params: {
     reserveDate: Date;
     agent: factory.transaction.reserve.IAgent;
     reservationNumber: string;
-    screeningEvent: factory.event.screeningEvent.IEvent;
+    reservationFor: factory.event.screeningEvent.IEvent;
     reservedTicket: factory.reservation.ITicket<factory.reservationType.EventReservation>;
     // additionalProperty: factory.propertyValue.IPropertyValue<string>[];
 }): factory.reservation.IReservation<factory.reservationType.EventReservation> {
@@ -360,7 +367,7 @@ function createReservation(params: {
         numSeats: 1,
         price: params.reservedTicket.totalPrice,
         priceCurrency: factory.priceCurrency.JPY,
-        reservationFor: params.screeningEvent,
+        reservationFor: params.reservationFor,
         reservationNumber: params.reservationNumber,
         reservationStatus: factory.reservationStatusType.ReservationPending,
         reservedTicket: params.reservedTicket,
@@ -619,7 +626,6 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
             default:
                 throw new factory.errors.NotImplemented(`Transaction status "${transaction.status}" not implemented.`);
         }
-        debug('taskAttributes prepared', taskAttributes);
 
         return Promise.all(taskAttributes.map(async (a) => repos.task.save(a)));
     };
