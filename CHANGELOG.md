@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## v12.0.0 - 2019-09-20
+
+### Added
+
 - 予約パッケージインターフェースを追加
 
 ### Changed
@@ -17,14 +31,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - install [@motionpicture/coa-service@7.0.0](https://www.npmjs.com/package/@motionpicture/coa-service)
 - [Redisクライアント](https://www.npmjs.com/package/redis)をpeerDependenciesへ変更
 - 予約データに不要なイベント属性について最適化
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 
 ## v11.0.1 - 2019-09-03
 
