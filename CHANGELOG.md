@@ -18,6 +18,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v12.0.0 - 2019-09-20
+
+### Added
+
+- 予約パッケージインターフェースを追加
+
+### Changed
+
+- 予約取引の予約番号発行プロセスと仮予約プロセスを分離
+- 予約インターフェースの汎用性拡張
+- install [@motionpicture/coa-service@7.0.0](https://www.npmjs.com/package/@motionpicture/coa-service)
+- [Redisクライアント](https://www.npmjs.com/package/redis)をpeerDependenciesへ変更
+- 予約データに不要なイベント属性について最適化
+
 ## v11.0.1 - 2019-09-03
 
 ### Fixed

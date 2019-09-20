@@ -25,7 +25,8 @@ describe('start()', () => {
         const transaction = { typeOf: domain.factory.transactionType.Reserve, id: 'id' };
         const repository = new domain.repository.Transaction(mongoose.connection);
         sandbox.mock(repository.transactionModel)
-            .expects('create').once()
+            .expects('create')
+            .once()
             .resolves(new repository.transactionModel());
 
         const result = await repository.start(<any>transaction);
@@ -45,8 +46,11 @@ describe('confirm()', () => {
         const potentialActions = {};
         const repository = new domain.repository.Transaction(mongoose.connection);
         const doc = new repository.transactionModel();
-        sandbox.mock(repository.transactionModel).expects('findOneAndUpdate').once()
-            .chain('exec').resolves(doc);
+        sandbox.mock(repository.transactionModel)
+            .expects('findOneAndUpdate')
+            .once()
+            .chain('exec')
+            .resolves(doc);
 
         const result = await repository.confirm({
             typeOf: domain.factory.transactionType.Reserve,
@@ -68,7 +72,8 @@ describe('reexportTasks()', () => {
         const intervalInMinutes = 10;
         const repository = new domain.repository.Transaction(mongoose.connection);
         sandbox.mock(repository.transactionModel)
-            .expects('findOneAndUpdate').once()
+            .expects('findOneAndUpdate')
+            .once()
             .chain('exec')
             .resolves(new repository.transactionModel());
 
@@ -87,7 +92,9 @@ describe('setTasksExportedById()', () => {
         const transactionId = 'transactionId';
         const repository = new domain.repository.Transaction(mongoose.connection);
         sandbox.mock(repository.transactionModel)
-            .expects('findByIdAndUpdate').once().withArgs(transactionId)
+            .expects('findByIdAndUpdate')
+            .once()
+            .withArgs(transactionId)
             .chain('exec')
             .resolves(new repository.transactionModel());
 
@@ -105,7 +112,8 @@ describe('makeExpired()', () => {
     it('MongoDBの状態が正常であれば、エラーにならないはず', async () => {
         const repository = new domain.repository.Transaction(mongoose.connection);
         sandbox.mock(repository.transactionModel)
-            .expects('update').once()
+            .expects('update')
+            .once()
             .chain('exec')
             .resolves();
 
@@ -127,8 +135,11 @@ describe('startExportTasks()', () => {
             status: domain.factory.transactionStatusType.Confirmed
         };
         const repository = new domain.repository.Transaction(mongoose.connection);
-        sandbox.mock(repository.transactionModel).expects('findOneAndUpdate').once()
-            .chain('exec').resolves(new repository.transactionModel());
+        sandbox.mock(repository.transactionModel)
+            .expects('findOneAndUpdate')
+            .once()
+            .chain('exec')
+            .resolves(new repository.transactionModel());
 
         const result = await repository.startExportTasks({ typeOf: transaction.typeOf, status: transaction.status });
         assert.equal(typeof result, 'object');
@@ -142,10 +153,15 @@ describe('startExportTasks()', () => {
             status: domain.factory.transactionStatusType.Confirmed
         };
         const repository = new domain.repository.Transaction(mongoose.connection);
-        sandbox.mock(repository.transactionModel).expects('findOneAndUpdate').once()
-            .chain('exec').resolves(null);
+        sandbox.mock(repository.transactionModel)
+            .expects('findOneAndUpdate')
+            .once()
+            .chain('exec')
+            // tslint:disable-next-line:no-null-keyword
+            .resolves(null);
 
         const result = await repository.startExportTasks({ typeOf: transaction.typeOf, status: transaction.status });
+        // tslint:disable-next-line:no-null-keyword
         assert.equal(result, null);
         sandbox.verify();
     });
@@ -158,8 +174,11 @@ describe('IDで取引を取得する', () => {
 
     it('取引が存在すればオブジェクトを取得できるはず', async () => {
         const transactionRepo = new domain.repository.Transaction(mongoose.connection);
-        sandbox.mock(transactionRepo.transactionModel).expects('findOne').once()
-            .chain('exec').resolves(new transactionRepo.transactionModel());
+        sandbox.mock(transactionRepo.transactionModel)
+            .expects('findOne')
+            .once()
+            .chain('exec')
+            .resolves(new transactionRepo.transactionModel());
 
         const result = await transactionRepo.findById({ typeOf: domain.factory.transactionType.Reserve, id: 'transactionId' });
         assert.equal(typeof result, 'object');
@@ -168,35 +187,14 @@ describe('IDで取引を取得する', () => {
 
     it('取引が存在しなければNotFoundエラー', async () => {
         const transactionRepo = new domain.repository.Transaction(mongoose.connection);
-        sandbox.mock(transactionRepo.transactionModel).expects('findOne').once().chain('exec').resolves(null);
+        sandbox.mock(transactionRepo.transactionModel)
+            .expects('findOne')
+            .once()
+            .chain('exec')
+            // tslint:disable-next-line:no-null-keyword
+            .resolves(null);
 
         const result = await transactionRepo.findById({ typeOf: domain.factory.transactionType.Reserve, id: 'transactionId' })
-            .catch((err) => err);
-        assert(result instanceof domain.factory.errors.NotFound);
-        sandbox.verify();
-    });
-});
-
-describe('IDで進行中取引を取得する', () => {
-    beforeEach(() => {
-        sandbox.restore();
-    });
-
-    it('取引が存在すればオブジェクトを取得できるはず', async () => {
-        const transactionRepo = new domain.repository.Transaction(mongoose.connection);
-        sandbox.mock(transactionRepo.transactionModel).expects('findOne').once()
-            .chain('exec').resolves(new transactionRepo.transactionModel());
-
-        const result = await transactionRepo.findInProgressById({ typeOf: domain.factory.transactionType.Reserve, id: 'transactionId' });
-        assert.equal(typeof result, 'object');
-        sandbox.verify();
-    });
-
-    it('取引が存在しなければNotFoundエラー', async () => {
-        const transactionRepo = new domain.repository.Transaction(mongoose.connection);
-        sandbox.mock(transactionRepo.transactionModel).expects('findOne').once().chain('exec').resolves(null);
-
-        const result = await transactionRepo.findInProgressById({ typeOf: domain.factory.transactionType.Reserve, id: 'transactionId' })
             .catch((err) => err);
         assert(result instanceof domain.factory.errors.NotFound);
         sandbox.verify();
@@ -210,8 +208,11 @@ describe('取引を中止する', () => {
 
     it('進行中取引が存在すれば中止できるはず', async () => {
         const transactionRepo = new domain.repository.Transaction(mongoose.connection);
-        sandbox.mock(transactionRepo.transactionModel).expects('findOneAndUpdate').once()
-            .chain('exec').resolves(new transactionRepo.transactionModel());
+        sandbox.mock(transactionRepo.transactionModel)
+            .expects('findOneAndUpdate')
+            .once()
+            .chain('exec')
+            .resolves(new transactionRepo.transactionModel());
 
         const result = await transactionRepo.cancel({ typeOf: domain.factory.transactionType.Reserve, id: 'transactionId' });
         assert.equal(typeof result, 'object');
@@ -226,8 +227,11 @@ describe('取引を検索する', () => {
 
     it('MongoDBが正常であれば配列を取得できるはず', async () => {
         const transactionRepo = new domain.repository.Transaction(mongoose.connection);
-        sandbox.mock(transactionRepo.transactionModel).expects('find').once()
-            .chain('exec').resolves([new transactionRepo.transactionModel()]);
+        sandbox.mock(transactionRepo.transactionModel)
+            .expects('find')
+            .once()
+            .chain('exec')
+            .resolves([new transactionRepo.transactionModel()]);
 
         const result = await transactionRepo.search({
             typeOf: domain.factory.transactionType.Reserve,

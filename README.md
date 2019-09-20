@@ -7,7 +7,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/chevre-jp/domain/badge.svg?targetFile=package.json)](https://snyk.io/test/github/chevre-jp/domain?targetFile=package.json)
 [![npm](https://img.shields.io/npm/dm/@chevre/domain.svg)](https://nodei.co/npm/@chevre/domain/)
 
-イベント在庫管理ドメインライブラリ
+予約管理サービスドメイン
 
 ## Table of contents
 

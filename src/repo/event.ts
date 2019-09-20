@@ -328,7 +328,7 @@ export class MongoRepository {
                 .exec();
 
             if (doc === null) {
-                throw new factory.errors.NotFound('Event');
+                throw new factory.errors.NotFound(this.eventModel.modelName);
             }
         }
 
@@ -379,9 +379,12 @@ export class MongoRepository {
             .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
-    public async findById<T extends factory.eventType>(params: {
-        id: string;
-    }): Promise<factory.event.IEvent<T>> {
+    public async findById<T extends factory.eventType>(
+        params: {
+            id: string;
+        },
+        projection?: any
+    ): Promise<factory.event.IEvent<T>> {
         const doc = await this.eventModel.findOne(
             {
                 _id: params.id
@@ -389,13 +392,14 @@ export class MongoRepository {
             {
                 __v: 0,
                 createdAt: 0,
-                updatedAt: 0
+                updatedAt: 0,
+                ...projection
             }
         )
             .exec();
 
         if (doc === null) {
-            throw new factory.errors.NotFound('Event');
+            throw new factory.errors.NotFound(this.eventModel.modelName);
         }
 
         return doc.toObject();

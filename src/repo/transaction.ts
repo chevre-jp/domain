@@ -9,9 +9,11 @@ import TransactionModel from './mongoose/model/transaction';
  */
 export class MongoRepository {
     public readonly transactionModel: typeof TransactionModel;
+
     constructor(connection: Connection) {
         this.transactionModel = connection.model(TransactionModel.modelName);
     }
+
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     public static CREATE_MONGO_CONDITIONS(params: factory.transaction.ISearchConditions<factory.transactionType>) {
         const andConditions: any[] = [
@@ -142,6 +144,7 @@ export class MongoRepository {
 
         return andConditions;
     }
+
     /**
      * 取引を開始する
      */
@@ -168,31 +171,45 @@ export class MongoRepository {
             typeOf: params.typeOf
         })
             .exec();
+
         if (doc === null) {
-            throw new factory.errors.NotFound('Transaction');
+            throw new factory.errors.NotFound(this.transactionModel.modelName);
         }
 
         return doc.toObject();
     }
+
     /**
-     * 進行中の取引を取得する
+     * 取引を確定する
      */
-    public async findInProgressById<T extends factory.transactionType>(params: {
-        typeOf: T;
+    public async addReservations(params: {
+        typeOf: factory.transactionType.Reserve;
         id: string;
-    }): Promise<factory.transaction.ITransaction<T>> {
-        const doc = await this.transactionModel.findOne({
-            _id: params.id,
-            typeOf: params.typeOf,
-            status: factory.transactionStatusType.InProgress
-        })
+        object: factory.transaction.reserve.IObject;
+    }): Promise<factory.transaction.ITransaction<factory.transactionType.Reserve>> {
+        const doc = await this.transactionModel.findOneAndUpdate(
+            {
+                _id: params.id,
+                typeOf: params.typeOf,
+                status: factory.transactionStatusType.InProgress
+            },
+            {
+                'object.event': params.object.event,
+                'object.reservationFor': params.object.reservationFor,
+                'object.reservations': params.object.reservations,
+                'object.subReservation': params.object.subReservation
+            },
+            { new: true }
+        )
             .exec();
+
         if (doc === null) {
-            throw new factory.errors.NotFound('Transaction');
+            throw new factory.errors.NotFound(this.transactionModel.modelName);
         }
 
         return doc.toObject();
     }
+
     /**
      * 取引を確定する
      */
@@ -234,6 +251,7 @@ export class MongoRepository {
 
         return doc.toObject();
     }
+
     /**
      * タスク未エクスポートの取引をひとつ取得してエクスポートを開始する
      */
@@ -254,6 +272,7 @@ export class MongoRepository {
             // tslint:disable-next-line:no-null-keyword
             .then((doc) => (doc === null) ? null : doc.toObject());
     }
+
     /**
      * タスクエクスポートリトライ
      * todo updatedAtを基準にしているが、タスクエクスポートトライ日時を持たせた方が安全か？
@@ -274,6 +293,7 @@ export class MongoRepository {
         )
             .exec();
     }
+
     /**
      * set task status exported by transaction id
      * IDでタスクをエクスポート済に変更する
@@ -289,6 +309,7 @@ export class MongoRepository {
         )
             .exec();
     }
+
     /**
      * 取引を期限切れにする
      */
@@ -310,6 +331,7 @@ export class MongoRepository {
         )
             .exec();
     }
+
     /**
      * 取引を中止する
      */
@@ -351,6 +373,7 @@ export class MongoRepository {
 
         return doc.toObject();
     }
+
     public async count<T extends factory.transactionType>(params: factory.transaction.ISearchConditions<T>): Promise<number> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
 
@@ -360,6 +383,7 @@ export class MongoRepository {
             .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
+
     /**
      * 取引を検索する
      */

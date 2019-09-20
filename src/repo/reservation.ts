@@ -15,7 +15,7 @@ export class MongoRepository {
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
-    public static CREATE_MONGO_CONDITIONS<T extends factory.reservationType>(params: factory.reservation.ISearchConditions<T>) {
+    public static CREATE_MONGO_CONDITIONS(params: factory.reservation.ISearchConditions<factory.reservationType>) {
         // MongoDB検索条件
         const andConditions: any[] = [
             { typeOf: params.typeOf }
@@ -119,169 +119,19 @@ export class MongoRepository {
             });
         }
 
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.reservationFor !== undefined) {
-            // tslint:disable-next-line:no-single-line-block-comment
-            /* istanbul ignore else */
-            if (params.reservationFor.typeOf !== undefined) {
-                andConditions.push(
-                    {
-                        'reservationFor.typeOf': {
-                            $exists: true,
-                            $eq: params.reservationFor.typeOf
-                        }
-                    }
-                );
-            }
-
-            // tslint:disable-next-line:no-single-line-block-comment
-            /* istanbul ignore else */
-            if (params.reservationFor.id !== undefined) {
-                andConditions.push(
-                    {
-                        'reservationFor.id': {
-                            $exists: true,
-                            $eq: params.reservationFor.id
-                        }
-                    }
-                );
-            }
-
-            // tslint:disable-next-line:no-single-line-block-comment
-            /* istanbul ignore else */
-            if (Array.isArray(params.reservationFor.ids)) {
-                andConditions.push(
-                    {
-                        'reservationFor.id': {
-                            $exists: true,
-                            $in: params.reservationFor.ids
-                        }
-                    }
-                );
-            }
-
-            // tslint:disable-next-line:no-single-line-block-comment
-            /* istanbul ignore else */
-            if (params.reservationFor.location !== undefined) {
+        switch (params.typeOf) {
+            case factory.reservationType.EventReservation:
                 // tslint:disable-next-line:no-single-line-block-comment
                 /* istanbul ignore else */
-                if (Array.isArray(params.reservationFor.location.ids)) {
-                    andConditions.push(
-                        {
-                            'reservationFor.location.id': {
-                                $exists: true,
-                                $in: params.reservationFor.location.ids
-                            }
-                        }
-                    );
-                }
-
-                // tslint:disable-next-line:no-single-line-block-comment
-                /* istanbul ignore else */
-                if (Array.isArray(params.reservationFor.location.branchCodes)) {
-                    andConditions.push(
-                        {
-                            'reservationFor.location.branchCode': {
-                                $exists: true,
-                                $in: params.reservationFor.location.branchCodes
-                            }
-                        }
-                    );
-                }
-            }
-
-            // tslint:disable-next-line:no-single-line-block-comment
-            /* istanbul ignore else */
-            if (params.reservationFor.startFrom instanceof Date) {
-                andConditions.push(
-                    {
-                        'reservationFor.startDate': {
-                            $exists: true,
-                            $gte: params.reservationFor.startFrom
-                        }
-                    }
-                );
-            }
-
-            // tslint:disable-next-line:no-single-line-block-comment
-            /* istanbul ignore else */
-            if (params.reservationFor.startThrough instanceof Date) {
-                andConditions.push(
-                    {
-                        'reservationFor.startDate': {
-                            $exists: true,
-                            $lt: params.reservationFor.startThrough
-                        }
-                    }
-                );
-            }
-
-            // tslint:disable-next-line:no-single-line-block-comment
-            /* istanbul ignore else */
-            if (params.reservationFor.endFrom instanceof Date) {
-                andConditions.push(
-                    {
-                        'reservationFor.endDate': {
-                            $exists: true,
-                            $gte: params.reservationFor.endFrom
-                        }
-                    }
-                );
-            }
-
-            // tslint:disable-next-line:no-single-line-block-comment
-            /* istanbul ignore else */
-            if (params.reservationFor.endThrough instanceof Date) {
-                andConditions.push(
-                    {
-                        'reservationFor.endDate': {
-                            $exists: true,
-                            $lt: params.reservationFor.endThrough
-                        }
-                    }
-                );
-            }
-
-            // tslint:disable-next-line:no-single-line-block-comment
-            /* istanbul ignore else */
-            if (params.reservationFor.superEvent !== undefined) {
-                // tslint:disable-next-line:no-single-line-block-comment
-                /* istanbul ignore else */
-                if (params.reservationFor.superEvent.id !== undefined) {
-                    andConditions.push(
-                        {
-                            'reservationFor.superEvent.id': {
-                                $exists: true,
-                                $eq: params.reservationFor.superEvent.id
-                            }
-                        }
-                    );
-                }
-                // tslint:disable-next-line:no-single-line-block-comment
-                /* istanbul ignore else */
-                if (Array.isArray(params.reservationFor.superEvent.ids)) {
-                    andConditions.push(
-                        {
-                            'reservationFor.superEvent.id': {
-                                $exists: true,
-                                $in: params.reservationFor.superEvent.ids
-                            }
-                        }
-                    );
-                }
-
-                // tslint:disable-next-line:no-single-line-block-comment
-                /* istanbul ignore else */
-                if (params.reservationFor.superEvent.location !== undefined) {
+                if (params.reservationFor !== undefined) {
                     // tslint:disable-next-line:no-single-line-block-comment
                     /* istanbul ignore else */
-                    if (Array.isArray(params.reservationFor.superEvent.location.ids)) {
+                    if (params.reservationFor.typeOf !== undefined) {
                         andConditions.push(
                             {
-                                'reservationFor.superEvent.location.id': {
+                                'reservationFor.typeOf': {
                                     $exists: true,
-                                    $in: params.reservationFor.superEvent.location.ids
+                                    $eq: params.reservationFor.typeOf
                                 }
                             }
                         );
@@ -289,29 +139,12 @@ export class MongoRepository {
 
                     // tslint:disable-next-line:no-single-line-block-comment
                     /* istanbul ignore else */
-                    if (Array.isArray(params.reservationFor.superEvent.location.branchCodes)) {
+                    if (params.reservationFor.id !== undefined) {
                         andConditions.push(
                             {
-                                'reservationFor.superEvent.location.branchCode': {
+                                'reservationFor.id': {
                                     $exists: true,
-                                    $in: params.reservationFor.superEvent.location.branchCodes
-                                }
-                            }
-                        );
-                    }
-                }
-
-                // tslint:disable-next-line:no-single-line-block-comment
-                /* istanbul ignore else */
-                if (params.reservationFor.superEvent.workPerformed !== undefined) {
-                    // tslint:disable-next-line:no-single-line-block-comment
-                    /* istanbul ignore else */
-                    if (Array.isArray(params.reservationFor.superEvent.workPerformed.ids)) {
-                        andConditions.push(
-                            {
-                                'reservationFor.superEvent.workPerformed.id': {
-                                    $exists: true,
-                                    $in: params.reservationFor.superEvent.workPerformed.ids
+                                    $eq: params.reservationFor.id
                                 }
                             }
                         );
@@ -319,18 +152,195 @@ export class MongoRepository {
 
                     // tslint:disable-next-line:no-single-line-block-comment
                     /* istanbul ignore else */
-                    if (Array.isArray(params.reservationFor.superEvent.workPerformed.identifiers)) {
+                    if (Array.isArray(params.reservationFor.ids)) {
                         andConditions.push(
                             {
-                                'reservationFor.superEvent.workPerformed.identifier': {
+                                'reservationFor.id': {
                                     $exists: true,
-                                    $in: params.reservationFor.superEvent.workPerformed.identifiers
+                                    $in: params.reservationFor.ids
                                 }
                             }
                         );
                     }
+
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (params.reservationFor.location !== undefined) {
+                        // tslint:disable-next-line:no-single-line-block-comment
+                        /* istanbul ignore else */
+                        if (Array.isArray(params.reservationFor.location.ids)) {
+                            andConditions.push(
+                                {
+                                    'reservationFor.location.id': {
+                                        $exists: true,
+                                        $in: params.reservationFor.location.ids
+                                    }
+                                }
+                            );
+                        }
+
+                        // tslint:disable-next-line:no-single-line-block-comment
+                        /* istanbul ignore else */
+                        if (Array.isArray(params.reservationFor.location.branchCodes)) {
+                            andConditions.push(
+                                {
+                                    'reservationFor.location.branchCode': {
+                                        $exists: true,
+                                        $in: params.reservationFor.location.branchCodes
+                                    }
+                                }
+                            );
+                        }
+                    }
+
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (params.reservationFor.startFrom instanceof Date) {
+                        andConditions.push(
+                            {
+                                'reservationFor.startDate': {
+                                    $exists: true,
+                                    $gte: params.reservationFor.startFrom
+                                }
+                            }
+                        );
+                    }
+
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (params.reservationFor.startThrough instanceof Date) {
+                        andConditions.push(
+                            {
+                                'reservationFor.startDate': {
+                                    $exists: true,
+                                    $lt: params.reservationFor.startThrough
+                                }
+                            }
+                        );
+                    }
+
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (params.reservationFor.endFrom instanceof Date) {
+                        andConditions.push(
+                            {
+                                'reservationFor.endDate': {
+                                    $exists: true,
+                                    $gte: params.reservationFor.endFrom
+                                }
+                            }
+                        );
+                    }
+
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (params.reservationFor.endThrough instanceof Date) {
+                        andConditions.push(
+                            {
+                                'reservationFor.endDate': {
+                                    $exists: true,
+                                    $lt: params.reservationFor.endThrough
+                                }
+                            }
+                        );
+                    }
+
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (params.reservationFor.superEvent !== undefined) {
+                        // tslint:disable-next-line:no-single-line-block-comment
+                        /* istanbul ignore else */
+                        if (params.reservationFor.superEvent.id !== undefined) {
+                            andConditions.push(
+                                {
+                                    'reservationFor.superEvent.id': {
+                                        $exists: true,
+                                        $eq: params.reservationFor.superEvent.id
+                                    }
+                                }
+                            );
+                        }
+                        // tslint:disable-next-line:no-single-line-block-comment
+                        /* istanbul ignore else */
+                        if (Array.isArray(params.reservationFor.superEvent.ids)) {
+                            andConditions.push(
+                                {
+                                    'reservationFor.superEvent.id': {
+                                        $exists: true,
+                                        $in: params.reservationFor.superEvent.ids
+                                    }
+                                }
+                            );
+                        }
+
+                        // tslint:disable-next-line:no-single-line-block-comment
+                        /* istanbul ignore else */
+                        if (params.reservationFor.superEvent.location !== undefined) {
+                            // tslint:disable-next-line:no-single-line-block-comment
+                            /* istanbul ignore else */
+                            if (Array.isArray(params.reservationFor.superEvent.location.ids)) {
+                                andConditions.push(
+                                    {
+                                        'reservationFor.superEvent.location.id': {
+                                            $exists: true,
+                                            $in: params.reservationFor.superEvent.location.ids
+                                        }
+                                    }
+                                );
+                            }
+
+                            // tslint:disable-next-line:no-single-line-block-comment
+                            /* istanbul ignore else */
+                            if (Array.isArray(params.reservationFor.superEvent.location.branchCodes)) {
+                                andConditions.push(
+                                    {
+                                        'reservationFor.superEvent.location.branchCode': {
+                                            $exists: true,
+                                            $in: params.reservationFor.superEvent.location.branchCodes
+                                        }
+                                    }
+                                );
+                            }
+                        }
+
+                        // tslint:disable-next-line:no-single-line-block-comment
+                        /* istanbul ignore else */
+                        if (params.reservationFor.superEvent.workPerformed !== undefined) {
+                            // tslint:disable-next-line:no-single-line-block-comment
+                            /* istanbul ignore else */
+                            if (Array.isArray(params.reservationFor.superEvent.workPerformed.ids)) {
+                                andConditions.push(
+                                    {
+                                        'reservationFor.superEvent.workPerformed.id': {
+                                            $exists: true,
+                                            $in: params.reservationFor.superEvent.workPerformed.ids
+                                        }
+                                    }
+                                );
+                            }
+
+                            // tslint:disable-next-line:no-single-line-block-comment
+                            /* istanbul ignore else */
+                            if (Array.isArray(params.reservationFor.superEvent.workPerformed.identifiers)) {
+                                andConditions.push(
+                                    {
+                                        'reservationFor.superEvent.workPerformed.identifier': {
+                                            $exists: true,
+                                            $in: params.reservationFor.superEvent.workPerformed.identifiers
+                                        }
+                                    }
+                                );
+                            }
+                        }
+                    }
                 }
-            }
+
+                break;
+
+            case factory.reservationType.ReservationPackage:
+                break;
+
+            default:
         }
 
         // tslint:disable-next-line:no-single-line-block-comment
