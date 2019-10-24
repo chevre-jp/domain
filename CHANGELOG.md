@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- 予約取引に予約ステータス変更時イベントを追加
+
 ### Changed
 
 ### Deprecated
