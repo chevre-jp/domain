@@ -8,8 +8,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
-- 予約取引に予約ステータス変更時イベントを追加
-
 ### Changed
 
 ### Deprecated
@@ -19,6 +17,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v12.1.0 - 2019-10-25
+
+### Added
+
+- 予約取引に予約ステータス変更時イベントを追加
 
 ## v12.0.0 - 2019-09-20
 
