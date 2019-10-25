@@ -31,6 +31,7 @@ export type IAddReservationsOperation<T> = (repos: {
     place: PlaceRepo;
     priceSpecification: PriceSpecificationRepo;
     reservation: ReservationRepo;
+    task: TaskRepo;
     transaction: TransactionRepo;
 }) => Promise<T>;
 
@@ -38,6 +39,7 @@ export type ICancelOperation<T> = (repos: {
     action: ActionRepo;
     eventAvailability: ScreeningEventAvailabilityRepo;
     reservation: ReservationRepo;
+    task: TaskRepo;
     transaction: TransactionRepo;
 }) => Promise<T>;
 
@@ -73,7 +75,10 @@ export function start(
             // clientUser: params.object.clientUser,
             project: params.project,
             reservationNumber: reservationNumber,
-            typeOf: factory.reservationType.ReservationPackage
+            typeOf: factory.reservationType.ReservationPackage,
+            onReservationStatusChanged: (params.object !== undefined && params.object.onReservationStatusChanged !== undefined)
+                ? params.object.onReservationStatusChanged
+                : {}
         };
 
         const startParams: factory.transaction.IStartParams<factory.transactionType.Reserve> = {
@@ -117,6 +122,7 @@ export function addReservations(params: {
         place: PlaceRepo;
         priceSpecification: PriceSpecificationRepo;
         reservation: ReservationRepo;
+        task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
         const now = new Date();
@@ -265,10 +271,70 @@ export function addReservations(params: {
 
         // 予約作成
         await Promise.all(reservations.map(async (r) => {
-            await repos.reservation.reservationModel.create({ ...r, _id: r.id });
+            const reservation = await repos.reservation.reservationModel.create({ ...r, _id: r.id })
+                .then((doc) => doc.toObject());
+
+            await onReservationCreated(transaction, reservation)(repos);
         }));
 
         return transaction;
+    };
+}
+
+/**
+ * 予約作成時イベント
+ */
+function onReservationCreated(
+    transaction: factory.transaction.ITransaction<factory.transactionType.Reserve>,
+    reservation: factory.reservation.IReservation<any>
+) {
+    return async (repos: {
+        task: TaskRepo;
+    }) => {
+        const now = new Date();
+        const taskAttributes: factory.task.IAttributes[] = [];
+
+        // 予約ステータス変更時イベント
+        if (transaction.object !== undefined && transaction.object.onReservationStatusChanged !== undefined) {
+            if (Array.isArray(transaction.object.onReservationStatusChanged.informReservation)) {
+                taskAttributes.push(...transaction.object.onReservationStatusChanged.informReservation.map(
+                    (a): factory.task.triggerWebhook.IAttributes => {
+                        return {
+                            project: transaction.project,
+                            name: factory.taskName.TriggerWebhook,
+                            status: factory.taskStatus.Ready,
+                            runsAt: now, // なるはやで実行
+                            remainingNumberOfTries: 10,
+                            numberOfTried: 0,
+                            executionResults: [],
+                            data: {
+                                project: transaction.project,
+                                typeOf: factory.actionType.InformAction,
+                                agent: (reservation.reservedTicket !== undefined
+                                    && reservation.reservedTicket.issuedBy !== undefined)
+                                    ? reservation.reservedTicket.issuedBy
+                                    : transaction.project,
+                                recipient: {
+                                    typeOf: transaction.agent.typeOf,
+                                    name: transaction.agent.name,
+                                    ...a.recipient
+                                },
+                                object: reservation,
+                                purpose: {
+                                    typeOf: transaction.typeOf,
+                                    id: transaction.id
+                                }
+                            }
+                        };
+                    })
+                );
+            }
+        }
+
+        // タスク保管
+        await Promise.all(taskAttributes.map(async (taskAttribute) => {
+            return repos.task.save(taskAttribute);
+        }));
     };
 }
 
@@ -407,6 +473,7 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
 
         // 予約アクション属性作成
         const pendingReservations = (Array.isArray(transaction.object.reservations)) ? transaction.object.reservations : [];
+        // tslint:disable-next-line:max-func-body-length
         const reserveActionAttributes: factory.action.reserve.IAttributes[] = pendingReservations.map((reservation) => {
             // 予約日時確定
             reservation.bookingTime = now;
@@ -446,6 +513,7 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
             }
 
             let informReservationActions: factory.action.reserve.IInformReservation[] = [];
+
             // 予約通知アクションの指定があれば設定
             if (params.potentialActions !== undefined
                 && params.potentialActions.reserve !== undefined
@@ -470,6 +538,33 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
                         }
                     };
                 });
+            }
+
+            // 取引に予約ステータス変更時イベントの指定があれば設定
+            if (transaction.object !== undefined && transaction.object.onReservationStatusChanged !== undefined) {
+                if (Array.isArray(transaction.object.onReservationStatusChanged.informReservation)) {
+                    informReservationActions.push(...transaction.object.onReservationStatusChanged.informReservation.map(
+                        (a): factory.action.reserve.IInformReservation => {
+                            return {
+                                project: transaction.project,
+                                typeOf: factory.actionType.InformAction,
+                                agent: (reservation.reservedTicket.issuedBy !== undefined)
+                                    ? reservation.reservedTicket.issuedBy
+                                    : transaction.project,
+                                recipient: {
+                                    typeOf: transaction.agent.typeOf,
+                                    name: transaction.agent.name,
+                                    ...a.recipient
+                                },
+                                object: reservation,
+                                purpose: {
+                                    typeOf: transaction.typeOf,
+                                    id: transaction.id
+                                }
+                            };
+                        })
+                    );
+                }
             }
 
             return {
@@ -508,9 +603,10 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
 export function cancel(params: { id: string }): ICancelOperation<void> {
     return async (repos: {
         action: ActionRepo;
-        reservation: ReservationRepo;
-        transaction: TransactionRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
+        reservation: ReservationRepo;
+        task: TaskRepo;
+        transaction: TransactionRepo;
     }) => {
         // まず取引状態変更
         const transaction = await repos.transaction.cancel({
@@ -522,7 +618,37 @@ export function cancel(params: { id: string }): ICancelOperation<void> {
         // 一応同期的にもcancelPendingReservationを実行しておく
         try {
             const pendingReservations = (Array.isArray(transaction.object.reservations)) ? transaction.object.reservations : [];
-            const actionAttributes: factory.action.cancel.reservation.IAttributes[] = pendingReservations.map((r) => {
+
+            const actionAttributes: factory.action.cancel.reservation.IAttributes[] = pendingReservations.map((reservation) => {
+                const informReservationActions: factory.action.reserve.IInformReservation[] = [];
+
+                // 取引に予約ステータス変更時イベントの指定があれば設定
+                if (transaction.object !== undefined && transaction.object.onReservationStatusChanged !== undefined) {
+                    if (Array.isArray(transaction.object.onReservationStatusChanged.informReservation)) {
+                        informReservationActions.push(...transaction.object.onReservationStatusChanged.informReservation.map(
+                            (a): factory.action.reserve.IInformReservation => {
+                                return {
+                                    project: transaction.project,
+                                    typeOf: factory.actionType.InformAction,
+                                    agent: (reservation.reservedTicket.issuedBy !== undefined)
+                                        ? reservation.reservedTicket.issuedBy
+                                        : transaction.project,
+                                    recipient: {
+                                        typeOf: transaction.agent.typeOf,
+                                        name: transaction.agent.name,
+                                        ...a.recipient
+                                    },
+                                    object: reservation,
+                                    purpose: {
+                                        typeOf: transaction.typeOf,
+                                        id: transaction.id
+                                    }
+                                };
+                            })
+                        );
+                    }
+                }
+
                 return {
                     project: transaction.project,
                     typeOf: <factory.actionType.CancelAction>factory.actionType.CancelAction,
@@ -531,7 +657,10 @@ export function cancel(params: { id: string }): ICancelOperation<void> {
                         id: transaction.id
                     },
                     agent: transaction.agent,
-                    object: r
+                    object: reservation,
+                    potentialActions: {
+                        informReservation: informReservationActions
+                    }
                 };
             });
             await ReserveService.cancelPendingReservation(actionAttributes)(repos);
@@ -567,6 +696,7 @@ export function exportTasks(status: factory.transactionStatusType) {
 /**
  * 取引タスク出力
  */
+// tslint:disable-next-line:max-func-body-length
 export function exportTasksById(params: { id: string }): ITaskAndTransactionOperation<factory.task.ITask[]> {
     return async (repos: {
         task: TaskRepo;
@@ -607,7 +737,36 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
             case factory.transactionStatusType.Canceled:
             case factory.transactionStatusType.Expired:
                 const pendingReservations = (Array.isArray(transaction.object.reservations)) ? transaction.object.reservations : [];
-                const actionAttributes: factory.action.cancel.reservation.IAttributes[] = pendingReservations.map((r) => {
+                const actionAttributes: factory.action.cancel.reservation.IAttributes[] = pendingReservations.map((reservation) => {
+                    const informReservationActions: factory.action.reserve.IInformReservation[] = [];
+
+                    // 取引に予約ステータス変更時イベントの指定があれば設定
+                    if (transaction.object !== undefined && transaction.object.onReservationStatusChanged !== undefined) {
+                        if (Array.isArray(transaction.object.onReservationStatusChanged.informReservation)) {
+                            informReservationActions.push(...transaction.object.onReservationStatusChanged.informReservation.map(
+                                (a): factory.action.reserve.IInformReservation => {
+                                    return {
+                                        project: transaction.project,
+                                        typeOf: factory.actionType.InformAction,
+                                        agent: (reservation.reservedTicket.issuedBy !== undefined)
+                                            ? reservation.reservedTicket.issuedBy
+                                            : transaction.project,
+                                        recipient: {
+                                            typeOf: transaction.agent.typeOf,
+                                            name: transaction.agent.name,
+                                            ...a.recipient
+                                        },
+                                        object: reservation,
+                                        purpose: {
+                                            typeOf: transaction.typeOf,
+                                            id: transaction.id
+                                        }
+                                    };
+                                })
+                            );
+                        }
+                    }
+
                     return {
                         project: transaction.project,
                         typeOf: <factory.actionType.CancelAction>factory.actionType.CancelAction,
@@ -616,9 +775,10 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                             id: transaction.id
                         },
                         agent: transaction.agent,
-                        object: r
+                        object: reservation
                     };
                 });
+
                 const cancelPendingReservationTask: factory.task.cancelPendingReservation.IAttributes = {
                     project: transaction.project,
                     name: factory.taskName.CancelPendingReservation,

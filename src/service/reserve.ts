@@ -110,18 +110,18 @@ function onConfirmed(
 export function cancelPendingReservation(actionAttributesList: factory.action.cancel.reservation.IAttributes[]) {
     return async (repos: {
         action: ActionRepo;
-        reservation: ReservationRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
+        reservation: ReservationRepo;
+        task: TaskRepo;
     }) => {
         await Promise.all(actionAttributesList.map(async (actionAttributes) => {
+            let reservation = actionAttributes.object;
             const reserveTransactionId = actionAttributes.purpose.id;
 
             // アクション開始
             const action = await repos.action.start<factory.actionType.CancelAction>(actionAttributes);
 
             try {
-                const reservation = actionAttributes.object;
-
                 // 予約取引がまだ座席を保持していれば座席ロック解除
                 const ticketedSeat = reservation.reservedTicket.ticketedSeat;
                 if (ticketedSeat !== undefined) {
@@ -144,7 +144,7 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
                     ids: [reservation.id]
                 });
                 if (reservationCount > 0) {
-                    await repos.reservation.cancel({ id: reservation.id });
+                    reservation = await repos.reservation.cancel<factory.reservationType.EventReservation>({ id: reservation.id });
                 }
             } catch (error) {
                 // actionにエラー結果を追加
@@ -161,6 +161,8 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
             // アクション完了
             const actionResult: factory.action.reserve.IResult = {};
             await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+
+            await onCanceled(actionAttributes, reservation)(repos);
         }));
     };
 }
@@ -172,10 +174,10 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
 export function cancelReservation(actionAttributesList: factory.action.cancel.reservation.IAttributes[]) {
     return async (repos: {
         action: ActionRepo;
+        eventAvailability: ScreeningEventAvailabilityRepo;
         reservation: ReservationRepo;
         task: TaskRepo;
         transaction: TransactionRepo;
-        eventAvailability: ScreeningEventAvailabilityRepo;
     }) => {
         await Promise.all(actionAttributesList.map(async (actionAttributes) => {
             let reservation = actionAttributes.object;
