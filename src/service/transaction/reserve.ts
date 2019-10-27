@@ -10,6 +10,7 @@ import { RedisRepository as ScreeningEventAvailabilityRepo } from '../../repo/it
 import { MongoRepository as OfferRepo } from '../../repo/offer';
 import { MongoRepository as PlaceRepo } from '../../repo/place';
 import { MongoRepository as PriceSpecificationRepo } from '../../repo/priceSpecification';
+import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
 import { RedisRepository as ReservationNumberRepo } from '../../repo/reservationNumber';
 import { MongoRepository as TaskRepo } from '../../repo/task';
@@ -20,6 +21,7 @@ import * as OfferService from '../offer';
 import * as ReserveService from '../reserve';
 
 export type IStartOperation<T> = (repos: {
+    project: ProjectRepo;
     reservationNumber: ReservationNumberRepo;
     transaction: TransactionRepo;
 }) => Promise<T>;
@@ -60,10 +62,28 @@ export function start(
     params: factory.transaction.reserve.IStartParamsWithoutDetail
 ): IStartOperation<factory.transaction.ITransaction<factory.transactionType.Reserve>> {
     return async (repos: {
+        project: ProjectRepo;
         reservationNumber: ReservationNumberRepo;
         transaction: TransactionRepo;
     }) => {
         const now = new Date();
+
+        const project = await repos.project.findById({ id: params.project.id });
+
+        const informReservationParams: factory.transaction.reserve.IInformReservationParams[] = [];
+
+        if (project.settings !== undefined
+            && project.settings !== null
+            && project.settings.onReservationStatusChanged !== undefined
+            && Array.isArray(project.settings.onReservationStatusChanged.informReservation)) {
+            informReservationParams.push(...project.settings.onReservationStatusChanged.informReservation);
+        }
+
+        if (params.object !== undefined
+            && params.object.onReservationStatusChanged !== undefined
+            && Array.isArray(params.object.onReservationStatusChanged.informReservation)) {
+            informReservationParams.push(...params.object.onReservationStatusChanged.informReservation);
+        }
 
         // 予約番号発行
         const reservationNumber = await repos.reservationNumber.publishByTimestamp({
@@ -76,9 +96,9 @@ export function start(
             project: params.project,
             reservationNumber: reservationNumber,
             typeOf: factory.reservationType.ReservationPackage,
-            onReservationStatusChanged: (params.object !== undefined && params.object.onReservationStatusChanged !== undefined)
-                ? params.object.onReservationStatusChanged
-                : {}
+            onReservationStatusChanged: {
+                informReservation: informReservationParams
+            }
         };
 
         const startParams: factory.transaction.IStartParams<factory.transactionType.Reserve> = {
@@ -512,32 +532,34 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
                 }
             }
 
-            let informReservationActions: factory.action.reserve.IInformReservation[] = [];
+            const informReservationActions: factory.action.reserve.IInformReservation[] = [];
 
             // 予約通知アクションの指定があれば設定
             if (params.potentialActions !== undefined
                 && params.potentialActions.reserve !== undefined
                 && params.potentialActions.reserve.potentialActions !== undefined
                 && Array.isArray(params.potentialActions.reserve.potentialActions.informReservation)) {
-                informReservationActions = params.potentialActions.reserve.potentialActions.informReservation.map((a) => {
-                    return {
-                        project: transaction.project,
-                        typeOf: factory.actionType.InformAction,
-                        agent: (reservation.reservedTicket.issuedBy !== undefined)
-                            ? reservation.reservedTicket.issuedBy
-                            : transaction.project,
-                        recipient: {
-                            typeOf: transaction.agent.typeOf,
-                            name: transaction.agent.name,
-                            ...a.recipient
-                        },
-                        object: reservation,
-                        purpose: {
-                            typeOf: transaction.typeOf,
-                            id: transaction.id
-                        }
-                    };
-                });
+                informReservationActions.push(...params.potentialActions.reserve.potentialActions.informReservation.map(
+                    (a): factory.action.reserve.IInformReservation => {
+                        return {
+                            project: transaction.project,
+                            typeOf: factory.actionType.InformAction,
+                            agent: (reservation.reservedTicket.issuedBy !== undefined)
+                                ? reservation.reservedTicket.issuedBy
+                                : transaction.project,
+                            recipient: {
+                                typeOf: transaction.agent.typeOf,
+                                name: transaction.agent.name,
+                                ...a.recipient
+                            },
+                            object: reservation,
+                            purpose: {
+                                typeOf: transaction.typeOf,
+                                id: transaction.id
+                            }
+                        };
+                    })
+                );
             }
 
             // 取引に予約ステータス変更時イベントの指定があれば設定
