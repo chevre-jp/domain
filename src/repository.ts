@@ -10,6 +10,7 @@ import { RedisRepository as ScreeningEventItemAvailabilityRepo } from './repo/it
 import { MongoRepository as OfferRepo } from './repo/offer';
 import { MongoRepository as PlaceRepo } from './repo/place';
 import { MongoRepository as PriceSpecificationRepo } from './repo/priceSpecification';
+import { MongoRepository as ProjectRepo } from './repo/project';
 import { MongoRepository as ReservationRepo } from './repo/reservation';
 import { RedisRepository as ReservationNumberRepo } from './repo/reservationNumber';
 import { MongoRepository as ServiceTypeRepo } from './repo/serviceType';
@@ -23,6 +24,7 @@ export class Event extends EventRepo { }
 export class Offer extends OfferRepo { }
 export class Place extends PlaceRepo { }
 export class PriceSpecification extends PriceSpecificationRepo { }
+export class Project extends ProjectRepo { }
 export class Reservation extends ReservationRepo { }
 export class ReservationNumber extends ReservationNumberRepo { }
 export class ServiceType extends ServiceTypeRepo { }

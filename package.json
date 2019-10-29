@@ -13,7 +13,7 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "^2.1.0",
+    "@chevre/factory": "^2.3.0",
     "@motionpicture/coa-service": "^7.0.0",
     "cdigit": "^2.3.7",
     "debug": "^3.2.6",
@@ -103,5 +103,5 @@
     "postversion": "git push origin --tags",
     "prepublishOnly": "npm run clean && npm run build && npm test && npm run doc"
   },
-  "version": "12.1.1"
+  "version": "12.2.0"
 }
