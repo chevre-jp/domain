@@ -113,6 +113,8 @@ export function triggerWebhook(params: factory.task.triggerWebhook.IData) {
                             }
                         }
                     );
+                } else {
+                    resolve();
                 }
             });
         } catch (error) {
