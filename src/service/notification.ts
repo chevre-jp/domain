@@ -84,11 +84,15 @@ export function triggerWebhook(params: factory.task.triggerWebhook.IData) {
         let result: any = {};
 
         try {
-            await new Promise<void>((resolve, reject) => {
-                if (params.recipient !== undefined && typeof params.recipient.url === 'string') {
+            if (params.recipient !== undefined
+                && params.recipient !== null
+                && typeof params.recipient.url === 'string') {
+                const url = params.recipient.url;
+
+                await new Promise<void>((resolve, reject) => {
                     request.post(
                         {
-                            url: params.recipient.url,
+                            url: url,
                             body: {
                                 data: params.object
                             },
@@ -113,10 +117,8 @@ export function triggerWebhook(params: factory.task.triggerWebhook.IData) {
                             }
                         }
                     );
-                } else {
-                    resolve();
-                }
-            });
+                });
+            }
         } catch (error) {
             // actionにエラー結果を追加
             try {
