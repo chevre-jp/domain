@@ -8,10 +8,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
-- プロジェクトリポジトリを追加
-- 予約取消取引に予約ステータス変更時イベントを追加
-- プロジェクトの予約通知設定を取引に反映
-
 ### Changed
 
 ### Deprecated
@@ -21,6 +17,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v12.2.0 - 2019-10-29
+
+### Added
+
+- プロジェクトリポジトリを追加
+- 予約取消取引に予約ステータス変更時イベントを追加
+- プロジェクトの予約通知設定を取引に反映
 
 ## v12.1.1 - 2019-10-29
 
