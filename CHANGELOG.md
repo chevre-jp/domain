@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v12.1.1 - 2019-10-29
+
+### Fixed
+
+- fix trigger webhook bug
+
 ## v12.1.0 - 2019-10-25
 
 ### Added
