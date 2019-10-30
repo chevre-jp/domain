@@ -8,7 +8,9 @@ import * as factory from '../factory';
 import { MongoRepository as EventRepo } from '../repo/event';
 import { MongoRepository as OfferRepo } from '../repo/offer';
 import { MongoRepository as PlaceRepo } from '../repo/place';
+import { MongoRepository as ProjectRepo } from '../repo/project';
 import { MongoRepository as ReservationRepo } from '../repo/reservation';
+import { MongoRepository as TaskRepo } from '../repo/task';
 
 const debug = createDebug('chevre-domain:service');
 
@@ -35,7 +37,9 @@ export type IAggregateScreeningEventOperation<T> = (repos: {
     event: EventRepo;
     offer: OfferRepo;
     place: PlaceRepo;
+    project: ProjectRepo;
     reservation: ReservationRepo;
+    task: TaskRepo;
 }) => Promise<T>;
 
 export interface IAggregateReservation {
@@ -69,12 +73,14 @@ export function aggregateScreeningEvent(params: {
         event: EventRepo;
         offer: OfferRepo;
         place: PlaceRepo;
+        project: ProjectRepo;
         reservation: ReservationRepo;
+        task: TaskRepo;
     }) => {
         const now = new Date();
 
         // 集計対象イベント検索
-        const event = await repos.event.findById<factory.eventType.ScreeningEvent>(params);
+        let event = await repos.event.findById<factory.eventType.ScreeningEvent>(params);
 
         let availableOffers: factory.ticketType.ITicketType[] = [];
         if (event.offers !== undefined) {
@@ -216,12 +222,46 @@ export function aggregateScreeningEvent(params: {
         debug('update:', update);
 
         // 保管
-        await repos.event.eventModel.findOneAndUpdate(
+        const eventDoc = await repos.event.eventModel.findOneAndUpdate(
             { _id: event.id },
             update,
             { new: true }
         )
             .exec();
+        if (eventDoc !== null) {
+            event = eventDoc.toObject();
+
+            // イベント通知タスク
+            const project = await repos.project.findById({ id: event.project.id });
+
+            if (project.settings !== undefined
+                && project.settings.onEventChanged !== undefined
+                && Array.isArray(project.settings.onEventChanged.informEvent)) {
+                await Promise.all(project.settings.onEventChanged.informEvent.map(async (informParams) => {
+                    const triggerWebhookTask: factory.task.triggerWebhook.IAttributes = {
+                        project: event.project,
+                        name: factory.taskName.TriggerWebhook,
+                        status: factory.taskStatus.Ready,
+                        runsAt: new Date(),
+                        remainingNumberOfTries: 3,
+                        numberOfTried: 0,
+                        executionResults: [],
+                        data: {
+                            project: event.project,
+                            typeOf: factory.actionType.InformAction,
+                            agent: event.project,
+                            recipient: {
+                                typeOf: 'Person',
+                                ...informParams.recipient
+                            },
+                            object: event
+                        }
+                    };
+
+                    await repos.task.save(triggerWebhookTask);
+                }));
+            }
+        }
     };
 }
 
