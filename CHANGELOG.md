@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- イベント変更時処理を追加
+
 ### Changed
 
 ### Deprecated
