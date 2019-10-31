@@ -4,6 +4,8 @@ import { format } from 'util';
 import { MongoRepository as EventRepo } from '../repo/event';
 import { MongoRepository as OfferRepo } from '../repo/offer';
 import { MongoRepository as PriceSpecificationRepo } from '../repo/priceSpecification';
+import { MongoRepository as ProjectRepo } from '../repo/project';
+import { MongoRepository as TaskRepo } from '../repo/task';
 
 import * as factory from '../factory';
 
@@ -299,5 +301,65 @@ function coaTicket2offer(params: {
         priceSpecification: unitPriceSpec,
         availability: factory.itemAvailability.InStock,
         eligibleCustomerType: eligibleCustomerType
+    };
+}
+
+/**
+ * イベント変更時処理
+ */
+export function onEventChanged(params: factory.event.IEvent<factory.eventType>) {
+    return async (repos: {
+        event: EventRepo;
+        project: ProjectRepo;
+        task: TaskRepo;
+    }) => {
+        const event = params;
+
+        // ScreeningEventであれば集計タスク
+        if (event.typeOf === factory.eventType.ScreeningEvent) {
+            const aggregateTask: factory.task.aggregateScreeningEvent.IAttributes = {
+                project: event.project,
+                name: factory.taskName.AggregateScreeningEvent,
+                status: factory.taskStatus.Ready,
+                runsAt: new Date(),
+                remainingNumberOfTries: 3,
+                numberOfTried: 0,
+                executionResults: [],
+                data: event
+            };
+
+            await repos.task.save(aggregateTask);
+        } else {
+            // イベント通知タスク
+            const project = await repos.project.findById({ id: event.project.id });
+
+            if (project.settings !== undefined
+                && project.settings.onEventChanged !== undefined
+                && Array.isArray(project.settings.onEventChanged.informEvent)) {
+                await Promise.all(project.settings.onEventChanged.informEvent.map(async (informParams) => {
+                    const triggerWebhookTask: factory.task.triggerWebhook.IAttributes = {
+                        project: event.project,
+                        name: factory.taskName.TriggerWebhook,
+                        status: factory.taskStatus.Ready,
+                        runsAt: new Date(),
+                        remainingNumberOfTries: 3,
+                        numberOfTried: 0,
+                        executionResults: [],
+                        data: {
+                            project: event.project,
+                            typeOf: factory.actionType.InformAction,
+                            agent: event.project,
+                            recipient: {
+                                typeOf: 'Person',
+                                ...informParams.recipient
+                            },
+                            object: event
+                        }
+                    };
+
+                    await repos.task.save(triggerWebhookTask);
+                }));
+            }
+        }
     };
 }
