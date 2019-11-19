@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- 予約のbookingTimeを仮予約時にセットするように調整
+
 ### Deprecated
 
 ### Removed

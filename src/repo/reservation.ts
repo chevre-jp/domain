@@ -84,14 +84,14 @@ export class MongoRepository {
         }
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.modifiedFrom !== undefined) {
+        if (params.modifiedFrom instanceof Date) {
             andConditions.push({
                 modifiedTime: { $gte: params.modifiedFrom }
             });
         }
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.modifiedThrough !== undefined) {
+        if (params.modifiedThrough instanceof Date) {
             andConditions.push({
                 modifiedTime: { $lte: params.modifiedThrough }
             });
@@ -99,7 +99,7 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.bookingFrom !== undefined) {
+        if (params.bookingFrom instanceof Date) {
             andConditions.push({
                 bookingTime: {
                     $exists: true,
@@ -110,7 +110,7 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.bookingThrough !== undefined) {
+        if (params.bookingThrough instanceof Date) {
             andConditions.push({
                 bookingTime: {
                     $exists: true,
