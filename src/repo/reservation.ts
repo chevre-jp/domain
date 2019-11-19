@@ -46,6 +46,42 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
+        if (params.id !== undefined && params.id !== null) {
+            if (typeof params.id.$eq === 'string') {
+                andConditions.push({
+                    _id: {
+                        $eq: params.id.$eq
+                    }
+                });
+            }
+
+            if (typeof params.id.$ne === 'string') {
+                andConditions.push({
+                    _id: {
+                        $ne: params.id.$ne
+                    }
+                });
+            }
+
+            if (Array.isArray(params.id.$in)) {
+                andConditions.push({
+                    _id: {
+                        $in: params.id.$in
+                    }
+                });
+            }
+
+            if (Array.isArray(params.id.$nin)) {
+                andConditions.push({
+                    _id: {
+                        $nin: params.id.$nin
+                    }
+                });
+            }
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
         if (Array.isArray(params.reservationNumbers)) {
             andConditions.push({
                 reservationNumber: {
@@ -56,23 +92,93 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.reservationNumber !== undefined) {
-            andConditions.push({
-                reservationNumber: {
-                    $regex: new RegExp(params.reservationNumber, 'i')
+        if (params.reservationNumber !== undefined && params.reservationNumber !== null) {
+            if (typeof params.reservationNumber === 'string') {
+                andConditions.push({
+                    reservationNumber: {
+                        $regex: new RegExp(params.reservationNumber, 'i')
+                    }
+                });
+            } else {
+                if (typeof params.reservationNumber.$eq === 'string') {
+                    andConditions.push({
+                        reservationNumber: {
+                            $eq: params.reservationNumber.$eq
+                        }
+                    });
                 }
-            });
+
+                if (typeof params.reservationNumber.$ne === 'string') {
+                    andConditions.push({
+                        reservationNumber: {
+                            $ne: params.reservationNumber.$ne
+                        }
+                    });
+                }
+
+                if (Array.isArray(params.reservationNumber.$in)) {
+                    andConditions.push({
+                        reservationNumber: {
+                            $in: params.reservationNumber.$in
+                        }
+                    });
+                }
+
+                if (Array.isArray(params.reservationNumber.$nin)) {
+                    andConditions.push({
+                        reservationNumber: {
+                            $nin: params.reservationNumber.$nin
+                        }
+                    });
+                }
+            }
         }
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.additionalTicketText !== undefined) {
-            andConditions.push({
-                additionalTicketText: {
-                    $exists: true,
-                    $regex: new RegExp(params.additionalTicketText, 'i')
+        if (params.additionalTicketText !== undefined && params.additionalTicketText !== null) {
+            if (typeof params.additionalTicketText === 'string') {
+                andConditions.push({
+                    additionalTicketText: {
+                        $exists: true,
+                        $regex: new RegExp(params.additionalTicketText, 'i')
+                    }
+                });
+            } else {
+                if (typeof params.additionalTicketText.$eq === 'string') {
+                    andConditions.push({
+                        additionalTicketText: {
+                            $exists: true,
+                            $eq: params.additionalTicketText.$eq
+                        }
+                    });
                 }
-            });
+
+                if (typeof params.additionalTicketText.$ne === 'string') {
+                    andConditions.push({
+                        additionalTicketText: {
+                            $ne: params.additionalTicketText.$ne
+                        }
+                    });
+                }
+
+                if (Array.isArray(params.additionalTicketText.$in)) {
+                    andConditions.push({
+                        additionalTicketText: {
+                            $exists: true,
+                            $in: params.additionalTicketText.$in
+                        }
+                    });
+                }
+
+                if (Array.isArray(params.additionalTicketText.$nin)) {
+                    andConditions.push({
+                        additionalTicketText: {
+                            $nin: params.additionalTicketText.$nin
+                        }
+                    });
+                }
+            }
         }
 
         // tslint:disable-next-line:no-single-line-block-comment
@@ -521,6 +627,15 @@ export class MongoRepository {
                         }
                     });
                 }
+
+                if (params.underName.identifier.$elemMatch !== undefined) {
+                    andConditions.push({
+                        'underName.identifier': {
+                            $exists: true,
+                            $elemMatch: params.underName.identifier.$elemMatch
+                        }
+                    });
+                }
             }
 
             // tslint:disable-next-line:no-single-line-block-comment
@@ -578,6 +693,15 @@ export class MongoRepository {
                 andConditions.push({
                     additionalProperty: {
                         $nin: params.additionalProperty.$nin
+                    }
+                });
+            }
+
+            if (params.additionalProperty.$elemMatch !== undefined) {
+                andConditions.push({
+                    additionalProperty: {
+                        $exists: true,
+                        $elemMatch: params.additionalProperty.$elemMatch
                     }
                 });
             }
