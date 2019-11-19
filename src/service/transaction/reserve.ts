@@ -460,6 +460,7 @@ function createReservation(params: {
         typeOf: factory.reservationType.EventReservation,
         id: params.id,
         additionalTicketText: params.reservedTicket.ticketType.name.ja,
+        bookingTime: params.reserveDate,
         modifiedTime: params.reserveDate,
         numSeats: 1,
         price: params.reservedTicket.totalPrice,
@@ -483,8 +484,6 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        const now = new Date();
-
         // 取引存在確認
         const transaction = await repos.transaction.findById({
             typeOf: factory.transactionType.Reserve,
@@ -495,9 +494,6 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
         const pendingReservations = (Array.isArray(transaction.object.reservations)) ? transaction.object.reservations : [];
         // tslint:disable-next-line:max-func-body-length
         const reserveActionAttributes: factory.action.reserve.IAttributes[] = pendingReservations.map((reservation) => {
-            // 予約日時確定
-            reservation.bookingTime = now;
-
             if (params.object !== undefined) {
                 // 予約属性の指定があれば上書き
                 const confirmingReservation = params.object.reservations.find((r) => r.id === reservation.id);

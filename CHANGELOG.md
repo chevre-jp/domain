@@ -18,6 +18,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v12.4.0 - 2019-11-19
+
+### Added
+
+- 予約検索条件を拡張
+
+### Changed
+
+- 予約のbookingTimeを仮予約時にセットするように調整
+
 ## v12.3.0 - 2019-10-31
 
 ### Added
