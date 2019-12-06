@@ -10,9 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- 予約取引に仮予約が存在しない場合に、予約確定タスクが作成されないように調整
-- 予約取引に仮予約が存在しない場合に、予約取消タスクが作成されないように調整
-
 ### Deprecated
 
 ### Removed
@@ -20,6 +17,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v12.5.0 - 2019-12-06
+
+### Changed
+
+- 予約取引に仮予約が存在しない場合に、予約確定タスクが作成されないように調整
+- 予約取引に仮予約が存在しない場合に、予約取消タスクが作成されないように調整
 
 ## v12.4.0 - 2019-11-19
 
