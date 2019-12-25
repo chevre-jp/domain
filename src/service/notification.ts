@@ -10,6 +10,9 @@ import { MongoRepository as ActionRepo } from '../repo/action';
 
 export type Operation<T> = () => Promise<T>;
 
+// tslint:disable-next-line:no-magic-numbers
+const TRIGGER_WEBHOOK_TIMEOUT = (process.env.TRIGGER_WEBHOOK_TIMEOUT !== undefined) ? Number(process.env.TRIGGER_WEBHOOK_TIMEOUT) : 15000;
+
 /**
  * 開発者に報告する
  * @see https://notify-bot.line.me/doc/ja/
@@ -80,6 +83,7 @@ export function triggerWebhook(params: factory.task.triggerWebhook.IData) {
     return async (repos: {
         action: ActionRepo;
     }) => {
+        // アクション開始
         const action = await repos.action.start(params);
         let result: any = {};
 
@@ -96,7 +100,8 @@ export function triggerWebhook(params: factory.task.triggerWebhook.IData) {
                             body: {
                                 data: params.object
                             },
-                            json: true
+                            json: true,
+                            timeout: TRIGGER_WEBHOOK_TIMEOUT
                         },
                         (error, response, body) => {
                             if (error instanceof Error) {
@@ -107,7 +112,10 @@ export function triggerWebhook(params: factory.task.triggerWebhook.IData) {
                                     case CREATED:
                                     case ACCEPTED:
                                     case NO_CONTENT:
-                                        result = body;
+                                        result = {
+                                            statusCode: response.statusCode
+                                            // body: body
+                                        };
                                         resolve();
                                         break;
 
