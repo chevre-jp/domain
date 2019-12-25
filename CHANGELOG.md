@@ -10,8 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- ウェブフック通知にタイムアウトを設定
-
 ### Deprecated
 
 ### Removed
@@ -19,6 +17,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v12.6.0 - 2019-12-25
+
+### Changed
+
+- ウェブフック通知にタイムアウトを設定
 
 ## v12.5.0 - 2019-12-06
 
