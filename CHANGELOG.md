@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v12.6.0 - 2019-12-25
+
+### Changed
+
+- ウェブフック通知にタイムアウトを設定
+
 ## v12.5.0 - 2019-12-06
 
 ### Changed
