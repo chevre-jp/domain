@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- オファーコレクションを追加
+- オファーカタログコレクションを追加
+- メンバーシッププログラムリポジトリを追加
+
 ### Changed
 
 ### Deprecated
