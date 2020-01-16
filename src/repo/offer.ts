@@ -2,22 +2,23 @@ import { Connection, Document } from 'mongoose';
 import * as uniqid from 'uniqid';
 
 import * as factory from '../factory';
-import OfferModel from './mongoose/model/offer';
-import OfferCatalogModel from './mongoose/model/offerCatalog';
-import ProductOfferModel from './mongoose/model/productOffer';
+
+import ProductTicketTypeModel from './mongoose/model/productOffer';
+import TicketTypeModel from './mongoose/model/ticketType';
+import TicketTypeGroupModel from './mongoose/model/ticketTypeGroup';
 
 /**
  * オファーリポジトリ
  */
 export class MongoRepository {
-    public readonly offerModel: typeof OfferModel;
-    public readonly offerCatalogModel: typeof OfferCatalogModel;
-    public readonly productOfferModel: typeof ProductOfferModel;
+    public readonly ticketTypeModel: typeof TicketTypeModel;
+    public readonly ticketTypeGroupModel: typeof TicketTypeGroupModel;
+    public readonly productTicketTypeModel: typeof ProductTicketTypeModel;
 
     constructor(connection: Connection) {
-        this.offerModel = connection.model(OfferModel.modelName);
-        this.offerCatalogModel = connection.model(OfferCatalogModel.modelName);
-        this.productOfferModel = connection.model(ProductOfferModel.modelName);
+        this.ticketTypeModel = connection.model(TicketTypeModel.modelName);
+        this.ticketTypeGroupModel = connection.model(TicketTypeGroupModel.modelName);
+        this.productTicketTypeModel = connection.model(ProductTicketTypeModel.modelName);
     }
 
     // tslint:disable-next-line:max-func-body-length
@@ -198,7 +199,7 @@ export class MongoRepository {
             id: string;
         };
     }): Promise<factory.ticketType.ITicketType[]> {
-        const ticketTypeGroup = await this.offerCatalogModel.findById(
+        const ticketTypeGroup = await this.ticketTypeGroupModel.findById(
             params.offerCatalog.id,
             {
                 __v: 0,
@@ -209,13 +210,13 @@ export class MongoRepository {
             .exec()
             .then((doc) => {
                 if (doc === null) {
-                    throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
+                    throw new factory.errors.NotFound(this.ticketTypeGroupModel.modelName);
                 }
 
                 return doc.toObject();
             });
 
-        return this.offerModel.find(
+        return this.ticketTypeModel.find(
             { _id: { $in: ticketTypeGroup.ticketTypes } },
             {
                 __v: 0,
@@ -235,9 +236,9 @@ export class MongoRepository {
 
         if (params.id === '') {
             const id = uniqid();
-            doc = await this.offerCatalogModel.create({ ...params, _id: id });
+            doc = await this.ticketTypeGroupModel.create({ ...params, _id: id });
         } else {
-            doc = await this.offerCatalogModel.findOneAndUpdate(
+            doc = await this.ticketTypeGroupModel.findOneAndUpdate(
                 { _id: params.id },
                 params,
                 { upsert: false, new: true }
@@ -245,7 +246,7 @@ export class MongoRepository {
                 .exec();
 
             if (doc === null) {
-                throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
+                throw new factory.errors.NotFound(this.ticketTypeGroupModel.modelName);
             }
         }
 
@@ -255,7 +256,7 @@ export class MongoRepository {
     public async findOfferCatalogById(params: {
         id: string;
     }): Promise<factory.ticketType.ITicketTypeGroup> {
-        const doc = await this.offerCatalogModel.findOne(
+        const doc = await this.ticketTypeGroupModel.findOne(
             {
                 _id: params.id
             },
@@ -267,7 +268,7 @@ export class MongoRepository {
         )
             .exec();
         if (doc === null) {
-            throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
+            throw new factory.errors.NotFound(this.ticketTypeGroupModel.modelName);
         }
 
         return doc.toObject();
@@ -278,7 +279,7 @@ export class MongoRepository {
     ): Promise<number> {
         const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
 
-        return this.offerCatalogModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
+        return this.ticketTypeGroupModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
             .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
@@ -290,7 +291,7 @@ export class MongoRepository {
         params: factory.ticketType.ITicketTypeGroupSearchConditions
     ): Promise<factory.ticketType.ITicketTypeGroup[]> {
         const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
-        const query = this.offerCatalogModel.find(
+        const query = this.ticketTypeGroupModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
             {
                 __v: 0,
@@ -315,7 +316,7 @@ export class MongoRepository {
     public async deleteOfferCatalog(params: {
         id: string;
     }) {
-        await this.offerCatalogModel.findOneAndRemove(
+        await this.ticketTypeGroupModel.findOneAndRemove(
             {
                 _id: params.id
             }
@@ -326,7 +327,7 @@ export class MongoRepository {
     public async findOfferById(params: {
         id: string;
     }): Promise<factory.ticketType.ITicketType> {
-        const doc = await this.offerModel.findOne(
+        const doc = await this.ticketTypeModel.findOne(
             {
                 _id: params.id
             },
@@ -338,7 +339,7 @@ export class MongoRepository {
         )
             .exec();
         if (doc === null) {
-            throw new factory.errors.NotFound(this.offerModel.modelName);
+            throw new factory.errors.NotFound(this.ticketTypeModel.modelName);
         }
 
         return doc.toObject();
@@ -349,7 +350,7 @@ export class MongoRepository {
     ): Promise<number> {
         const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
 
-        return this.offerModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
+        return this.ticketTypeModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
             .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
@@ -361,7 +362,7 @@ export class MongoRepository {
         params: factory.ticketType.ITicketTypeSearchConditions
     ): Promise<factory.ticketType.ITicketType[]> {
         const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
-        const query = this.offerModel.find(
+        const query = this.ticketTypeModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
             {
                 __v: 0,
@@ -396,9 +397,9 @@ export class MongoRepository {
 
         if (params.id === '') {
             const id = uniqid();
-            doc = await this.offerModel.create({ ...params, _id: id });
+            doc = await this.ticketTypeModel.create({ ...params, _id: id });
         } else {
-            doc = await this.offerModel.findOneAndUpdate(
+            doc = await this.ticketTypeModel.findOneAndUpdate(
                 { _id: params.id },
                 params,
                 { upsert: false, new: true }
@@ -406,7 +407,7 @@ export class MongoRepository {
                 .exec();
 
             if (doc === null) {
-                throw new factory.errors.NotFound(this.offerModel.modelName);
+                throw new factory.errors.NotFound(this.ticketTypeModel.modelName);
             }
         }
 
@@ -419,7 +420,7 @@ export class MongoRepository {
     public async deleteOffer(params: {
         id: string;
     }) {
-        await this.offerModel.findOneAndRemove(
+        await this.ticketTypeModel.findOneAndRemove(
             {
                 _id: params.id
             }
@@ -432,9 +433,9 @@ export class MongoRepository {
 
         if (params.id === '') {
             const id = uniqid();
-            doc = await this.productOfferModel.create({ ...params, _id: id });
+            doc = await this.productTicketTypeModel.create({ ...params, _id: id });
         } else {
-            doc = await this.productOfferModel.findOneAndUpdate(
+            doc = await this.productTicketTypeModel.findOneAndUpdate(
                 { _id: params.id },
                 params,
                 { upsert: false, new: true }
@@ -442,7 +443,7 @@ export class MongoRepository {
                 .exec();
 
             if (doc === null) {
-                throw new factory.errors.NotFound(this.productOfferModel.modelName);
+                throw new factory.errors.NotFound(this.productTicketTypeModel.modelName);
             }
         }
 
@@ -454,7 +455,7 @@ export class MongoRepository {
     ): Promise<number> {
         const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
 
-        return this.productOfferModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
+        return this.productTicketTypeModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
             .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
@@ -463,7 +464,7 @@ export class MongoRepository {
         params: factory.offer.product.ISearchConditions
     ): Promise<factory.offer.product.IOffer[]> {
         const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
-        const query = this.productOfferModel.find(
+        const query = this.productTicketTypeModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
             {
                 __v: 0,
@@ -493,7 +494,7 @@ export class MongoRepository {
     public async deleteProductOffer(params: {
         id: string;
     }) {
-        await this.productOfferModel.findOneAndRemove(
+        await this.productTicketTypeModel.findOneAndRemove(
             {
                 _id: params.id
             }

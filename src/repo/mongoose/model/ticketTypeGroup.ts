@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 
 import multilingualString from '../schemaTypes/multilingualString';
-import TicketType from './offer';
+import TicketType from './ticketType';
 
 const safe = { j: true, w: 'majority', wtimeout: 10000 };
 

@@ -204,7 +204,7 @@ export function importFromCOA(params: {
                 })
             };
 
-            await repos.offer.offerModel.findByIdAndUpdate(
+            await repos.offer.ticketTypeModel.findByIdAndUpdate(
                 offer.id,
                 {
                     $pull: {
@@ -214,7 +214,7 @@ export function importFromCOA(params: {
             )
                 .exec();
 
-            await repos.offer.offerModel.findByIdAndUpdate(
+            await repos.offer.ticketTypeModel.findByIdAndUpdate(
                 offer.id,
                 {
                     $push: {
