@@ -84,7 +84,7 @@ export function aggregateScreeningEvent(params: {
 
         let availableOffers: factory.ticketType.ITicketType[] = [];
         if (event.offers !== undefined) {
-            availableOffers = await repos.offer.findByOfferCatalogId({ offerCatalog: event.offers });
+            availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: event.offers });
         }
 
         // 座席指定イベントかどうか

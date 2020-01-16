@@ -200,7 +200,7 @@ export class MongoRepository {
         return andConditions;
     }
 
-    public async findByOfferCatalogId(params: {
+    public async findTicketTypesByOfferCatalogId(params: {
         offerCatalog: {
             id: string;
         };
@@ -237,7 +237,7 @@ export class MongoRepository {
     /**
      * 券種グループを保管する
      */
-    public async saveOfferCatalog(params: factory.ticketType.ITicketTypeGroup): Promise<factory.ticketType.ITicketTypeGroup> {
+    public async saveTicketTypeGroup(params: factory.ticketType.ITicketTypeGroup): Promise<factory.ticketType.ITicketTypeGroup> {
         let doc: Document | null;
 
         if (params.id === '') {
@@ -259,7 +259,7 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    public async findOfferCatalogById(params: {
+    public async findTicketTypeGroupById(params: {
         id: string;
     }): Promise<factory.ticketType.ITicketTypeGroup> {
         const doc = await this.ticketTypeGroupModel.findOne(
@@ -280,7 +280,7 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    public async countOfferCatalogs(
+    public async countTicketTypeGroups(
         params: factory.ticketType.ITicketTypeGroupSearchConditions
     ): Promise<number> {
         const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
@@ -293,7 +293,7 @@ export class MongoRepository {
     /**
      * 券種グループを検索する
      */
-    public async searchOfferCatalogs(
+    public async searchTicketTypeGroups(
         params: factory.ticketType.ITicketTypeGroupSearchConditions
     ): Promise<factory.ticketType.ITicketTypeGroup[]> {
         const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
@@ -319,7 +319,7 @@ export class MongoRepository {
     /**
      * 券種グループを削除する
      */
-    public async deleteOfferCatalog(params: {
+    public async deleteTicketTypeGroup(params: {
         id: string;
     }) {
         await this.ticketTypeGroupModel.findOneAndRemove(
@@ -330,7 +330,7 @@ export class MongoRepository {
             .exec();
     }
 
-    public async findOfferById(params: {
+    public async findTicketTypeById(params: {
         id: string;
     }): Promise<factory.ticketType.ITicketType> {
         const doc = await this.ticketTypeModel.findOne(
@@ -351,7 +351,7 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    public async countOffers(
+    public async countTicketTypes(
         params: factory.ticketType.ITicketTypeSearchConditions
     ): Promise<number> {
         const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
@@ -364,7 +364,7 @@ export class MongoRepository {
     /**
      * 券種を検索する
      */
-    public async searchOffers(
+    public async searchTicketTypes(
         params: factory.ticketType.ITicketTypeSearchConditions
     ): Promise<factory.ticketType.ITicketType[]> {
         const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
@@ -398,7 +398,7 @@ export class MongoRepository {
     /**
      * 券種を保管する
      */
-    public async saveOffer(params: factory.ticketType.ITicketType): Promise<factory.ticketType.ITicketType> {
+    public async saveTicketType(params: factory.ticketType.ITicketType): Promise<factory.ticketType.ITicketType> {
         let doc: Document | null;
 
         if (params.id === '') {
@@ -423,7 +423,7 @@ export class MongoRepository {
     /**
      * 券種を削除する
      */
-    public async deleteOffer(params: {
+    public async deleteTicketType(params: {
         id: string;
     }) {
         await this.ticketTypeModel.findOneAndRemove(

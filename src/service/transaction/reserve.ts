@@ -188,7 +188,7 @@ export function addReservations(params: {
 
         // チケット存在確認
         const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
-        const availableOffers = await repos.offer.findByOfferCatalogId({ offerCatalog: eventOffers });
+        const availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: eventOffers });
 
         // 座席情報取得
         const movieTheater = await repos.place.findById({ id: event.superEvent.location.id });

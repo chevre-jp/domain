@@ -45,7 +45,7 @@ export function searchScreeningEventTicketOffers(params: {
             = (Array.isArray(event.superEvent.videoFormat))
                 ? event.superEvent.videoFormat.map((f) => f.typeOf)
                 : [factory.videoFormatType['2D']];
-        const availableOffers = await repos.offer.findByOfferCatalogId({ offerCatalog: screeningEventOffers });
+        const availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: screeningEventOffers });
 
         // 価格仕様を検索する
         // const soundFormatCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
@@ -195,7 +195,7 @@ export function importFromCOA(params: {
         await Promise.all(ticketResults.map(async (ticketResult) => {
             const offer = coaTicket2offer({ project: params.project, theaterCode: params.theaterCode, ticketResult: ticketResult });
 
-            await repos.offer.saveOffer(offer);
+            await repos.offer.saveTicketType(offer);
 
             const additionalProperty: factory.propertyValue.IPropertyValue<string> = {
                 name: 'coaInfo',
