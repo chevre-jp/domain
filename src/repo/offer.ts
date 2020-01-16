@@ -507,4 +507,187 @@ export class MongoRepository {
         )
             .exec();
     }
+
+    public async saveOfferCatalog(params: any): Promise<any> {
+        let doc: Document | null;
+
+        if (params.id === '') {
+            const id = uniqid();
+            doc = await this.offerCatalogModel.create({ ...params, _id: id });
+        } else {
+            doc = await this.offerCatalogModel.findOneAndUpdate(
+                { _id: params.id },
+                params,
+                { upsert: false, new: true }
+            )
+                .exec();
+
+            if (doc === null) {
+                throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
+            }
+        }
+
+        return doc.toObject();
+    }
+
+    public async findOfferCatalogById(params: {
+        id: string;
+    }): Promise<any> {
+        const doc = await this.offerCatalogModel.findOne(
+            {
+                _id: params.id
+            },
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        )
+            .exec();
+        if (doc === null) {
+            throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
+        }
+
+        return doc.toObject();
+    }
+
+    public async countOfferCatalogs(
+        params: any
+    ): Promise<number> {
+        const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
+
+        return this.offerCatalogModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
+            .setOptions({ maxTimeMS: 10000 })
+            .exec();
+    }
+
+    public async searchOfferCatalogs(
+        params: any
+    ): Promise<any[]> {
+        const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
+        const query = this.offerCatalogModel.find(
+            (conditions.length > 0) ? { $and: conditions } : {},
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        );
+        if (params.limit !== undefined && params.page !== undefined) {
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
+        }
+
+        return query.sort({ _id: 1 })
+            .setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
+    }
+
+    public async deleteOfferCatalog(params: {
+        id: string;
+    }) {
+        await this.offerCatalogModel.findOneAndRemove(
+            {
+                _id: params.id
+            }
+        )
+            .exec();
+    }
+
+    public async findById(params: {
+        id: string;
+    }): Promise<any> {
+        const doc = await this.offerModel.findOne(
+            {
+                _id: params.id
+            },
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        )
+            .exec();
+        if (doc === null) {
+            throw new factory.errors.NotFound(this.offerModel.modelName);
+        }
+
+        return doc.toObject();
+    }
+
+    public async count(
+        params: any
+    ): Promise<number> {
+        const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
+
+        return this.offerModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
+            .setOptions({ maxTimeMS: 10000 })
+            .exec();
+    }
+
+    public async search(
+        params: any
+    ): Promise<any[]> {
+        const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
+        const query = this.offerModel.find(
+            (conditions.length > 0) ? { $and: conditions } : {},
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        );
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.limit !== undefined && params.page !== undefined) {
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
+
+        return query.setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
+    }
+
+    public async save(params: any): Promise<any> {
+        let doc: Document | null;
+
+        if (params.id === '') {
+            const id = uniqid();
+            doc = await this.offerModel.create({ ...params, _id: id });
+        } else {
+            doc = await this.offerModel.findOneAndUpdate(
+                { _id: params.id },
+                params,
+                { upsert: false, new: true }
+            )
+                .exec();
+
+            if (doc === null) {
+                throw new factory.errors.NotFound(this.offerModel.modelName);
+            }
+        }
+
+        return doc.toObject();
+    }
+
+    public async deleteById(params: {
+        id: string;
+    }) {
+        await this.offerModel.findOneAndRemove(
+            {
+                _id: params.id
+            }
+        )
+            .exec();
+    }
+
 }
