@@ -27,7 +27,7 @@ export class MongoRepository {
         this.productTicketTypeModel = connection.model(ProductTicketTypeModel.modelName);
     }
 
-    // tslint:disable-next-line:max-func-body-length
+    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     public static CREATE_OFFER_MONGO_CONDITIONS(params: factory.ticketType.ITicketTypeSearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [];
@@ -53,8 +53,22 @@ export class MongoRepository {
             andConditions.push({ _id: { $in: params.ids } });
         }
 
-        if (params.identifier !== undefined) {
-            andConditions.push({ identifier: new RegExp(params.identifier) });
+        if (typeof params.identifier === 'string') {
+            andConditions.push({
+                identifier: {
+                    $exists: true,
+                    $regex: new RegExp(params.identifier)
+                }
+            });
+        } else if (params.identifier !== undefined && params.identifier !== null) {
+            if (typeof params.identifier.$eq === 'string') {
+                andConditions.push({
+                    identifier: {
+                        $exists: true,
+                        $eq: params.identifier.$eq
+                    }
+                });
+            }
         }
 
         if (Array.isArray(params.identifiers)) {
@@ -177,8 +191,22 @@ export class MongoRepository {
             andConditions.push({ _id: new RegExp(params.id) });
         }
 
-        if (params.identifier !== undefined) {
-            andConditions.push({ identifier: new RegExp(params.identifier) });
+        if (typeof params.identifier === 'string') {
+            andConditions.push({
+                identifier: {
+                    $exists: true,
+                    $regex: new RegExp(params.identifier)
+                }
+            });
+        } else if (params.identifier !== undefined && params.identifier !== null) {
+            if (typeof params.identifier.$eq === 'string') {
+                andConditions.push({
+                    identifier: {
+                        $exists: true,
+                        $eq: params.identifier.$eq
+                    }
+                });
+            }
         }
 
         if (params.name !== undefined) {

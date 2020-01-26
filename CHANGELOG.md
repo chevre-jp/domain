@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - オファーリポジトリの券種関連メソッドの名前を変更
 - 各リソースの正規表現検索についてcase insensitivityを無効化
+- 作品検索条件拡張
+- 券種検索条件拡張
+- 券種グループ検索条件拡張
+- 勘定科目検索条件拡張
 
 ### Deprecated
 

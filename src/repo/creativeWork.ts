@@ -36,14 +36,24 @@ export class MongoRepository implements Repository {
             }
         }
 
-        if (params.identifier !== undefined) {
+        if (typeof params.identifier === 'string') {
             andConditions.push({
                 identifier: {
                     $exists: true,
                     $regex: new RegExp(params.identifier)
                 }
             });
+        } else if (params.identifier !== undefined && params.identifier !== null) {
+            if (typeof params.identifier.$eq === 'string') {
+                andConditions.push({
+                    identifier: {
+                        $exists: true,
+                        $eq: params.identifier.$eq
+                    }
+                });
+            }
         }
+
         if (params.name !== undefined) {
             andConditions.push({
                 name: {
