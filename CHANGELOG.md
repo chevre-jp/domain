@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - オファーリポジトリの券種関連メソッドの名前を変更
+- 各リソースの正規表現検索についてcase insensitivityを無効化
 
 ### Deprecated
 

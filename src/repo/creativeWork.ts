@@ -40,7 +40,7 @@ export class MongoRepository implements Repository {
             andConditions.push({
                 identifier: {
                     $exists: true,
-                    $regex: new RegExp(params.identifier, 'i')
+                    $regex: new RegExp(params.identifier)
                 }
             });
         }
@@ -48,7 +48,7 @@ export class MongoRepository implements Repository {
             andConditions.push({
                 name: {
                     $exists: true,
-                    $regex: new RegExp(params.name, 'i')
+                    $regex: new RegExp(params.name)
                 }
             });
         }

@@ -96,7 +96,7 @@ export class MongoRepository {
             if (typeof params.reservationNumber === 'string') {
                 andConditions.push({
                     reservationNumber: {
-                        $regex: new RegExp(params.reservationNumber, 'i')
+                        $regex: new RegExp(params.reservationNumber)
                     }
                 });
             } else {
@@ -141,7 +141,7 @@ export class MongoRepository {
                 andConditions.push({
                     additionalTicketText: {
                         $exists: true,
-                        $regex: new RegExp(params.additionalTicketText, 'i')
+                        $regex: new RegExp(params.additionalTicketText)
                     }
                 });
             } else {
@@ -539,7 +539,7 @@ export class MongoRepository {
                 andConditions.push({
                     'underName.id': {
                         $exists: true,
-                        $regex: new RegExp(params.underName.id, 'i')
+                        $regex: new RegExp(params.underName.id)
                     }
                 });
             }
@@ -550,7 +550,7 @@ export class MongoRepository {
                 andConditions.push({
                     'underName.email': {
                         $exists: true,
-                        $regex: new RegExp(params.underName.email, 'i')
+                        $regex: new RegExp(params.underName.email)
                     }
                 });
             }
@@ -561,7 +561,7 @@ export class MongoRepository {
                 andConditions.push({
                     'underName.name': {
                         $exists: true,
-                        $regex: new RegExp(params.underName.name, 'i')
+                        $regex: new RegExp(params.underName.name)
                     }
                 });
             }
@@ -572,7 +572,7 @@ export class MongoRepository {
                 andConditions.push({
                     'underName.telephone': {
                         $exists: true,
-                        $regex: new RegExp(params.underName.telephone, 'i')
+                        $regex: new RegExp(params.underName.telephone)
                     }
                 });
             }
@@ -583,7 +583,7 @@ export class MongoRepository {
                 andConditions.push({
                     'underName.givenName': {
                         $exists: true,
-                        $regex: new RegExp(params.underName.givenName, 'i')
+                        $regex: new RegExp(params.underName.givenName)
                     }
                 });
             }
@@ -594,7 +594,7 @@ export class MongoRepository {
                 andConditions.push({
                     'underName.familyName': {
                         $exists: true,
-                        $regex: new RegExp(params.underName.familyName, 'i')
+                        $regex: new RegExp(params.underName.familyName)
                     }
                 });
             }

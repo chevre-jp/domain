@@ -35,7 +35,7 @@ export class MongoRepository {
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.name !== undefined) {
-            andConditions.push({ name: new RegExp(params.name, 'i') });
+            andConditions.push({ name: new RegExp(params.name) });
         }
 
         // tslint:disable-next-line:no-single-line-block-comment

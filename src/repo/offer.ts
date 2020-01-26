@@ -46,7 +46,7 @@ export class MongoRepository {
         }
 
         if (params.id !== undefined) {
-            andConditions.push({ _id: new RegExp(params.id, 'i') });
+            andConditions.push({ _id: new RegExp(params.id) });
         }
 
         if (Array.isArray(params.ids)) {
@@ -54,7 +54,7 @@ export class MongoRepository {
         }
 
         if (params.identifier !== undefined) {
-            andConditions.push({ identifier: new RegExp(params.identifier, 'i') });
+            andConditions.push({ identifier: new RegExp(params.identifier) });
         }
 
         if (Array.isArray(params.identifiers)) {
@@ -67,25 +67,25 @@ export class MongoRepository {
                     {
                         'name.ja': {
                             $exists: true,
-                            $regex: new RegExp(params.name, 'i')
+                            $regex: new RegExp(params.name)
                         }
                     },
                     {
                         'name.en': {
                             $exists: true,
-                            $regex: new RegExp(params.name, 'i')
+                            $regex: new RegExp(params.name)
                         }
                     },
                     {
                         'alternateName.ja': {
                             $exists: true,
-                            $regex: new RegExp(params.name, 'i')
+                            $regex: new RegExp(params.name)
                         }
                     },
                     {
                         'alternateName.en': {
                             $exists: true,
-                            $regex: new RegExp(params.name, 'i')
+                            $regex: new RegExp(params.name)
                         }
                     }
                 ]
@@ -174,18 +174,18 @@ export class MongoRepository {
         }
 
         if (params.id !== undefined) {
-            andConditions.push({ _id: new RegExp(params.id, 'i') });
+            andConditions.push({ _id: new RegExp(params.id) });
         }
 
         if (params.identifier !== undefined) {
-            andConditions.push({ identifier: new RegExp(params.identifier, 'i') });
+            andConditions.push({ identifier: new RegExp(params.identifier) });
         }
 
         if (params.name !== undefined) {
             andConditions.push({
                 $or: [
-                    { 'name.ja': new RegExp(params.name, 'i') },
-                    { 'name.en': new RegExp(params.name, 'i') }
+                    { 'name.ja': new RegExp(params.name) },
+                    { 'name.en': new RegExp(params.name) }
                 ]
             });
         }
