@@ -1,4 +1,4 @@
-import { Connection } from 'mongoose';
+import { Connection, Document, QueryCursor } from 'mongoose';
 
 import reservationModel from './mongoose/model/reservation';
 
@@ -755,6 +755,27 @@ export class MongoRepository {
         return query.setOptions({ maxTimeMS: 10000 })
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
+    }
+
+    public stream<T extends factory.reservationType>(params: factory.reservation.ISearchConditions<T>): QueryCursor<Document> {
+        const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
+        const query = this.reservationModel.find((conditions.length > 0) ? { $and: conditions } : {})
+            .select({ __v: 0, createdAt: 0, updatedAt: 0 });
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.limit !== undefined && params.page !== undefined) {
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
+
+        return query.cursor();
     }
 
     public async findById<T extends factory.reservationType>(params: {

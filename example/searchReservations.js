@@ -11,8 +11,8 @@ async function main() {
         limit: 100,
         page: 1,
         typeOf: domain.factory.reservationType.EventReservation,
-        modifiedFrom: moment().add(-3, 'days').toDate(),
-        modifiedThrough: moment().toDate(),
+        // modifiedFrom: moment().add(-3, 'days').toDate(),
+        // modifiedThrough: moment().toDate(),
         reservationStatuses: [domain.factory.reservationStatusType.ReservationConfirmed],
         reservedTicket: {
             ticketedSeat: {

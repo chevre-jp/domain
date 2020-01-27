@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - オファーコレクションを追加
 - オファーカタログコレクションを追加
 - メンバーシッププログラムリポジトリを追加
+- 予約レポートサービスを追加
 
 ### Changed
 
