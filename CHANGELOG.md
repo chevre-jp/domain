@@ -8,10 +8,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- プロダクトリポジトリを追加
 - オファーコレクションを追加
 - オファーカタログコレクションを追加
-- メンバーシッププログラムリポジトリを追加
+- メンバーシップリポジトリを追加
 - 予約レポートサービスを追加
+- メンバーシップ登録取引サービスを追加
 
 ### Changed
 

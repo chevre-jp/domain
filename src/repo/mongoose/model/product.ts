@@ -1,11 +1,11 @@
 import * as mongoose from 'mongoose';
 
-const modelName = 'ProgramMembership';
+const modelName = 'Product';
 
 const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
 /**
- * メンバーシッププログラムスキーマ
+ * プロダクトスキーマ
  */
 const schema = new mongoose.Schema(
     {
@@ -16,7 +16,7 @@ const schema = new mongoose.Schema(
         }
     },
     {
-        collection: 'programMemberships',
+        collection: 'products',
         id: true,
         read: 'primaryPreferred',
         writeConcern: writeConcern,

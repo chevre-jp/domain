@@ -187,6 +187,16 @@ schema.index(
 );
 
 schema.index(
+    { 'object.membershipNumber': 1, startDate: -1 },
+    {
+        name: 'searchByObjectMembershipNumber',
+        partialFilterExpression: {
+            'object.membershipNumber': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { typeOf: 1, status: 1, tasksExportationStatus: 1 },
     { name: 'startExportTasks' }
 );
