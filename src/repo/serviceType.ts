@@ -22,11 +22,11 @@ export class MongoRepository {
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.project !== undefined) {
-            if (Array.isArray(params.project.ids)) {
+            if (Array.isArray((<any>params).project.ids)) {
                 andConditions.push({
                     'project.id': {
                         $exists: true,
-                        $in: params.project.ids
+                        $in: (<any>params).project.ids
                     }
                 });
             }
@@ -35,19 +35,19 @@ export class MongoRepository {
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.name !== undefined) {
-            andConditions.push({ name: new RegExp(params.name) });
+            andConditions.push({ name: new RegExp((<any>params).name) });
         }
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (Array.isArray(params.ids)) {
-            andConditions.push({ _id: { $in: params.ids } });
+        if (Array.isArray((<any>params).ids)) {
+            andConditions.push({ _id: { $in: (<any>params).ids } });
         }
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (Array.isArray(params.identifiers)) {
-            andConditions.push({ identifier: { $in: params.identifiers } });
+        if (Array.isArray((<any>params).identifiers)) {
+            andConditions.push({ identifier: { $in: (<any>params).identifiers } });
         }
 
         return andConditions;

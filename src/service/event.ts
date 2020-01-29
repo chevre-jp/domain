@@ -476,12 +476,9 @@ export function createScreeningEventFromCOA(params: {
             typeOf: 'QuantitativeValue'
         },
         itemOffered: {
-            serviceType: {
+            serviceType: <any>{
                 project: params.project,
-                typeOf: 'ServiceType',
-                id: '',
-                identifier: '',
-                name: ''
+                typeOf: 'CategoryCode'
             }
         }
         // offeredThrough: {

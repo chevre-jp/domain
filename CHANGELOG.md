@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 券種検索条件拡張
 - 券種グループ検索条件拡張
 - 勘定科目検索条件拡張
+- サービスタイプをカテゴリーコードに統合
 
 ### Deprecated
 
