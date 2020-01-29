@@ -46,6 +46,7 @@ export class MongoRepository {
     //     return andConditions;
     // }
 
+    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     public static CREATE_MONGO_CONDITIONS<T extends factory.priceSpecificationType>(
         params: factory.priceSpecification.ISearchConditions<T>
     ) {
@@ -70,6 +71,61 @@ export class MongoRepository {
             andConditions.push({
                 typeOf: params.typeOf
             });
+        }
+
+        if ((<any>params).appliesToCategoryCode !== undefined && (<any>params).appliesToCategoryCode !== null) {
+            if ((<any>params).appliesToCategoryCode.$elemMatch !== undefined && (<any>params).appliesToCategoryCode.$elemMatch !== null) {
+                const categoryCodeElemMatch = (<any>params).appliesToCategoryCode.$elemMatch;
+                andConditions.push({
+                    appliesToCategoryCode: {
+                        $exists: true,
+                        $elemMatch: categoryCodeElemMatch
+                    }
+                });
+            }
+
+            if ((<any>params).appliesToCategoryCode.codeValue !== undefined && (<any>params).appliesToCategoryCode.codeValue !== null) {
+                if (typeof (<any>params).appliesToCategoryCode.codeValue.$eq === 'string') {
+                    andConditions.push({
+                        'appliesToCategoryCode.codeValue': {
+                            $exists: true,
+                            $eq: (<any>params).appliesToCategoryCode.codeValue.$eq
+                        }
+                    });
+                }
+
+                if (Array.isArray((<any>params).appliesToCategoryCode.codeValue.$in)) {
+                    andConditions.push({
+                        'appliesToCategoryCode.codeValue': {
+                            $exists: true,
+                            $in: (<any>params).appliesToCategoryCode.codeValue.$in
+                        }
+                    });
+                }
+            }
+
+            if ((<any>params).appliesToCategoryCode.inCodeSet !== undefined && (<any>params).appliesToCategoryCode.inCodeSet !== null) {
+                if ((<any>params).appliesToCategoryCode.inCodeSet.identifier !== undefined
+                    && (<any>params).appliesToCategoryCode.inCodeSet.identifier !== null) {
+                    if (typeof (<any>params).appliesToCategoryCode.inCodeSet.identifier.$eq === 'string') {
+                        andConditions.push({
+                            'appliesToCategoryCode.inCodeSet.identifier': {
+                                $exists: true,
+                                $eq: (<any>params).appliesToCategoryCode.inCodeSet.identifier.$eq
+                            }
+                        });
+                    }
+
+                    if (Array.isArray((<any>params).appliesToCategoryCode.inCodeSet.identifier.$in)) {
+                        andConditions.push({
+                            'appliesToCategoryCode.inCodeSet.identifier': {
+                                $exists: true,
+                                $in: (<any>params).appliesToCategoryCode.inCodeSet.identifier.$in
+                            }
+                        });
+                    }
+                }
+            }
         }
 
         if (Array.isArray(params.appliesToVideoFormats)) {
@@ -200,6 +256,10 @@ export class MongoRepository {
         if (params.sort !== undefined) {
             query.sort(params.sort);
         }
+
+        // const explainResult = await (<any>query).explain();
+        // console.log(explainResult[0].executionStats.allPlansExecution.map((e: any) => e.executionStages.inputStage));
+        // return;
 
         return query.setOptions({ maxTimeMS: 10000 })
             .exec()

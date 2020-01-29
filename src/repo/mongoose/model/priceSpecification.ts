@@ -158,6 +158,36 @@ schema.index(
 );
 
 schema.index(
+    { appliesToCategoryCode: 1, price: 1 },
+    {
+        name: 'searchByAppliesToCategoryCode',
+        partialFilterExpression: {
+            appliesToCategoryCode: { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'appliesToCategoryCode.codeValue': 1, price: 1 },
+    {
+        name: 'searchByAppliesToCategoryCodeCodeValue',
+        partialFilterExpression: {
+            'appliesToCategoryCode.codeValue': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'appliesToCategoryCode.inCodeSet.identifier': 1, price: 1 },
+    {
+        name: 'searchByAppliesToCategoryCodeInCodeSetIdentifier',
+        partialFilterExpression: {
+            'appliesToCategoryCode.inCodeSet.identifier': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'appliesToMovieTicket.serviceType': 1, price: 1 },
     {
         name: 'searchByAppliesToMovieTicketServiceType',

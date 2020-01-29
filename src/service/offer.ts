@@ -47,53 +47,49 @@ export function searchScreeningEventTicketOffers(params: {
                 : [factory.videoFormatType['2D']];
         const availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: screeningEventOffers });
 
-        // 価格仕様を検索する
-        // const soundFormatCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
-        //     typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
-        //     priceComponent: { typeOf: factory.priceSpecificationType.SoundFormatChargeSpecification }
-        // });
-        // const videoFormatCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
-        //     typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
-        //     priceComponent: { typeOf: factory.priceSpecificationType.VideoFormatChargeSpecification }
-        // });
-        // const movieTicketTypeCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
-        //     typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
-        //     priceComponent: { typeOf: factory.priceSpecificationType.MovieTicketTypeChargeSpecification }
-        // });
-
-        // イベントに関係のある価格仕様に絞り、ひとつの複合価格仕様としてまとめる
         // const soundFormatChargeSpecifications =
-        //     soundFormatCompoundPriceSpecifications.reduce<ISoundFormatChargeSpecification[]>(
-        //         (a, b) => [...a, ...b.priceComponent],
-        //         []
-        //     )
-        //         .filter((spec) => eventSoundFormatTypes.indexOf(spec.appliesToSoundFormat) >= 0);
-
-        const soundFormatChargeSpecifications =
-            await repos.priceSpecification.search<factory.priceSpecificationType.SoundFormatChargeSpecification>({
-                typeOf: factory.priceSpecificationType.SoundFormatChargeSpecification,
-                appliesToSoundFormats: eventSoundFormatTypes
-            });
+        //     await repos.priceSpecification.search<factory.priceSpecificationType.SoundFormatChargeSpecification>({
+        //         typeOf: factory.priceSpecificationType.SoundFormatChargeSpecification,
+        //         appliesToSoundFormats: eventSoundFormatTypes
+        //     });
 
         // const videoFormatChargeSpecifications =
-        //     videoFormatCompoundPriceSpecifications.reduce<IVideoFormatChargeSpecification[]>(
-        //         (a, b) => [...a, ...b.priceComponent],
-        //         []
-        //     )
-        //         .filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
+        //     await repos.priceSpecification.search<factory.priceSpecificationType.VideoFormatChargeSpecification>({
+        //         typeOf: factory.priceSpecificationType.VideoFormatChargeSpecification,
+        //         appliesToVideoFormats: eventVideoFormatTypes
+        //     });
 
-        const videoFormatChargeSpecifications =
-            await repos.priceSpecification.search<factory.priceSpecificationType.VideoFormatChargeSpecification>({
-                typeOf: factory.priceSpecificationType.VideoFormatChargeSpecification,
-                appliesToVideoFormats: eventVideoFormatTypes
+        const soundFormatChargeSpecifications =
+            await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>(<any>{
+                typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
+                appliesToCategoryCode: {
+                    $elemMatch: {
+                        codeValue: { $in: eventSoundFormatTypes },
+                        'inCodeSet.identifier': { $eq: factory.categoryCode.CategorySetIdentifier.SoundFormatType }
+                    }
+                }
             });
 
-        // const movieTicketTypeChargeSpecs =
-        //     movieTicketTypeCompoundPriceSpecifications.reduce<IMovieTicketTypeChargeSpecification[]>(
-        //         (a, b) => [...a, ...b.priceComponent],
-        //         []
-        //     )
-        //         .filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
+        const videoFormatChargeSpecifications =
+            await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>(<any>{
+                typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
+                appliesToCategoryCode: {
+                    $elemMatch: {
+                        codeValue: { $in: eventVideoFormatTypes },
+                        'inCodeSet.identifier': { $eq: factory.categoryCode.CategorySetIdentifier.VideoFormatType }
+                    }
+                }
+            });
+
+        const seatingTypeChargeSpecifications =
+            await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>(<any>{
+                typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
+                appliesToCategoryCode: {
+                    $elemMatch: {
+                        'inCodeSet.identifier': { $eq: factory.categoryCode.CategorySetIdentifier.SeatingType }
+                    }
+                }
+            });
 
         const movieTicketTypeChargeSpecs =
             await repos.priceSpecification.search<factory.priceSpecificationType.MovieTicketTypeChargeSpecification>({
@@ -134,6 +130,7 @@ export function searchScreeningEventTicketOffers(params: {
                         valueAddedTaxIncluded: true,
                         priceComponent: [
                             spec,
+                            ...seatingTypeChargeSpecifications,
                             ...mvtkSpecs
                         ]
                     };
@@ -166,6 +163,7 @@ export function searchScreeningEventTicketOffers(params: {
                     valueAddedTaxIncluded: true,
                     priceComponent: [
                         spec,
+                        ...seatingTypeChargeSpecifications,
                         ...videoFormatChargeSpecifications,
                         ...soundFormatChargeSpecifications
                     ]
