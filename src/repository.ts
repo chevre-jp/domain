@@ -4,6 +4,7 @@
  */
 import { MongoRepository as AccountTitleRepo } from './repo/accountTitle';
 import { MongoRepository as ActionRepo } from './repo/action';
+import { MongoRepository as CategoryCodeRepo } from './repo/categoryCode';
 import { MongoRepository as CreativeWorkRepo } from './repo/creativeWork';
 import { MongoRepository as EventRepo } from './repo/event';
 import { RedisRepository as ScreeningEventItemAvailabilityRepo } from './repo/itemAvailability/screeningEvent';
@@ -21,6 +22,7 @@ import { MongoRepository as TransactionRepo } from './repo/transaction';
 
 export class AccountTitle extends AccountTitleRepo { }
 export class Action extends ActionRepo { }
+export class CategoryCode extends CategoryCodeRepo { }
 export class CreativeWork extends CreativeWorkRepo { }
 export class Event extends EventRepo { }
 export class Offer extends OfferRepo { }
