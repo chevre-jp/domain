@@ -8,19 +8,14 @@ const safe = { j: true, w: 'majority', wtimeout: 10000 };
 const schema = new mongoose.Schema(
     {
         project: mongoose.SchemaTypes.Mixed,
-        _id: String,
-        identifier: mongoose.SchemaTypes.Mixed,
-        typeOf: String,
-        name: String,
-        description: String,
-        additionalProperty: mongoose.SchemaTypes.Mixed
+        _id: String
     },
     {
         collection: 'serviceTypes',
         id: true,
         read: 'primaryPreferred',
         safe: safe,
-        strict: true,
+        strict: false,
         useNestedStrict: true,
         timestamps: {
             createdAt: 'createdAt',
