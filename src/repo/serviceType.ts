@@ -15,6 +15,7 @@ export class MongoRepository {
         this.serviceTypeModel = connection.model(ServiceTypeModel.modelName);
     }
 
+    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     public static CREATE_MONGO_CONDITIONS(params: factory.serviceType.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [];
@@ -34,7 +35,7 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.name !== undefined) {
+        if (typeof params.name === 'string') {
             andConditions.push({ name: new RegExp((<any>params).name) });
         }
 
@@ -48,6 +49,72 @@ export class MongoRepository {
         /* istanbul ignore else */
         if (Array.isArray((<any>params).identifiers)) {
             andConditions.push({ identifier: { $in: (<any>params).identifiers } });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.project !== undefined && params.project !== null) {
+            if (params.project.id !== undefined && params.project.id !== null) {
+                if (typeof params.project.id.$eq === 'string') {
+                    andConditions.push({
+                        'project.id': {
+                            $exists: true,
+                            $eq: params.project.id.$eq
+                        }
+                    });
+                }
+            }
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.name !== undefined && params.name !== null) {
+            if (typeof params.name.$regex === 'string') {
+                andConditions.push({
+                    $or: [
+                        {
+                            'name.ja': {
+                                $exists: true,
+                                $regex: new RegExp(params.name.$regex)
+                            }
+                        },
+                        {
+                            'name.en': {
+                                $exists: true,
+                                $regex: new RegExp(params.name.$regex)
+                            }
+                        }
+                    ]
+                });
+            }
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.codeValue !== undefined && params.codeValue !== null) {
+            if (typeof params.codeValue.$eq === 'string') {
+                andConditions.push({
+                    codeValue: {
+                        $exists: true,
+                        $eq: params.codeValue.$eq
+                    }
+                });
+            }
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.inCodeSet !== undefined && params.inCodeSet !== null) {
+            if (params.inCodeSet.identifier !== undefined && params.inCodeSet.identifier !== null) {
+                if (typeof params.inCodeSet.identifier.$eq === 'string') {
+                    andConditions.push({
+                        'inCodeSet.identifier': {
+                            $exists: true,
+                            $eq: params.inCodeSet.identifier.$eq
+                        }
+                    });
+                }
+            }
         }
 
         return andConditions;
