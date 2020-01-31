@@ -16,7 +16,6 @@ import { MongoRepository as ProgramMembershipRepo } from './repo/programMembersh
 import { MongoRepository as ProjectRepo } from './repo/project';
 import { MongoRepository as ReservationRepo } from './repo/reservation';
 import { RedisRepository as ReservationNumberRepo } from './repo/reservationNumber';
-import { MongoRepository as ServiceTypeRepo } from './repo/serviceType';
 import { MongoRepository as TaskRepo } from './repo/task';
 import { MongoRepository as TransactionRepo } from './repo/transaction';
 
@@ -33,7 +32,6 @@ export class ProgramMembership extends ProgramMembershipRepo { }
 export class Project extends ProjectRepo { }
 export class Reservation extends ReservationRepo { }
 export class ReservationNumber extends ReservationNumberRepo { }
-export class ServiceType extends ServiceTypeRepo { }
 export class Task extends TaskRepo { }
 export class Transaction extends TransactionRepo { }
 export namespace aggregation {
