@@ -81,15 +81,15 @@ export function searchScreeningEventTicketOffers(params: {
                 }
             });
 
-        const seatingTypeChargeSpecifications =
-            await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>(<any>{
-                typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
-                appliesToCategoryCode: {
-                    $elemMatch: {
-                        'inCodeSet.identifier': { $eq: factory.categoryCode.CategorySetIdentifier.SeatingType }
-                    }
-                }
-            });
+        // const seatingTypeChargeSpecifications =
+        //     await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>(<any>{
+        //         typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
+        //         appliesToCategoryCode: {
+        //             $elemMatch: {
+        //                 'inCodeSet.identifier': { $eq: factory.categoryCode.CategorySetIdentifier.SeatingType }
+        //             }
+        //         }
+        //     });
 
         const movieTicketTypeChargeSpecs =
             await repos.priceSpecification.search<factory.priceSpecificationType.MovieTicketTypeChargeSpecification>({
@@ -130,7 +130,7 @@ export function searchScreeningEventTicketOffers(params: {
                         valueAddedTaxIncluded: true,
                         priceComponent: [
                             spec,
-                            ...seatingTypeChargeSpecifications,
+                            // ...seatingTypeChargeSpecifications,
                             ...mvtkSpecs
                         ]
                     };
@@ -163,7 +163,7 @@ export function searchScreeningEventTicketOffers(params: {
                     valueAddedTaxIncluded: true,
                     priceComponent: [
                         spec,
-                        ...seatingTypeChargeSpecifications,
+                        // ...seatingTypeChargeSpecifications,
                         ...videoFormatChargeSpecifications,
                         ...soundFormatChargeSpecifications
                     ]
