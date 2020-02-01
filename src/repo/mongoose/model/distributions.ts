@@ -9,7 +9,7 @@ const schema = new mongoose.Schema(
     {
         project: mongoose.SchemaTypes.Mixed,
         _id: String,
-        name: String
+        name: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'distributions',
