@@ -505,10 +505,10 @@ function createReservation(params: {
         // price: params.reservedTicket.totalPrice,
         price: {
             ...params.ticketOffer.priceSpecification,
-            priceComponent: {
+            priceComponent: [
                 ...params.ticketOffer.priceSpecification.priceComponent,
                 ...params.seatPriceComponent
-            }
+            ]
         },
         priceCurrency: factory.priceCurrency.JPY,
         reservationFor: params.reservationFor,
