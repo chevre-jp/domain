@@ -186,9 +186,12 @@ export function addReservations(params: {
             && serviceOutput.reservedTicket !== undefined
             && serviceOutput.reservedTicket.ticketedSeat === undefined);
 
-        // チケット存在確認
+        // イベントオファー検索
         const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
         const availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: eventOffers });
+
+        // 座席オファー検索
+        const availableSeatOffers = await OfferService.searchEventSeatOffers({ event: { id: event.id } })(repos);
 
         // 座席情報取得
         const movieTheater = await repos.place.findById({ id: event.superEvent.location.id });
@@ -227,6 +230,38 @@ export function addReservations(params: {
 
         // 仮予約作成
         const reservations = await Promise.all(tickets.map(async (ticket, index) => {
+            const ticketOffer = ticketOffers.find((t) => t.id === ticket.ticketType.id);
+            if (ticketOffer === undefined) {
+                throw new factory.errors.NotFound('Ticket Offer');
+            }
+
+            // 座席指定であれば、座席タイプチャージを検索する
+            const seatPriceComponent: factory.place.seat.IPriceComponent[] = [];
+            const ticketedSeat = ticket.ticketedSeat;
+            if (ticketedSeat !== undefined && ticketedSeat !== null) {
+                const availableSeatSectionOffer = availableSeatOffers.find((o) => o.branchCode === ticketedSeat.seatSection);
+                if (availableSeatSectionOffer !== undefined) {
+                    if (Array.isArray(availableSeatSectionOffer.containsPlace)) {
+                        const availableSeat =
+                            availableSeatSectionOffer.containsPlace.find((o) => o.branchCode === ticketedSeat.seatNumber);
+                        if (availableSeat !== undefined) {
+                            if (Array.isArray(availableSeat.offers)) {
+                                if (availableSeat.offers[0] !== undefined) {
+                                    const availableSeatOffer = availableSeat.offers[0];
+                                    if (availableSeatOffer !== undefined) {
+                                        if (availableSeatOffer.priceSpecification !== undefined
+                                            && availableSeatOffer.priceSpecification !== null
+                                            && Array.isArray(availableSeatOffer.priceSpecification.priceComponent)) {
+                                            seatPriceComponent.push(...availableSeatOffer.priceSpecification.priceComponent);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             return createReservation({
                 project: transaction.project,
                 id: `${reservationNumber}-${index}`,
@@ -234,7 +269,9 @@ export function addReservations(params: {
                 agent: transaction.agent,
                 reservationNumber: reservationNumber,
                 reservationFor: event,
-                reservedTicket: ticket
+                reservedTicket: ticket,
+                ticketOffer: ticketOffer,
+                seatPriceComponent: seatPriceComponent
             });
         }));
 
@@ -454,6 +491,8 @@ function createReservation(params: {
     reservationFor: factory.event.screeningEvent.IEvent;
     reservedTicket: factory.reservation.ITicket<factory.reservationType.EventReservation>;
     // additionalProperty: factory.propertyValue.IPropertyValue<string>[];
+    ticketOffer: factory.event.screeningEvent.ITicketOffer;
+    seatPriceComponent: factory.place.seat.IPriceComponent[];
 }): factory.reservation.IReservation<factory.reservationType.EventReservation> {
     return {
         project: params.project,
@@ -463,7 +502,14 @@ function createReservation(params: {
         bookingTime: params.reserveDate,
         modifiedTime: params.reserveDate,
         numSeats: 1,
-        price: params.reservedTicket.totalPrice,
+        // price: params.reservedTicket.totalPrice,
+        price: {
+            ...params.ticketOffer.priceSpecification,
+            priceComponent: {
+                ...params.ticketOffer.priceSpecification.priceComponent,
+                ...params.seatPriceComponent
+            }
+        },
         priceCurrency: factory.priceCurrency.JPY,
         reservationFor: params.reservationFor,
         reservationNumber: params.reservationNumber,

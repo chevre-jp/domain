@@ -2,7 +2,9 @@ import * as COA from '@motionpicture/coa-service';
 import { format } from 'util';
 
 import { MongoRepository as EventRepo } from '../repo/event';
+import { RedisRepository as EventAvailabilityRepo } from '../repo/itemAvailability/screeningEvent';
 import { MongoRepository as OfferRepo } from '../repo/offer';
+import { MongoRepository as PlaceRepo } from '../repo/place';
 import { MongoRepository as PriceSpecificationRepo } from '../repo/priceSpecification';
 import { MongoRepository as ProjectRepo } from '../repo/project';
 import { MongoRepository as TaskRepo } from '../repo/task';
@@ -20,6 +22,103 @@ type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     priceSpecification: PriceSpecificationRepo;
     offer: OfferRepo;
 }) => Promise<T>;
+
+export function searchEventSeatOffers(params: {
+    event: { id: string };
+}) {
+    return async (repos: {
+        event: EventRepo;
+        priceSpecification: PriceSpecificationRepo;
+        eventAvailability: EventAvailabilityRepo;
+        place: PlaceRepo;
+    }): Promise<factory.place.movieTheater.IScreeningRoomSectionOffer[]> => {
+
+        let offers: factory.place.movieTheater.IScreeningRoomSectionOffer[] = [];
+
+        const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
+            id: params.event.id
+        });
+
+        // 座席指定利用可能かどうか
+        const reservedSeatsAvailable = !(
+            event.offers !== undefined
+            && event.offers.itemOffered !== undefined
+            && event.offers.itemOffered.serviceOutput !== undefined
+            && event.offers.itemOffered.serviceOutput.reservedTicket !== undefined
+            && event.offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat === undefined
+        );
+
+        if (reservedSeatsAvailable) {
+            // 座席タイプ価格仕様を検索
+            const priceSpecs =
+                await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>({
+                    limit: 100,
+                    project: { ids: [event.project.id] },
+                    typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
+                    ...{
+                        appliesToCategoryCode: {
+                            inCodeSet: { identifier: { $eq: factory.categoryCode.CategorySetIdentifier.SeatingType } }
+                        }
+                    }
+                });
+
+            const unavailableOffers = await repos.eventAvailability.findUnavailableOffersByEventId({ eventId: params.event.id });
+            const movieTheater = await repos.place.findById({ id: event.superEvent.location.id });
+            const screeningRoom = <factory.place.movieTheater.IScreeningRoom>movieTheater.containsPlace.find(
+                (p) => p.branchCode === event.location.branchCode
+            );
+            if (screeningRoom === undefined) {
+                throw new factory.errors.NotFound(factory.placeType.ScreeningRoom);
+            }
+
+            offers = screeningRoom.containsPlace;
+            offers.forEach((offer) => {
+                const seats = offer.containsPlace;
+                const seatSection = offer.branchCode;
+                seats.forEach((seat) => {
+                    const seatNumber = seat.branchCode;
+                    const unavailableOffer = unavailableOffers.find(
+                        (o) => o.seatSection === seatSection && o.seatNumber === seatNumber
+                    );
+
+                    const priceComponent: factory.place.seat.IPriceComponent[] = [];
+
+                    // 座席タイプが指定されていれば、適用される価格仕様を構成要素に追加
+                    if (typeof seat.seatingType === 'string' && seat.seatingType.length > 0) {
+                        priceComponent.push(...priceSpecs.filter((s) => {
+                            // 適用カテゴリーコードに座席タイプが含まれる価格仕様を検索
+                            return (Array.isArray(s.appliesToCategoryCode))
+                                && s.appliesToCategoryCode.some((categoryCode) => {
+                                    return categoryCode.codeValue === seat.seatingType
+                                        // tslint:disable-next-line:max-line-length
+                                        && categoryCode.inCodeSet.identifier === factory.categoryCode.CategorySetIdentifier.SeatingType;
+                                });
+                        }));
+                    }
+
+                    const priceSpecification: factory.place.seat.IPriceSpecification = {
+                        project: event.project,
+                        typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
+                        priceCurrency: factory.priceCurrency.JPY,
+                        valueAddedTaxIncluded: true,
+                        priceComponent: priceComponent
+                    };
+
+                    seat.offers = [{
+                        typeOf: 'Offer',
+                        priceCurrency: factory.priceCurrency.JPY,
+                        availability: (unavailableOffer !== undefined)
+                            ? factory.itemAvailability.OutOfStock
+                            : factory.itemAvailability.InStock,
+                        priceSpecification: priceSpecification
+                    }];
+                });
+            });
+        }
+
+        return offers;
+    };
+}
 
 /**
  * 上映イベントに対するオファーを検索する
