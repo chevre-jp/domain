@@ -28,7 +28,7 @@ export class MongoRepository {
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
-    public static CREATE_OFFER_MONGO_CONDITIONS(params: factory.ticketType.ITicketTypeSearchConditions) {
+    public static CREATE_TICKET_TYPE_MONGO_CONDITIONS(params: factory.ticketType.ITicketTypeSearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [];
 
@@ -164,6 +164,70 @@ export class MongoRepository {
                         $in: params.category.ids
                     }
                 });
+            }
+        }
+
+        return andConditions;
+    }
+
+    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
+    public static CREATE_OFFER_MONGO_CONDITIONS(params: factory.offer.ISearchConditions) {
+        // MongoDB検索条件
+        const andConditions: any[] = [];
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.project !== undefined && params.project !== null) {
+            if (params.project.id !== undefined && params.project.id !== null) {
+                if (typeof params.project.id.$eq === 'string') {
+                    andConditions.push({
+                        'project.id': {
+                            $exists: true,
+                            $eq: params.project.id.$eq
+                        }
+                    });
+                }
+            }
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.id !== undefined && params.id !== null) {
+            if (typeof params.id.$eq === 'string') {
+                andConditions.push({
+                    _id: {
+                        $exists: true,
+                        $eq: params.id.$eq
+                    }
+                });
+            }
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.identifier !== undefined && params.identifier !== null) {
+            if (typeof params.identifier.$eq === 'string') {
+                andConditions.push({
+                    identifier: {
+                        $exists: true,
+                        $eq: params.identifier.$eq
+                    }
+                });
+            }
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.itemOffered !== undefined && params.itemOffered !== null) {
+            if (params.itemOffered.typeOf !== undefined && params.itemOffered.typeOf !== null) {
+                if (typeof params.itemOffered.typeOf.$eq === 'string') {
+                    andConditions.push({
+                        'itemOffered.typeOf': {
+                            $exists: true,
+                            $eq: params.itemOffered.typeOf.$eq
+                        }
+                    });
+                }
             }
         }
 
@@ -382,7 +446,7 @@ export class MongoRepository {
     public async countTicketTypes(
         params: factory.ticketType.ITicketTypeSearchConditions
     ): Promise<number> {
-        const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
+        const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
 
         return this.ticketTypeModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
             .setOptions({ maxTimeMS: 10000 })
@@ -395,7 +459,7 @@ export class MongoRepository {
     public async searchTicketTypes(
         params: factory.ticketType.ITicketTypeSearchConditions
     ): Promise<factory.ticketType.ITicketType[]> {
-        const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
+        const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
         const query = this.ticketTypeModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
             {
@@ -485,7 +549,7 @@ export class MongoRepository {
     }
 
     public async countProductOffers(
-        params: factory.offer.product.ISearchConditions
+        params: factory.offer.ISearchConditions
     ): Promise<number> {
         const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
 
@@ -495,7 +559,7 @@ export class MongoRepository {
     }
 
     public async searchProductOffers(
-        params: factory.offer.product.ISearchConditions
+        params: factory.offer.ISearchConditions
     ): Promise<factory.offer.product.IOffer[]> {
         const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
         const query = this.productTicketTypeModel.find(
@@ -625,7 +689,7 @@ export class MongoRepository {
 
     public async findById(params: {
         id: string;
-    }): Promise<any> {
+    }): Promise<factory.offer.IOffer> {
         const doc = await this.offerModel.findOne(
             {
                 _id: params.id
@@ -645,7 +709,7 @@ export class MongoRepository {
     }
 
     public async count(
-        params: any
+        params: factory.offer.ISearchConditions
     ): Promise<number> {
         const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
 
@@ -655,8 +719,8 @@ export class MongoRepository {
     }
 
     public async search(
-        params: any
-    ): Promise<any[]> {
+        params: factory.offer.ISearchConditions
+    ): Promise<factory.offer.IOffer[]> {
         const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
         const query = this.offerModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
@@ -685,7 +749,7 @@ export class MongoRepository {
             .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
-    public async save(params: any): Promise<any> {
+    public async save(params: factory.offer.IOffer): Promise<factory.offer.IOffer> {
         let doc: Document | null;
 
         if (params.id === '') {
