@@ -185,10 +185,7 @@ export function searchScreeningEventTicketOffers(params: {
             movieTicketOffers = availableOffers
                 .filter((t) => t.priceSpecification !== undefined)
                 .filter((t) => {
-                    const spec = {
-                        ...<factory.ticketType.IPriceSpecification>t.priceSpecification,
-                        name: t.name
-                    };
+                    const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
                     const movieTicketType = spec.appliesToMovieTicketType;
 
                     return movieTicketType !== undefined
@@ -197,7 +194,10 @@ export function searchScreeningEventTicketOffers(params: {
                         && movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketType).length > 0;
                 })
                 .map((t) => {
-                    const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
+                    const spec = {
+                        ...<factory.ticketType.IPriceSpecification>t.priceSpecification,
+                        name: t.name
+                    };
 
                     const movieTicketType = <string>spec.appliesToMovieTicketType;
                     const mvtkSpecs = movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketType);
@@ -225,16 +225,16 @@ export function searchScreeningEventTicketOffers(params: {
         const ticketTypeOffers = availableOffers
             .filter((t) => t.priceSpecification !== undefined)
             .filter((t) => {
-                const spec = {
-                    ...<factory.ticketType.IPriceSpecification>t.priceSpecification,
-                    name: t.name
-                };
+                const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
 
                 return spec.appliesToMovieTicketType === undefined
                     || spec.appliesToMovieTicketType === '';
             })
             .map((t) => {
-                const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
+                const spec = {
+                    ...<factory.ticketType.IPriceSpecification>t.priceSpecification,
+                    name: t.name
+                };
 
                 const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
                     project: event.project,
