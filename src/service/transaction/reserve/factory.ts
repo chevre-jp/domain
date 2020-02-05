@@ -158,6 +158,7 @@ export function createReservation(params: {
                 return {
                     project: params.project,
                     typeOf: factory.priceSpecificationType.UnitPriceSpecification,
+                    name: acceptedAddOnPriceSpec.name,
                     price: acceptedAddOnPriceSpec.price,
                     priceCurrency: acceptedAddOnPriceSpec.priceCurrency,
                     referenceQuantity: acceptedAddOnPriceSpec.referenceQuantity,

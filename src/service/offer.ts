@@ -11,18 +11,15 @@ import { MongoRepository as TaskRepo } from '../repo/task';
 
 import * as factory from '../factory';
 
-// type IMovieTicketTypeChargeSpecification =
-//     factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.MovieTicketTypeChargeSpecification>;
-// type ISoundFormatChargeSpecification =
-//     factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.SoundFormatChargeSpecification>;
-// type IVideoFormatChargeSpecification =
-//     factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.VideoFormatChargeSpecification>;
 type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     event: EventRepo;
     priceSpecification: PriceSpecificationRepo;
     offer: OfferRepo;
 }) => Promise<T>;
 
+/**
+ * イベントに対する座席オファーを検索する
+ */
 export function searchEventSeatOffers(params: {
     event: { id: string };
 }) {
@@ -122,7 +119,7 @@ export function searchEventSeatOffers(params: {
 }
 
 /**
- * 上映イベントに対するオファーを検索する
+ * イベントに対するオファーを検索する
  */
 export function searchScreeningEventTicketOffers(params: {
     eventId: string;
@@ -147,18 +144,6 @@ export function searchScreeningEventTicketOffers(params: {
                 : [factory.videoFormatType['2D']];
         const availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: screeningEventOffers });
 
-        // const soundFormatChargeSpecifications =
-        //     await repos.priceSpecification.search<factory.priceSpecificationType.SoundFormatChargeSpecification>({
-        //         typeOf: factory.priceSpecificationType.SoundFormatChargeSpecification,
-        //         appliesToSoundFormats: eventSoundFormatTypes
-        //     });
-
-        // const videoFormatChargeSpecifications =
-        //     await repos.priceSpecification.search<factory.priceSpecificationType.VideoFormatChargeSpecification>({
-        //         typeOf: factory.priceSpecificationType.VideoFormatChargeSpecification,
-        //         appliesToVideoFormats: eventVideoFormatTypes
-        //     });
-
         const soundFormatChargeSpecifications =
             await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>(<any>{
                 typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
@@ -181,16 +166,6 @@ export function searchScreeningEventTicketOffers(params: {
                 }
             });
 
-        // const seatingTypeChargeSpecifications =
-        //     await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>(<any>{
-        //         typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
-        //         appliesToCategoryCode: {
-        //             $elemMatch: {
-        //                 'inCodeSet.identifier': { $eq: factory.categoryCode.CategorySetIdentifier.SeatingType }
-        //             }
-        //         }
-        //     });
-
         const movieTicketTypeChargeSpecs =
             await repos.priceSpecification.search<factory.priceSpecificationType.MovieTicketTypeChargeSpecification>({
                 typeOf: factory.priceSpecificationType.MovieTicketTypeChargeSpecification,
@@ -210,7 +185,10 @@ export function searchScreeningEventTicketOffers(params: {
             movieTicketOffers = availableOffers
                 .filter((t) => t.priceSpecification !== undefined)
                 .filter((t) => {
-                    const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
+                    const spec = {
+                        ...<factory.ticketType.IPriceSpecification>t.priceSpecification,
+                        name: t.name
+                    };
                     const movieTicketType = spec.appliesToMovieTicketType;
 
                     return movieTicketType !== undefined
@@ -230,7 +208,6 @@ export function searchScreeningEventTicketOffers(params: {
                         valueAddedTaxIncluded: true,
                         priceComponent: [
                             spec,
-                            // ...seatingTypeChargeSpecifications,
                             ...mvtkSpecs
                         ]
                     };
@@ -248,7 +225,10 @@ export function searchScreeningEventTicketOffers(params: {
         const ticketTypeOffers = availableOffers
             .filter((t) => t.priceSpecification !== undefined)
             .filter((t) => {
-                const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
+                const spec = {
+                    ...<factory.ticketType.IPriceSpecification>t.priceSpecification,
+                    name: t.name
+                };
 
                 return spec.appliesToMovieTicketType === undefined
                     || spec.appliesToMovieTicketType === '';
@@ -263,7 +243,6 @@ export function searchScreeningEventTicketOffers(params: {
                     valueAddedTaxIncluded: true,
                     priceComponent: [
                         spec,
-                        // ...seatingTypeChargeSpecifications,
                         ...videoFormatChargeSpecifications,
                         ...soundFormatChargeSpecifications
                     ]
