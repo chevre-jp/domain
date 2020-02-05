@@ -5,7 +5,6 @@ import * as factory from '../factory';
 
 import OfferModel from './mongoose/model/offer';
 import OfferCatalogModel from './mongoose/model/offerCatalog';
-import ProductTicketTypeModel from './mongoose/model/productOffer';
 import TicketTypeModel from './mongoose/model/ticketType';
 import TicketTypeGroupModel from './mongoose/model/ticketTypeGroup';
 
@@ -17,14 +16,12 @@ export class MongoRepository {
     public readonly offerCatalogModel: typeof OfferCatalogModel;
     public readonly ticketTypeModel: typeof TicketTypeModel;
     public readonly ticketTypeGroupModel: typeof TicketTypeGroupModel;
-    public readonly productTicketTypeModel: typeof ProductTicketTypeModel;
 
     constructor(connection: Connection) {
         this.offerModel = connection.model(OfferModel.modelName);
         this.offerCatalogModel = connection.model(OfferCatalogModel.modelName);
         this.ticketTypeModel = connection.model(TicketTypeModel.modelName);
         this.ticketTypeGroupModel = connection.model(TicketTypeGroupModel.modelName);
-        this.productTicketTypeModel = connection.model(ProductTicketTypeModel.modelName);
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
@@ -519,80 +516,6 @@ export class MongoRepository {
         id: string;
     }) {
         await this.ticketTypeModel.findOneAndRemove(
-            {
-                _id: params.id
-            }
-        )
-            .exec();
-    }
-
-    public async saveProductOffer(params: factory.offer.product.IOffer): Promise<factory.offer.product.IOffer> {
-        let doc: Document | null;
-
-        if (params.id === '') {
-            const id = uniqid();
-            doc = await this.productTicketTypeModel.create({ ...params, _id: id });
-        } else {
-            doc = await this.productTicketTypeModel.findOneAndUpdate(
-                { _id: params.id },
-                params,
-                { upsert: false, new: true }
-            )
-                .exec();
-
-            if (doc === null) {
-                throw new factory.errors.NotFound(this.productTicketTypeModel.modelName);
-            }
-        }
-
-        return doc.toObject();
-    }
-
-    public async countProductOffers(
-        params: factory.offer.ISearchConditions
-    ): Promise<number> {
-        const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
-
-        return this.productTicketTypeModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
-            .setOptions({ maxTimeMS: 10000 })
-            .exec();
-    }
-
-    public async searchProductOffers(
-        params: factory.offer.ISearchConditions
-    ): Promise<factory.offer.product.IOffer[]> {
-        const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
-        const query = this.productTicketTypeModel.find(
-            (conditions.length > 0) ? { $and: conditions } : {},
-            {
-                __v: 0,
-                createdAt: 0,
-                updatedAt: 0
-            }
-        );
-
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit)
-                .skip(params.limit * (params.page - 1));
-        }
-
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.sort !== undefined) {
-            query.sort(params.sort);
-        }
-
-        return query.setOptions({ maxTimeMS: 10000 })
-            .exec()
-            .then((docs) => docs.map((doc) => doc.toObject()));
-    }
-
-    public async deleteProductOffer(params: {
-        id: string;
-    }) {
-        await this.productTicketTypeModel.findOneAndRemove(
             {
                 _id: params.id
             }
