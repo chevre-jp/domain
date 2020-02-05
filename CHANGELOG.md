@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 配給区分をカテゴリーコードに統合
 - 座席に対するオファーインターフェースを拡張
 - 予約の価格仕様インターフェースを拡張
+- 予約にアドオンを指定できるように調整
 
 ### Deprecated
 

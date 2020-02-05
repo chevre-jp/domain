@@ -130,6 +130,8 @@ export function createReservedTicket(params: {
     };
 }
 
+export type IUnitPriceSpecification = factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>;
+
 export function createReservation(params: {
     project: factory.project.IProject;
     id: string;
@@ -141,7 +143,38 @@ export function createReservation(params: {
     // additionalProperty: factory.propertyValue.IPropertyValue<string>[];
     ticketOffer: factory.event.screeningEvent.ITicketOffer;
     seatPriceComponent: factory.place.seat.IPriceComponent[];
+    acceptedAddOns: factory.offer.IAddOn[];
 }): factory.reservation.IReservation<factory.reservationType.EventReservation> {
+    // acceptedAddOnsがあればアドオンに対する単価仕様を価格構成に追加
+    let unitPriceSpecsAppliedToAddOn: IUnitPriceSpecification[] = [];
+    if (Array.isArray(params.acceptedAddOns)) {
+        unitPriceSpecsAppliedToAddOn = params.acceptedAddOns.map<IUnitPriceSpecification>(
+            (acceptedAddOn) => {
+                const acceptedAddOnPriceSpec = <IUnitPriceSpecification>acceptedAddOn.priceSpecification;
+                if (acceptedAddOnPriceSpec === undefined || acceptedAddOnPriceSpec === null) {
+                    throw new factory.errors.NotFound('AddOn PriceSpecification');
+                }
+
+                return {
+                    project: params.project,
+                    typeOf: factory.priceSpecificationType.UnitPriceSpecification,
+                    price: acceptedAddOnPriceSpec.price,
+                    priceCurrency: acceptedAddOnPriceSpec.priceCurrency,
+                    referenceQuantity: acceptedAddOnPriceSpec.referenceQuantity,
+                    valueAddedTaxIncluded: acceptedAddOnPriceSpec.valueAddedTaxIncluded,
+                    appliesToAddOn: [{
+                        project: acceptedAddOn.project,
+                        typeOf: acceptedAddOn.typeOf,
+                        id: acceptedAddOn.id,
+                        identifier: acceptedAddOn.identifier,
+                        itemOffered: acceptedAddOn.itemOffered,
+                        priceCurrency: acceptedAddOn.priceCurrency
+                    }]
+                };
+            }
+        );
+    }
+
     return {
         project: params.project,
         typeOf: factory.reservationType.EventReservation,
@@ -154,7 +187,8 @@ export function createReservation(params: {
             ...params.ticketOffer.priceSpecification,
             priceComponent: [
                 ...params.ticketOffer.priceSpecification.priceComponent,
-                ...params.seatPriceComponent
+                ...params.seatPriceComponent,
+                ...unitPriceSpecsAppliedToAddOn
             ]
         },
         priceCurrency: factory.priceCurrency.JPY,

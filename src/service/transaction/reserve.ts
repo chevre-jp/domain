@@ -174,19 +174,6 @@ export function addReservations(params: {
         }
 
         const acceptedOffers = (Array.isArray(params.object.acceptedOffer)) ? params.object.acceptedOffer : [];
-        // const tickets: factory.reservation.ITicket<factory.reservationType.EventReservation>[] =
-        //     acceptedOffers.map((offer) => {
-        //         return createTicket({
-        //             acceptedOffer: offer,
-        //             availableOffers: availableOffers,
-        //             dateIssued: now,
-        //             event: event,
-        //             reservedSeatsOnly: reservedSeatsOnly,
-        //             screeningRoomSections: availableSeatOffers,
-        //             ticketOffers: ticketOffers,
-        //             transaction: transaction
-        //         });
-        //     });
 
         // 仮予約作成
         const reservations = acceptedOffers.map((acceptedOffer, index) => {
@@ -239,6 +226,16 @@ export function addReservations(params: {
                 }
             }
 
+            // 指定されたアドオンがオファーに存在すれば、アドオンの単価仕様作成
+            let acceptedAddOns: factory.offer.IAddOn[] = [];
+            const acceptedAddOnParams = acceptedOffer.addOn;
+            const availableAddOns = ticketOffer.addOn;
+            if (Array.isArray(availableAddOns) && Array.isArray(acceptedAddOnParams)) {
+                acceptedAddOns = availableAddOns.filter(
+                    (availableAddOn) => acceptedAddOnParams.some((acceptedAddOn) => availableAddOn.id === acceptedAddOn.id)
+                );
+            }
+
             return createReservation({
                 project: transaction.project,
                 id: `${reservationNumber}-${index}`,
@@ -248,7 +245,8 @@ export function addReservations(params: {
                 reservationFor: event,
                 reservedTicket: reservedTicket,
                 ticketOffer: ticketOffer,
-                seatPriceComponent: seatPriceComponent
+                seatPriceComponent: seatPriceComponent,
+                acceptedAddOns: acceptedAddOns
             });
         });
 

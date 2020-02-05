@@ -105,6 +105,7 @@ export function searchEventSeatOffers(params: {
                     };
 
                     seat.offers = [{
+                        project: event.project,
                         typeOf: 'Offer',
                         priceCurrency: factory.priceCurrency.JPY,
                         availability: (unavailableOffer !== undefined)

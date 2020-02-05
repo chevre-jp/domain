@@ -137,15 +137,6 @@ export class MongoRepository {
             });
         }
 
-        if (Array.isArray(params.appliesToSoundFormats)) {
-            andConditions.push({
-                appliesToSoundFormat: {
-                    $exists: true,
-                    $in: params.appliesToSoundFormats
-                }
-            });
-        }
-
         if (params.appliesToMovieTicket !== undefined) {
             if (Array.isArray(params.appliesToMovieTicket.serviceTypes)) {
                 andConditions.push({

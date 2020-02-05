@@ -458,6 +458,7 @@ export function createScreeningEventFromCOA(params: {
     //     (params.screeningEventSeries.offers !== undefined) ? params.screeningEventSeries.offers.acceptedPaymentMethod : undefined;
 
     const offers: factory.event.screeningEvent.IOffer = {
+        project: { typeOf: params.project.typeOf, id: params.project.id },
         id: '',
         name: {
             ja: '',
@@ -618,6 +619,7 @@ export function createScreeningEventSeriesFromCOA(params: {
         startDate: startDate,
         coaInfo: coaInfo,
         offers: {
+            project: { typeOf: params.project.typeOf, id: params.project.id },
             typeOf: 'Offer',
             priceCurrency: factory.priceCurrency.JPY,
             acceptedPaymentMethod: acceptedPaymentMethod
