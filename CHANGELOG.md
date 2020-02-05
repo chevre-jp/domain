@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - メンバーシップ登録取引サービスを追加
 - カテゴリーコードリポジトリを追加
 - カテゴリーコードチャージ仕様インターフェースを追加
+- オファーカテゴリータイプを追加
 
 ### Changed
 
