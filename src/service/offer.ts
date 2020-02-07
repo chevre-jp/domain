@@ -81,17 +81,19 @@ export function searchEventSeatOffers(params: {
                     const priceComponent: factory.place.seat.IPriceComponent[] = [];
 
                     // 座席タイプが指定されていれば、適用される価格仕様を構成要素に追加
-                    if (typeof seat.seatingType === 'string' && seat.seatingType.length > 0) {
-                        priceComponent.push(...priceSpecs.filter((s) => {
-                            // 適用カテゴリーコードに座席タイプが含まれる価格仕様を検索
-                            return (Array.isArray(s.appliesToCategoryCode))
-                                && s.appliesToCategoryCode.some((categoryCode) => {
-                                    return categoryCode.codeValue === seat.seatingType
-                                        // tslint:disable-next-line:max-line-length
-                                        && categoryCode.inCodeSet.identifier === factory.categoryCode.CategorySetIdentifier.SeatingType;
-                                });
-                        }));
-                    }
+                    const seatingTypes: string[] = (Array.isArray(seat.seatingType))
+                        ? seat.seatingType
+                        : (typeof seat.seatingType === 'string' && seat.seatingType.length > 0) ? [seat.seatingType]
+                            : [];
+                    priceComponent.push(...priceSpecs.filter((s) => {
+                        // 適用カテゴリーコードに座席タイプが含まれる価格仕様を検索
+                        return (Array.isArray(s.appliesToCategoryCode))
+                            && s.appliesToCategoryCode.some((categoryCode) => {
+                                return seatingTypes.includes(categoryCode.codeValue)
+                                    // tslint:disable-next-line:max-line-length
+                                    && categoryCode.inCodeSet.identifier === factory.categoryCode.CategorySetIdentifier.SeatingType;
+                            });
+                    }));
 
                     const priceSpecification: factory.place.seat.IPriceSpecification = {
                         project: event.project,
