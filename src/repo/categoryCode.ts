@@ -14,6 +14,7 @@ export class MongoRepository {
         this.categoryCodeModel = connection.model(modelName);
     }
 
+    // tslint:disable-next-line:cyclomatic-complexity
     public static CREATE_MONGO_CONDITIONS(params: factory.categoryCode.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [];
@@ -30,6 +31,18 @@ export class MongoRepository {
                         }
                     });
                 }
+            }
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.id !== undefined && params.id !== null) {
+            if (typeof params.id.$eq === 'string') {
+                andConditions.push({
+                    _id: {
+                        $eq: params.id.$eq
+                    }
+                });
             }
         }
 
