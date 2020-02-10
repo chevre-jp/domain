@@ -84,7 +84,19 @@ export function createReservedTicket(params: {
     //     };
     // }
 
-    const acceptedTicketedSeat = params.acceptedOffer.ticketedSeat;
+    let acceptedTicketedSeat = params.acceptedOffer.ticketedSeat;
+    if (params.acceptedOffer.itemOffered !== undefined && params.acceptedOffer.itemOffered !== null) {
+        if (params.acceptedOffer.itemOffered.serviceOutput !== undefined && params.acceptedOffer.itemOffered.serviceOutput !== null) {
+            if (params.acceptedOffer.itemOffered.serviceOutput.reservedTicket !== undefined
+                && params.acceptedOffer.itemOffered.serviceOutput.reservedTicket !== null) {
+                if (params.acceptedOffer.itemOffered.serviceOutput.reservedTicket.ticketedSeat !== undefined
+                    && params.acceptedOffer.itemOffered.serviceOutput.reservedTicket.ticketedSeat !== null) {
+                    acceptedTicketedSeat = params.acceptedOffer.itemOffered.serviceOutput.reservedTicket.ticketedSeat;
+                }
+            }
+        }
+    }
+
     let ticketedSeat: factory.reservation.ISeat<factory.reservationType> | undefined;
 
     if (params.reservedSeatsOnly) {
@@ -93,8 +105,11 @@ export function createReservedTicket(params: {
             throw new factory.errors.ArgumentNull('offer.ticketedSeat');
         }
 
+        const seatSection = acceptedTicketedSeat.seatSection;
+        const seatNumber = acceptedTicketedSeat.seatNumber;
+
         const screeningRoomSection = params.screeningRoomSections.find(
-            (section) => section.branchCode === acceptedTicketedSeat.seatSection
+            (section) => section.branchCode === seatSection
         );
         if (screeningRoomSection === undefined) {
             throw new factory.errors.NotFound(
@@ -102,9 +117,9 @@ export function createReservedTicket(params: {
                 `${factory.placeType.ScreeningRoomSection} ${acceptedTicketedSeat.seatSection} not found`
             );
         }
-        const seat = screeningRoomSection.containsPlace.find((p) => p.branchCode === acceptedTicketedSeat.seatNumber);
+        const seat = screeningRoomSection.containsPlace.find((p) => p.branchCode === seatNumber);
         if (seat === undefined) {
-            throw new factory.errors.NotFound(factory.placeType.Seat, `${factory.placeType.Seat} ${acceptedTicketedSeat.seatNumber} not found`);
+            throw new factory.errors.NotFound(factory.placeType.Seat, `${factory.placeType.Seat} ${seatNumber} not found`);
         }
 
         ticketedSeat = { ...acceptedTicketedSeat, ...seat };
@@ -130,6 +145,26 @@ export function createReservedTicket(params: {
     };
 }
 
+/**
+ * 追加チケットテキストを生成する
+ */
+export function createAdditionalTicketText(params: {
+    acceptedOffer: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail;
+    reservedTicket: factory.reservation.ITicket<factory.reservationType.EventReservation>;
+}): string {
+    let additionalTicketText: string = params.reservedTicket.ticketType.name.ja;
+
+    if (params.acceptedOffer.itemOffered !== undefined && params.acceptedOffer.itemOffered !== null) {
+        if (params.acceptedOffer.itemOffered.serviceOutput !== undefined && params.acceptedOffer.itemOffered.serviceOutput !== null) {
+            if (typeof params.acceptedOffer.itemOffered.serviceOutput.additionalTicketText === 'string') {
+                additionalTicketText = params.acceptedOffer.itemOffered.serviceOutput.additionalTicketText;
+            }
+        }
+    }
+
+    return additionalTicketText;
+}
+
 export type IUnitPriceSpecification = factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>;
 
 export function createReservation(params: {
@@ -140,6 +175,7 @@ export function createReservation(params: {
     reservationNumber: string;
     reservationFor: factory.event.screeningEvent.IEvent;
     reservedTicket: factory.reservation.ITicket<factory.reservationType.EventReservation>;
+    additionalTicketText?: string;
     // additionalProperty: factory.propertyValue.IPropertyValue<string>[];
     ticketOffer: factory.event.screeningEvent.ITicketOffer;
     seatPriceComponent: factory.place.seat.IPriceComponent[];
@@ -180,7 +216,9 @@ export function createReservation(params: {
         project: params.project,
         typeOf: factory.reservationType.EventReservation,
         id: params.id,
-        additionalTicketText: params.reservedTicket.ticketType.name.ja,
+        additionalTicketText: (typeof params.additionalTicketText === 'string')
+            ? params.additionalTicketText
+            : params.reservedTicket.ticketType.name.ja,
         bookingTime: params.reserveDate,
         modifiedTime: params.reserveDate,
         numSeats: 1,

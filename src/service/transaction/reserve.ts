@@ -19,7 +19,7 @@ import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 import * as OfferService from '../offer';
 import * as ReserveService from '../reserve';
 
-import { createPotentialActions, createReservation, createReservedTicket, createStartParams } from './reserve/factory';
+import { createAdditionalTicketText, createPotentialActions, createReservation, createReservedTicket, createStartParams } from './reserve/factory';
 
 export type IStartOperation<T> = (repos: {
     project: ProjectRepo;
@@ -199,6 +199,11 @@ export function addReservations(params: {
                 transaction: transaction
             });
 
+            const additionalTicketText = createAdditionalTicketText({
+                acceptedOffer: acceptedOffer,
+                reservedTicket: reservedTicket
+            });
+
             // 座席指定であれば、座席タイプチャージを検索する
             const seatPriceComponent: factory.place.seat.IPriceComponent[] = [];
             const ticketedSeat = reservedTicket.ticketedSeat;
@@ -244,6 +249,7 @@ export function addReservations(params: {
                 reservationNumber: reservationNumber,
                 reservationFor: event,
                 reservedTicket: reservedTicket,
+                additionalTicketText: additionalTicketText,
                 ticketOffer: ticketOffer,
                 seatPriceComponent: seatPriceComponent,
                 acceptedAddOns: acceptedAddOns
