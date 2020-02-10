@@ -49,13 +49,10 @@ export function searchEventSeatOffers(params: {
             // 座席タイプ価格仕様を検索
             const priceSpecs =
                 await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>({
-                    limit: 100,
-                    project: { ids: [event.project.id] },
+                    project: { id: { $eq: event.project.id } },
                     typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
-                    ...{
-                        appliesToCategoryCode: {
-                            inCodeSet: { identifier: { $eq: factory.categoryCode.CategorySetIdentifier.SeatingType } }
-                        }
+                    appliesToCategoryCode: {
+                        inCodeSet: { identifier: { $eq: factory.categoryCode.CategorySetIdentifier.SeatingType } }
                     }
                 });
 
@@ -147,7 +144,8 @@ export function searchScreeningEventTicketOffers(params: {
         const availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: screeningEventOffers });
 
         const soundFormatChargeSpecifications =
-            await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>(<any>{
+            await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>({
+                project: { id: { $eq: event.project.id } },
                 typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
                 appliesToCategoryCode: {
                     $elemMatch: {
@@ -158,7 +156,8 @@ export function searchScreeningEventTicketOffers(params: {
             });
 
         const videoFormatChargeSpecifications =
-            await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>(<any>{
+            await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>({
+                project: { id: { $eq: event.project.id } },
                 typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
                 appliesToCategoryCode: {
                     $elemMatch: {
@@ -170,6 +169,7 @@ export function searchScreeningEventTicketOffers(params: {
 
         const movieTicketTypeChargeSpecs =
             await repos.priceSpecification.search<factory.priceSpecificationType.MovieTicketTypeChargeSpecification>({
+                project: { id: { $eq: event.project.id } },
                 typeOf: factory.priceSpecificationType.MovieTicketTypeChargeSpecification,
                 appliesToVideoFormats: eventVideoFormatTypes
             });
