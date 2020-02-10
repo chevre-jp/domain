@@ -146,6 +146,25 @@ export function createReservedTicket(params: {
 }
 
 /**
+ * 追加特性を生成する
+ */
+export function createAdditionalProperty(params: {
+    acceptedOffer: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail;
+}): factory.propertyValue.IPropertyValue<string>[] {
+    let additionalProperty: factory.propertyValue.IPropertyValue<string>[] = [];
+
+    if (params.acceptedOffer.itemOffered !== undefined && params.acceptedOffer.itemOffered !== null) {
+        if (params.acceptedOffer.itemOffered.serviceOutput !== undefined && params.acceptedOffer.itemOffered.serviceOutput !== null) {
+            if (Array.isArray(params.acceptedOffer.itemOffered.serviceOutput.additionalProperty)) {
+                additionalProperty = params.acceptedOffer.itemOffered.serviceOutput.additionalProperty;
+            }
+        }
+    }
+
+    return additionalProperty;
+}
+
+/**
  * 追加チケットテキストを生成する
  */
 export function createAdditionalTicketText(params: {
@@ -175,8 +194,8 @@ export function createReservation(params: {
     reservationNumber: string;
     reservationFor: factory.event.screeningEvent.IEvent;
     reservedTicket: factory.reservation.ITicket<factory.reservationType.EventReservation>;
+    additionalProperty?: factory.propertyValue.IPropertyValue<string>[];
     additionalTicketText?: string;
-    // additionalProperty: factory.propertyValue.IPropertyValue<string>[];
     ticketOffer: factory.event.screeningEvent.ITicketOffer;
     seatPriceComponent: factory.place.seat.IPriceComponent[];
     acceptedAddOns: factory.offer.IAddOn[];
@@ -216,9 +235,8 @@ export function createReservation(params: {
         project: params.project,
         typeOf: factory.reservationType.EventReservation,
         id: params.id,
-        additionalTicketText: (typeof params.additionalTicketText === 'string')
-            ? params.additionalTicketText
-            : params.reservedTicket.ticketType.name.ja,
+        additionalProperty: params.additionalProperty,
+        additionalTicketText: params.additionalTicketText,
         bookingTime: params.reserveDate,
         modifiedTime: params.reserveDate,
         numSeats: 1,
@@ -238,7 +256,6 @@ export function createReservation(params: {
         underName: params.agent,
         checkedIn: false,
         attended: false
-        // additionalProperty: params.additionalProperty
     };
 }
 
@@ -260,8 +277,12 @@ export function createPotentialActions(params: factory.transaction.reserve.IConf
                     reservation.additionalTicketText = confirmingReservation.additionalTicketText;
                 }
 
+                // 追加特性の指定があれば、元の追加特性にマージ
                 if (Array.isArray(confirmingReservation.additionalProperty)) {
-                    reservation.additionalProperty = confirmingReservation.additionalProperty;
+                    reservation.additionalProperty = [
+                        ...(Array.isArray(reservation.additionalProperty)) ? reservation.additionalProperty : [],
+                        ...confirmingReservation.additionalProperty
+                    ];
                 }
 
                 if (confirmingReservation.underName !== undefined) {
