@@ -53,37 +53,6 @@ export function createReservedTicket(params: {
     ticketOffer: factory.event.screeningEvent.ITicketOffer;
     transaction: factory.transaction.ITransaction<factory.transactionType.Reserve>;
 }): factory.reservation.ITicket<factory.reservationType.EventReservation> {
-    // const ticketOffer = params.ticketOffers.find((t) => t.id === params.acceptedOffer.id);
-    // if (ticketOffer === undefined) {
-    //     throw new factory.errors.NotFound('Ticket Offer');
-    // }
-
-    // const ticketType = params.availableOffers.find((o) => o.id === params.acceptedOffer.id);
-    // // 基本的に券種でID管理されていないオファーは存在しないが、念のため管理されていないケースに対応
-    // if (ticketType === undefined) {
-    //     const unitPriceSpec
-    //         = <factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>>
-    //         ticketOffer.priceSpecification.priceComponent.find((spec) => {
-    //             return spec.typeOf === factory.priceSpecificationType.UnitPriceSpecification;
-    //         });
-    //     if (unitPriceSpec === undefined) {
-    //         throw new factory.errors.Argument('acceptedOffer', `UnitPriceSpecification for ${params.acceptedOffer.id} Not Found`);
-    //     }
-
-    //     ticketType = {
-    //         project: params.transaction.project,
-    //         typeOf: ticketOffer.typeOf,
-    //         id: ticketOffer.id,
-    //         identifier: ticketOffer.identifier,
-    //         name: ticketOffer.name,
-    //         description: ticketOffer.description,
-    //         alternateName: ticketOffer.name,
-    //         priceCurrency: factory.priceCurrency.JPY,
-    //         availability: factory.itemAvailability.InStock,
-    //         priceSpecification: unitPriceSpec
-    //     };
-    // }
-
     let acceptedTicketedSeat = params.acceptedOffer.ticketedSeat;
     if (params.acceptedOffer.itemOffered !== undefined && params.acceptedOffer.itemOffered !== null) {
         if (params.acceptedOffer.itemOffered.serviceOutput !== undefined && params.acceptedOffer.itemOffered.serviceOutput !== null) {
@@ -122,6 +91,11 @@ export function createReservedTicket(params: {
             throw new factory.errors.NotFound(factory.placeType.Seat, `${factory.placeType.Seat} ${seatNumber} not found`);
         }
 
+        validateEligibleSeatingType({
+            availableOffer: params.availableOffer,
+            seat: seat
+        });
+
         ticketedSeat = { ...acceptedTicketedSeat, ...seat };
     }
 
@@ -143,6 +117,31 @@ export function createReservedTicket(params: {
             ? { ticketedSeat: ticketedSeat }
             : {}
     };
+}
+
+function validateEligibleSeatingType(params: {
+    availableOffer: factory.ticketType.ITicketType;
+    seat: factory.place.seat.IPlace;
+}): void {
+    const seat = params.seat;
+
+    // 座席タイプ制約のあるオファーの場合、確認
+    // 座席の持つ座席タイプがどれかひとつeligibleSeatingTypesに含まれればよい
+    const eligibleSeatingTypes = params.availableOffer.eligibleSeatingType;
+    if (Array.isArray(eligibleSeatingTypes)) {
+        const seatingTypes = (Array.isArray(seat.seatingType)) ? seat.seatingType
+            : (typeof seat.seatingType === 'string') ? [seat.seatingType]
+                : [];
+        const isEligible = seatingTypes.some((seatingTypeCodeValue) => eligibleSeatingTypes.some(
+            (eligibleSeatingType) => eligibleSeatingType.codeValue === seatingTypeCodeValue)
+        );
+        if (!isEligible) {
+            throw new factory.errors.Argument(
+                'ticketedSeat',
+                `${seat.branchCode} is not eligible for the offer ${params.availableOffer.id}`
+            );
+        }
+    }
 }
 
 /**

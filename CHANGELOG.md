@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 予約にアドオンを指定できるように調整
 - オファー適用条件拡張
 - イベントのacceptedOfferを拡張
+- 座席タイプの適格性に対するバリデーションを追加
 
 ### Deprecated
 
