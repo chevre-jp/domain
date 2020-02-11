@@ -6,6 +6,7 @@ import * as createDebug from 'debug';
 import * as factory from '../factory';
 
 import { MongoRepository as EventRepo } from '../repo/event';
+import { RedisRepository as EventAvailabilityRepo } from '../repo/itemAvailability/screeningEvent';
 import { MongoRepository as OfferRepo } from '../repo/offer';
 import { MongoRepository as PlaceRepo } from '../repo/place';
 import { MongoRepository as ProjectRepo } from '../repo/project';
@@ -35,6 +36,7 @@ enum DefaultTicketTypeCategory {
 
 export type IAggregateScreeningEventOperation<T> = (repos: {
     event: EventRepo;
+    eventAvailability: EventAvailabilityRepo;
     offer: OfferRepo;
     place: PlaceRepo;
     project: ProjectRepo;
@@ -71,6 +73,7 @@ export function aggregateScreeningEvent(params: {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         event: EventRepo;
+        eventAvailability: EventAvailabilityRepo;
         offer: OfferRepo;
         place: PlaceRepo;
         project: ProjectRepo;
@@ -119,7 +122,13 @@ export function aggregateScreeningEvent(params: {
 
             if (reservedSeatsAvailable) {
                 maximumAttendeeCapacity = screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0);
-                remainingAttendeeCapacity = maximumAttendeeCapacity - reservationCount;
+
+                // 残席数を予約数から計算する場合
+                // remainingAttendeeCapacity = maximumAttendeeCapacity - reservationCount;
+
+                // 残席数を座席ロック数から計算する場合
+                const unavailableOfferCount = await repos.eventAvailability.countUnavailableOffers({ event: { id: event.id } });
+                remainingAttendeeCapacity = maximumAttendeeCapacity - unavailableOfferCount;
             }
 
             attendeeCount = await repos.reservation.count({

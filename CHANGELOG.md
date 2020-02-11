@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - オファー適用条件拡張
 - イベントのacceptedOfferを拡張
 - 座席タイプの適格性に対するバリデーションを追加
+- イベント残席数集計を座席ロック数から計算するように調整
 
 ### Deprecated
 

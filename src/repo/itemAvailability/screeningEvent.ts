@@ -138,6 +138,28 @@ export class RedisRepository {
     }
 
     /**
+     * 空席でない座席をカウントする
+     */
+    public async countUnavailableOffers(params: { event: { id: string } }) {
+        const key = `${RedisRepository.KEY_PREFIX}:${params.event.id}`;
+
+        return new Promise<number>((resolve, reject) => {
+            this.redisClient.hlen(key, (err, reply) => {
+                if (err !== null) {
+                    reject(err);
+                } else {
+                    let fieldCount: number = 0;
+                    if (typeof reply === 'number') {
+                        fieldCount = Number(reply);
+                    }
+
+                    resolve(fieldCount);
+                }
+            });
+        });
+    }
+
+    /**
      * 保持者を取得する
      */
     public async getHolder(params: {
