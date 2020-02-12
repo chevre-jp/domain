@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 座席タイプの適格性に対するバリデーションを追加
 - イベント残席数集計を座席ロック数から計算するように調整
 - 予約に余分確保分としてのsubReservationを追加
+- オファーに適用サブ予約条件を追加
 
 ### Deprecated
 

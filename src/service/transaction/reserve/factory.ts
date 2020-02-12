@@ -54,16 +54,9 @@ export function createReservedTicket(params: {
     transaction: factory.transaction.ITransaction<factory.transactionType.Reserve>;
 }): factory.reservation.ITicket<factory.reservationType.EventReservation> {
     let acceptedTicketedSeat = params.acceptedOffer.ticketedSeat;
-    if (params.acceptedOffer.itemOffered !== undefined && params.acceptedOffer.itemOffered !== null) {
-        if (params.acceptedOffer.itemOffered.serviceOutput !== undefined && params.acceptedOffer.itemOffered.serviceOutput !== null) {
-            if (params.acceptedOffer.itemOffered.serviceOutput.reservedTicket !== undefined
-                && params.acceptedOffer.itemOffered.serviceOutput.reservedTicket !== null) {
-                if (params.acceptedOffer.itemOffered.serviceOutput.reservedTicket.ticketedSeat !== undefined
-                    && params.acceptedOffer.itemOffered.serviceOutput.reservedTicket.ticketedSeat !== null) {
-                    acceptedTicketedSeat = params.acceptedOffer.itemOffered.serviceOutput.reservedTicket.ticketedSeat;
-                }
-            }
-        }
+    const acceptedTicketedSeatByItemOffered = params.acceptedOffer.itemOffered?.serviceOutput?.reservedTicket?.ticketedSeat;
+    if (acceptedTicketedSeatByItemOffered !== undefined && acceptedTicketedSeatByItemOffered !== null) {
+        acceptedTicketedSeat = acceptedTicketedSeatByItemOffered;
     }
 
     let ticketedSeat: factory.reservation.ISeat<factory.reservationType> | undefined;
@@ -71,7 +64,7 @@ export function createReservedTicket(params: {
     if (params.reservedSeatsOnly) {
         // 指定席のみの場合、座席指定が必須
         if (acceptedTicketedSeat === undefined) {
-            throw new factory.errors.ArgumentNull('offer.ticketedSeat');
+            throw new factory.errors.ArgumentNull('ticketedSeat');
         }
 
         const seatSection = acceptedTicketedSeat.seatSection;
@@ -94,6 +87,12 @@ export function createReservedTicket(params: {
         validateEligibleSeatingType({
             availableOffer: params.availableOffer,
             seat: seat
+        });
+
+        validateEligibleSubReservation({
+            availableOffer: params.availableOffer,
+            acceptedOffer: params.acceptedOffer,
+            screeningRoomSection: screeningRoomSection
         });
 
         ticketedSeat = { ...acceptedTicketedSeat, ...seat };
@@ -144,20 +143,62 @@ function validateEligibleSeatingType(params: {
     }
 }
 
+function validateEligibleSubReservation(params: {
+    availableOffer: factory.ticketType.ITicketType;
+    acceptedOffer: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail;
+    screeningRoomSection: factory.place.movieTheater.IScreeningRoomSection;
+}): void {
+    const subReservations = params.acceptedOffer.itemOffered?.serviceOutput?.subReservation;
+    const eligibleSubReservations = params.availableOffer.eligibleSubReservation;
+
+    if (Array.isArray(subReservations) && Array.isArray(eligibleSubReservations)) {
+        const seats4subReservation = subReservations.map((subReservation) => {
+            const seatNumber4subReservation = subReservation.reservedTicket?.ticketedSeat?.seatNumber;
+            const seat4subReservation = params.screeningRoomSection.containsPlace.find((p) => p.branchCode === seatNumber4subReservation);
+            if (seat4subReservation === undefined) {
+                throw new factory.errors.NotFound(
+                    factory.placeType.Seat,
+                    `${factory.placeType.Seat} ${seatNumber4subReservation} not found`
+                );
+            }
+
+            return seat4subReservation;
+        });
+
+        const isEligible = eligibleSubReservations.some((eligibleSubReservation) => {
+            const includesEligilbeSeatingType = seats4subReservation.every((seat) => {
+                const seatingTypes = (Array.isArray(seat.seatingType)) ? seat.seatingType
+                    : (typeof seat.seatingType === 'string') ? [seat.seatingType]
+                        : [];
+
+                // 座席が条件の座席タイプを含む
+                return seatingTypes.includes(eligibleSubReservation.typeOfGood.seatingType);
+            });
+
+            const includesEligibleAmount = seats4subReservation.length === eligibleSubReservation.amountOfThisGood;
+
+            return includesEligilbeSeatingType && includesEligibleAmount;
+        });
+
+        if (!isEligible) {
+            throw new factory.errors.Argument(
+                'subReservation',
+                `${seats4subReservation.map((seat) => seat.branchCode)
+                    .join(',')} is not eligible for the offer ${params.availableOffer.id}`
+            );
+        }
+    }
+}
+
 /**
  * 追加特性を生成する
  */
 export function createAdditionalProperty(params: {
     acceptedOffer: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail;
 }): factory.propertyValue.IPropertyValue<string>[] {
-    let additionalProperty: factory.propertyValue.IPropertyValue<string>[] = [];
-
-    if (params.acceptedOffer.itemOffered !== undefined && params.acceptedOffer.itemOffered !== null) {
-        if (params.acceptedOffer.itemOffered.serviceOutput !== undefined && params.acceptedOffer.itemOffered.serviceOutput !== null) {
-            if (Array.isArray(params.acceptedOffer.itemOffered.serviceOutput.additionalProperty)) {
-                additionalProperty = params.acceptedOffer.itemOffered.serviceOutput.additionalProperty;
-            }
-        }
+    let additionalProperty = params.acceptedOffer.itemOffered?.serviceOutput?.additionalProperty;
+    if (!Array.isArray(additionalProperty)) {
+        additionalProperty = [];
     }
 
     return additionalProperty;
@@ -170,14 +211,9 @@ export function createAdditionalTicketText(params: {
     acceptedOffer: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail;
     reservedTicket: factory.reservation.ITicket<factory.reservationType.EventReservation>;
 }): string {
-    let additionalTicketText: string = params.reservedTicket.ticketType.name.ja;
-
-    if (params.acceptedOffer.itemOffered !== undefined && params.acceptedOffer.itemOffered !== null) {
-        if (params.acceptedOffer.itemOffered.serviceOutput !== undefined && params.acceptedOffer.itemOffered.serviceOutput !== null) {
-            if (typeof params.acceptedOffer.itemOffered.serviceOutput.additionalTicketText === 'string') {
-                additionalTicketText = params.acceptedOffer.itemOffered.serviceOutput.additionalTicketText;
-            }
-        }
+    let additionalTicketText = params.acceptedOffer.itemOffered?.serviceOutput?.additionalTicketText;
+    if (typeof additionalTicketText !== 'string') {
+        additionalTicketText = params.reservedTicket.ticketType.name.ja;
     }
 
     return additionalTicketText;
