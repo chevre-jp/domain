@@ -252,6 +252,8 @@ export function addReservations(params: {
                 );
             }
 
+            const subReservation = acceptedOffer.itemOffered?.serviceOutput?.subReservation;
+
             return createReservation({
                 project: transaction.project,
                 id: `${reservationNumber}-${index}`,
@@ -264,7 +266,8 @@ export function addReservations(params: {
                 additionalTicketText: additionalTicketText,
                 ticketOffer: ticketOffer,
                 seatPriceComponent: seatPriceComponent,
-                acceptedAddOns: acceptedAddOns
+                acceptedAddOns: acceptedAddOns,
+                subReservation: subReservation
             });
         });
 
@@ -294,29 +297,11 @@ export function addReservations(params: {
 
         // 指定席イベントであれば、座席ロック
         if (reservedSeatsOnly) {
-            const offers: {
-                seatSection: string;
-                seatNumber: string;
-            }[] = reservations.map((r) => {
-                // 指定席のみの場合、上記処理によってticketedSeatの存在は保証されている
-                if (r.reservedTicket.ticketedSeat === undefined) {
-                    throw new factory.errors.ServiceUnavailable('Reserved seat required');
-                }
-
-                return {
-                    seatSection: r.reservedTicket.ticketedSeat.seatSection,
-                    seatNumber: r.reservedTicket.ticketedSeat.seatNumber
-                };
-            });
-
-            await repos.eventAvailability.lock({
-                eventId: event.id,
-                offers: offers,
-                expires: moment(event.endDate)
-                    .add(1, 'month')
-                    .toDate(),
-                holder: transaction.id
-            });
+            await processLockSeats({
+                event: event,
+                reservations: reservations,
+                transaction: transaction
+            })(repos);
         }
 
         // 予約作成
@@ -328,6 +313,67 @@ export function addReservations(params: {
         }));
 
         return transaction;
+    };
+}
+
+/**
+ * 座席ロックプロセス
+ */
+function processLockSeats(params: {
+    event: factory.event.IEvent<factory.eventType.ScreeningEvent>;
+    reservations: factory.reservation.IReservation<factory.reservationType.EventReservation>[];
+    transaction: { id: string };
+}) {
+    return async (repos: {
+        eventAvailability: ScreeningEventAvailabilityRepo;
+    }) => {
+        const offers: {
+            seatSection: string;
+            seatNumber: string;
+        }[] = [];
+
+        params.reservations.forEach((r) => {
+            const seatSection = r.reservedTicket.ticketedSeat?.seatSection;
+            const seatNumber = r.reservedTicket.ticketedSeat?.seatNumber;
+
+            // 指定席のみの場合、ticketedSeatの存在は保証されている
+            if (typeof seatSection !== 'string' || typeof seatNumber !== 'string') {
+                throw new factory.errors.ArgumentNull('ticketedSeat');
+            }
+
+            // subReservationがあれば、そちらもロック
+            const subReservations = r.subReservation;
+            if (Array.isArray(subReservations)) {
+                subReservations.forEach((subReservation) => {
+                    const seatSection4sub = subReservation.reservedTicket?.ticketedSeat?.seatSection;
+                    const seatNumber4sub = subReservation.reservedTicket?.ticketedSeat?.seatNumber;
+
+                    // 指定席のみの場合、ticketedSeatの存在は保証されている
+                    if (typeof seatSection4sub !== 'string' || typeof seatNumber4sub !== 'string') {
+                        throw new factory.errors.ArgumentNull('subReservation.reservedTicket.ticketedSeat');
+                    }
+
+                    offers.push({
+                        seatSection: seatSection4sub,
+                        seatNumber: seatNumber4sub
+                    });
+                });
+            }
+
+            offers.push({
+                seatSection: seatSection,
+                seatNumber: seatNumber
+            });
+        });
+
+        await repos.eventAvailability.lock({
+            eventId: params.event.id,
+            offers: offers,
+            expires: moment(params.event.endDate)
+                .add(1, 'month')
+                .toDate(),
+            holder: params.transaction.id
+        });
     };
 }
 

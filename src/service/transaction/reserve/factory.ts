@@ -198,6 +198,7 @@ export function createReservation(params: {
     ticketOffer: factory.event.screeningEvent.ITicketOffer;
     seatPriceComponent: factory.place.seat.IPriceComponent[];
     acceptedAddOns: factory.offer.IAddOn[];
+    subReservation?: any[];
 }): factory.reservation.IReservation<factory.reservationType.EventReservation> {
     // acceptedAddOnsがあればアドオンに対する単価仕様を価格構成に追加
     let unitPriceSpecsAppliedToAddOn: IUnitPriceSpecification[] = [];
@@ -254,7 +255,8 @@ export function createReservation(params: {
         reservedTicket: params.reservedTicket,
         underName: params.agent,
         checkedIn: false,
-        attended: false
+        attended: false,
+        ...(Array.isArray(params.subReservation)) ? { subReservation: params.subReservation } : undefined
     };
 }
 
