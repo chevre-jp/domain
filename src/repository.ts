@@ -14,6 +14,7 @@ import { MongoRepository as PriceSpecificationRepo } from './repo/priceSpecifica
 import { MongoRepository as ProductRepo } from './repo/product';
 import { MongoRepository as ProgramMembershipRepo } from './repo/programMembership';
 import { MongoRepository as ProjectRepo } from './repo/project';
+import { RedisRepository as OfferRateLimitRepo } from './repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from './repo/reservation';
 import { RedisRepository as ReservationNumberRepo } from './repo/reservationNumber';
 import { MongoRepository as TaskRepo } from './repo/task';
@@ -38,6 +39,10 @@ export namespace aggregation {
 }
 export namespace itemAvailability {
     export class ScreeningEvent extends ScreeningEventItemAvailabilityRepo { }
+}
+export namespace rateLimit {
+    // tslint:disable-next-line:no-shadowed-variable
+    export class Offer extends OfferRateLimitRepo { }
 }
 
 import { MongoRepository as SubjectRepo } from './repo/subject';

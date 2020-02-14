@@ -11,6 +11,7 @@ import { MongoRepository as OfferRepo } from '../../repo/offer';
 import { MongoRepository as PlaceRepo } from '../../repo/place';
 import { MongoRepository as PriceSpecificationRepo } from '../../repo/priceSpecification';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
+import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../../repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
 import { RedisRepository as ReservationNumberRepo } from '../../repo/reservationNumber';
 import { MongoRepository as TaskRepo } from '../../repo/task';
@@ -38,6 +39,7 @@ export type IAddReservationsOperation<T> = (repos: {
     eventAvailability: ScreeningEventAvailabilityRepo;
     event: EventRepo;
     offer: OfferRepo;
+    offerRateLimit: OfferRateLimitRepo;
     place: PlaceRepo;
     priceSpecification: PriceSpecificationRepo;
     reservation: ReservationRepo;
@@ -120,6 +122,7 @@ export function addReservations(params: {
         eventAvailability: ScreeningEventAvailabilityRepo;
         event: EventRepo;
         offer: OfferRepo;
+        offerRateLimit: OfferRateLimitRepo;
         place: PlaceRepo;
         priceSpecification: PriceSpecificationRepo;
         reservation: ReservationRepo;
@@ -272,7 +275,15 @@ export function addReservations(params: {
         });
 
         // 取引に予約追加
+        let lockedOfferRateLimitKeys: IRateLimitKey[] = [];
         try {
+            lockedOfferRateLimitKeys = await processLockOfferRateLimit({
+                acceptedOffers: acceptedOffers,
+                availableOffers: availableOffers,
+                event: event,
+                reservationNumber: reservationNumber
+            })(repos);
+
             transaction = await repos.transaction.addReservations({
                 typeOf: factory.transactionType.Reserve,
                 id: transaction.id,
@@ -286,6 +297,10 @@ export function addReservations(params: {
                 }
             });
         } catch (error) {
+            if (lockedOfferRateLimitKeys.length > 0) {
+                await processUnlockOfferRateLimit(lockedOfferRateLimitKeys)(repos);
+            }
+
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore next */
             if (error.name === 'MongoError') {
@@ -313,6 +328,51 @@ export function addReservations(params: {
         }));
 
         return transaction;
+    };
+}
+
+function processLockOfferRateLimit(_: {
+    acceptedOffers: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail[];
+    availableOffers: factory.ticketType.ITicketType[];
+    event: factory.event.screeningEvent.IEvent;
+    reservationNumber: string;
+}) {
+    return async (__: {
+        offerRateLimit: OfferRateLimitRepo;
+    }): Promise<IRateLimitKey[]> => {
+        return [];
+        // const rateLimitKeys = [];
+
+        // // オファーにレート制限が存在すれば、一度にロック
+        // for (const acceptedOffer of params.acceptedOffers) {
+        //     const ticketType = params.availableOffers.find((o) => o.id === acceptedOffer.id);
+        //     if (ticketType === undefined) {
+        //         throw new factory.errors.NotFound('Offer');
+        //     }
+
+        //     const rateLimitKey = {
+        //         offer: { id: ticketType.id },
+        //         event: {
+        //             startDate: moment(params.event.startDate)
+        //                 .toDate()
+        //         },
+        //         unitInSeconds: 3600
+        //     };
+
+        //     await repos.offerRateLimit.lock(rateLimitKey, params.reservationNumber);
+
+        //     rateLimitKeys.push(rateLimitKey);
+        // }
+
+        // return rateLimitKeys;
+    };
+}
+
+function processUnlockOfferRateLimit(_: IRateLimitKey[]) {
+    return async (__: {
+        offerRateLimit: OfferRateLimitRepo;
+    }) => {
+        // 未実装
     };
 }
 
