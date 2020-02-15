@@ -324,14 +324,15 @@ export function processUnlockOfferRateLimit(params: {
     }) => {
         const reservation = params.reservation;
 
+        const scope = reservation.reservedTicket.ticketType.validRateLimit?.scope;
         const unitInSeconds = reservation.reservedTicket.ticketType.validRateLimit?.unitInSeconds;
-        if (typeof unitInSeconds === 'number') {
+        if (typeof scope === 'string' && typeof unitInSeconds === 'number') {
             const rateLimitKey: IRateLimitKey = {
                 reservedTicket: {
                     ticketType: {
-                        id: reservation.reservedTicket.ticketType.id,
                         validRateLimit: {
-                            unitInSeconds: reservation.reservedTicket.ticketType.validRateLimit.unitInSeconds
+                            scope: scope,
+                            unitInSeconds: unitInSeconds
                         }
                     }
                 },

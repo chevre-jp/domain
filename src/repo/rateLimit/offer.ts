@@ -12,8 +12,8 @@ const debug = createDebug('chevre-domain:repo');
 export interface IRateLimitKey {
     reservedTicket: {
         ticketType: {
-            id: string;
             validRateLimit: {
+                scope: string;
                 unitInSeconds: number;
             };
         };
@@ -38,7 +38,7 @@ export class RedisRepository {
         const unitInSeconds = Number(ratelimitKey.reservedTicket.ticketType.validRateLimit.unitInSeconds.toString());
         const validFrom = dateNow.unix() - dateNow.unix() % unitInSeconds;
 
-        return `${RedisRepository.KEY_PREFIX}:${ratelimitKey.reservedTicket.ticketType.id}:${validFrom.toString()}`;
+        return `${RedisRepository.KEY_PREFIX}:${ratelimitKey.reservedTicket.ticketType.validRateLimit.scope}:${validFrom.toString()}`;
     }
 
     /**

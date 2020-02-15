@@ -1,4 +1,5 @@
 import * as COA from '@motionpicture/coa-service';
+import * as moment from 'moment';
 import { format } from 'util';
 
 import { MongoRepository as EventRepo } from '../repo/event';
@@ -7,6 +8,7 @@ import { MongoRepository as OfferRepo } from '../repo/offer';
 import { MongoRepository as PlaceRepo } from '../repo/place';
 import { MongoRepository as PriceSpecificationRepo } from '../repo/priceSpecification';
 import { MongoRepository as ProjectRepo } from '../repo/project';
+import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../repo/rateLimit/offer';
 import { MongoRepository as TaskRepo } from '../repo/task';
 
 import * as factory from '../factory';
@@ -15,6 +17,7 @@ type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     event: EventRepo;
     priceSpecification: PriceSpecificationRepo;
     offer: OfferRepo;
+    offerRateLimit: OfferRateLimitRepo;
 }) => Promise<T>;
 
 /**
@@ -128,6 +131,7 @@ export function searchScreeningEventTicketOffers(params: {
         event: EventRepo;
         priceSpecification: PriceSpecificationRepo;
         offer: OfferRepo;
+        offerRateLimit: OfferRateLimitRepo;
     }) => {
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
             id: params.eventId
@@ -258,7 +262,38 @@ export function searchScreeningEventTicketOffers(params: {
                 };
             });
 
-        return [...ticketTypeOffers, ...movieTicketOffers];
+        const offers4event: factory.event.screeningEvent.ITicketOffer[] = [...ticketTypeOffers, ...movieTicketOffers];
+
+        // レート制限を確認
+        for (const offer4event of offers4event) {
+            const scope = offer4event.validRateLimit?.scope;
+            const unitInSeconds = offer4event.validRateLimit?.unitInSeconds;
+            if (typeof scope === 'string' && typeof unitInSeconds === 'number') {
+                const rateLimitKey: IRateLimitKey = {
+                    reservedTicket: {
+                        ticketType: {
+                            validRateLimit: {
+                                scope: scope,
+                                unitInSeconds: unitInSeconds
+                            }
+                        }
+                    },
+                    reservationFor: {
+                        startDate: moment(event.startDate)
+                            .toDate()
+                    },
+                    reservationNumber: ''
+                };
+
+                const holder = await repos.offerRateLimit.getHolder(rateLimitKey);
+                // ロックされていればOutOfStock
+                if (typeof holder === 'string') {
+                    offer4event.availability = factory.itemAvailability.OutOfStock;
+                }
+            }
+        }
+
+        return offers4event;
     };
 }
 
