@@ -11,11 +11,15 @@ const debug = createDebug('chevre-domain:repo');
  */
 export interface IRateLimitKey {
     reservedTicket: {
-        id: string;
+        ticketType: {
+            id: string;
+            validRateLimit: {
+                unitInSeconds: number;
+            };
+        };
     };
     reservationFor: { startDate: Date };
     reservationNumber: string;
-    unitInSeconds: number;
 }
 
 /**
@@ -31,10 +35,10 @@ export class RedisRepository {
 
     public static CREATE_REDIS_KEY(ratelimitKey: IRateLimitKey) {
         const dateNow = moment(ratelimitKey.reservationFor.startDate);
-        const unitInSeconds = Number(ratelimitKey.unitInSeconds.toString());
+        const unitInSeconds = Number(ratelimitKey.reservedTicket.ticketType.validRateLimit.unitInSeconds.toString());
         const validFrom = dateNow.unix() - dateNow.unix() % unitInSeconds;
 
-        return `${RedisRepository.KEY_PREFIX}:${ratelimitKey.reservedTicket.id}:${validFrom.toString()}`;
+        return `${RedisRepository.KEY_PREFIX}:${ratelimitKey.reservedTicket.ticketType.id}:${validFrom.toString()}`;
     }
 
     /**
@@ -46,7 +50,7 @@ export class RedisRepository {
                 key: RedisRepository.CREATE_REDIS_KEY(ratelimitKey),
                 value: ratelimitKey.reservationNumber,
                 ttl: moment(ratelimitKey.reservationFor.startDate)
-                    .add(ratelimitKey.unitInSeconds, 'seconds')
+                    .add(ratelimitKey.reservedTicket.ticketType.validRateLimit.unitInSeconds, 'seconds')
                     .diff(moment(), 'seconds')
             };
         });

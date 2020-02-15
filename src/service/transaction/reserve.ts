@@ -50,6 +50,7 @@ export type IAddReservationsOperation<T> = (repos: {
 export type ICancelOperation<T> = (repos: {
     action: ActionRepo;
     eventAvailability: ScreeningEventAvailabilityRepo;
+    offerRateLimit: OfferRateLimitRepo;
     reservation: ReservationRepo;
     task: TaskRepo;
     transaction: TransactionRepo;
@@ -278,10 +279,7 @@ export function addReservations(params: {
         let lockedOfferRateLimitKeys: IRateLimitKey[] = [];
         try {
             lockedOfferRateLimitKeys = await processLockOfferRateLimit({
-                acceptedOffers: acceptedOffers,
-                availableOffers: availableOffers,
-                event: event,
-                reservationNumber: reservationNumber
+                reservations: reservations
             })(repos);
 
             transaction = await repos.transaction.addReservations({
@@ -298,7 +296,9 @@ export function addReservations(params: {
             });
         } catch (error) {
             if (lockedOfferRateLimitKeys.length > 0) {
-                await processUnlockOfferRateLimit(lockedOfferRateLimitKeys)(repos);
+                await Promise.all(reservations.map(async (reservation) => {
+                    await ReserveService.processUnlockOfferRateLimit({ reservation })(repos);
+                }));
             }
 
             // tslint:disable-next-line:no-single-line-block-comment
@@ -331,48 +331,40 @@ export function addReservations(params: {
     };
 }
 
-function processLockOfferRateLimit(_: {
-    acceptedOffers: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail[];
-    availableOffers: factory.ticketType.ITicketType[];
-    event: factory.event.screeningEvent.IEvent;
-    reservationNumber: string;
+function processLockOfferRateLimit(params: {
+    reservations: factory.reservation.IReservation<factory.reservationType.EventReservation>[];
 }) {
-    return async (__: {
+    return async (repos: {
         offerRateLimit: OfferRateLimitRepo;
     }): Promise<IRateLimitKey[]> => {
-        return [];
-        // const rateLimitKeys = [];
+        const rateLimitKeys: IRateLimitKey[] = [];
 
-        // // オファーにレート制限が存在すれば、一度にロック
-        // for (const acceptedOffer of params.acceptedOffers) {
-        //     const ticketType = params.availableOffers.find((o) => o.id === acceptedOffer.id);
-        //     if (ticketType === undefined) {
-        //         throw new factory.errors.NotFound('Offer');
-        //     }
+        params.reservations.forEach((reservation) => {
+            const unitInSeconds = reservation.reservedTicket.ticketType.validRateLimit?.unitInSeconds;
+            if (typeof unitInSeconds === 'number') {
+                const rateLimitKey: IRateLimitKey = {
+                    reservedTicket: {
+                        ticketType: {
+                            id: reservation.reservedTicket.ticketType.id,
+                            validRateLimit: {
+                                unitInSeconds: reservation.reservedTicket.ticketType.validRateLimit.unitInSeconds
+                            }
+                        }
+                    },
+                    reservationFor: {
+                        startDate: moment(reservation.reservationFor.startDate)
+                            .toDate()
+                    },
+                    reservationNumber: reservation.reservationNumber
+                };
 
-        //     const rateLimitKey = {
-        //         offer: { id: ticketType.id },
-        //         event: {
-        //             startDate: moment(params.event.startDate)
-        //                 .toDate()
-        //         },
-        //         unitInSeconds: 3600
-        //     };
+                rateLimitKeys.push(rateLimitKey);
+            }
+        });
 
-        //     await repos.offerRateLimit.lock(rateLimitKey, params.reservationNumber);
+        await repos.offerRateLimit.lock(rateLimitKeys);
 
-        //     rateLimitKeys.push(rateLimitKey);
-        // }
-
-        // return rateLimitKeys;
-    };
-}
-
-function processUnlockOfferRateLimit(_: IRateLimitKey[]) {
-    return async (__: {
-        offerRateLimit: OfferRateLimitRepo;
-    }) => {
-        // 未実装
+        return rateLimitKeys;
     };
 }
 
@@ -531,6 +523,7 @@ export function cancel(params: { id: string }): ICancelOperation<void> {
     return async (repos: {
         action: ActionRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
+        offerRateLimit: OfferRateLimitRepo;
         reservation: ReservationRepo;
         task: TaskRepo;
         transaction: TransactionRepo;

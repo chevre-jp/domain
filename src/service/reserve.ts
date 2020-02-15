@@ -1,10 +1,13 @@
 /**
  * 予約サービス
  */
+import * as moment from 'moment';
+
 import * as factory from '../factory';
 
 import { MongoRepository as ActionRepo } from '../repo/action';
 import { RedisRepository as ScreeningEventAvailabilityRepo } from '../repo/itemAvailability/screeningEvent';
+import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from '../repo/reservation';
 import { MongoRepository as TaskRepo } from '../repo/task';
 import { MongoRepository as TransactionRepo } from '../repo/transaction';
@@ -111,6 +114,7 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
     return async (repos: {
         action: ActionRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
+        offerRateLimit: OfferRateLimitRepo;
         reservation: ReservationRepo;
         task: TaskRepo;
     }) => {
@@ -126,6 +130,8 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
                     reservation: reservation,
                     expectedHolder: reserveTransactionId
                 })(repos);
+
+                await processUnlockOfferRateLimit({ reservation })(repos);
 
                 // 予約が存在すればキャンセル状態に変更する
                 const reservationCount = await repos.reservation.count({
@@ -176,6 +182,7 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
     return async (repos: {
         action: ActionRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
+        offerRateLimit: OfferRateLimitRepo;
         reservation: ReservationRepo;
         task: TaskRepo;
         transaction: TransactionRepo;
@@ -219,6 +226,8 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
                         expectedHolder: exectedHolder
                     })(repos);
                 }
+
+                await processUnlockOfferRateLimit({ reservation })(repos);
 
                 // 予約をキャンセル状態に変更する
                 reservation = await repos.reservation.cancel<factory.reservationType.EventReservation>({ id: reservation.id });
@@ -303,6 +312,40 @@ function processUnlockSeat(params: {
                     }
                 }
             }));
+        }
+    };
+}
+
+export function processUnlockOfferRateLimit(params: {
+    reservation: factory.reservation.IReservation<factory.reservationType.EventReservation>;
+}) {
+    return async (repos: {
+        offerRateLimit: OfferRateLimitRepo;
+    }) => {
+        const reservation = params.reservation;
+
+        const unitInSeconds = reservation.reservedTicket.ticketType.validRateLimit?.unitInSeconds;
+        if (typeof unitInSeconds === 'number') {
+            const rateLimitKey: IRateLimitKey = {
+                reservedTicket: {
+                    ticketType: {
+                        id: reservation.reservedTicket.ticketType.id,
+                        validRateLimit: {
+                            unitInSeconds: reservation.reservedTicket.ticketType.validRateLimit.unitInSeconds
+                        }
+                    }
+                },
+                reservationFor: {
+                    startDate: moment(reservation.reservationFor.startDate)
+                        .toDate()
+                },
+                reservationNumber: reservation.reservationNumber
+            };
+
+            const holder = await repos.offerRateLimit.getHolder(rateLimitKey);
+            if (holder === rateLimitKey.reservationNumber) {
+                await repos.offerRateLimit.unlock([rateLimitKey]);
+            }
         }
     };
 }
