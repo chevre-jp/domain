@@ -249,7 +249,7 @@ export function importFromCOA(params: {
                     });
 
                     // スクリーン存在チェック
-                    const screenRoom = <factory.place.movieTheater.IScreeningRoom | undefined>movieTheater.containsPlace.find(
+                    const screenRoom = <factory.place.screeningRoom.IPlace | undefined>movieTheater.containsPlace.find(
                         (p) => p.branchCode === scheduleFromCOA.screenCode
                     );
                     if (screenRoom === undefined) {
@@ -388,7 +388,7 @@ export function importMovieTheaterFromCOA(params: {
 export function createScreeningEventFromCOA(params: {
     project: factory.project.IProject;
     performanceFromCOA: COA.services.master.IScheduleResult;
-    screenRoom: factory.place.movieTheater.IScreeningRoom;
+    screenRoom: factory.place.screeningRoom.IPlace;
     superEvent: factory.event.screeningEventSeries.IEvent;
     serviceKubuns: COA.services.master.IKubunNameResult[];
     acousticKubuns: COA.services.master.IKubunNameResult[];
@@ -730,8 +730,8 @@ export function createMovieTheaterFromCOA(
 export function createScreeningRoomFromCOA(
     project: factory.project.IProject,
     screenFromCOA: COA.services.master.IScreenResult
-): factory.place.movieTheater.IScreeningRoom {
-    const sections: factory.place.movieTheater.IScreeningRoomSection[] = [];
+): factory.place.screeningRoom.IPlace {
+    const sections: factory.place.screeningRoomSection.IPlace[] = [];
     const sectionCodes: string[] = [];
     screenFromCOA.listSeat.forEach((seat) => {
         if (sectionCodes.indexOf(seat.seatSection) < 0) {

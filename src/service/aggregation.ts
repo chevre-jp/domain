@@ -108,7 +108,7 @@ export function aggregateScreeningEvent(params: {
         let reservationCount: number | undefined;
         let offers: IOffer[] = [];
 
-        const screeningRoom = <factory.place.movieTheater.IScreeningRoom | undefined>
+        const screeningRoom = <factory.place.screeningRoom.IPlace | undefined>
             movieTheater.containsPlace.find((p) => p.branchCode === event.location.branchCode);
         if (screeningRoom === undefined) {
             // 基本的にありえないはずだが、万が一スクリーンが見つからなければcapacityは0のまま

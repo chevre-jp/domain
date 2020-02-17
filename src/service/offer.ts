@@ -31,9 +31,9 @@ export function searchEventSeatOffers(params: {
         priceSpecification: PriceSpecificationRepo;
         eventAvailability: EventAvailabilityRepo;
         place: PlaceRepo;
-    }): Promise<factory.place.movieTheater.IScreeningRoomSectionOffer[]> => {
+    }): Promise<factory.place.screeningRoomSection.IPlaceWithOffer[]> => {
 
-        let offers: factory.place.movieTheater.IScreeningRoomSectionOffer[] = [];
+        let offers: factory.place.screeningRoomSection.IPlaceWithOffer[] = [];
 
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
             id: params.event.id
@@ -61,7 +61,7 @@ export function searchEventSeatOffers(params: {
 
             const unavailableOffers = await repos.eventAvailability.findUnavailableOffersByEventId({ eventId: params.event.id });
             const movieTheater = await repos.place.findById({ id: event.superEvent.location.id });
-            const screeningRoom = <factory.place.movieTheater.IScreeningRoom>movieTheater.containsPlace.find(
+            const screeningRoom = <factory.place.screeningRoom.IPlace>movieTheater.containsPlace.find(
                 (p) => p.branchCode === event.location.branchCode
             );
             if (screeningRoom === undefined) {

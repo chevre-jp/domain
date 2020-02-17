@@ -49,7 +49,7 @@ export function createReservedTicket(params: {
     dateIssued: Date;
     event: factory.event.screeningEvent.IEvent;
     reservedSeatsOnly: boolean;
-    screeningRoomSections: factory.place.movieTheater.IScreeningRoomSection[];
+    screeningRoomSections: factory.place.screeningRoomSection.IPlace[];
     ticketOffer: factory.event.screeningEvent.ITicketOffer;
     transaction: factory.transaction.ITransaction<factory.transactionType.Reserve>;
 }): factory.reservation.ITicket<factory.reservationType.EventReservation> {
@@ -146,7 +146,7 @@ function validateEligibleSeatingType(params: {
 function validateEligibleSubReservation(params: {
     availableOffer: factory.ticketType.ITicketType;
     acceptedOffer: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail;
-    screeningRoomSection: factory.place.movieTheater.IScreeningRoomSection;
+    screeningRoomSection: factory.place.screeningRoomSection.IPlace;
 }): void {
     const subReservations = params.acceptedOffer.itemOffered?.serviceOutput?.subReservation;
     const eligibleSubReservations = params.availableOffer.eligibleSubReservation;
