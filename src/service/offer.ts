@@ -287,7 +287,7 @@ export function searchScreeningEventTicketOffers(params: {
 
                 const holder = await repos.offerRateLimit.getHolder(rateLimitKey);
                 // ロックされていればOutOfStock
-                if (typeof holder === 'string') {
+                if (typeof holder === 'string' && holder.length > 0) {
                     offer4event.availability = factory.itemAvailability.OutOfStock;
                 }
             }
