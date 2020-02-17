@@ -1,9 +1,11 @@
 import * as factory from '../../factory';
+
 import { MongoRepository as EventRepo } from '../../repo/event';
 import { RedisRepository as EventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
 import { MongoRepository as OfferRepo } from '../../repo/offer';
 import { MongoRepository as PlaceRepo } from '../../repo/place';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
+import { RedisRepository as OfferRateLimitRepo } from '../../repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 
@@ -26,6 +28,7 @@ export function call(data: factory.task.aggregateScreeningEvent.IData): IOperati
             event: new EventRepo(settings.connection),
             eventAvailability: new EventAvailabilityRepo(settings.redisClient),
             offer: new OfferRepo(settings.connection),
+            offerRateLimit: new OfferRateLimitRepo(settings.redisClient),
             place: new PlaceRepo(settings.connection),
             project: new ProjectRepo(settings.connection),
             reservation: new ReservationRepo(settings.connection),
