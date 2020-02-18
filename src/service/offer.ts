@@ -105,7 +105,7 @@ export function searchEventSeatOffers(params: {
 
                     seat.offers = [{
                         project: event.project,
-                        typeOf: 'Offer',
+                        typeOf: factory.offerType.Offer,
                         priceCurrency: factory.priceCurrency.JPY,
                         availability: (unavailableOffer !== undefined)
                             ? factory.itemAvailability.OutOfStock
@@ -391,7 +391,7 @@ function coaTicket2offer(params: {
 
     return {
         project: params.project,
-        typeOf: 'Offer',
+        typeOf: factory.offerType.Offer,
         priceCurrency: factory.priceCurrency.JPY,
         id: id,
         identifier: params.ticketResult.ticketCode,

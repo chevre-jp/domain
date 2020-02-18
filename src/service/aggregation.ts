@@ -28,25 +28,6 @@ export type IAggregateScreeningEventOperation<T> = (repos: {
     task: TaskRepo;
 }) => Promise<T>;
 
-export interface IAggregateReservation {
-    typeOf: 'AggregateReservation';
-    aggregateDate: Date;
-    checkInCount?: number;
-    attendeeCount?: number;
-    reservationCount?: number;
-}
-
-export interface IOfferWithAggregateReservation extends factory.ticketType.ITicketType {
-    aggregateReservation?: IAggregateReservation;
-    maximumAttendeeCapacity?: number;
-    remainingAttendeeCapacity?: number;
-}
-
-export interface IAggregateOffer {
-    typeOf: 'AggregateOffer';
-    offers?: IOfferWithAggregateReservation[];
-}
-
 /**
  * イベントデータをID指定で集計する
  */
@@ -69,20 +50,30 @@ export function aggregateScreeningEvent(params: {
         // 集計対象イベント検索
         let event = await repos.event.findById<factory.eventType.ScreeningEvent>(params);
 
-        // 座席指定イベントかどうか
-        const reservedSeatsAvailable = !(event.offers?.itemOffered?.serviceOutput?.reservedTicket !== undefined
-            && event.offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat === undefined);
+        // 劇場取得
+        const movieTheater = await repos.place.findById({ id: event.superEvent.location.id });
+
+        const screeningRoom = <factory.place.screeningRoom.IPlace | undefined>
+            movieTheater.containsPlace.find((p) => p.branchCode === event.location.branchCode);
+        if (screeningRoom === undefined) {
+            // 基本的にありえないはずだが、万が一スクリーンが見つからなければcapacityは0のまま
+            console.error(new Error('Screening room not found'));
+
+            return;
+        }
 
         // 予約集計
         const { maximumAttendeeCapacity, remainingAttendeeCapacity, aggregateReservation } = await aggregateReservationByEvent({
             aggregateDate: now,
-            event: event
+            event: event,
+            screeningRoom: screeningRoom
         })(repos);
 
         // オファーごとの集計
-        const aggregateOffer: IAggregateOffer = await aggregateOfferByEvent({
+        const aggregateOffer = await aggregateOfferByEvent({
             aggregateDate: now,
-            event: event
+            event: event,
+            screeningRoom: screeningRoom
         })(repos);
 
         // 値がundefinedの場合に更新しないように注意
@@ -96,7 +87,7 @@ export function aggregateScreeningEvent(params: {
                 ...(aggregateReservation.checkInCount !== undefined) ? { checkInCount: aggregateReservation.checkInCount } : undefined,
                 ...(aggregateReservation.attendeeCount !== undefined) ? { attendeeCount: aggregateReservation.attendeeCount } : undefined
             },
-            ...(!reservedSeatsAvailable)
+            ...(!reservedSeatsAvailable({ event }))
                 // 在庫なしイベントの場合収容人数削除
                 ? {
                     $unset: {
@@ -152,43 +143,51 @@ export function aggregateScreeningEvent(params: {
     };
 }
 
+function reservedSeatsAvailable(params: {
+    event: factory.event.IEvent<factory.eventType.ScreeningEvent>;
+}) {
+    return !(params.event.offers?.itemOffered?.serviceOutput?.reservedTicket !== undefined
+        && params.event.offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat === undefined);
+}
+
 function aggregateOfferByEvent(params: {
     aggregateDate: Date;
     event: factory.event.IEvent<factory.eventType.ScreeningEvent>;
+    screeningRoom: factory.place.screeningRoom.IPlace;
 }) {
     return async (repos: {
         offer: OfferRepo;
         offerRateLimit: OfferRateLimitRepo;
         reservation: ReservationRepo;
-    }): Promise<IAggregateOffer> => {
+    }): Promise<factory.event.screeningEvent.IAggregateOffer> => {
         let availableOffers: factory.ticketType.ITicketType[] = [];
         if (params.event.offers !== undefined) {
             availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: params.event.offers });
         }
 
         // オファーごとの予約集計
-        const offersWithAggregateReservation: IOfferWithAggregateReservation[] = await Promise.all(availableOffers.map(async (o) => {
-            const { maximumAttendeeCapacity, remainingAttendeeCapacity, aggregateReservation } = await aggregateReservationByOffer({
-                aggregateDate: params.aggregateDate,
-                event: params.event,
-                offer: o
-            })(repos);
+        const offersWithAggregateReservation: factory.event.screeningEvent.IOfferWithAggregateReservation[]
+            = await Promise.all(availableOffers.map(async (o) => {
+                const { maximumAttendeeCapacity, remainingAttendeeCapacity, aggregateReservation } = await aggregateReservationByOffer({
+                    aggregateDate: params.aggregateDate,
+                    event: params.event,
+                    screeningRoom: params.screeningRoom,
+                    offer: o
+                })(repos);
 
-            return {
-                project: o.project,
-                typeOf: o.typeOf,
-                id: o.id,
-                identifier: o.identifier,
-                priceCurrency: o.priceCurrency,
-                name: o.name,
-                aggregateReservation: aggregateReservation,
-                maximumAttendeeCapacity,
-                remainingAttendeeCapacity
-            };
-        }));
+                return {
+                    typeOf: <factory.offerType.Offer>o.typeOf,
+                    id: o.id,
+                    identifier: o.identifier,
+                    aggregateReservation: aggregateReservation,
+                    maximumAttendeeCapacity,
+                    remainingAttendeeCapacity
+                };
+            }));
 
         return {
-            typeOf: 'AggregateOffer',
+            typeOf: factory.offerType.AggregateOffer,
+            offerCount: availableOffers.length,
             offers: offersWithAggregateReservation
         };
     };
@@ -197,6 +196,7 @@ function aggregateOfferByEvent(params: {
 function aggregateReservationByOffer(params: {
     aggregateDate: Date;
     event: factory.event.IEvent<factory.eventType.ScreeningEvent>;
+    screeningRoom: factory.place.screeningRoom.IPlace;
     offer: factory.ticketType.ITicketType;
 }) {
     return async (repos: {
@@ -205,9 +205,9 @@ function aggregateReservationByOffer(params: {
     }): Promise<{
         maximumAttendeeCapacity?: number;
         remainingAttendeeCapacity?: number;
-        aggregateReservation: IAggregateReservation;
+        aggregateReservation: factory.event.screeningEvent.IAggregateReservation;
     }> => {
-        // const maximumAttendeeCapacity: number | undefined;
+        let maximumAttendeeCapacity: number | undefined;
         let remainingAttendeeCapacity: number | undefined;
 
         const reservationCount4offer = await repos.reservation.count({
@@ -233,6 +233,17 @@ function aggregateReservationByOffer(params: {
             checkedIn: true
         });
 
+        if (reservedSeatsAvailable({ event: params.event })) {
+            maximumAttendeeCapacity = params.screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0);
+
+            // 残席数を予約数から計算する場合
+            remainingAttendeeCapacity = maximumAttendeeCapacity - reservationCount4offer;
+
+            // 残席数を座席ロック数から計算する場合
+            // const unavailableOfferCount = await repos.eventAvailability.countUnavailableOffers({ event: { id: params.event.id } });
+            // remainingAttendeeCapacity = maximumAttendeeCapacity - unavailableOfferCount;
+        }
+
         // レート制限がある場合、考慮する
         const scope = params.offer.validRateLimit?.scope;
         const unitInSeconds = params.offer.validRateLimit?.unitInSeconds;
@@ -255,7 +266,7 @@ function aggregateReservationByOffer(params: {
 
             const holder = await repos.offerRateLimit.getHolder(rateLimitKey);
             // ロックされていれば在庫0
-            if (typeof holder === 'string') {
+            if (typeof holder === 'string' && holder.length > 0) {
                 remainingAttendeeCapacity = 0;
             }
         }
@@ -268,8 +279,8 @@ function aggregateReservationByOffer(params: {
                 attendeeCount: attendeeCount4offer,
                 checkInCount: checkInCount4offer
             },
-            // maximumAttendeeCapacity,
-            remainingAttendeeCapacity
+            ...(typeof maximumAttendeeCapacity === 'number') ? { maximumAttendeeCapacity } : undefined,
+            ...(typeof remainingAttendeeCapacity === 'number') ? { remainingAttendeeCapacity } : undefined
         };
     };
 }
@@ -277,15 +288,16 @@ function aggregateReservationByOffer(params: {
 function aggregateReservationByEvent(params: {
     aggregateDate: Date;
     event: factory.event.IEvent<factory.eventType.ScreeningEvent>;
+    screeningRoom: factory.place.screeningRoom.IPlace;
 }) {
     return async (repos: {
         eventAvailability: EventAvailabilityRepo;
-        place: PlaceRepo;
+        // place: PlaceRepo;
         reservation: ReservationRepo;
     }): Promise<{
         maximumAttendeeCapacity?: number;
         remainingAttendeeCapacity?: number;
-        aggregateReservation: IAggregateReservation;
+        aggregateReservation: factory.event.screeningEvent.IAggregateReservation;
     }> => {
         // 収容人数を集計
         let maximumAttendeeCapacity: number | undefined;
@@ -294,50 +306,36 @@ function aggregateReservationByEvent(params: {
         let checkInCount: number | undefined;
         let reservationCount: number | undefined;
 
-        // 座席指定イベントかどうか
-        const reservedSeatsAvailable = !(params.event.offers?.itemOffered?.serviceOutput?.reservedTicket !== undefined
-            && params.event.offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat === undefined);
+        reservationCount = await repos.reservation.count({
+            typeOf: factory.reservationType.EventReservation,
+            reservationFor: { ids: [params.event.id] },
+            reservationStatuses: [factory.reservationStatusType.ReservationConfirmed]
+        });
 
-        // 劇場取得
-        const movieTheater = await repos.place.findById({ id: params.event.superEvent.location.id });
+        if (reservedSeatsAvailable({ event: params.event })) {
+            maximumAttendeeCapacity = params.screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0);
 
-        const screeningRoom = <factory.place.screeningRoom.IPlace | undefined>
-            movieTheater.containsPlace.find((p) => p.branchCode === params.event.location.branchCode);
-        if (screeningRoom === undefined) {
-            // 基本的にありえないはずだが、万が一スクリーンが見つからなければcapacityは0のまま
-            console.error(new Error('Screening room not found'));
-        } else {
-            reservationCount = await repos.reservation.count({
-                typeOf: factory.reservationType.EventReservation,
-                reservationFor: { ids: [params.event.id] },
-                reservationStatuses: [factory.reservationStatusType.ReservationConfirmed]
-            });
+            // 残席数を予約数から計算する場合
+            // remainingAttendeeCapacity = maximumAttendeeCapacity - reservationCount;
 
-            if (reservedSeatsAvailable) {
-                maximumAttendeeCapacity = screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0);
-
-                // 残席数を予約数から計算する場合
-                // remainingAttendeeCapacity = maximumAttendeeCapacity - reservationCount;
-
-                // 残席数を座席ロック数から計算する場合
-                const unavailableOfferCount = await repos.eventAvailability.countUnavailableOffers({ event: { id: params.event.id } });
-                remainingAttendeeCapacity = maximumAttendeeCapacity - unavailableOfferCount;
-            }
-
-            attendeeCount = await repos.reservation.count({
-                typeOf: factory.reservationType.EventReservation,
-                reservationFor: { ids: [params.event.id] },
-                reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
-                attended: true
-            });
-
-            checkInCount = await repos.reservation.count({
-                typeOf: factory.reservationType.EventReservation,
-                reservationFor: { ids: [params.event.id] },
-                reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
-                checkedIn: true
-            });
+            // 残席数を座席ロック数から計算する場合
+            const unavailableOfferCount = await repos.eventAvailability.countUnavailableOffers({ event: { id: params.event.id } });
+            remainingAttendeeCapacity = maximumAttendeeCapacity - unavailableOfferCount;
         }
+
+        attendeeCount = await repos.reservation.count({
+            typeOf: factory.reservationType.EventReservation,
+            reservationFor: { ids: [params.event.id] },
+            reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+            attended: true
+        });
+
+        checkInCount = await repos.reservation.count({
+            typeOf: factory.reservationType.EventReservation,
+            reservationFor: { ids: [params.event.id] },
+            reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+            checkedIn: true
+        });
 
         return {
             maximumAttendeeCapacity,

@@ -464,7 +464,7 @@ export function createScreeningEventFromCOA(params: {
             ja: '',
             en: ''
         },
-        typeOf: 'Offer',
+        typeOf: factory.offerType.Offer,
         priceCurrency: factory.priceCurrency.JPY,
         // acceptedPaymentMethod: acceptedPaymentMethod,
         availabilityEnds: validThrough,
@@ -620,7 +620,7 @@ export function createScreeningEventSeriesFromCOA(params: {
         coaInfo: coaInfo,
         offers: {
             project: { typeOf: params.project.typeOf, id: params.project.id },
-            typeOf: 'Offer',
+            typeOf: factory.offerType.Offer,
             priceCurrency: factory.priceCurrency.JPY,
             acceptedPaymentMethod: acceptedPaymentMethod
         }

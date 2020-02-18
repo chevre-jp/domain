@@ -351,7 +351,8 @@ export class MongoRepository {
      * イベントを検索する
      */
     public async search<T extends factory.eventType>(
-        params: factory.event.ISearchConditions<T>
+        params: factory.event.ISearchConditions<T>,
+        projection?: any
     ): Promise<factory.event.IEvent<T>[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.eventModel.find(
@@ -359,7 +360,8 @@ export class MongoRepository {
             {
                 __v: 0,
                 createdAt: 0,
-                updatedAt: 0
+                updatedAt: 0,
+                ...projection
             }
         );
         // tslint:disable-next-line:no-single-line-block-comment
