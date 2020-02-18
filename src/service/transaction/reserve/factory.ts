@@ -1,6 +1,8 @@
 /**
  * 予約取引ファクトリー
  */
+import * as moment from 'moment';
+
 import * as factory from '../../../factory';
 
 export function createStartParams(params: factory.transaction.reserve.IStartParamsWithoutDetail & {
@@ -84,6 +86,11 @@ export function createReservedTicket(params: {
             throw new factory.errors.NotFound(factory.placeType.Seat, `${factory.placeType.Seat} ${seatNumber} not found`);
         }
 
+        validateDate({
+            availableOffer: params.availableOffer,
+            dateIssued: params.dateIssued
+        });
+
         validateEligibleSeatingType({
             availableOffer: params.availableOffer,
             seat: seat
@@ -116,6 +123,33 @@ export function createReservedTicket(params: {
             ? { ticketedSeat: ticketedSeat }
             : {}
     };
+}
+
+function validateDate(params: {
+    availableOffer: factory.ticketType.ITicketType;
+    dateIssued: Date;
+}): void {
+    const dateIssued = moment(params.dateIssued);
+
+    if (params.availableOffer.validFrom instanceof Date) {
+        const validFrom = moment(params.availableOffer.validFrom);
+        if (dateIssued.isBefore(validFrom)) {
+            throw new factory.errors.Argument(
+                'acceptedOffer.id',
+                `Offer ${params.availableOffer.id} is valid from ${validFrom.toISOString()}`
+            );
+        }
+    }
+
+    if (params.availableOffer.validThrough instanceof Date) {
+        const validThrough = moment(params.availableOffer.validThrough);
+        if (dateIssued.isAfter(validThrough)) {
+            throw new factory.errors.Argument(
+                'acceptedOffer.id',
+                `Offer ${params.availableOffer.id} is valid through ${validThrough.toISOString()}`
+            );
+        }
+    }
 }
 
 function validateEligibleSeatingType(params: {

@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 予約に余分確保分としてのsubReservationを追加
 - オファーに適用サブ予約条件を追加
 - 自由席許可属性を場所インターフェースに追加
+- オファーに有効期間を追加
 
 ### Deprecated
 
