@@ -527,6 +527,22 @@ export class MongoRepository {
                         }
                     );
                 }
+
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if ((<any>params.reservedTicket.ticketedSeat).seatingType !== undefined
+                    && (<any>params.reservedTicket.ticketedSeat).seatingType !== null) {
+                    if (Array.isArray((<any>params.reservedTicket.ticketedSeat).seatingType.$in)) {
+                        andConditions.push(
+                            {
+                                'reservedTicket.ticketedSeat.seatingType': {
+                                    $exists: true,
+                                    $in: (<any>params.reservedTicket.ticketedSeat).seatingType.$in
+                                }
+                            }
+                        );
+                    }
+                }
             }
         }
 

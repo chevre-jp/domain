@@ -102,7 +102,17 @@ export function createReservedTicket(params: {
             screeningRoomSection: screeningRoomSection
         });
 
-        ticketedSeat = { ...acceptedTicketedSeat, ...seat };
+        // 座席タイプをArrayに統一
+        let seatingType = seat.seatingType;
+        if (typeof seatingType === 'string') {
+            seatingType = [seatingType];
+        }
+
+        ticketedSeat = {
+            ...acceptedTicketedSeat,
+            ...seat,
+            ...(Array.isArray(seatingType)) ? { seatingType } : undefined
+        };
     }
 
     return {

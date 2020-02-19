@@ -318,6 +318,16 @@ schema.index(
 );
 
 schema.index(
+    { 'reservedTicket.ticketedSeat.seatingType': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservedTicketTicketedSeatSeatingType',
+        partialFilterExpression: {
+            'reservedTicket.ticketedSeat.seatingType': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'reservedTicket.ticketType.id': 1, modifiedTime: -1 },
     {
         name: 'searchByReservedTicketTicketTypeId',
