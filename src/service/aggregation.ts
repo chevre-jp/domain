@@ -242,17 +242,14 @@ function aggregateReservationByOffer(params: {
             checkedIn: true
         });
 
-        // 基本的にはイベントのキャパシティに同じ
         if (reservedSeatsAvailable({ event: params.event })) {
+            // 基本的にはイベントのキャパシティに同じ
             maximumAttendeeCapacity = params.event.maximumAttendeeCapacity;
             remainingAttendeeCapacity = params.event.remainingAttendeeCapacity;
-        }
 
-        // 座席タイプ制約のあるオファーの場合
-        const eligibleSeatingTypes = params.offer.eligibleSeatingType;
-        if (Array.isArray(eligibleSeatingTypes)) {
-
-            if (reservedSeatsAvailable({ event: params.event })) {
+            // 座席タイプ制約のあるオファーの場合
+            const eligibleSeatingTypes = params.offer.eligibleSeatingType;
+            if (Array.isArray(eligibleSeatingTypes)) {
                 // 適用座席タイプに絞る
                 maximumAttendeeCapacity = params.screeningRoom.containsPlace.reduce(
                     (a, b) => {
@@ -284,6 +281,18 @@ function aggregateReservationByOffer(params: {
                 });
 
                 remainingAttendeeCapacity = maximumAttendeeCapacity - reseravtionCount4eligibleSeatingType;
+            }
+
+            // 単価スペックの単位が1より大きい場合
+            const referenceQuantityValue = params.offer.priceSpecification?.referenceQuantity.value;
+            if (typeof referenceQuantityValue === 'number' && referenceQuantityValue > 1) {
+                if (typeof maximumAttendeeCapacity === 'number') {
+                    maximumAttendeeCapacity -= maximumAttendeeCapacity % referenceQuantityValue;
+                }
+
+                if (typeof remainingAttendeeCapacity === 'number') {
+                    remainingAttendeeCapacity -= remainingAttendeeCapacity % referenceQuantityValue;
+                }
             }
         }
 
