@@ -192,10 +192,17 @@ function validateEligibleSubReservation(params: {
     acceptedOffer: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail;
     screeningRoomSection: factory.place.screeningRoomSection.IPlace;
 }): void {
-    const subReservations = params.acceptedOffer.itemOffered?.serviceOutput?.subReservation;
     const eligibleSubReservations = params.availableOffer.eligibleSubReservation;
 
-    if (Array.isArray(subReservations) && Array.isArray(eligibleSubReservations)) {
+    // サブ予約条件が存在すればacceptedOfferが適切かどうか確認する
+    if (Array.isArray(eligibleSubReservations)) {
+        const subReservations = params.acceptedOffer.itemOffered?.serviceOutput?.subReservation;
+        if (!Array.isArray(subReservations)) {
+            throw new factory.errors.ArgumentNull(
+                'subReservation'
+            );
+        }
+
         const seats4subReservation = subReservations.map((subReservation) => {
             const seatNumber4subReservation = subReservation.reservedTicket?.ticketedSeat?.seatNumber;
             const seat4subReservation = params.screeningRoomSection.containsPlace.find((p) => p.branchCode === seatNumber4subReservation);
@@ -215,10 +222,11 @@ function validateEligibleSubReservation(params: {
                     : (typeof seat.seatingType === 'string') ? [seat.seatingType]
                         : [];
 
-                // 座席が条件の座席タイプを含む
+                // 座席が条件の座席タイプを含むかどうか
                 return seatingTypes.includes(eligibleSubReservation.typeOfGood.seatingType);
             });
 
+            // 座席数が条件に等しいかどうか
             const includesEligibleAmount = seats4subReservation.length === eligibleSubReservation.amountOfThisGood;
 
             return includesEligilbeSeatingType && includesEligibleAmount;
