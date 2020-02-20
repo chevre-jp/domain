@@ -289,6 +289,10 @@ export class MongoRepository {
         return andConditions;
     }
 
+    /**
+     * 券種グループの券種を検索する
+     * 券種グループに登録された券種の順序は保証される
+     */
     public async findTicketTypesByOfferCatalogId(params: {
         offerCatalog: {
             id: string;
@@ -311,8 +315,10 @@ export class MongoRepository {
                 return doc.toObject();
             });
 
-        return this.ticketTypeModel.find(
-            { _id: { $in: ticketTypeGroup.ticketTypes } },
+        const sortedOfferIds = ticketTypeGroup.ticketTypes;
+
+        let offers = await this.ticketTypeModel.find(
+            { _id: { $in: sortedOfferIds } },
             {
                 __v: 0,
                 createdAt: 0,
@@ -321,6 +327,11 @@ export class MongoRepository {
         )
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
+
+        // sorting
+        offers = offers.sort((a, b) => sortedOfferIds.indexOf(a.id) - sortedOfferIds.indexOf(b.id));
+
+        return offers;
     }
 
     /**

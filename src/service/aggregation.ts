@@ -171,24 +171,27 @@ function aggregateOfferByEvent(params: {
         }
 
         // オファーごとの予約集計
-        const offersWithAggregateReservation: factory.event.screeningEvent.IOfferWithAggregateReservation[]
-            = await Promise.all(availableOffers.map(async (o) => {
-                const { maximumAttendeeCapacity, remainingAttendeeCapacity, aggregateReservation } = await aggregateReservationByOffer({
-                    aggregateDate: params.aggregateDate,
-                    event: params.event,
-                    screeningRoom: params.screeningRoom,
-                    offer: o
-                })(repos);
+        const offersWithAggregateReservation: factory.event.screeningEvent.IOfferWithAggregateReservation[] = [];
+        for (const o of availableOffers) {
+            const { maximumAttendeeCapacity, remainingAttendeeCapacity, aggregateReservation } = await aggregateReservationByOffer({
+                aggregateDate: params.aggregateDate,
+                event: params.event,
+                screeningRoom: params.screeningRoom,
+                offer: o
+            })(repos);
 
-                return {
-                    typeOf: <factory.offerType.Offer>o.typeOf,
-                    id: o.id,
-                    identifier: o.identifier,
-                    aggregateReservation: aggregateReservation,
-                    maximumAttendeeCapacity,
-                    remainingAttendeeCapacity
-                };
-            }));
+            offersWithAggregateReservation.push({
+                typeOf: <factory.offerType.Offer>o.typeOf,
+                id: o.id,
+                identifier: o.identifier,
+                aggregateReservation: aggregateReservation,
+                maximumAttendeeCapacity,
+                remainingAttendeeCapacity,
+                ...{
+                    name: o.name
+                }
+            });
+        }
 
         return {
             typeOf: factory.offerType.AggregateOffer,

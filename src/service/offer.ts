@@ -145,9 +145,8 @@ export function searchScreeningEventTicketOffers(params: {
             = (Array.isArray(event.superEvent.videoFormat))
                 ? event.superEvent.videoFormat.map((f) => f.typeOf)
                 : [factory.videoFormatType['2D']];
-        const offerCatalog = await repos.offer.findTicketTypeGroupById({ id: screeningEventOffers.id });
-        const sortedOfferIds = offerCatalog.ticketTypes;
         const availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: screeningEventOffers });
+        const sortedOfferIds = availableOffers.map((o) => o.id);
 
         const soundFormatChargeSpecifications =
             await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>({
