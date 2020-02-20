@@ -145,6 +145,8 @@ export function searchScreeningEventTicketOffers(params: {
             = (Array.isArray(event.superEvent.videoFormat))
                 ? event.superEvent.videoFormat.map((f) => f.typeOf)
                 : [factory.videoFormatType['2D']];
+        const offerCatalog = await repos.offer.findTicketTypeGroupById({ id: screeningEventOffers.id });
+        const sortedOfferIds = offerCatalog.ticketTypes;
         const availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: screeningEventOffers });
 
         const soundFormatChargeSpecifications =
@@ -262,7 +264,7 @@ export function searchScreeningEventTicketOffers(params: {
                 };
             });
 
-        const offers4event: factory.event.screeningEvent.ITicketOffer[] = [...ticketTypeOffers, ...movieTicketOffers];
+        let offers4event: factory.event.screeningEvent.ITicketOffer[] = [...ticketTypeOffers, ...movieTicketOffers];
 
         // レート制限を確認
         for (const offer4event of offers4event) {
@@ -292,6 +294,11 @@ export function searchScreeningEventTicketOffers(params: {
                 }
             }
         }
+
+        // sorting
+        offers4event = offers4event.sort((a, b) => {
+            return sortedOfferIds.indexOf(a.id) - sortedOfferIds.indexOf(b.id);
+        });
 
         return offers4event;
     };
