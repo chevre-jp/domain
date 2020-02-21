@@ -348,6 +348,16 @@ schema.index(
 );
 
 schema.index(
+    { 'reservedTicket.ticketType.category.codeValue': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservedTicketTicketTypeCategoryCodeValue',
+        partialFilterExpression: {
+            'reservedTicket.ticketType.category.codeValue': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'underName.id': 1, modifiedTime: -1 },
     {
         name: 'searchByUnderNameId',

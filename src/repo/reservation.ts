@@ -483,6 +483,22 @@ export class MongoRepository {
                             }
                         );
                     }
+
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (params.reservedTicket.ticketType.category.codeValue !== undefined
+                        && params.reservedTicket.ticketType.category !== null) {
+                        if (Array.isArray(params.reservedTicket.ticketType.category.codeValue.$in)) {
+                            andConditions.push(
+                                {
+                                    'reservedTicket.ticketType.category.codeValue': {
+                                        $exists: true,
+                                        $in: params.reservedTicket.ticketType.category.codeValue.$in
+                                    }
+                                }
+                            );
+                        }
+                    }
                 }
             }
 

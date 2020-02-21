@@ -162,6 +162,17 @@ export class MongoRepository {
                     }
                 });
             }
+
+            if (params.category.codeValue !== undefined && params.category.codeValue !== null) {
+                if (Array.isArray(params.category.codeValue.$in)) {
+                    andConditions.push({
+                        'category.codeValue': {
+                            $exists: true,
+                            $in: params.category.codeValue.$in
+                        }
+                    });
+                }
+            }
         }
 
         return andConditions;
@@ -222,6 +233,19 @@ export class MongoRepository {
                         'itemOffered.typeOf': {
                             $exists: true,
                             $eq: params.itemOffered.typeOf.$eq
+                        }
+                    });
+                }
+            }
+        }
+
+        if (params.category !== undefined && params.category !== null) {
+            if (params.category.codeValue !== undefined && params.category.codeValue !== null) {
+                if (Array.isArray(params.category.codeValue.$in)) {
+                    andConditions.push({
+                        'category.codeValue': {
+                            $exists: true,
+                            $in: params.category.codeValue.$in
                         }
                     });
                 }

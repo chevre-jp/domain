@@ -156,6 +156,16 @@ export function create(options: mongoose.SchemaOptions) {
     );
 
     schema.index(
+        { 'category.codeValue': 1, 'priceSpecification.price': 1 },
+        {
+            name: 'searchByCategoryCodeValue',
+            partialFilterExpression: {
+                'category.codeValue': { $exists: true }
+            }
+        }
+    );
+
+    schema.index(
         { 'itemOffered.typeOf': 1, 'priceSpecification.price': 1 },
         {
             name: 'searchByItemOfferedTypeOf',
