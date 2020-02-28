@@ -9,6 +9,7 @@ import { MongoRepository as CreativeWorkRepo } from './repo/creativeWork';
 import { MongoRepository as EventRepo } from './repo/event';
 import { RedisRepository as ScreeningEventItemAvailabilityRepo } from './repo/itemAvailability/screeningEvent';
 import { MongoRepository as OfferRepo } from './repo/offer';
+import { MongoRepository as OfferCatalogRepo } from './repo/offerCatalog';
 import { MongoRepository as PlaceRepo } from './repo/place';
 import { MongoRepository as PriceSpecificationRepo } from './repo/priceSpecification';
 import { MongoRepository as ProductRepo } from './repo/product';
@@ -26,6 +27,7 @@ export class CategoryCode extends CategoryCodeRepo { }
 export class CreativeWork extends CreativeWorkRepo { }
 export class Event extends EventRepo { }
 export class Offer extends OfferRepo { }
+export class OfferCatalog extends OfferCatalogRepo { }
 export class Place extends PlaceRepo { }
 export class PriceSpecification extends PriceSpecificationRepo { }
 export class Product extends ProductRepo { }

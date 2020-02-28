@@ -314,7 +314,7 @@ export class MongoRepository {
         return andConditions;
     }
 
-    public static CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params: factory.ticketType.ITicketTypeGroupSearchConditions) {
+    public static CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params: factory.offerCatalog.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [];
 
@@ -425,10 +425,13 @@ export class MongoRepository {
                     throw new factory.errors.NotFound(this.ticketTypeGroupModel.modelName);
                 }
 
-                return doc.toObject();
+                return <factory.offerCatalog.IOfferCatalog>doc.toObject();
             });
 
-        const sortedOfferIds = ticketTypeGroup.ticketTypes;
+        // ticketTypes属性への互換性対応
+        const sortedOfferIds: string[] = (Array.isArray(ticketTypeGroup.itemListElement))
+            ? ticketTypeGroup.itemListElement.map((element) => element.id)
+            : ticketTypeGroup.ticketTypes;
 
         let offers = await this.ticketTypeModel.find(
             { _id: { $in: sortedOfferIds } },
@@ -450,7 +453,7 @@ export class MongoRepository {
     /**
      * 券種グループを保管する
      */
-    public async saveTicketTypeGroup(params: factory.ticketType.ITicketTypeGroup): Promise<factory.ticketType.ITicketTypeGroup> {
+    public async saveTicketTypeGroup(params: factory.offerCatalog.IOfferCatalog): Promise<factory.offerCatalog.IOfferCatalog> {
         let doc: Document | null;
 
         if (params.id === '') {
@@ -474,7 +477,7 @@ export class MongoRepository {
 
     public async findTicketTypeGroupById(params: {
         id: string;
-    }): Promise<factory.ticketType.ITicketTypeGroup> {
+    }): Promise<factory.offerCatalog.IOfferCatalog> {
         const doc = await this.ticketTypeGroupModel.findOne(
             {
                 _id: params.id
@@ -494,7 +497,7 @@ export class MongoRepository {
     }
 
     public async countTicketTypeGroups(
-        params: factory.ticketType.ITicketTypeGroupSearchConditions
+        params: factory.offerCatalog.ISearchConditions
     ): Promise<number> {
         const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
 
@@ -507,8 +510,8 @@ export class MongoRepository {
      * 券種グループを検索する
      */
     public async searchTicketTypeGroups(
-        params: factory.ticketType.ITicketTypeGroupSearchConditions
-    ): Promise<factory.ticketType.ITicketTypeGroup[]> {
+        params: factory.offerCatalog.ISearchConditions
+    ): Promise<factory.offerCatalog.IOfferCatalog[]> {
         const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
         const query = this.ticketTypeGroupModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
@@ -518,13 +521,27 @@ export class MongoRepository {
                 updatedAt: 0
             }
         );
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
             query.limit(params.limit)
                 .skip(params.limit * (params.page - 1));
         }
 
-        return query.sort({ _id: 1 })
-            .setOptions({ maxTimeMS: 10000 })
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
+
+        return query.setOptions({ maxTimeMS: 10000 })
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
     }
@@ -647,93 +664,6 @@ export class MongoRepository {
             .exec();
     }
 
-    public async saveOfferCatalog(params: any): Promise<any> {
-        let doc: Document | null;
-
-        if (params.id === '') {
-            const id = uniqid();
-            doc = await this.offerCatalogModel.create({ ...params, _id: id });
-        } else {
-            doc = await this.offerCatalogModel.findOneAndUpdate(
-                { _id: params.id },
-                params,
-                { upsert: false, new: true }
-            )
-                .exec();
-
-            if (doc === null) {
-                throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
-            }
-        }
-
-        return doc.toObject();
-    }
-
-    public async findOfferCatalogById(params: {
-        id: string;
-    }): Promise<any> {
-        const doc = await this.offerCatalogModel.findOne(
-            {
-                _id: params.id
-            },
-            {
-                __v: 0,
-                createdAt: 0,
-                updatedAt: 0
-            }
-        )
-            .exec();
-        if (doc === null) {
-            throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
-        }
-
-        return doc.toObject();
-    }
-
-    public async countOfferCatalogs(
-        params: any
-    ): Promise<number> {
-        const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
-
-        return this.offerCatalogModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
-            .setOptions({ maxTimeMS: 10000 })
-            .exec();
-    }
-
-    public async searchOfferCatalogs(
-        params: any
-    ): Promise<any[]> {
-        const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
-        const query = this.offerCatalogModel.find(
-            (conditions.length > 0) ? { $and: conditions } : {},
-            {
-                __v: 0,
-                createdAt: 0,
-                updatedAt: 0
-            }
-        );
-        if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit)
-                .skip(params.limit * (params.page - 1));
-        }
-
-        return query.sort({ _id: 1 })
-            .setOptions({ maxTimeMS: 10000 })
-            .exec()
-            .then((docs) => docs.map((doc) => doc.toObject()));
-    }
-
-    public async deleteOfferCatalog(params: {
-        id: string;
-    }) {
-        await this.offerCatalogModel.findOneAndRemove(
-            {
-                _id: params.id
-            }
-        )
-            .exec();
-    }
-
     public async findById(params: {
         id: string;
     }): Promise<factory.offer.IOffer> {
@@ -828,5 +758,4 @@ export class MongoRepository {
         )
             .exec();
     }
-
 }

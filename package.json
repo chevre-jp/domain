@@ -13,7 +13,7 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "2.6.0-alpha.23",
+    "@chevre/factory": "2.6.0-alpha.24",
     "@motionpicture/coa-service": "^7.0.0",
     "JSONStream": "^1.3.5",
     "cdigit": "^2.3.7",

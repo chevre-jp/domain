@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - カテゴリーコードチャージ仕様インターフェースを追加
 - オファーカテゴリータイプを追加
 - オファーレート制限リポジトリを追加
+- オファーカタログリポジトリを追加
 
 ### Changed
 
