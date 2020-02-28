@@ -210,10 +210,10 @@ export class MongoRepository {
                 });
             }
 
-            if (Array.isArray((<any>params.id).$in)) {
+            if (Array.isArray((params.id).$in)) {
                 andConditions.push({
                     _id: {
-                        $in: (<any>params.id).$in
+                        $in: (params.id).$in
                     }
                 });
             }
@@ -260,6 +260,57 @@ export class MongoRepository {
             }
         }
 
+        if (params.priceSpecification !== undefined && params.priceSpecification !== null) {
+            if (typeof params.priceSpecification.price?.$gte === 'number') {
+                andConditions.push({
+                    'priceSpecification.price': {
+                        $exists: true,
+                        $gte: params.priceSpecification.price?.$gte
+                    }
+                });
+            }
+
+            if (typeof params.priceSpecification.price?.$lte === 'number') {
+                andConditions.push({
+                    'priceSpecification.price': {
+                        $exists: true,
+                        $lte: params.priceSpecification.price?.$lte
+                    }
+                });
+            }
+
+            if (params.priceSpecification.accounting !== undefined && params.priceSpecification.accounting !== null) {
+                if (typeof params.priceSpecification.accounting.accountsReceivable?.$gte === 'number') {
+                    andConditions.push({
+                        'priceSpecification.accounting.accountsReceivable': {
+                            $exists: true,
+                            $gte: params.priceSpecification.accounting.accountsReceivable?.$gte
+                        }
+                    });
+                }
+
+                if (typeof params.priceSpecification.accounting.accountsReceivable?.$lte === 'number') {
+                    andConditions.push({
+                        'priceSpecification.accounting.accountsReceivable': {
+                            $exists: true,
+                            $lte: params.priceSpecification.accounting.accountsReceivable?.$lte
+                        }
+                    });
+                }
+            }
+
+            if (params.priceSpecification.referenceQuantity !== undefined) {
+                if (typeof params.priceSpecification.referenceQuantity.value?.$eq === 'number') {
+                    andConditions.push({
+                        'priceSpecification.referenceQuantity.value': {
+                            $exists: true,
+                            $eq: params.priceSpecification.referenceQuantity.value?.$eq
+                        }
+                    });
+                }
+            }
+        }
+
         return andConditions;
     }
 
@@ -279,12 +330,12 @@ export class MongoRepository {
                 });
             }
 
-            if ((<any>params.project).id !== undefined && (<any>params.project).id !== null) {
-                if (typeof (<any>params.project).id.$eq === 'string') {
+            if (params.project.id !== undefined && params.project.id !== null) {
+                if (typeof params.project.id.$eq === 'string') {
                     andConditions.push({
                         'project.id': {
                             $exists: true,
-                            $eq: (<any>params.project).id.$eq
+                            $eq: params.project.id.$eq
                         }
                     });
                 }
@@ -321,10 +372,29 @@ export class MongoRepository {
                 ]
             });
         }
+
         if (Array.isArray(params.ticketTypes)) {
             andConditions.push({
                 ticketTypes: {
                     $in: params.ticketTypes
+                }
+            });
+        }
+
+        const itemListElementIdIn = params.itemListElement?.id?.$in;
+        if (Array.isArray(itemListElementIdIn)) {
+            andConditions.push({
+                'itemListElement.id': {
+                    $in: itemListElementIdIn
+                }
+            });
+        }
+
+        const itemOfferedTypeOfEq = params.itemOffered?.typeOf?.$eq;
+        if (typeof itemOfferedTypeOfEq === 'string') {
+            andConditions.push({
+                'itemOffered.typeOf': {
+                    $eq: itemOfferedTypeOfEq
                 }
             });
         }

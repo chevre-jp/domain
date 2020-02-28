@@ -35,6 +35,43 @@ schema.index(
     { name: 'searchByUpdatedAt' }
 );
 
+schema.index(
+    { identifier: 1 },
+    {
+        name: 'searchByIdentifier'
+    }
+);
+
+schema.index(
+    { 'project.id': 1, identifier: 1 },
+    {
+        name: 'searchByProjectId',
+        partialFilterExpression: {
+            'project.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'itemListElement.id': 1, identifier: 1 },
+    {
+        name: 'searchByItemListElementId',
+        partialFilterExpression: {
+            'itemListElement.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'itemOffered.typeOf': 1, identifier: 1 },
+    {
+        name: 'searchByItemOfferedTypeOf',
+        partialFilterExpression: {
+            'itemOffered.typeOf': { $exists: true }
+        }
+    }
+);
+
 export default mongoose.model('OfferCatalog', schema)
     .on(
         'index',

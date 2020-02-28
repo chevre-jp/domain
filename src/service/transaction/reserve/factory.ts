@@ -262,10 +262,10 @@ export function createAdditionalProperty(params: {
 export function createAdditionalTicketText(params: {
     acceptedOffer: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail;
     reservedTicket: factory.reservation.ITicket<factory.reservationType.EventReservation>;
-}): string {
-    let additionalTicketText = params.acceptedOffer.itemOffered?.serviceOutput?.additionalTicketText;
+}): string | undefined {
+    const additionalTicketText = params.acceptedOffer.itemOffered?.serviceOutput?.additionalTicketText;
     if (typeof additionalTicketText !== 'string') {
-        additionalTicketText = params.reservedTicket.ticketType.name.ja;
+        // additionalTicketText = params.reservedTicket.ticketType.name.ja;
     }
 
     return additionalTicketText;
@@ -324,7 +324,6 @@ export function createReservation(params: {
         typeOf: factory.reservationType.EventReservation,
         id: params.id,
         additionalProperty: params.additionalProperty,
-        additionalTicketText: params.additionalTicketText,
         bookingTime: params.reserveDate,
         modifiedTime: params.reserveDate,
         numSeats: 1,
@@ -344,6 +343,7 @@ export function createReservation(params: {
         underName: params.agent,
         checkedIn: false,
         attended: false,
+        ...(typeof params.additionalTicketText === 'string') ? { additionalTicketText: params.additionalTicketText } : undefined,
         ...(Array.isArray(params.subReservation)) ? { subReservation: params.subReservation } : undefined
     };
 }
