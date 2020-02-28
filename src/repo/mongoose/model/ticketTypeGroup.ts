@@ -30,6 +30,7 @@ const schema = new mongoose.Schema(
         id: true,
         read: 'primaryPreferred',
         safe: safe,
+        strict: false,
         timestamps: {
             createdAt: 'createdAt',
             updatedAt: 'updatedAt'
