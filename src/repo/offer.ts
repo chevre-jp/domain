@@ -535,12 +535,6 @@ export class MongoRepository {
             query.sort(params.sort);
         }
 
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.sort !== undefined) {
-            query.sort(params.sort);
-        }
-
         return query.setOptions({ maxTimeMS: 10000 })
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
