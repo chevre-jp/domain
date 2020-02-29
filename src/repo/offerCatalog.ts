@@ -19,28 +19,14 @@ export class MongoRepository {
         // MongoDB検索条件
         const andConditions: any[] = [];
 
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.project !== undefined) {
-            if (Array.isArray(params.project.ids)) {
-                andConditions.push({
-                    'project.id': {
-                        $exists: true,
-                        $in: params.project.ids
-                    }
-                });
-            }
-
-            if (params.project.id !== undefined && params.project.id !== null) {
-                if (typeof params.project.id.$eq === 'string') {
-                    andConditions.push({
-                        'project.id': {
-                            $exists: true,
-                            $eq: params.project.id.$eq
-                        }
-                    });
+        const projectIdEq = params.project?.id?.$eq;
+        if (typeof projectIdEq === 'string') {
+            andConditions.push({
+                'project.id': {
+                    $exists: true,
+                    $eq: projectIdEq
                 }
-            }
+            });
         }
 
         if (params.id !== undefined) {
@@ -74,18 +60,11 @@ export class MongoRepository {
             });
         }
 
-        if (Array.isArray(params.ticketTypes)) {
-            andConditions.push({
-                ticketTypes: {
-                    $in: params.ticketTypes
-                }
-            });
-        }
-
         const itemListElementIdIn = params.itemListElement?.id?.$in;
         if (Array.isArray(itemListElementIdIn)) {
             andConditions.push({
                 'itemListElement.id': {
+                    $exists: true,
                     $in: itemListElementIdIn
                 }
             });
@@ -95,7 +74,29 @@ export class MongoRepository {
         if (typeof itemOfferedTypeOfEq === 'string') {
             andConditions.push({
                 'itemOffered.typeOf': {
+                    $exists: true,
                     $eq: itemOfferedTypeOfEq
+                }
+            });
+        }
+
+        // 互換性対応
+        const ticketTypes = (<any>params).ticketTypes;
+        if (Array.isArray(ticketTypes)) {
+            andConditions.push({
+                ticketTypes: {
+                    $in: ticketTypes
+                }
+            });
+        }
+
+        // 互換性対応
+        const projectIds = (<any>params).project?.ids;
+        if (Array.isArray(projectIds)) {
+            andConditions.push({
+                'project.id': {
+                    $exists: true,
+                    $in: projectIds
                 }
             });
         }
