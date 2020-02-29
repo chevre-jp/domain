@@ -74,6 +74,14 @@ export class MongoRepository {
             });
         }
 
+        if (Array.isArray(params.ticketTypes)) {
+            andConditions.push({
+                ticketTypes: {
+                    $in: params.ticketTypes
+                }
+            });
+        }
+
         const itemListElementIdIn = params.itemListElement?.id?.$in;
         if (Array.isArray(itemListElementIdIn)) {
             andConditions.push({

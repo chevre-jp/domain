@@ -8,6 +8,8 @@ import OfferCatalogModel from './mongoose/model/offerCatalog';
 import TicketTypeModel from './mongoose/model/ticketType';
 import TicketTypeGroupModel from './mongoose/model/ticketTypeGroup';
 
+import { MongoRepository as OfferCategoryRepo } from './offerCatalog';
+
 /**
  * オファーリポジトリ
  */
@@ -314,94 +316,6 @@ export class MongoRepository {
         return andConditions;
     }
 
-    public static CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params: factory.offerCatalog.ISearchConditions) {
-        // MongoDB検索条件
-        const andConditions: any[] = [];
-
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.project !== undefined) {
-            if (Array.isArray(params.project.ids)) {
-                andConditions.push({
-                    'project.id': {
-                        $exists: true,
-                        $in: params.project.ids
-                    }
-                });
-            }
-
-            if (params.project.id !== undefined && params.project.id !== null) {
-                if (typeof params.project.id.$eq === 'string') {
-                    andConditions.push({
-                        'project.id': {
-                            $exists: true,
-                            $eq: params.project.id.$eq
-                        }
-                    });
-                }
-            }
-        }
-
-        if (params.id !== undefined) {
-            andConditions.push({ _id: new RegExp(params.id) });
-        }
-
-        if (typeof params.identifier === 'string') {
-            andConditions.push({
-                identifier: {
-                    $exists: true,
-                    $regex: new RegExp(params.identifier)
-                }
-            });
-        } else if (params.identifier !== undefined && params.identifier !== null) {
-            if (typeof params.identifier.$eq === 'string') {
-                andConditions.push({
-                    identifier: {
-                        $exists: true,
-                        $eq: params.identifier.$eq
-                    }
-                });
-            }
-        }
-
-        if (params.name !== undefined) {
-            andConditions.push({
-                $or: [
-                    { 'name.ja': new RegExp(params.name) },
-                    { 'name.en': new RegExp(params.name) }
-                ]
-            });
-        }
-
-        if (Array.isArray(params.ticketTypes)) {
-            andConditions.push({
-                ticketTypes: {
-                    $in: params.ticketTypes
-                }
-            });
-        }
-
-        const itemListElementIdIn = params.itemListElement?.id?.$in;
-        if (Array.isArray(itemListElementIdIn)) {
-            andConditions.push({
-                'itemListElement.id': {
-                    $in: itemListElementIdIn
-                }
-            });
-        }
-
-        const itemOfferedTypeOfEq = params.itemOffered?.typeOf?.$eq;
-        if (typeof itemOfferedTypeOfEq === 'string') {
-            andConditions.push({
-                'itemOffered.typeOf': {
-                    $eq: itemOfferedTypeOfEq
-                }
-            });
-        }
-
-        return andConditions;
-    }
-
     /**
      * 券種グループの券種を検索する
      * 券種グループに登録された券種の順序は保証される
@@ -499,7 +413,7 @@ export class MongoRepository {
     public async countTicketTypeGroups(
         params: factory.offerCatalog.ISearchConditions
     ): Promise<number> {
-        const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
+        const conditions = OfferCategoryRepo.CREATE_MONGO_CONDITIONS(params);
 
         return this.ticketTypeGroupModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
             .setOptions({ maxTimeMS: 10000 })
@@ -512,7 +426,7 @@ export class MongoRepository {
     public async searchTicketTypeGroups(
         params: factory.offerCatalog.ISearchConditions
     ): Promise<factory.offerCatalog.IOfferCatalog[]> {
-        const conditions = MongoRepository.CREATE_OFFER_CATALOG_MONGO_CONDITIONS(params);
+        const conditions = OfferCategoryRepo.CREATE_MONGO_CONDITIONS(params);
         const query = this.ticketTypeGroupModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
             {
