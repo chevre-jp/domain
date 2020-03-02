@@ -73,11 +73,16 @@ schema.index(
 );
 
 schema.index(
+    { identifier: 1 },
     {
-        'project.id': 1
-    },
+        name: 'searchByIdentifier2'
+    }
+);
+
+schema.index(
+    { 'project.id': 1, identifier: 1 },
     {
-        name: 'searchByProjectId',
+        name: 'searchByProjectId2',
         partialFilterExpression: {
             'project.id': { $exists: true }
         }
@@ -85,58 +90,42 @@ schema.index(
 );
 
 schema.index(
+    { name: 1, identifier: 1 },
     {
-        identifier: 1
-    },
-    {
-        partialFilterExpression: {
-            identifier: { $exists: true }
-        },
-        name: 'searchByIdentifier'
-    }
-);
-schema.index(
-    {
-        name: 1
-    },
-    {
+        name: 'searchByName2',
         partialFilterExpression: {
             name: { $exists: true }
-        },
-        name: 'searchByName'
+        }
     }
 );
+
 schema.index(
+    { datePublished: 1, identifier: 1 },
     {
-        datePublished: 1
-    },
-    {
+        name: 'searchByDatePublished2',
         partialFilterExpression: {
             datePublished: { $exists: true }
-        },
-        name: 'searchByDatePublished'
+        }
     }
 );
+
 schema.index(
+    { 'offers.availabilityEnds': 1, identifier: 1 },
     {
-        'offers.availabilityEnds': 1
-    },
-    {
+        name: 'searchByOffersAvailabilityEnds2',
         partialFilterExpression: {
             'offers.availabilityEnds': { $exists: true }
-        },
-        name: 'searchByOffersAvailabilityEnds'
+        }
     }
 );
+
 schema.index(
+    { 'offers.availabilityStarts': 1, identifier: 1 },
     {
-        'offers.availabilityStarts': 1
-    },
-    {
+        name: 'searchByOffersAvailabilityStarts2',
         partialFilterExpression: {
             'offers.availabilityStarts': { $exists: true }
-        },
-        name: 'searchByOffersAvailabilityStarts'
+        }
     }
 );
 
