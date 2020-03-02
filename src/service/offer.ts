@@ -5,8 +5,10 @@ import { format } from 'util';
 import { MongoRepository as EventRepo } from '../repo/event';
 import { RedisRepository as EventAvailabilityRepo } from '../repo/itemAvailability/screeningEvent';
 import { MongoRepository as OfferRepo } from '../repo/offer';
+import { MongoRepository as OfferCatalogRepo } from '../repo/offerCatalog';
 import { MongoRepository as PlaceRepo } from '../repo/place';
 import { MongoRepository as PriceSpecificationRepo } from '../repo/priceSpecification';
+import { MongoRepository as ProductRepo } from '../repo/product';
 import { MongoRepository as ProjectRepo } from '../repo/project';
 import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../repo/rateLimit/offer';
 import { MongoRepository as TaskRepo } from '../repo/task';
@@ -17,7 +19,9 @@ type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     event: EventRepo;
     priceSpecification: PriceSpecificationRepo;
     offer: OfferRepo;
+    offerCatalog: OfferCatalogRepo;
     offerRateLimit: OfferRateLimitRepo;
+    product: ProductRepo;
 }) => Promise<T>;
 
 /**
@@ -131,7 +135,9 @@ export function searchScreeningEventTicketOffers(params: {
         event: EventRepo;
         priceSpecification: PriceSpecificationRepo;
         offer: OfferRepo;
+        offerCatalog: OfferCatalogRepo;
         offerRateLimit: OfferRateLimitRepo;
+        product: ProductRepo;
     }) => {
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
             id: params.eventId
@@ -294,12 +300,68 @@ export function searchScreeningEventTicketOffers(params: {
             }
         }
 
+        // アドオン設定があれば、プロダクトオファーを検索
+        for (const offer of offers4event) {
+            const offerAddOn: factory.offer.IAddOn[] = [];
+
+            if (Array.isArray(offer.addOn)) {
+                for (const addOn of offer.addOn) {
+                    const productId = addOn.itemOffered?.id;
+                    if (typeof productId === 'string') {
+                        const productOffers = await searchAddOns({ product: { id: productId } })(repos);
+                        offerAddOn.push(...productOffers);
+                    }
+
+                }
+            }
+
+            offer.addOn = offerAddOn;
+        }
+
         // sorting
         offers4event = offers4event.sort((a, b) => {
             return sortedOfferIds.indexOf(a.id) - sortedOfferIds.indexOf(b.id);
         });
 
         return offers4event;
+    };
+}
+
+/**
+ * アドオンを検索する
+ */
+export function searchAddOns(params: {
+    product: { id: string };
+}): ISearchScreeningEventTicketOffersOperation<factory.offer.IOffer[]> {
+    return async (repos: {
+        offer: OfferRepo;
+        offerCatalog: OfferCatalogRepo;
+        product: ProductRepo;
+    }) => {
+        let offers: factory.offer.IOffer[] = [];
+
+        const productId = params.product?.id;
+        if (typeof productId === 'string') {
+            const product = await repos.product.findById({ id: productId });
+            const offerCatalogId = product.hasOfferCatalog?.id;
+            if (typeof offerCatalogId === 'string') {
+                const offerCatalog = await repos.offerCatalog.findById({ id: offerCatalogId });
+                if (Array.isArray(offerCatalog.itemListElement)) {
+                    offers = await repos.offer.search({
+                        id: { $in: offerCatalog.itemListElement.map((e) => e.id) }
+                    });
+
+                    offers = offers.map((o) => {
+                        return {
+                            ...o,
+                            itemOffered: product
+                        };
+                    });
+                }
+            }
+        }
+
+        return offers;
     };
 }
 
