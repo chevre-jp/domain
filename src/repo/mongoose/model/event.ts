@@ -178,6 +178,16 @@ schema.index(
 );
 
 schema.index(
+    { 'superEvent.location.id': 1, startDate: 1 },
+    {
+        name: 'searchBySuperEventLocationId',
+        partialFilterExpression: {
+            'superEvent.location.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'superEvent.workPerformed.identifier': 1, startDate: 1 },
     {
         name: 'searchBySuperEventWorkPerformedIdentifier',

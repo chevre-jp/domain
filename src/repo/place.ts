@@ -47,6 +47,17 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
+        const idEq = (<any>params).id?.$eq;
+        if (typeof idEq === 'string') {
+            andConditions.push({
+                _id: {
+                    $eq: idEq
+                }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
         if (params.name !== undefined) {
             andConditions.push({
                 $or: [

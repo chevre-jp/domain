@@ -102,6 +102,18 @@ export class MongoRepository {
             });
         }
 
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        const superEventLocationIdEq = (<any>conditions).superEvent?.location?.id?.$eq;
+        if (typeof superEventLocationIdEq === 'string') {
+            andConditions.push({
+                'superEvent.location.id': {
+                    $exists: true,
+                    $eq: superEventLocationIdEq
+                }
+            });
+        }
+
         let params: factory.event.ISearchConditions<factory.eventType>;
 
         switch (conditions.typeOf) {
