@@ -43,6 +43,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - オファーに有効期間を追加
 - イベントのオファー検索結果をカタログの登録順にソート
 - 作品コレクションのインデックス調整
+- ticketTypeGroupsをofferCatalogsへ移行
 
 ### Deprecated
 
