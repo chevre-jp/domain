@@ -90,6 +90,18 @@ export class MongoRepository {
             });
         }
 
+        const locationBranchCodeEq = (<any>conditions).location?.branchCode?.$eq;
+        if (typeof locationBranchCodeEq === 'string') {
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            andConditions.push({
+                'location.branchCode': {
+                    $exists: true,
+                    $eq: locationBranchCodeEq
+                }
+            });
+        }
+
         let params: factory.event.ISearchConditions<factory.eventType>;
 
         switch (conditions.typeOf) {
