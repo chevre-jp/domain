@@ -119,7 +119,7 @@ export function createReservedTicket(params: {
         dateIssued: params.dateIssued,
         issuedBy: {
             typeOf: params.event.location.typeOf,
-            name: params.event.location.name.ja
+            name: <string>params.event.location.name.ja
         },
         priceCurrency: factory.priceCurrency.JPY,
         ticketType: params.availableOffer,

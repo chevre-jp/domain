@@ -342,10 +342,9 @@ export class MongoRepository {
                 return <factory.offerCatalog.IOfferCatalog>doc.toObject();
             });
 
-        // ticketTypes属性への互換性対応
         const sortedOfferIds: string[] = (Array.isArray(ticketTypeGroup.itemListElement))
             ? ticketTypeGroup.itemListElement.map((element) => element.id)
-            : ticketTypeGroup.ticketTypes;
+            : [];
 
         let offers = await this.ticketTypeModel.find(
             { _id: { $in: sortedOfferIds } },
