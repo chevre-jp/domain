@@ -90,7 +90,7 @@ export class MongoRepository {
             });
         }
 
-        const locationBranchCodeEq = (<any>conditions).location?.branchCode?.$eq;
+        const locationBranchCodeEq = conditions.location?.branchCode?.$eq;
         if (typeof locationBranchCodeEq === 'string') {
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
@@ -104,7 +104,7 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        const superEventLocationIdEq = (<any>conditions).superEvent?.location?.id?.$eq;
+        const superEventLocationIdEq = conditions.superEvent?.location?.id?.$eq;
         if (typeof superEventLocationIdEq === 'string') {
             andConditions.push({
                 'superEvent.location.id': {
