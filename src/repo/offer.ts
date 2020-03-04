@@ -6,7 +6,6 @@ import * as factory from '../factory';
 import OfferModel from './mongoose/model/offer';
 import OfferCatalogModel from './mongoose/model/offerCatalog';
 import TicketTypeModel from './mongoose/model/ticketType';
-import TicketTypeGroupModel from './mongoose/model/ticketTypeGroup';
 
 import { MongoRepository as OfferCategoryRepo } from './offerCatalog';
 
@@ -17,13 +16,11 @@ export class MongoRepository {
     public readonly offerModel: typeof OfferModel;
     public readonly offerCatalogModel: typeof OfferCatalogModel;
     public readonly ticketTypeModel: typeof TicketTypeModel;
-    public readonly ticketTypeGroupModel: typeof TicketTypeGroupModel;
 
     constructor(connection: Connection) {
         this.offerModel = connection.model(OfferModel.modelName);
         this.offerCatalogModel = connection.model(OfferCatalogModel.modelName);
         this.ticketTypeModel = connection.model(TicketTypeModel.modelName);
-        this.ticketTypeGroupModel = connection.model(TicketTypeGroupModel.modelName);
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length

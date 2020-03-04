@@ -55,7 +55,7 @@ export function createReservedTicket(params: {
     ticketOffer: factory.event.screeningEvent.ITicketOffer;
     transaction: factory.transaction.ITransaction<factory.transactionType.Reserve>;
 }): factory.reservation.ITicket<factory.reservationType.EventReservation> {
-    let acceptedTicketedSeat = params.acceptedOffer.ticketedSeat;
+    let acceptedTicketedSeat = (<any>params.acceptedOffer).ticketedSeat; // 互換性維持対応
     const acceptedTicketedSeatByItemOffered = params.acceptedOffer.itemOffered?.serviceOutput?.reservedTicket?.ticketedSeat;
     if (acceptedTicketedSeatByItemOffered !== undefined && acceptedTicketedSeatByItemOffered !== null) {
         acceptedTicketedSeat = acceptedTicketedSeatByItemOffered;
@@ -119,7 +119,7 @@ export function createReservedTicket(params: {
         dateIssued: params.dateIssued,
         issuedBy: {
             typeOf: params.event.location.typeOf,
-            name: <string>params.event.location.name.ja
+            name: <string>params.event.location.name?.ja
         },
         priceCurrency: factory.priceCurrency.JPY,
         ticketType: params.availableOffer,

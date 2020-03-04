@@ -6,9 +6,9 @@ const mongoose = require('mongoose');
 async function main() {
     await mongoose.connect(process.env.MONGOLAB_URI);
 
-    const offerRepo = new chevre.repository.Offer(mongoose.connection);
+    const offerCatalogRepo = new chevre.repository.OfferCatalog(mongoose.connection);
 
-    const cursor = await offerRepo.ticketTypeGroupModel.find(
+    const cursor = await offerCatalogRepo.offerCatalogModel.find(
         {
         },
         {
@@ -37,7 +37,7 @@ async function main() {
             });
             // console.log('updating...', itemListElement);
             updateCount += 1;
-            await offerRepo.ticketTypeGroupModel.findOneAndUpdate(
+            await offerCatalogRepo.offerCatalogModel.findOneAndUpdate(
                 { _id: ticketTypeGroup.id },
                 {
                     'itemOffered.typeOf': 'EventService',
