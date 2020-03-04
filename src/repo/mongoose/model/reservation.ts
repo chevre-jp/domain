@@ -76,6 +76,7 @@ const schema = new mongoose.Schema(
             required: true
         },
         reservedTicket: reservedTicketSchema,
+        subReservation: mongoose.SchemaTypes.Mixed,
         underName: underNameSchema,
         checkedIn: { type: Boolean, default: false },
         attended: { type: Boolean, default: false },
@@ -317,6 +318,16 @@ schema.index(
 );
 
 schema.index(
+    { 'reservedTicket.ticketedSeat.seatingType': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservedTicketTicketedSeatSeatingType',
+        partialFilterExpression: {
+            'reservedTicket.ticketedSeat.seatingType': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'reservedTicket.ticketType.id': 1, modifiedTime: -1 },
     {
         name: 'searchByReservedTicketTicketTypeId',
@@ -332,6 +343,16 @@ schema.index(
         name: 'searchByReservedTicketTicketTypeCategoryId',
         partialFilterExpression: {
             'reservedTicket.ticketType.category.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'reservedTicket.ticketType.category.codeValue': 1, modifiedTime: -1 },
+    {
+        name: 'searchByReservedTicketTicketTypeCategoryCodeValue',
+        partialFilterExpression: {
+            'reservedTicket.ticketType.category.codeValue': { $exists: true }
         }
     }
 );

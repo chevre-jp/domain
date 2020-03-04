@@ -1,35 +1,22 @@
 import * as mongoose from 'mongoose';
 
-import multilingualString from '../schemaTypes/multilingualString';
-import TicketType from './offer';
-
 const safe = { j: true, w: 'majority', wtimeout: 10000 };
 
 /**
- * 券種グループスキーマ
+ * オファーカタログスキーマ
  */
 const schema = new mongoose.Schema(
     {
         project: mongoose.SchemaTypes.Mixed,
         _id: String,
-        identifier: mongoose.SchemaTypes.Mixed,
-        name: multilingualString,
-        alternateName: multilingualString,
-        description: multilingualString,
-        notes: multilingualString,
-        ticketTypes: [{
-            type: String,
-            ref: TicketType.modelName,
-            required: true
-        }],
-        itemOffered: mongoose.SchemaTypes.Mixed,
-        additionalProperty: mongoose.SchemaTypes.Mixed
+        identifier: mongoose.SchemaTypes.Mixed
     },
     {
-        collection: 'ticketTypeGroups',
+        collection: 'offerCatalogs',
         id: true,
         read: 'primaryPreferred',
         safe: safe,
+        strict: false,
         timestamps: {
             createdAt: 'createdAt',
             updatedAt: 'updatedAt'
@@ -65,7 +52,27 @@ schema.index(
     }
 );
 
-export default mongoose.model('TicketTypeGroup', schema)
+schema.index(
+    { 'itemListElement.id': 1, identifier: 1 },
+    {
+        name: 'searchByItemListElementId',
+        partialFilterExpression: {
+            'itemListElement.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'itemOffered.typeOf': 1, identifier: 1 },
+    {
+        name: 'searchByItemOfferedTypeOf',
+        partialFilterExpression: {
+            'itemOffered.typeOf': { $exists: true }
+        }
+    }
+);
+
+export default mongoose.model('OfferCatalog', schema)
     .on(
         'index',
         // tslint:disable-next-line:no-single-line-block-comment

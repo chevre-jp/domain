@@ -1,4 +1,4 @@
-import { Connection } from 'mongoose';
+import { Connection, Document, QueryCursor } from 'mongoose';
 
 import reservationModel from './mongoose/model/reservation';
 
@@ -96,7 +96,7 @@ export class MongoRepository {
             if (typeof params.reservationNumber === 'string') {
                 andConditions.push({
                     reservationNumber: {
-                        $regex: new RegExp(params.reservationNumber, 'i')
+                        $regex: new RegExp(params.reservationNumber)
                     }
                 });
             } else {
@@ -141,7 +141,7 @@ export class MongoRepository {
                 andConditions.push({
                     additionalTicketText: {
                         $exists: true,
-                        $regex: new RegExp(params.additionalTicketText, 'i')
+                        $regex: new RegExp(params.additionalTicketText)
                     }
                 });
             } else {
@@ -483,6 +483,22 @@ export class MongoRepository {
                             }
                         );
                     }
+
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (params.reservedTicket.ticketType.category.codeValue !== undefined
+                        && params.reservedTicket.ticketType.category !== null) {
+                        if (Array.isArray(params.reservedTicket.ticketType.category.codeValue.$in)) {
+                            andConditions.push(
+                                {
+                                    'reservedTicket.ticketType.category.codeValue': {
+                                        $exists: true,
+                                        $in: params.reservedTicket.ticketType.category.codeValue.$in
+                                    }
+                                }
+                            );
+                        }
+                    }
                 }
             }
 
@@ -527,6 +543,22 @@ export class MongoRepository {
                         }
                     );
                 }
+
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if ((<any>params.reservedTicket.ticketedSeat).seatingType !== undefined
+                    && (<any>params.reservedTicket.ticketedSeat).seatingType !== null) {
+                    if (Array.isArray((<any>params.reservedTicket.ticketedSeat).seatingType.$in)) {
+                        andConditions.push(
+                            {
+                                'reservedTicket.ticketedSeat.seatingType': {
+                                    $exists: true,
+                                    $in: (<any>params.reservedTicket.ticketedSeat).seatingType.$in
+                                }
+                            }
+                        );
+                    }
+                }
             }
         }
 
@@ -539,7 +571,7 @@ export class MongoRepository {
                 andConditions.push({
                     'underName.id': {
                         $exists: true,
-                        $regex: new RegExp(params.underName.id, 'i')
+                        $regex: new RegExp(params.underName.id)
                     }
                 });
             }
@@ -550,7 +582,7 @@ export class MongoRepository {
                 andConditions.push({
                     'underName.email': {
                         $exists: true,
-                        $regex: new RegExp(params.underName.email, 'i')
+                        $regex: new RegExp(params.underName.email)
                     }
                 });
             }
@@ -561,7 +593,7 @@ export class MongoRepository {
                 andConditions.push({
                     'underName.name': {
                         $exists: true,
-                        $regex: new RegExp(params.underName.name, 'i')
+                        $regex: new RegExp(params.underName.name)
                     }
                 });
             }
@@ -572,7 +604,7 @@ export class MongoRepository {
                 andConditions.push({
                     'underName.telephone': {
                         $exists: true,
-                        $regex: new RegExp(params.underName.telephone, 'i')
+                        $regex: new RegExp(params.underName.telephone)
                     }
                 });
             }
@@ -583,7 +615,7 @@ export class MongoRepository {
                 andConditions.push({
                     'underName.givenName': {
                         $exists: true,
-                        $regex: new RegExp(params.underName.givenName, 'i')
+                        $regex: new RegExp(params.underName.givenName)
                     }
                 });
             }
@@ -594,7 +626,7 @@ export class MongoRepository {
                 andConditions.push({
                     'underName.familyName': {
                         $exists: true,
-                        $regex: new RegExp(params.underName.familyName, 'i')
+                        $regex: new RegExp(params.underName.familyName)
                     }
                 });
             }
@@ -755,6 +787,27 @@ export class MongoRepository {
         return query.setOptions({ maxTimeMS: 10000 })
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
+    }
+
+    public stream<T extends factory.reservationType>(params: factory.reservation.ISearchConditions<T>): QueryCursor<Document> {
+        const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
+        const query = this.reservationModel.find((conditions.length > 0) ? { $and: conditions } : {})
+            .select({ __v: 0, createdAt: 0, updatedAt: 0 });
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.limit !== undefined && params.page !== undefined) {
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
+
+        return query.cursor();
     }
 
     public async findById<T extends factory.reservationType>(params: {

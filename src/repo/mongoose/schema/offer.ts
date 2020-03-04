@@ -46,6 +46,7 @@ export function create(options: mongoose.SchemaOptions) {
             id: true,
             read: 'primaryPreferred',
             safe: safe,
+            strict: false,
             timestamps: {
                 createdAt: 'createdAt',
                 updatedAt: 'updatedAt'
@@ -150,6 +151,26 @@ export function create(options: mongoose.SchemaOptions) {
             name: 'searchCategoryId',
             partialFilterExpression: {
                 'category.id': { $exists: true }
+            }
+        }
+    );
+
+    schema.index(
+        { 'category.codeValue': 1, 'priceSpecification.price': 1 },
+        {
+            name: 'searchByCategoryCodeValue',
+            partialFilterExpression: {
+                'category.codeValue': { $exists: true }
+            }
+        }
+    );
+
+    schema.index(
+        { 'itemOffered.typeOf': 1, 'priceSpecification.price': 1 },
+        {
+            name: 'searchByItemOfferedTypeOf',
+            partialFilterExpression: {
+                'itemOffered.typeOf': { $exists: true }
             }
         }
     );

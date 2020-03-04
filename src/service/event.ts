@@ -249,7 +249,7 @@ export function importFromCOA(params: {
                     });
 
                     // スクリーン存在チェック
-                    const screenRoom = <factory.place.movieTheater.IScreeningRoom | undefined>movieTheater.containsPlace.find(
+                    const screenRoom = <factory.place.screeningRoom.IPlace | undefined>movieTheater.containsPlace.find(
                         (p) => p.branchCode === scheduleFromCOA.screenCode
                     );
                     if (screenRoom === undefined) {
@@ -388,7 +388,7 @@ export function importMovieTheaterFromCOA(params: {
 export function createScreeningEventFromCOA(params: {
     project: factory.project.IProject;
     performanceFromCOA: COA.services.master.IScheduleResult;
-    screenRoom: factory.place.movieTheater.IScreeningRoom;
+    screenRoom: factory.place.screeningRoom.IPlace;
     superEvent: factory.event.screeningEventSeries.IEvent;
     serviceKubuns: COA.services.master.IKubunNameResult[];
     acousticKubuns: COA.services.master.IKubunNameResult[];
@@ -458,12 +458,13 @@ export function createScreeningEventFromCOA(params: {
     //     (params.screeningEventSeries.offers !== undefined) ? params.screeningEventSeries.offers.acceptedPaymentMethod : undefined;
 
     const offers: factory.event.screeningEvent.IOffer = {
+        project: { typeOf: params.project.typeOf, id: params.project.id },
         id: '',
         name: {
             ja: '',
             en: ''
         },
-        typeOf: 'Offer',
+        typeOf: factory.offerType.Offer,
         priceCurrency: factory.priceCurrency.JPY,
         // acceptedPaymentMethod: acceptedPaymentMethod,
         availabilityEnds: validThrough,
@@ -476,12 +477,9 @@ export function createScreeningEventFromCOA(params: {
             typeOf: 'QuantitativeValue'
         },
         itemOffered: {
-            serviceType: {
+            serviceType: <any>{
                 project: params.project,
-                typeOf: 'ServiceType',
-                id: '',
-                identifier: '',
-                name: ''
+                typeOf: 'CategoryCode'
             }
         }
         // offeredThrough: {
@@ -621,7 +619,8 @@ export function createScreeningEventSeriesFromCOA(params: {
         startDate: startDate,
         coaInfo: coaInfo,
         offers: {
-            typeOf: 'Offer',
+            project: { typeOf: params.project.typeOf, id: params.project.id },
+            typeOf: factory.offerType.Offer,
             priceCurrency: factory.priceCurrency.JPY,
             acceptedPaymentMethod: acceptedPaymentMethod
         }
@@ -731,8 +730,8 @@ export function createMovieTheaterFromCOA(
 export function createScreeningRoomFromCOA(
     project: factory.project.IProject,
     screenFromCOA: COA.services.master.IScreenResult
-): factory.place.movieTheater.IScreeningRoom {
-    const sections: factory.place.movieTheater.IScreeningRoomSection[] = [];
+): factory.place.screeningRoom.IPlace {
+    const sections: factory.place.screeningRoomSection.IPlace[] = [];
     const sectionCodes: string[] = [];
     screenFromCOA.listSeat.forEach((seat) => {
         if (sectionCodes.indexOf(seat.seatSection) < 0) {

@@ -47,15 +47,26 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
+        const idEq = params.id?.$eq;
+        if (typeof idEq === 'string') {
+            andConditions.push({
+                _id: {
+                    $eq: idEq
+                }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
         if (params.name !== undefined) {
             andConditions.push({
                 $or: [
-                    { 'name.ja': new RegExp(params.name, 'i') },
-                    { 'name.en': new RegExp(params.name, 'i') },
+                    { 'name.ja': new RegExp(params.name) },
+                    { 'name.en': new RegExp(params.name) },
                     {
                         kanaName: {
                             $exists: true,
-                            $regex: new RegExp(params.name, 'i')
+                            $regex: new RegExp(params.name)
                         }
                     }
                 ]

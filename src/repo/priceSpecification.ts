@@ -13,39 +13,7 @@ export class MongoRepository {
         this.priceSpecificationModel = connection.model(priceSpecificationModel.modelName);
     }
 
-    // public static CREATE_COMPOUND_PRICE_SPECIFICATION_MONGO_CONDITIONS(
-    //     params: factory.compoundPriceSpecification.ISearchConditions<factory.priceSpecificationType>
-    // ) {
-    //     const andConditions: any[] = [
-    //         {
-    //             typeOf: params.typeOf
-    //         }
-    //     ];
-    //     // tslint:disable-next-line:no-single-line-block-comment
-    //     /* istanbul ignore else */
-    //     if (params.validFrom !== undefined) {
-    //         andConditions.push({
-    //             validThrough: { $exists: true, $gt: params.validFrom }
-    //         });
-    //     }
-    //     // tslint:disable-next-line:no-single-line-block-comment
-    //     /* istanbul ignore else */
-    //     if (params.validThrough !== undefined) {
-    //         andConditions.push({
-    //             validFrom: { $exists: true, $lt: params.validThrough }
-    //         });
-    //     }
-    //     // tslint:disable-next-line:no-single-line-block-comment
-    //     /* istanbul ignore else */
-    //     if (params.priceComponent !== undefined) {
-    //         andConditions.push({
-    //             'priceComponent.typeOf': { $exists: true, $eq: params.priceComponent.typeOf }
-    //         });
-    //     }
-
-    //     return andConditions;
-    // }
-
+    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     public static CREATE_MONGO_CONDITIONS<T extends factory.priceSpecificationType>(
         params: factory.priceSpecification.ISearchConditions<T>
     ) {
@@ -66,10 +34,92 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
+        if (params.project !== undefined && params.project !== null) {
+            if (params.project.id !== undefined && params.project.id !== null) {
+                if (typeof params.project.id.$eq === 'string') {
+                    andConditions.push({
+                        'project.id': {
+                            $exists: true,
+                            $eq: params.project.id.$eq
+                        }
+                    });
+                }
+            }
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.id !== undefined && params.id !== null) {
+            if (typeof params.id.$eq === 'string') {
+                andConditions.push({
+                    _id: {
+                        $eq: params.id.$eq
+                    }
+                });
+            }
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
         if (params.typeOf !== undefined) {
             andConditions.push({
                 typeOf: params.typeOf
             });
+        }
+
+        if (params.appliesToCategoryCode !== undefined && params.appliesToCategoryCode !== null) {
+            if (params.appliesToCategoryCode.$elemMatch !== undefined && params.appliesToCategoryCode.$elemMatch !== null) {
+                const categoryCodeElemMatch = params.appliesToCategoryCode.$elemMatch;
+                andConditions.push({
+                    appliesToCategoryCode: {
+                        $exists: true,
+                        $elemMatch: categoryCodeElemMatch
+                    }
+                });
+            }
+
+            if (params.appliesToCategoryCode.codeValue !== undefined && params.appliesToCategoryCode.codeValue !== null) {
+                if (typeof params.appliesToCategoryCode.codeValue.$eq === 'string') {
+                    andConditions.push({
+                        'appliesToCategoryCode.codeValue': {
+                            $exists: true,
+                            $eq: params.appliesToCategoryCode.codeValue.$eq
+                        }
+                    });
+                }
+
+                if (Array.isArray(params.appliesToCategoryCode.codeValue.$in)) {
+                    andConditions.push({
+                        'appliesToCategoryCode.codeValue': {
+                            $exists: true,
+                            $in: params.appliesToCategoryCode.codeValue.$in
+                        }
+                    });
+                }
+            }
+
+            if (params.appliesToCategoryCode.inCodeSet !== undefined && params.appliesToCategoryCode.inCodeSet !== null) {
+                if (params.appliesToCategoryCode.inCodeSet.identifier !== undefined
+                    && params.appliesToCategoryCode.inCodeSet.identifier !== null) {
+                    if (typeof params.appliesToCategoryCode.inCodeSet.identifier.$eq === 'string') {
+                        andConditions.push({
+                            'appliesToCategoryCode.inCodeSet.identifier': {
+                                $exists: true,
+                                $eq: params.appliesToCategoryCode.inCodeSet.identifier.$eq
+                            }
+                        });
+                    }
+
+                    if (Array.isArray(params.appliesToCategoryCode.inCodeSet.identifier.$in)) {
+                        andConditions.push({
+                            'appliesToCategoryCode.inCodeSet.identifier': {
+                                $exists: true,
+                                $in: params.appliesToCategoryCode.inCodeSet.identifier.$in
+                            }
+                        });
+                    }
+                }
+            }
         }
 
         if (Array.isArray(params.appliesToVideoFormats)) {
@@ -77,15 +127,6 @@ export class MongoRepository {
                 appliesToVideoFormat: {
                     $exists: true,
                     $in: params.appliesToVideoFormats
-                }
-            });
-        }
-
-        if (Array.isArray(params.appliesToSoundFormats)) {
-            andConditions.push({
-                appliesToSoundFormat: {
-                    $exists: true,
-                    $in: params.appliesToSoundFormats
                 }
             });
         }
@@ -200,6 +241,10 @@ export class MongoRepository {
         if (params.sort !== undefined) {
             query.sort(params.sort);
         }
+
+        // const explainResult = await (<any>query).explain();
+        // console.log(explainResult[0].executionStats.allPlansExecution.map((e: any) => e.executionStages.inputStage));
+        // return;
 
         return query.setOptions({ maxTimeMS: 10000 })
             .exec()

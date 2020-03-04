@@ -158,11 +158,31 @@ schema.index(
 );
 
 schema.index(
+    { 'location.branchCode': 1, startDate: 1 },
+    {
+        name: 'searchByLocationBranchCode',
+        partialFilterExpression: {
+            'location.branchCode': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'superEvent.location.branchCode': 1, startDate: 1 },
     {
         name: 'searchBySuperEventLocationBranchCode',
         partialFilterExpression: {
             'superEvent.location.branchCode': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'superEvent.location.id': 1, startDate: 1 },
+    {
+        name: 'searchBySuperEventLocationId',
+        partialFilterExpression: {
+            'superEvent.location.id': { $exists: true }
         }
     }
 );

@@ -1,10 +1,13 @@
 /**
  * 予約サービス
  */
+import * as moment from 'moment';
+
 import * as factory from '../factory';
 
 import { MongoRepository as ActionRepo } from '../repo/action';
 import { RedisRepository as ScreeningEventAvailabilityRepo } from '../repo/itemAvailability/screeningEvent';
+import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from '../repo/reservation';
 import { MongoRepository as TaskRepo } from '../repo/task';
 import { MongoRepository as TransactionRepo } from '../repo/transaction';
@@ -111,6 +114,7 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
     return async (repos: {
         action: ActionRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
+        offerRateLimit: OfferRateLimitRepo;
         reservation: ReservationRepo;
         task: TaskRepo;
     }) => {
@@ -122,21 +126,12 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
             const action = await repos.action.start<factory.actionType.CancelAction>(actionAttributes);
 
             try {
-                // 予約取引がまだ座席を保持していれば座席ロック解除
-                const ticketedSeat = reservation.reservedTicket.ticketedSeat;
-                if (ticketedSeat !== undefined) {
-                    const lockKey = {
-                        eventId: reservation.reservationFor.id,
-                        offer: {
-                            seatNumber: ticketedSeat.seatNumber,
-                            seatSection: ticketedSeat.seatSection
-                        }
-                    };
-                    const holder = await repos.eventAvailability.getHolder(lockKey);
-                    if (holder === reserveTransactionId) {
-                        await repos.eventAvailability.unlock(lockKey);
-                    }
-                }
+                await processUnlockSeat({
+                    reservation: reservation,
+                    expectedHolder: reserveTransactionId
+                })(repos);
+
+                await processUnlockOfferRateLimit({ reservation })(repos);
 
                 // 予約が存在すればキャンセル状態に変更する
                 const reservationCount = await repos.reservation.count({
@@ -164,17 +159,30 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
 
             await onCanceled(actionAttributes, reservation)(repos);
         }));
+
+        const aggregateTask: factory.task.aggregateScreeningEvent.IAttributes = {
+            project: actionAttributesList[0].project,
+            name: factory.taskName.AggregateScreeningEvent,
+            status: factory.taskStatus.Ready,
+            runsAt: new Date(), // なるはやで実行
+            remainingNumberOfTries: 10,
+            numberOfTried: 0,
+            executionResults: [],
+            data: actionAttributesList[0].object.reservationFor
+        };
+        await repos.task.save(aggregateTask);
     };
 }
 
 /**
  * 予約をキャンセルする
  */
-// tslint:disable-next-line:max-func-body-length
 export function cancelReservation(actionAttributesList: factory.action.cancel.reservation.IAttributes[]) {
+    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         action: ActionRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
+        offerRateLimit: OfferRateLimitRepo;
         reservation: ReservationRepo;
         task: TaskRepo;
         transaction: TransactionRepo;
@@ -212,23 +220,14 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
                     }
                 }
 
-                if (exectedHolder !== undefined) {
-                    // 予約取引がまだ座席を保持していれば座席ロック解除
-                    const ticketedSeat = reservation.reservedTicket.ticketedSeat;
-                    if (ticketedSeat !== undefined) {
-                        const lockKey = {
-                            eventId: reservation.reservationFor.id,
-                            offer: {
-                                seatNumber: ticketedSeat.seatNumber,
-                                seatSection: ticketedSeat.seatSection
-                            }
-                        };
-                        const holder = await repos.eventAvailability.getHolder(lockKey);
-                        if (holder === exectedHolder) {
-                            await repos.eventAvailability.unlock(lockKey);
-                        }
-                    }
+                if (typeof exectedHolder === 'string') {
+                    await processUnlockSeat({
+                        reservation: reservation,
+                        expectedHolder: exectedHolder
+                    })(repos);
                 }
+
+                await processUnlockOfferRateLimit({ reservation })(repos);
 
                 // 予約をキャンセル状態に変更する
                 reservation = await repos.reservation.cancel<factory.reservationType.EventReservation>({ id: reservation.id });
@@ -261,6 +260,94 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
             data: actionAttributesList[0].object.reservationFor
         };
         await repos.task.save(aggregateTask);
+    };
+}
+
+/**
+ * 座席ロック解除プロセス
+ */
+function processUnlockSeat(params: {
+    reservation: factory.reservation.IReservation<factory.reservationType.EventReservation>;
+    expectedHolder: string;
+}) {
+    return async (repos: {
+        eventAvailability: ScreeningEventAvailabilityRepo;
+    }) => {
+        const reservation = params.reservation;
+
+        // 予約取引がまだ座席を保持していれば座席ロック解除
+        const ticketedSeat = reservation.reservedTicket.ticketedSeat;
+        if (ticketedSeat !== undefined) {
+            const lockKey = {
+                eventId: reservation.reservationFor.id,
+                offer: {
+                    seatNumber: ticketedSeat.seatNumber,
+                    seatSection: ticketedSeat.seatSection
+                }
+            };
+            const holder = await repos.eventAvailability.getHolder(lockKey);
+            if (holder === params.expectedHolder) {
+                await repos.eventAvailability.unlock(lockKey);
+            }
+        }
+
+        // subReservationがあれば、そちらも解除(順不同)
+        const subReservations = reservation.subReservation;
+        if (Array.isArray(subReservations)) {
+            await Promise.all(subReservations.map(async (subReservation) => {
+                const seatSection4sub = subReservation.reservedTicket?.ticketedSeat?.seatSection;
+                const seatNumber4sub = subReservation.reservedTicket?.ticketedSeat?.seatNumber;
+
+                if (typeof seatSection4sub === 'string' && typeof seatNumber4sub === 'string') {
+                    const lockKey = {
+                        eventId: reservation.reservationFor.id,
+                        offer: {
+                            seatNumber: seatNumber4sub,
+                            seatSection: seatSection4sub
+                        }
+                    };
+                    const holder = await repos.eventAvailability.getHolder(lockKey);
+                    if (holder === params.expectedHolder) {
+                        await repos.eventAvailability.unlock(lockKey);
+                    }
+                }
+            }));
+        }
+    };
+}
+
+export function processUnlockOfferRateLimit(params: {
+    reservation: factory.reservation.IReservation<factory.reservationType.EventReservation>;
+}) {
+    return async (repos: {
+        offerRateLimit: OfferRateLimitRepo;
+    }) => {
+        const reservation = params.reservation;
+
+        const scope = reservation.reservedTicket.ticketType.validRateLimit?.scope;
+        const unitInSeconds = reservation.reservedTicket.ticketType.validRateLimit?.unitInSeconds;
+        if (typeof scope === 'string' && typeof unitInSeconds === 'number') {
+            const rateLimitKey: IRateLimitKey = {
+                reservedTicket: {
+                    ticketType: {
+                        validRateLimit: {
+                            scope: scope,
+                            unitInSeconds: unitInSeconds
+                        }
+                    }
+                },
+                reservationFor: {
+                    startDate: moment(reservation.reservationFor.startDate)
+                        .toDate()
+                },
+                reservationNumber: reservation.reservationNumber
+            };
+
+            const holder = await repos.offerRateLimit.getHolder(rateLimitKey);
+            if (holder === rateLimitKey.reservationNumber) {
+                await repos.offerRateLimit.unlock([rateLimitKey]);
+            }
+        }
     };
 }
 

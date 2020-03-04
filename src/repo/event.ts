@@ -90,6 +90,30 @@ export class MongoRepository {
             });
         }
 
+        const locationBranchCodeEq = conditions.location?.branchCode?.$eq;
+        if (typeof locationBranchCodeEq === 'string') {
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            andConditions.push({
+                'location.branchCode': {
+                    $exists: true,
+                    $eq: locationBranchCodeEq
+                }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        const superEventLocationIdEq = conditions.superEvent?.location?.id?.$eq;
+        if (typeof superEventLocationIdEq === 'string') {
+            andConditions.push({
+                'superEvent.location.id': {
+                    $exists: true,
+                    $eq: superEventLocationIdEq
+                }
+            });
+        }
+
         let params: factory.event.ISearchConditions<factory.eventType>;
 
         switch (conditions.typeOf) {
@@ -101,8 +125,8 @@ export class MongoRepository {
                 if (params.name !== undefined) {
                     andConditions.push({
                         $or: [
-                            { 'name.ja': new RegExp(params.name, 'i') },
-                            { 'name.en': new RegExp(params.name, 'i') }
+                            { 'name.ja': new RegExp(params.name) },
+                            { 'name.en': new RegExp(params.name) }
                         ]
                     });
                 }
@@ -248,9 +272,9 @@ export class MongoRepository {
                 if (params.name !== undefined) {
                     andConditions.push({
                         $or: [
-                            { 'name.ja': new RegExp(params.name, 'i') },
-                            { 'name.en': new RegExp(params.name, 'i') },
-                            { kanaName: new RegExp(params.name, 'i') }
+                            { 'name.ja': new RegExp(params.name) },
+                            { 'name.en': new RegExp(params.name) },
+                            { kanaName: new RegExp(params.name) }
                         ]
                     });
                 }
@@ -351,7 +375,8 @@ export class MongoRepository {
      * イベントを検索する
      */
     public async search<T extends factory.eventType>(
-        params: factory.event.ISearchConditions<T>
+        params: factory.event.ISearchConditions<T>,
+        projection?: any
     ): Promise<factory.event.IEvent<T>[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.eventModel.find(
@@ -359,7 +384,8 @@ export class MongoRepository {
             {
                 __v: 0,
                 createdAt: 0,
-                updatedAt: 0
+                updatedAt: 0,
+                ...projection
             }
         );
         // tslint:disable-next-line:no-single-line-block-comment

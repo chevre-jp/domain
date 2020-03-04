@@ -18,7 +18,7 @@ export class MongoRepository {
         // MongoDB検索条件
         const andConditions: any[] = [];
         if (params.detailCd !== undefined) {
-            andConditions.push({ detailCd: new RegExp(params.detailCd, 'i') });
+            andConditions.push({ detailCd: new RegExp(params.detailCd) });
         }
 
         return andConditions;

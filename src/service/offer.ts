@@ -1,28 +1,131 @@
 import * as COA from '@motionpicture/coa-service';
+import * as moment from 'moment';
 import { format } from 'util';
 
 import { MongoRepository as EventRepo } from '../repo/event';
+import { RedisRepository as EventAvailabilityRepo } from '../repo/itemAvailability/screeningEvent';
 import { MongoRepository as OfferRepo } from '../repo/offer';
+import { MongoRepository as OfferCatalogRepo } from '../repo/offerCatalog';
+import { MongoRepository as PlaceRepo } from '../repo/place';
 import { MongoRepository as PriceSpecificationRepo } from '../repo/priceSpecification';
+import { MongoRepository as ProductRepo } from '../repo/product';
 import { MongoRepository as ProjectRepo } from '../repo/project';
+import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../repo/rateLimit/offer';
 import { MongoRepository as TaskRepo } from '../repo/task';
 
 import * as factory from '../factory';
 
-// type IMovieTicketTypeChargeSpecification =
-//     factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.MovieTicketTypeChargeSpecification>;
-// type ISoundFormatChargeSpecification =
-//     factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.SoundFormatChargeSpecification>;
-// type IVideoFormatChargeSpecification =
-//     factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.VideoFormatChargeSpecification>;
 type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     event: EventRepo;
     priceSpecification: PriceSpecificationRepo;
     offer: OfferRepo;
+    offerCatalog: OfferCatalogRepo;
+    offerRateLimit: OfferRateLimitRepo;
+    product: ProductRepo;
 }) => Promise<T>;
 
 /**
- * 上映イベントに対するオファーを検索する
+ * イベントに対する座席オファーを検索する
+ */
+export function searchEventSeatOffers(params: {
+    event: { id: string };
+}) {
+    return async (repos: {
+        event: EventRepo;
+        priceSpecification: PriceSpecificationRepo;
+        eventAvailability: EventAvailabilityRepo;
+        place: PlaceRepo;
+    }): Promise<factory.place.screeningRoomSection.IPlaceWithOffer[]> => {
+
+        let offers: factory.place.screeningRoomSection.IPlaceWithOffer[] = [];
+
+        const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
+            id: params.event.id
+        });
+
+        // 座席指定利用可能かどうか
+        const reservedSeatsAvailable = !(
+            event.offers !== undefined
+            && event.offers.itemOffered !== undefined
+            && event.offers.itemOffered.serviceOutput !== undefined
+            && event.offers.itemOffered.serviceOutput.reservedTicket !== undefined
+            && event.offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat === undefined
+        );
+
+        if (reservedSeatsAvailable) {
+            // 座席タイプ価格仕様を検索
+            const priceSpecs =
+                await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>({
+                    project: { id: { $eq: event.project.id } },
+                    typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
+                    appliesToCategoryCode: {
+                        inCodeSet: { identifier: { $eq: factory.categoryCode.CategorySetIdentifier.SeatingType } }
+                    }
+                });
+
+            const unavailableOffers = await repos.eventAvailability.findUnavailableOffersByEventId({ eventId: params.event.id });
+            const movieTheater = await repos.place.findById({ id: event.superEvent.location.id });
+            const screeningRoom = <factory.place.screeningRoom.IPlace>movieTheater.containsPlace.find(
+                (p) => p.branchCode === event.location.branchCode
+            );
+            if (screeningRoom === undefined) {
+                throw new factory.errors.NotFound(factory.placeType.ScreeningRoom);
+            }
+
+            offers = screeningRoom.containsPlace;
+            offers.forEach((offer) => {
+                const seats = offer.containsPlace;
+                const seatSection = offer.branchCode;
+                seats.forEach((seat) => {
+                    const seatNumber = seat.branchCode;
+                    const unavailableOffer = unavailableOffers.find(
+                        (o) => o.seatSection === seatSection && o.seatNumber === seatNumber
+                    );
+
+                    const priceComponent: factory.place.seat.IPriceComponent[] = [];
+
+                    // 座席タイプが指定されていれば、適用される価格仕様を構成要素に追加
+                    const seatingTypes: string[] = (Array.isArray(seat.seatingType))
+                        ? seat.seatingType
+                        : (typeof seat.seatingType === 'string' && seat.seatingType.length > 0) ? [seat.seatingType]
+                            : [];
+                    priceComponent.push(...priceSpecs.filter((s) => {
+                        // 適用カテゴリーコードに座席タイプが含まれる価格仕様を検索
+                        return (Array.isArray(s.appliesToCategoryCode))
+                            && s.appliesToCategoryCode.some((categoryCode) => {
+                                return seatingTypes.includes(categoryCode.codeValue)
+                                    // tslint:disable-next-line:max-line-length
+                                    && categoryCode.inCodeSet.identifier === factory.categoryCode.CategorySetIdentifier.SeatingType;
+                            });
+                    }));
+
+                    const priceSpecification: factory.place.seat.IPriceSpecification = {
+                        project: event.project,
+                        typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
+                        priceCurrency: factory.priceCurrency.JPY,
+                        valueAddedTaxIncluded: true,
+                        priceComponent: priceComponent
+                    };
+
+                    seat.offers = [{
+                        project: event.project,
+                        typeOf: factory.offerType.Offer,
+                        priceCurrency: factory.priceCurrency.JPY,
+                        availability: (unavailableOffer !== undefined)
+                            ? factory.itemAvailability.OutOfStock
+                            : factory.itemAvailability.InStock,
+                        priceSpecification: priceSpecification
+                    }];
+                });
+            });
+        }
+
+        return offers;
+    };
+}
+
+/**
+ * イベントに対するオファーを検索する
  */
 export function searchScreeningEventTicketOffers(params: {
     eventId: string;
@@ -32,6 +135,9 @@ export function searchScreeningEventTicketOffers(params: {
         event: EventRepo;
         priceSpecification: PriceSpecificationRepo;
         offer: OfferRepo;
+        offerCatalog: OfferCatalogRepo;
+        offerRateLimit: OfferRateLimitRepo;
+        product: ProductRepo;
     }) => {
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
             id: params.eventId
@@ -45,58 +151,36 @@ export function searchScreeningEventTicketOffers(params: {
             = (Array.isArray(event.superEvent.videoFormat))
                 ? event.superEvent.videoFormat.map((f) => f.typeOf)
                 : [factory.videoFormatType['2D']];
-        const availableOffers = await repos.offer.findByOfferCatalogId({ offerCatalog: screeningEventOffers });
-
-        // 価格仕様を検索する
-        // const soundFormatCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
-        //     typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
-        //     priceComponent: { typeOf: factory.priceSpecificationType.SoundFormatChargeSpecification }
-        // });
-        // const videoFormatCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
-        //     typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
-        //     priceComponent: { typeOf: factory.priceSpecificationType.VideoFormatChargeSpecification }
-        // });
-        // const movieTicketTypeCompoundPriceSpecifications = await repos.priceSpecification.searchCompoundPriceSpecifications({
-        //     typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
-        //     priceComponent: { typeOf: factory.priceSpecificationType.MovieTicketTypeChargeSpecification }
-        // });
-
-        // イベントに関係のある価格仕様に絞り、ひとつの複合価格仕様としてまとめる
-        // const soundFormatChargeSpecifications =
-        //     soundFormatCompoundPriceSpecifications.reduce<ISoundFormatChargeSpecification[]>(
-        //         (a, b) => [...a, ...b.priceComponent],
-        //         []
-        //     )
-        //         .filter((spec) => eventSoundFormatTypes.indexOf(spec.appliesToSoundFormat) >= 0);
+        const availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: screeningEventOffers });
+        const sortedOfferIds = availableOffers.map((o) => o.id);
 
         const soundFormatChargeSpecifications =
-            await repos.priceSpecification.search<factory.priceSpecificationType.SoundFormatChargeSpecification>({
-                typeOf: factory.priceSpecificationType.SoundFormatChargeSpecification,
-                appliesToSoundFormats: eventSoundFormatTypes
+            await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>({
+                project: { id: { $eq: event.project.id } },
+                typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
+                appliesToCategoryCode: {
+                    $elemMatch: {
+                        codeValue: { $in: eventSoundFormatTypes },
+                        'inCodeSet.identifier': { $eq: factory.categoryCode.CategorySetIdentifier.SoundFormatType }
+                    }
+                }
             });
-
-        // const videoFormatChargeSpecifications =
-        //     videoFormatCompoundPriceSpecifications.reduce<IVideoFormatChargeSpecification[]>(
-        //         (a, b) => [...a, ...b.priceComponent],
-        //         []
-        //     )
-        //         .filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
 
         const videoFormatChargeSpecifications =
-            await repos.priceSpecification.search<factory.priceSpecificationType.VideoFormatChargeSpecification>({
-                typeOf: factory.priceSpecificationType.VideoFormatChargeSpecification,
-                appliesToVideoFormats: eventVideoFormatTypes
+            await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>({
+                project: { id: { $eq: event.project.id } },
+                typeOf: factory.priceSpecificationType.CategoryCodeChargeSpecification,
+                appliesToCategoryCode: {
+                    $elemMatch: {
+                        codeValue: { $in: eventVideoFormatTypes },
+                        'inCodeSet.identifier': { $eq: factory.categoryCode.CategorySetIdentifier.VideoFormatType }
+                    }
+                }
             });
-
-        // const movieTicketTypeChargeSpecs =
-        //     movieTicketTypeCompoundPriceSpecifications.reduce<IMovieTicketTypeChargeSpecification[]>(
-        //         (a, b) => [...a, ...b.priceComponent],
-        //         []
-        //     )
-        //         .filter((spec) => eventVideoFormatTypes.indexOf(spec.appliesToVideoFormat) >= 0);
 
         const movieTicketTypeChargeSpecs =
             await repos.priceSpecification.search<factory.priceSpecificationType.MovieTicketTypeChargeSpecification>({
+                project: { id: { $eq: event.project.id } },
                 typeOf: factory.priceSpecificationType.MovieTicketTypeChargeSpecification,
                 appliesToVideoFormats: eventVideoFormatTypes
             });
@@ -123,7 +207,10 @@ export function searchScreeningEventTicketOffers(params: {
                         && movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketType).length > 0;
                 })
                 .map((t) => {
-                    const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
+                    const spec = {
+                        ...<factory.ticketType.IPriceSpecification>t.priceSpecification,
+                        name: t.name
+                    };
 
                     const movieTicketType = <string>spec.appliesToMovieTicketType;
                     const mvtkSpecs = movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketType);
@@ -157,7 +244,10 @@ export function searchScreeningEventTicketOffers(params: {
                     || spec.appliesToMovieTicketType === '';
             })
             .map((t) => {
-                const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
+                const spec = {
+                    ...<factory.ticketType.IPriceSpecification>t.priceSpecification,
+                    name: t.name
+                };
 
                 const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
                     project: event.project,
@@ -179,7 +269,99 @@ export function searchScreeningEventTicketOffers(params: {
                 };
             });
 
-        return [...ticketTypeOffers, ...movieTicketOffers];
+        let offers4event: factory.event.screeningEvent.ITicketOffer[] = [...ticketTypeOffers, ...movieTicketOffers];
+
+        // レート制限を確認
+        for (const offer4event of offers4event) {
+            const scope = offer4event.validRateLimit?.scope;
+            const unitInSeconds = offer4event.validRateLimit?.unitInSeconds;
+            if (typeof scope === 'string' && typeof unitInSeconds === 'number') {
+                const rateLimitKey: IRateLimitKey = {
+                    reservedTicket: {
+                        ticketType: {
+                            validRateLimit: {
+                                scope: scope,
+                                unitInSeconds: unitInSeconds
+                            }
+                        }
+                    },
+                    reservationFor: {
+                        startDate: moment(event.startDate)
+                            .toDate()
+                    },
+                    reservationNumber: ''
+                };
+
+                const holder = await repos.offerRateLimit.getHolder(rateLimitKey);
+                // ロックされていればOutOfStock
+                if (typeof holder === 'string' && holder.length > 0) {
+                    offer4event.availability = factory.itemAvailability.OutOfStock;
+                }
+            }
+        }
+
+        // アドオン設定があれば、プロダクトオファーを検索
+        for (const offer of offers4event) {
+            const offerAddOn: factory.offer.IAddOn[] = [];
+
+            if (Array.isArray(offer.addOn)) {
+                for (const addOn of offer.addOn) {
+                    const productId = addOn.itemOffered?.id;
+                    if (typeof productId === 'string') {
+                        const productOffers = await searchAddOns({ product: { id: productId } })(repos);
+                        offerAddOn.push(...productOffers);
+                    }
+
+                }
+            }
+
+            offer.addOn = offerAddOn;
+        }
+
+        // sorting
+        offers4event = offers4event.sort((a, b) => {
+            return sortedOfferIds.indexOf(a.id) - sortedOfferIds.indexOf(b.id);
+        });
+
+        return offers4event;
+    };
+}
+
+/**
+ * アドオンを検索する
+ */
+export function searchAddOns(params: {
+    product: { id: string };
+}): ISearchScreeningEventTicketOffersOperation<factory.offer.IOffer[]> {
+    return async (repos: {
+        offer: OfferRepo;
+        offerCatalog: OfferCatalogRepo;
+        product: ProductRepo;
+    }) => {
+        let offers: factory.offer.IOffer[] = [];
+
+        const productId = params.product?.id;
+        if (typeof productId === 'string') {
+            const product = await repos.product.findById({ id: productId });
+            const offerCatalogId = product.hasOfferCatalog?.id;
+            if (typeof offerCatalogId === 'string') {
+                const offerCatalog = await repos.offerCatalog.findById({ id: offerCatalogId });
+                if (Array.isArray(offerCatalog.itemListElement)) {
+                    offers = await repos.offer.search({
+                        id: { $in: offerCatalog.itemListElement.map((e) => e.id) }
+                    });
+
+                    offers = offers.map((o) => {
+                        return {
+                            ...o,
+                            itemOffered: product
+                        };
+                    });
+                }
+            }
+        }
+
+        return offers;
     };
 }
 
@@ -195,7 +377,7 @@ export function importFromCOA(params: {
         await Promise.all(ticketResults.map(async (ticketResult) => {
             const offer = coaTicket2offer({ project: params.project, theaterCode: params.theaterCode, ticketResult: ticketResult });
 
-            await repos.offer.saveOffer(offer);
+            await repos.offer.saveTicketType(offer);
 
             const additionalProperty: factory.propertyValue.IPropertyValue<string> = {
                 name: 'coaInfo',
@@ -204,7 +386,7 @@ export function importFromCOA(params: {
                 })
             };
 
-            await repos.offer.offerModel.findByIdAndUpdate(
+            await repos.offer.ticketTypeModel.findByIdAndUpdate(
                 offer.id,
                 {
                     $pull: {
@@ -214,7 +396,7 @@ export function importFromCOA(params: {
             )
                 .exec();
 
-            await repos.offer.offerModel.findByIdAndUpdate(
+            await repos.offer.ticketTypeModel.findByIdAndUpdate(
                 offer.id,
                 {
                     $push: {
@@ -277,7 +459,7 @@ function coaTicket2offer(params: {
 
     return {
         project: params.project,
-        typeOf: 'Offer',
+        typeOf: factory.offerType.Offer,
         priceCurrency: factory.priceCurrency.JPY,
         id: id,
         identifier: params.ticketResult.ticketCode,

@@ -2,6 +2,7 @@ import * as factory from '../../factory';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { RedisRepository as ScreeningEventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
+import { RedisRepository as OfferRateLimitRepo } from '../../repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 
@@ -24,10 +25,12 @@ export function call(data: factory.task.cancelPendingReservation.IData): IOperat
         const taskRepo = new TaskRepo(settings.connection);
         const reservationRepo = new ReservationRepo(settings.connection);
         const eventAvailabilityRepo = new ScreeningEventAvailabilityRepo(settings.redisClient);
+        const offerRateLimitRepo = new OfferRateLimitRepo(settings.redisClient);
 
         await ReserveService.cancelPendingReservation(data.actionAttributes)({
             action: actionRepo,
             eventAvailability: eventAvailabilityRepo,
+            offerRateLimit: offerRateLimitRepo,
             reservation: reservationRepo,
             task: taskRepo
         });
