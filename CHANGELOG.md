@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## v13.0.0 - 2020-03-04
+
+### Added
+
 - プロダクトリポジトリを追加
 - オファーコレクションを追加
 - オファーカタログコレクションを追加
@@ -44,14 +58,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - イベントのオファー検索結果をカタログの登録順にソート
 - 作品コレクションのインデックス調整
 - ticketTypeGroupsをofferCatalogsへ移行
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 
 ## v12.6.0 - 2019-12-25
 
