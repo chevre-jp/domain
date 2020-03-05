@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Removed
 
+- 旧細目リポジトリを削除
+
 ### Fixed
 
 ### Security

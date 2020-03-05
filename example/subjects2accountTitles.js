@@ -6,6 +6,7 @@ async function main() {
     await mongoose.connect(process.env.MONGOLAB_URI);
 
     const subjectRepo = new domain.repository.Subject(mongoose.connection);
+    const accountTitleRepo = new domain.repository.AccountTitle(mongoose.connection);
 
     const subjects = await subjectRepo.searchSubject({ detailCd: '' });
     console.log(subjects.length, 'subjects found');
@@ -57,6 +58,17 @@ async function main() {
 
     fs.writeFileSync(`${__dirname}/subjects2accountTitles.json`, JSON.stringify(accountTitles, null, '    '));
     console.log(accountTitles);
+
+    for (const accountTitle of accountTitles) {
+        await accountTitleRepo.accountTitleModel.findOneAndUpdate(
+            { codeValue: accountTitle.codeValue },
+            accountTitle,
+            { new: true, upsert: true }
+        )
+            .exec();
+        console.log('accountTitle updated');
+    }
+    console.log(accountTitles.length, 'accountTitles updated');
 }
 
 main().then(console.log).catch(console.error);
