@@ -31,22 +31,22 @@ export class MongoRepository {
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.project !== undefined) {
-            if (Array.isArray(params.project.ids)) {
+            if (Array.isArray((<any>params.project).ids)) {
                 andConditions.push({
                     'project.id': {
                         $exists: true,
-                        $in: params.project.ids
+                        $in: (<any>params.project).ids
                     }
                 });
             }
         }
 
-        if (params.id !== undefined) {
-            andConditions.push({ _id: new RegExp(params.id) });
+        if (typeof params.id === 'string') {
+            andConditions.push({ _id: new RegExp(<string>params.id) });
         }
 
-        if (Array.isArray(params.ids)) {
-            andConditions.push({ _id: { $in: params.ids } });
+        if (Array.isArray((<any>params).ids)) {
+            andConditions.push({ _id: { $in: (<any>params).ids } });
         }
 
         if (typeof params.identifier === 'string') {
@@ -67,35 +67,36 @@ export class MongoRepository {
             }
         }
 
-        if (Array.isArray(params.identifiers)) {
-            andConditions.push({ identifier: { $in: params.identifiers } });
+        if (Array.isArray((<any>params).identifiers)) {
+            andConditions.push({ identifier: { $in: (<any>params).identifiers } });
         }
 
-        if (params.name !== undefined) {
+        if (typeof params.name === 'string') {
+            const nameRegExp = new RegExp(<string>params.name);
             andConditions.push({
                 $or: [
                     {
                         'name.ja': {
                             $exists: true,
-                            $regex: new RegExp(params.name)
+                            $regex: nameRegExp
                         }
                     },
                     {
                         'name.en': {
                             $exists: true,
-                            $regex: new RegExp(params.name)
+                            $regex: nameRegExp
                         }
                     },
                     {
                         'alternateName.ja': {
                             $exists: true,
-                            $regex: new RegExp(params.name)
+                            $regex: nameRegExp
                         }
                     },
                     {
                         'alternateName.en': {
                             $exists: true,
-                            $regex: new RegExp(params.name)
+                            $regex: nameRegExp
                         }
                     }
                 ]
@@ -103,38 +104,38 @@ export class MongoRepository {
         }
 
         if (params.priceSpecification !== undefined) {
-            if (typeof params.priceSpecification.maxPrice === 'number') {
+            if (typeof (<any>params.priceSpecification).maxPrice === 'number') {
                 andConditions.push({
                     'priceSpecification.price': {
                         $exists: true,
-                        $lte: params.priceSpecification.maxPrice
+                        $lte: (<any>params.priceSpecification).maxPrice
                     }
                 });
             }
 
-            if (typeof params.priceSpecification.minPrice === 'number') {
+            if (typeof (<any>params.priceSpecification).minPrice === 'number') {
                 andConditions.push({
                     'priceSpecification.price': {
                         $exists: true,
-                        $gte: params.priceSpecification.minPrice
+                        $gte: (<any>params.priceSpecification).minPrice
                     }
                 });
             }
 
             if (params.priceSpecification.accounting !== undefined) {
-                if (typeof params.priceSpecification.accounting.maxAccountsReceivable === 'number') {
+                if (typeof (<any>params.priceSpecification.accounting).maxAccountsReceivable === 'number') {
                     andConditions.push({
                         'priceSpecification.accounting.accountsReceivable': {
                             $exists: true,
-                            $lte: params.priceSpecification.accounting.maxAccountsReceivable
+                            $lte: (<any>params.priceSpecification.accounting).maxAccountsReceivable
                         }
                     });
                 }
-                if (typeof params.priceSpecification.accounting.minAccountsReceivable === 'number') {
+                if (typeof (<any>params.priceSpecification.accounting).minAccountsReceivable === 'number') {
                     andConditions.push({
                         'priceSpecification.accounting.accountsReceivable': {
                             $exists: true,
-                            $gte: params.priceSpecification.accounting.minAccountsReceivable
+                            $gte: (<any>params.priceSpecification.accounting).minAccountsReceivable
                         }
                     });
                 }
@@ -153,11 +154,11 @@ export class MongoRepository {
         }
 
         if (params.category !== undefined) {
-            if (Array.isArray(params.category.ids)) {
+            if (Array.isArray((<any>params.category).ids)) {
                 andConditions.push({
                     'category.id': {
                         $exists: true,
-                        $in: params.category.ids
+                        $in: (<any>params.category).ids
                     }
                 });
             }
@@ -177,136 +178,171 @@ export class MongoRepository {
         return andConditions;
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
+    // tslint:disable-next-line:max-func-body-length
     public static CREATE_OFFER_MONGO_CONDITIONS(params: factory.offer.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [];
 
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.project !== undefined && params.project !== null) {
-            if (params.project.id !== undefined && params.project.id !== null) {
-                if (typeof params.project.id.$eq === 'string') {
-                    andConditions.push({
-                        'project.id': {
-                            $exists: true,
-                            $eq: params.project.id.$eq
-                        }
-                    });
+        const projectIdEq = params.project?.id?.$eq;
+        if (typeof projectIdEq === 'string') {
+            andConditions.push({
+                'project.id': {
+                    $exists: true,
+                    $eq: projectIdEq
                 }
-            }
+            });
         }
 
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.id !== undefined && params.id !== null) {
-            if (typeof params.id.$eq === 'string') {
-                andConditions.push({
-                    _id: {
-                        $exists: true,
-                        $eq: params.id.$eq
-                    }
-                });
-            }
-
-            if (Array.isArray((params.id).$in)) {
-                andConditions.push({
-                    _id: {
-                        $in: (params.id).$in
-                    }
-                });
-            }
-        }
-
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.identifier !== undefined && params.identifier !== null) {
-            if (typeof params.identifier.$eq === 'string') {
-                andConditions.push({
-                    identifier: {
-                        $exists: true,
-                        $eq: params.identifier.$eq
-                    }
-                });
-            }
-        }
-
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.itemOffered !== undefined && params.itemOffered !== null) {
-            if (params.itemOffered.typeOf !== undefined && params.itemOffered.typeOf !== null) {
-                if (typeof params.itemOffered.typeOf.$eq === 'string') {
-                    andConditions.push({
-                        'itemOffered.typeOf': {
-                            $exists: true,
-                            $eq: params.itemOffered.typeOf.$eq
-                        }
-                    });
+        const idEq = params.id?.$eq;
+        if (typeof idEq === 'string') {
+            andConditions.push({
+                _id: {
+                    $eq: idEq
                 }
-            }
+            });
         }
 
-        if (params.category !== undefined && params.category !== null) {
-            if (params.category.codeValue !== undefined && params.category.codeValue !== null) {
-                if (Array.isArray(params.category.codeValue.$in)) {
-                    andConditions.push({
-                        'category.codeValue': {
-                            $exists: true,
-                            $in: params.category.codeValue.$in
-                        }
-                    });
+        const idIn = params.id?.$in;
+        if (Array.isArray(idIn)) {
+            andConditions.push({
+                _id: {
+                    $in: idIn
                 }
-            }
+            });
+        }
+
+        const identifierEq = params.identifier?.$eq;
+        if (typeof identifierEq === 'string') {
+            andConditions.push({
+                identifier: {
+                    $exists: true,
+                    $eq: identifierEq
+                }
+            });
+        }
+
+        const identifierIn = params.identifier?.$in;
+        if (Array.isArray(identifierIn)) {
+            andConditions.push({
+                identifier: {
+                    $exists: true,
+                    $in: identifierIn
+                }
+            });
+        }
+
+        const identifierRegex = params.identifier?.$regex;
+        if (typeof identifierRegex === 'string') {
+            andConditions.push({
+                identifier: {
+                    $exists: true,
+                    $regex: new RegExp(identifierRegex)
+                }
+            });
+        }
+
+        const nameRegex = params.name?.$regex;
+        if (typeof nameRegex === 'string') {
+            const nameRegexExp = new RegExp(nameRegex);
+            andConditions.push({
+                $or: [
+                    {
+                        'name.ja': {
+                            $exists: true,
+                            $regex: nameRegexExp
+                        }
+                    },
+                    {
+                        'name.en': {
+                            $exists: true,
+                            $regex: nameRegexExp
+                        }
+                    },
+                    {
+                        'alternateName.ja': {
+                            $exists: true,
+                            $regex: nameRegexExp
+                        }
+                    },
+                    {
+                        'alternateName.en': {
+                            $exists: true,
+                            $regex: nameRegexExp
+                        }
+                    }
+                ]
+            });
+        }
+
+        const itemOfferedTypeOfEq = params.itemOffered?.typeOf?.$eq;
+        if (typeof itemOfferedTypeOfEq === 'string') {
+            andConditions.push({
+                'itemOffered.typeOf': {
+                    $exists: true,
+                    $eq: itemOfferedTypeOfEq
+                }
+            });
+        }
+
+        const categoryCodeValueIn = params.category?.codeValue?.$in;
+        if (Array.isArray(categoryCodeValueIn)) {
+            andConditions.push({
+                'category.codeValue': {
+                    $exists: true,
+                    $in: categoryCodeValueIn
+                }
+            });
         }
 
         if (params.priceSpecification !== undefined && params.priceSpecification !== null) {
-            if (typeof params.priceSpecification.price?.$gte === 'number') {
+            const priceSpecificationPriceGte = params.priceSpecification.price?.$gte;
+            if (typeof priceSpecificationPriceGte === 'number') {
                 andConditions.push({
                     'priceSpecification.price': {
                         $exists: true,
-                        $gte: params.priceSpecification.price?.$gte
+                        $gte: priceSpecificationPriceGte
                     }
                 });
             }
 
-            if (typeof params.priceSpecification.price?.$lte === 'number') {
+            const priceSpecificationPriceLte = params.priceSpecification.price?.$lte;
+            if (typeof priceSpecificationPriceLte === 'number') {
                 andConditions.push({
                     'priceSpecification.price': {
                         $exists: true,
-                        $lte: params.priceSpecification.price?.$lte
+                        $lte: priceSpecificationPriceLte
                     }
                 });
             }
 
-            if (params.priceSpecification.accounting !== undefined && params.priceSpecification.accounting !== null) {
-                if (typeof params.priceSpecification.accounting.accountsReceivable?.$gte === 'number') {
-                    andConditions.push({
-                        'priceSpecification.accounting.accountsReceivable': {
-                            $exists: true,
-                            $gte: params.priceSpecification.accounting.accountsReceivable?.$gte
-                        }
-                    });
-                }
-
-                if (typeof params.priceSpecification.accounting.accountsReceivable?.$lte === 'number') {
-                    andConditions.push({
-                        'priceSpecification.accounting.accountsReceivable': {
-                            $exists: true,
-                            $lte: params.priceSpecification.accounting.accountsReceivable?.$lte
-                        }
-                    });
-                }
+            const accountsReceivableGte = params.priceSpecification.accounting?.accountsReceivable?.$gte;
+            if (typeof accountsReceivableGte === 'number') {
+                andConditions.push({
+                    'priceSpecification.accounting.accountsReceivable': {
+                        $exists: true,
+                        $gte: accountsReceivableGte
+                    }
+                });
             }
 
-            if (params.priceSpecification.referenceQuantity !== undefined) {
-                if (typeof params.priceSpecification.referenceQuantity.value?.$eq === 'number') {
-                    andConditions.push({
-                        'priceSpecification.referenceQuantity.value': {
-                            $exists: true,
-                            $eq: params.priceSpecification.referenceQuantity.value?.$eq
-                        }
-                    });
-                }
+            const accountsReceivableLte = params.priceSpecification.accounting?.accountsReceivable?.$lte;
+            if (typeof accountsReceivableLte === 'number') {
+                andConditions.push({
+                    'priceSpecification.accounting.accountsReceivable': {
+                        $exists: true,
+                        $lte: accountsReceivableLte
+                    }
+                });
+            }
+
+            const referenceQuantityValueEq = params.priceSpecification.referenceQuantity?.value?.$eq;
+            if (typeof referenceQuantityValueEq === 'number') {
+                andConditions.push({
+                    'priceSpecification.referenceQuantity.value': {
+                        $exists: true,
+                        $eq: referenceQuantityValueEq
+                    }
+                });
             }
         }
 
@@ -489,6 +525,7 @@ export class MongoRepository {
         params: factory.ticketType.ITicketTypeSearchConditions
     ): Promise<number> {
         const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
+        conditions.push(MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params));
 
         return this.ticketTypeModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
             .setOptions({ maxTimeMS: 10000 })
@@ -502,6 +539,8 @@ export class MongoRepository {
         params: factory.ticketType.ITicketTypeSearchConditions
     ): Promise<factory.ticketType.ITicketType[]> {
         const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
+        conditions.push(MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params));
+
         const query = this.ticketTypeModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
             {
