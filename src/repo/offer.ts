@@ -525,7 +525,7 @@ export class MongoRepository {
         params: factory.ticketType.ITicketTypeSearchConditions
     ): Promise<number> {
         const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
-        conditions.push(MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params));
+        conditions.push(...MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params));
 
         return this.ticketTypeModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
             .setOptions({ maxTimeMS: 10000 })
@@ -539,7 +539,7 @@ export class MongoRepository {
         params: factory.ticketType.ITicketTypeSearchConditions
     ): Promise<factory.ticketType.ITicketType[]> {
         const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
-        conditions.push(MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params));
+        conditions.push(...MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params));
 
         const query = this.ticketTypeModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
