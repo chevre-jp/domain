@@ -24,7 +24,7 @@ export class MongoRepository {
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
-    public static CREATE_TICKET_TYPE_MONGO_CONDITIONS(params: factory.ticketType.ITicketTypeSearchConditions) {
+    public static CREATE_TICKET_TYPE_MONGO_CONDITIONS(params: factory.offer.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [];
 
@@ -357,7 +357,7 @@ export class MongoRepository {
         offerCatalog: {
             id: string;
         };
-    }): Promise<factory.ticketType.ITicketType[]> {
+    }): Promise<factory.offer.IUnitPriceOffer[]> {
         const ticketTypeGroup = await this.offerCatalogModel.findById(
             params.offerCatalog.id,
             {
@@ -502,7 +502,7 @@ export class MongoRepository {
 
     public async findTicketTypeById(params: {
         id: string;
-    }): Promise<factory.ticketType.ITicketType> {
+    }): Promise<factory.offer.IUnitPriceOffer> {
         const doc = await this.ticketTypeModel.findOne(
             {
                 _id: params.id
@@ -522,7 +522,7 @@ export class MongoRepository {
     }
 
     public async countTicketTypes(
-        params: factory.ticketType.ITicketTypeSearchConditions
+        params: factory.offer.ISearchConditions
     ): Promise<number> {
         const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
         conditions.push(...MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params));
@@ -536,8 +536,8 @@ export class MongoRepository {
      * 券種を検索する
      */
     public async searchTicketTypes(
-        params: factory.ticketType.ITicketTypeSearchConditions
-    ): Promise<factory.ticketType.ITicketType[]> {
+        params: factory.offer.ISearchConditions
+    ): Promise<factory.offer.IUnitPriceOffer[]> {
         const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
         conditions.push(...MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params));
 
@@ -571,7 +571,7 @@ export class MongoRepository {
     /**
      * 券種を保管する
      */
-    public async saveTicketType(params: factory.ticketType.ITicketType): Promise<factory.ticketType.ITicketType> {
+    public async saveTicketType(params: factory.offer.IUnitPriceOffer): Promise<factory.offer.IUnitPriceOffer> {
         let doc: Document | null;
 
         if (params.id === '') {

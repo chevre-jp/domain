@@ -62,6 +62,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - イベントのオファー検索結果をカタログの登録順にソート
 - 作品コレクションのインデックス調整
 - ticketTypeGroupsをofferCatalogsへ移行
+- 券種インターフェースを単価オファーインターフェースとして再定義
 
 ## v12.6.0 - 2019-12-25
 

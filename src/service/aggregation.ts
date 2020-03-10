@@ -165,9 +165,9 @@ function aggregateOfferByEvent(params: {
         offerRateLimit: OfferRateLimitRepo;
         reservation: ReservationRepo;
     }): Promise<factory.event.screeningEvent.IAggregateOffer> => {
-        let availableOffers: factory.ticketType.ITicketType[] = [];
+        let availableOffers: factory.offer.IUnitPriceOffer[] = [];
         if (params.event.offers !== undefined) {
-            availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: params.event.offers });
+            availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: { id: <string>params.event.offers.id } });
         }
 
         // オファーごとの予約集計
@@ -205,7 +205,7 @@ function aggregateReservationByOffer(params: {
     aggregateDate: Date;
     event: factory.event.IEvent<factory.eventType.ScreeningEvent>;
     screeningRoom: factory.place.screeningRoom.IPlace;
-    offer: factory.ticketType.ITicketType;
+    offer: factory.offer.IUnitPriceOffer;
 }) {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
@@ -226,14 +226,14 @@ function aggregateReservationByOffer(params: {
             typeOf: factory.reservationType.EventReservation,
             reservationFor: { ids: [params.event.id] },
             reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
-            reservedTicket: { ticketType: { ids: [params.offer.id] } }
+            reservedTicket: { ticketType: { ids: [<string>params.offer.id] } }
         });
 
         attendeeCount4offer = await repos.reservation.count({
             typeOf: factory.reservationType.EventReservation,
             reservationFor: { ids: [params.event.id] },
             reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
-            reservedTicket: { ticketType: { ids: [params.offer.id] } },
+            reservedTicket: { ticketType: { ids: [<string>params.offer.id] } },
             attended: true
         });
 
@@ -241,7 +241,7 @@ function aggregateReservationByOffer(params: {
             typeOf: factory.reservationType.EventReservation,
             reservationFor: { ids: [params.event.id] },
             reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
-            reservedTicket: { ticketType: { ids: [params.offer.id] } },
+            reservedTicket: { ticketType: { ids: [<string>params.offer.id] } },
             checkedIn: true
         });
 
