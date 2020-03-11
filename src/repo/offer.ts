@@ -379,7 +379,7 @@ export class MongoRepository {
             ? ticketTypeGroup.itemListElement.map((element) => element.id)
             : [];
 
-        let offers = await this.ticketTypeModel.find(
+        let offers = await this.offerModel.find(
             { _id: { $in: sortedOfferIds } },
             {
                 __v: 0,
@@ -503,7 +503,7 @@ export class MongoRepository {
     public async findTicketTypeById(params: {
         id: string;
     }): Promise<factory.offer.IUnitPriceOffer> {
-        const doc = await this.ticketTypeModel.findOne(
+        const doc = await this.offerModel.findOne(
             {
                 _id: params.id
             },
@@ -515,7 +515,7 @@ export class MongoRepository {
         )
             .exec();
         if (doc === null) {
-            throw new factory.errors.NotFound(this.ticketTypeModel.modelName);
+            throw new factory.errors.NotFound(this.offerModel.modelName);
         }
 
         return doc.toObject();
@@ -527,7 +527,7 @@ export class MongoRepository {
         const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
         conditions.push(...MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params));
 
-        return this.ticketTypeModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
+        return this.offerModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
             .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
@@ -541,7 +541,7 @@ export class MongoRepository {
         const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
         conditions.push(...MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params));
 
-        const query = this.ticketTypeModel.find(
+        const query = this.offerModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
             {
                 __v: 0,
@@ -576,9 +576,9 @@ export class MongoRepository {
 
         if (params.id === '') {
             const id = uniqid();
-            doc = await this.ticketTypeModel.create({ ...params, _id: id });
+            doc = await this.offerModel.create({ ...params, _id: id });
         } else {
-            doc = await this.ticketTypeModel.findOneAndUpdate(
+            doc = await this.offerModel.findOneAndUpdate(
                 { _id: params.id },
                 params,
                 { upsert: false, new: true }
@@ -586,7 +586,7 @@ export class MongoRepository {
                 .exec();
 
             if (doc === null) {
-                throw new factory.errors.NotFound(this.ticketTypeModel.modelName);
+                throw new factory.errors.NotFound(this.offerModel.modelName);
             }
         }
 
@@ -599,7 +599,7 @@ export class MongoRepository {
     public async deleteTicketType(params: {
         id: string;
     }) {
-        await this.ticketTypeModel.findOneAndRemove(
+        await this.offerModel.findOneAndRemove(
             {
                 _id: params.id
             }
