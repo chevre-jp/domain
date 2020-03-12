@@ -5,9 +5,6 @@ import * as factory from '../factory';
 
 import OfferModel from './mongoose/model/offer';
 import OfferCatalogModel from './mongoose/model/offerCatalog';
-import TicketTypeModel from './mongoose/model/ticketType';
-
-import { MongoRepository as OfferCategoryRepo } from './offerCatalog';
 
 /**
  * オファーリポジトリ
@@ -15,12 +12,10 @@ import { MongoRepository as OfferCategoryRepo } from './offerCatalog';
 export class MongoRepository {
     public readonly offerModel: typeof OfferModel;
     public readonly offerCatalogModel: typeof OfferCatalogModel;
-    public readonly ticketTypeModel: typeof TicketTypeModel;
 
     constructor(connection: Connection) {
         this.offerModel = connection.model(OfferModel.modelName);
         this.offerCatalogModel = connection.model(OfferCatalogModel.modelName);
-        this.ticketTypeModel = connection.model(TicketTypeModel.modelName);
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
@@ -353,7 +348,7 @@ export class MongoRepository {
      * 券種グループの券種を検索する
      * 券種グループに登録された券種の順序は保証される
      */
-    public async findTicketTypesByOfferCatalogId(params: {
+    public async findOffersByOfferCatalogId(params: {
         offerCatalog: {
             id: string;
         };
@@ -397,142 +392,6 @@ export class MongoRepository {
     }
 
     /**
-     * 券種グループを保管する
-     */
-    public async saveTicketTypeGroup(params: factory.offerCatalog.IOfferCatalog): Promise<factory.offerCatalog.IOfferCatalog> {
-        let doc: Document | null;
-
-        if (params.id === '') {
-            const id = uniqid();
-            doc = await this.offerCatalogModel.create({ ...params, _id: id });
-        } else {
-            doc = await this.offerCatalogModel.findOneAndUpdate(
-                { _id: params.id },
-                params,
-                { upsert: false, new: true }
-            )
-                .exec();
-
-            if (doc === null) {
-                throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
-            }
-        }
-
-        return doc.toObject();
-    }
-
-    public async findTicketTypeGroupById(params: {
-        id: string;
-    }): Promise<factory.offerCatalog.IOfferCatalog> {
-        const doc = await this.offerCatalogModel.findOne(
-            {
-                _id: params.id
-            },
-            {
-                __v: 0,
-                createdAt: 0,
-                updatedAt: 0
-            }
-        )
-            .exec();
-        if (doc === null) {
-            throw new factory.errors.NotFound(this.offerCatalogModel.modelName);
-        }
-
-        return doc.toObject();
-    }
-
-    public async countTicketTypeGroups(
-        params: factory.offerCatalog.ISearchConditions
-    ): Promise<number> {
-        const conditions = OfferCategoryRepo.CREATE_MONGO_CONDITIONS(params);
-
-        return this.offerCatalogModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
-            .setOptions({ maxTimeMS: 10000 })
-            .exec();
-    }
-
-    /**
-     * 券種グループを検索する
-     */
-    public async searchTicketTypeGroups(
-        params: factory.offerCatalog.ISearchConditions
-    ): Promise<factory.offerCatalog.IOfferCatalog[]> {
-        const conditions = OfferCategoryRepo.CREATE_MONGO_CONDITIONS(params);
-        const query = this.offerCatalogModel.find(
-            (conditions.length > 0) ? { $and: conditions } : {},
-            {
-                __v: 0,
-                createdAt: 0,
-                updatedAt: 0
-            }
-        );
-
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit)
-                .skip(params.limit * (params.page - 1));
-        }
-
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.sort !== undefined) {
-            query.sort(params.sort);
-        }
-
-        return query.setOptions({ maxTimeMS: 10000 })
-            .exec()
-            .then((docs) => docs.map((doc) => doc.toObject()));
-    }
-
-    /**
-     * 券種グループを削除する
-     */
-    public async deleteTicketTypeGroup(params: {
-        id: string;
-    }) {
-        await this.offerCatalogModel.findOneAndRemove(
-            {
-                _id: params.id
-            }
-        )
-            .exec();
-    }
-
-    public async findTicketTypeById(params: {
-        id: string;
-    }): Promise<factory.offer.IUnitPriceOffer> {
-        const doc = await this.offerModel.findOne(
-            {
-                _id: params.id
-            },
-            {
-                __v: 0,
-                createdAt: 0,
-                updatedAt: 0
-            }
-        )
-            .exec();
-        if (doc === null) {
-            throw new factory.errors.NotFound(this.offerModel.modelName);
-        }
-
-        return doc.toObject();
-    }
-
-    public async countTicketTypes(
-        params: factory.offer.ISearchConditions
-    ): Promise<number> {
-        const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
-        conditions.push(...MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params));
-
-        return this.offerModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
-            .setOptions({ maxTimeMS: 10000 })
-            .exec();
-    }
-
-    /**
      * 券種を検索する
      */
     public async searchTicketTypes(
@@ -568,52 +427,11 @@ export class MongoRepository {
             .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
-    /**
-     * 券種を保管する
-     */
-    public async saveTicketType(params: factory.offer.IUnitPriceOffer): Promise<factory.offer.IUnitPriceOffer> {
-        let doc: Document | null;
-
-        if (params.id === '') {
-            const id = uniqid();
-            doc = await this.offerModel.create({ ...params, _id: id });
-        } else {
-            doc = await this.offerModel.findOneAndUpdate(
-                { _id: params.id },
-                params,
-                { upsert: false, new: true }
-            )
-                .exec();
-
-            if (doc === null) {
-                throw new factory.errors.NotFound(this.offerModel.modelName);
-            }
-        }
-
-        return doc.toObject();
-    }
-
-    /**
-     * 券種を削除する
-     */
-    public async deleteTicketType(params: {
-        id: string;
-    }) {
-        await this.offerModel.findOneAndRemove(
-            {
-                _id: params.id
-            }
-        )
-            .exec();
-    }
-
     public async findById(params: {
         id: string;
-    }): Promise<factory.offer.IOffer> {
+    }): Promise<factory.offer.IUnitPriceOffer> {
         const doc = await this.offerModel.findOne(
-            {
-                _id: params.id
-            },
+            { _id: params.id },
             {
                 __v: 0,
                 createdAt: 0,
@@ -640,7 +458,7 @@ export class MongoRepository {
 
     public async search(
         params: factory.offer.ISearchConditions
-    ): Promise<factory.offer.IOffer[]> {
+    ): Promise<factory.offer.IUnitPriceOffer[]> {
         const conditions = MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params);
         const query = this.offerModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
@@ -669,7 +487,7 @@ export class MongoRepository {
             .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
-    public async save(params: factory.offer.IOffer): Promise<factory.offer.IOffer> {
+    public async save(params: factory.offer.IUnitPriceOffer): Promise<factory.offer.IUnitPriceOffer> {
         let doc: Document | null;
 
         if (params.id === '') {
@@ -695,9 +513,7 @@ export class MongoRepository {
         id: string;
     }) {
         await this.offerModel.findOneAndRemove(
-            {
-                _id: params.id
-            }
+            { _id: params.id }
         )
             .exec();
     }

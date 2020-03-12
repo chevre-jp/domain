@@ -153,7 +153,7 @@ export function searchScreeningEventTicketOffers(params: {
             = (Array.isArray(event.superEvent.videoFormat))
                 ? event.superEvent.videoFormat.map((f) => f.typeOf)
                 : [factory.videoFormatType['2D']];
-        const availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({
+        const availableOffers = await repos.offer.findOffersByOfferCatalogId({
             offerCatalog: { id: <string>screeningEventOffers.id }
         });
         const sortedOfferIds = availableOffers.map((o) => o.id);
@@ -381,7 +381,7 @@ export function importFromCOA(params: {
         await Promise.all(ticketResults.map(async (ticketResult) => {
             const offer = coaTicket2offer({ project: params.project, theaterCode: params.theaterCode, ticketResult: ticketResult });
 
-            await repos.offer.saveTicketType(offer);
+            await repos.offer.save(offer);
 
             const additionalProperty: factory.propertyValue.IPropertyValue<string> = {
                 name: 'coaInfo',

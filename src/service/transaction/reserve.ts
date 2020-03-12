@@ -179,7 +179,7 @@ export function addReservations(params: {
 
         // イベントオファー検索
         const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
-        const availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: { id: <string>eventOffers.id } });
+        const availableOffers = await repos.offer.findOffersByOfferCatalogId({ offerCatalog: { id: <string>eventOffers.id } });
 
         // 座席オファー検索
         const availableSeatOffers = await OfferService.searchEventSeatOffers({ event: { id: event.id } })(repos);
