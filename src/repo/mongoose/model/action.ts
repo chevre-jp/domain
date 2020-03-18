@@ -2,65 +2,6 @@ import * as mongoose from 'mongoose';
 
 const safe = { j: true, w: 'majority', wtimeout: 10000 };
 
-const agentSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const recipientSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const errorSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const objectSchema = mongoose.SchemaTypes.Mixed;
-const resultSchema = mongoose.SchemaTypes.Mixed;
-const purposeSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const potentialActionsSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const locationSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const instrumentSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
 /**
  * アクションスキーマ
  */
@@ -69,26 +10,26 @@ const schema = new mongoose.Schema(
         project: mongoose.SchemaTypes.Mixed,
         actionStatus: String,
         typeOf: String,
-        agent: agentSchema,
-        recipient: recipientSchema,
-        result: resultSchema,
-        error: errorSchema,
-        object: objectSchema,
+        agent: mongoose.SchemaTypes.Mixed,
+        recipient: mongoose.SchemaTypes.Mixed,
+        result: mongoose.SchemaTypes.Mixed,
+        error: mongoose.SchemaTypes.Mixed,
+        object: mongoose.SchemaTypes.Mixed,
         startDate: Date,
         endDate: Date,
-        purpose: purposeSchema,
-        potentialActions: potentialActionsSchema,
+        purpose: mongoose.SchemaTypes.Mixed,
+        potentialActions: mongoose.SchemaTypes.Mixed,
         amount: Number,
-        fromLocation: locationSchema,
-        toLocation: locationSchema,
-        instrument: instrumentSchema
+        fromLocation: mongoose.SchemaTypes.Mixed,
+        toLocation: mongoose.SchemaTypes.Mixed,
+        instrument: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'actions',
         id: true,
         read: 'primaryPreferred',
         safe: safe,
-        strict: true,
+        strict: false,
         useNestedStrict: true,
         timestamps: {
             createdAt: 'createdAt',

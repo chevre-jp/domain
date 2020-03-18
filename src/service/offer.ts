@@ -230,7 +230,7 @@ export function searchScreeningEventTicketOffers(params: {
                     };
 
                     return {
-                        ...eventOffers,
+                        // ...eventOffers, // テスト終了後削除
                         ...t,
                         eligibleQuantity: eventOffers.eligibleQuantity,
                         priceSpecification: compoundPriceSpecification
@@ -266,7 +266,7 @@ export function searchScreeningEventTicketOffers(params: {
                 };
 
                 return {
-                    ...eventOffers,
+                    // ...eventOffers, // テスト終了後削除
                     ...t,
                     eligibleQuantity: eventOffers.eligibleQuantity,
                     priceSpecification: compoundPriceSpecification
