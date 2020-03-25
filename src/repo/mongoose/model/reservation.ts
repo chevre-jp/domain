@@ -108,9 +108,14 @@ schema.index(
 );
 
 schema.index(
-    { 'project.id': 1, modifiedTime: -1 },
+    { bookingTime: -1 },
+    { name: 'searchByBookingTime-v3' }
+);
+
+schema.index(
+    { 'project.id': 1, bookingTime: -1 },
     {
-        name: 'searchByProjectId',
+        name: 'searchByProjectId-v3',
         partialFilterExpression: {
             'project.id': { $exists: true }
         }
@@ -118,49 +123,34 @@ schema.index(
 );
 
 schema.index(
-    { typeOf: 1, modifiedTime: -1 },
-    { name: 'searchByTypeOf-v2' }
+    { typeOf: 1, bookingTime: -1 },
+    { name: 'searchByTypeOf-v3' }
 );
 
 schema.index(
-    { reservationNumber: 1, modifiedTime: -1 },
-    { name: 'searchByReservationNumber-v2' }
+    { reservationNumber: 1, bookingTime: -1 },
+    { name: 'searchByReservationNumber-v3' }
 );
 
 schema.index(
-    { reservationStatus: 1, modifiedTime: -1 },
-    { name: 'searchByReservationStatus-v2' }
+    { reservationStatus: 1, bookingTime: -1 },
+    { name: 'searchByReservationStatus-v3' }
 );
 
 schema.index(
-    { checkedIn: 1, modifiedTime: -1 },
-    { name: 'searchByCheckedIn-v2' }
+    { checkedIn: 1, bookingTime: -1 },
+    { name: 'searchByCheckedIn-v3' }
 );
 
 schema.index(
-    { attended: 1, modifiedTime: -1 },
-    { name: 'searchByAttended-v2' }
+    { attended: 1, bookingTime: -1 },
+    { name: 'searchByAttended-v3' }
 );
 
 schema.index(
-    { bookingTime: -1, modifiedTime: -1 },
+    { additionalTicketText: 1, bookingTime: -1 },
     {
-        name: 'searchByBookingTime',
-        partialFilterExpression: {
-            bookingTime: { $exists: true }
-        }
-    }
-);
-
-schema.index(
-    { modifiedTime: -1 },
-    { name: 'searchByModifiedTime-v2' }
-);
-
-schema.index(
-    { additionalTicketText: 1, modifiedTime: -1 },
-    {
-        name: 'searchByAdditionalTicketText',
+        name: 'searchByAdditionalTicketText-v3',
         partialFilterExpression: {
             additionalTicketText: { $exists: true }
         }
@@ -168,9 +158,9 @@ schema.index(
 );
 
 schema.index(
-    { additionalProperty: 1, modifiedTime: -1 },
+    { additionalProperty: 1, bookingTime: -1 },
     {
-        name: 'searchByAdditionalProperty',
+        name: 'searchByAdditionalProperty-v3',
         partialFilterExpression: {
             additionalProperty: { $exists: true }
         }
@@ -178,9 +168,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservationFor.typeOf': 1, modifiedTime: -1 },
+    { 'reservationFor.typeOf': 1, bookingTime: -1 },
     {
-        name: 'searchByReservationForTypeOf-v2',
+        name: 'searchByReservationForTypeOf-v3',
         partialFilterExpression: {
             'reservationFor.typeOf': { $exists: true }
         }
@@ -188,9 +178,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservationFor.id': 1, modifiedTime: -1 },
+    { 'reservationFor.id': 1, bookingTime: -1 },
     {
-        name: 'searchByReservationForId-v2',
+        name: 'searchByReservationForId-v3',
         partialFilterExpression: {
             'reservationFor.id': { $exists: true }
         }
@@ -198,9 +188,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservationFor.location.id': 1, modifiedTime: -1 },
+    { 'reservationFor.location.id': 1, bookingTime: -1 },
     {
-        name: 'searchByReservationForLocationId',
+        name: 'searchByReservationForLocationId-v3',
         partialFilterExpression: {
             'reservationFor.location.id': { $exists: true }
         }
@@ -208,9 +198,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservationFor.location.branchCode': 1, modifiedTime: -1 },
+    { 'reservationFor.location.branchCode': 1, bookingTime: -1 },
     {
-        name: 'searchByReservationForLocationBranchCode',
+        name: 'searchByReservationForLocationBranchCode-v3',
         partialFilterExpression: {
             'reservationFor.location.branchCode': { $exists: true }
         }
@@ -218,9 +208,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservationFor.startDate': 1, modifiedTime: -1 },
+    { 'reservationFor.startDate': 1, bookingTime: -1 },
     {
-        name: 'searchByReservationForStartDate-v2',
+        name: 'searchByReservationForStartDate-v3',
         partialFilterExpression: {
             'reservationFor.startDate': { $exists: true }
         }
@@ -228,9 +218,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservationFor.endDate': 1, modifiedTime: -1 },
+    { 'reservationFor.endDate': 1, bookingTime: -1 },
     {
-        name: 'searchByReservationForEndDate-v2',
+        name: 'searchByReservationForEndDate-v3',
         partialFilterExpression: {
             'reservationFor.endDate': { $exists: true }
         }
@@ -238,9 +228,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservationFor.superEvent.id': 1, modifiedTime: -1 },
+    { 'reservationFor.superEvent.id': 1, bookingTime: -1 },
     {
-        name: 'searchByReservationForSuperEventId-v2',
+        name: 'searchByReservationForSuperEventId-v3',
         partialFilterExpression: {
             'reservationFor.superEvent.id': { $exists: true }
         }
@@ -248,9 +238,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservationFor.superEvent.workPerformed.id': 1, modifiedTime: -1 },
+    { 'reservationFor.superEvent.workPerformed.id': 1, bookingTime: -1 },
     {
-        name: 'searchByReservationForSuperEventWorkPerformedId',
+        name: 'searchByReservationForSuperEventWorkPerformedId-v3',
         partialFilterExpression: {
             'reservationFor.superEvent.workPerformed.id': { $exists: true }
         }
@@ -258,9 +248,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservationFor.superEvent.workPerformed.identifier': 1, modifiedTime: -1 },
+    { 'reservationFor.superEvent.workPerformed.identifier': 1, bookingTime: -1 },
     {
-        name: 'searchByReservationForSuperEventWorkPerformedIdentifier',
+        name: 'searchByReservationForSuperEventWorkPerformedIdentifier-v3',
         partialFilterExpression: {
             'reservationFor.superEvent.workPerformed.identifier': { $exists: true }
         }
@@ -268,9 +258,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservationFor.superEvent.location.id': 1, modifiedTime: -1 },
+    { 'reservationFor.superEvent.location.id': 1, bookingTime: -1 },
     {
-        name: 'searchByReservationForSuperEventLocationId',
+        name: 'searchByReservationForSuperEventLocationId-v3',
         partialFilterExpression: {
             'reservationFor.superEvent.location.id': { $exists: true }
         }
@@ -278,9 +268,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservationFor.superEvent.location.branchCode': 1, modifiedTime: -1 },
+    { 'reservationFor.superEvent.location.branchCode': 1, bookingTime: -1 },
     {
-        name: 'searchByReservationForSuperEventLocationBranchCode',
+        name: 'searchByReservationForSuperEventLocationBranchCode-v3',
         partialFilterExpression: {
             'reservationFor.superEvent.location.branchCode': { $exists: true }
         }
@@ -288,9 +278,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservedTicket.ticketedSeat.seatNumber': 1, modifiedTime: -1 },
+    { 'reservedTicket.ticketedSeat.seatNumber': 1, bookingTime: -1 },
     {
-        name: 'searchByReservedTicketTicketedSeatSeatNumber',
+        name: 'searchByReservedTicketTicketedSeatSeatNumber-v3',
         partialFilterExpression: {
             'reservedTicket.ticketedSeat.seatNumber': { $exists: true }
         }
@@ -298,9 +288,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservedTicket.ticketedSeat.seatRow': 1, modifiedTime: -1 },
+    { 'reservedTicket.ticketedSeat.seatRow': 1, bookingTime: -1 },
     {
-        name: 'searchByReservedTicketTicketedSeatSeatRow',
+        name: 'searchByReservedTicketTicketedSeatSeatRow-v3',
         partialFilterExpression: {
             'reservedTicket.ticketedSeat.seatRow': { $exists: true }
         }
@@ -308,9 +298,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservedTicket.ticketedSeat.seatSection': 1, modifiedTime: -1 },
+    { 'reservedTicket.ticketedSeat.seatSection': 1, bookingTime: -1 },
     {
-        name: 'searchByReservedTicketTicketedSeatSeatSection',
+        name: 'searchByReservedTicketTicketedSeatSeatSection-v3',
         partialFilterExpression: {
             'reservedTicket.ticketedSeat.seatSection': { $exists: true }
         }
@@ -318,19 +308,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservedTicket.ticketedSeat.seatingType': 1, modifiedTime: -1 },
+    { 'reservedTicket.ticketType.id': 1, bookingTime: -1 },
     {
-        name: 'searchByReservedTicketTicketedSeatSeatingType',
-        partialFilterExpression: {
-            'reservedTicket.ticketedSeat.seatingType': { $exists: true }
-        }
-    }
-);
-
-schema.index(
-    { 'reservedTicket.ticketType.id': 1, modifiedTime: -1 },
-    {
-        name: 'searchByReservedTicketTicketTypeId',
+        name: 'searchByReservedTicketTicketTypeId-v3',
         partialFilterExpression: {
             'reservedTicket.ticketType.id': { $exists: true }
         }
@@ -338,9 +318,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservedTicket.ticketType.category.id': 1, modifiedTime: -1 },
+    { 'reservedTicket.ticketType.category.id': 1, bookingTime: -1 },
     {
-        name: 'searchByReservedTicketTicketTypeCategoryId',
+        name: 'searchByReservedTicketTicketTypeCategoryId-v3',
         partialFilterExpression: {
             'reservedTicket.ticketType.category.id': { $exists: true }
         }
@@ -348,9 +328,9 @@ schema.index(
 );
 
 schema.index(
-    { 'reservedTicket.ticketType.category.codeValue': 1, modifiedTime: -1 },
+    { 'reservedTicket.ticketType.category.codeValue': 1, bookingTime: -1 },
     {
-        name: 'searchByReservedTicketTicketTypeCategoryCodeValue',
+        name: 'searchByReservedTicketTicketTypeCategoryCodeValue-v3',
         partialFilterExpression: {
             'reservedTicket.ticketType.category.codeValue': { $exists: true }
         }
@@ -358,9 +338,9 @@ schema.index(
 );
 
 schema.index(
-    { 'underName.id': 1, modifiedTime: -1 },
+    { 'underName.id': 1, bookingTime: -1 },
     {
-        name: 'searchByUnderNameId',
+        name: 'searchByUnderNameId-v3',
         partialFilterExpression: {
             'underName.id': { $exists: true }
         }
@@ -368,9 +348,9 @@ schema.index(
 );
 
 schema.index(
-    { 'underName.email': 1, modifiedTime: -1 },
+    { 'underName.email': 1, bookingTime: -1 },
     {
-        name: 'searchByUnderNameEmail',
+        name: 'searchByUnderNameEmail-v3',
         partialFilterExpression: {
             'underName.email': { $exists: true }
         }
@@ -378,9 +358,9 @@ schema.index(
 );
 
 schema.index(
-    { 'underName.name': 1, modifiedTime: -1 },
+    { 'underName.name': 1, bookingTime: -1 },
     {
-        name: 'searchByUnderNameName',
+        name: 'searchByUnderNameName-v3',
         partialFilterExpression: {
             'underName.name': { $exists: true }
         }
@@ -388,9 +368,9 @@ schema.index(
 );
 
 schema.index(
-    { 'underName.telephone': 1, modifiedTime: -1 },
+    { 'underName.telephone': 1, bookingTime: -1 },
     {
-        name: 'searchByUnderNameTelephone',
+        name: 'searchByUnderNameTelephone-v3',
         partialFilterExpression: {
             'underName.telephone': { $exists: true }
         }
@@ -398,9 +378,9 @@ schema.index(
 );
 
 schema.index(
-    { 'underName.familyName': 1, modifiedTime: -1 },
+    { 'underName.familyName': 1, bookingTime: -1 },
     {
-        name: 'searchByUnderNameFamilyName',
+        name: 'searchByUnderNameFamilyName-v3',
         partialFilterExpression: {
             'underName.familyName': { $exists: true }
         }
@@ -408,9 +388,9 @@ schema.index(
 );
 
 schema.index(
-    { 'underName.givenName': 1, modifiedTime: -1 },
+    { 'underName.givenName': 1, bookingTime: -1 },
     {
-        name: 'searchByUnderNameGivenName',
+        name: 'searchByUnderNameGivenName-v3',
         partialFilterExpression: {
             'underName.givenName': { $exists: true }
         }
@@ -418,9 +398,9 @@ schema.index(
 );
 
 schema.index(
-    { 'underName.identifier': 1, modifiedTime: -1 },
+    { 'underName.identifier': 1, bookingTime: -1 },
     {
-        name: 'searchByUnderNameIdentifier',
+        name: 'searchByUnderNameIdentifier-v3',
         partialFilterExpression: {
             'underName.identifier': { $exists: true }
         }
