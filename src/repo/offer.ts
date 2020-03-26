@@ -18,161 +18,6 @@ export class MongoRepository {
         this.offerCatalogModel = connection.model(OfferCatalogModel.modelName);
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
-    public static CREATE_TICKET_TYPE_MONGO_CONDITIONS(params: factory.offer.ISearchConditions) {
-        // MongoDB検索条件
-        const andConditions: any[] = [];
-
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.project !== undefined) {
-            if (Array.isArray((<any>params.project).ids)) {
-                andConditions.push({
-                    'project.id': {
-                        $exists: true,
-                        $in: (<any>params.project).ids
-                    }
-                });
-            }
-        }
-
-        if (typeof params.id === 'string') {
-            andConditions.push({ _id: new RegExp(<string>params.id) });
-        }
-
-        if (Array.isArray((<any>params).ids)) {
-            andConditions.push({ _id: { $in: (<any>params).ids } });
-        }
-
-        if (typeof params.identifier === 'string') {
-            andConditions.push({
-                identifier: {
-                    $exists: true,
-                    $regex: new RegExp(params.identifier)
-                }
-            });
-        } else if (params.identifier !== undefined && params.identifier !== null) {
-            if (typeof params.identifier.$eq === 'string') {
-                andConditions.push({
-                    identifier: {
-                        $exists: true,
-                        $eq: params.identifier.$eq
-                    }
-                });
-            }
-        }
-
-        if (Array.isArray((<any>params).identifiers)) {
-            andConditions.push({ identifier: { $in: (<any>params).identifiers } });
-        }
-
-        if (typeof params.name === 'string') {
-            const nameRegExp = new RegExp(<string>params.name);
-            andConditions.push({
-                $or: [
-                    {
-                        'name.ja': {
-                            $exists: true,
-                            $regex: nameRegExp
-                        }
-                    },
-                    {
-                        'name.en': {
-                            $exists: true,
-                            $regex: nameRegExp
-                        }
-                    },
-                    {
-                        'alternateName.ja': {
-                            $exists: true,
-                            $regex: nameRegExp
-                        }
-                    },
-                    {
-                        'alternateName.en': {
-                            $exists: true,
-                            $regex: nameRegExp
-                        }
-                    }
-                ]
-            });
-        }
-
-        if (params.priceSpecification !== undefined) {
-            if (typeof (<any>params.priceSpecification).maxPrice === 'number') {
-                andConditions.push({
-                    'priceSpecification.price': {
-                        $exists: true,
-                        $lte: (<any>params.priceSpecification).maxPrice
-                    }
-                });
-            }
-
-            if (typeof (<any>params.priceSpecification).minPrice === 'number') {
-                andConditions.push({
-                    'priceSpecification.price': {
-                        $exists: true,
-                        $gte: (<any>params.priceSpecification).minPrice
-                    }
-                });
-            }
-
-            if (params.priceSpecification.accounting !== undefined) {
-                if (typeof (<any>params.priceSpecification.accounting).maxAccountsReceivable === 'number') {
-                    andConditions.push({
-                        'priceSpecification.accounting.accountsReceivable': {
-                            $exists: true,
-                            $lte: (<any>params.priceSpecification.accounting).maxAccountsReceivable
-                        }
-                    });
-                }
-                if (typeof (<any>params.priceSpecification.accounting).minAccountsReceivable === 'number') {
-                    andConditions.push({
-                        'priceSpecification.accounting.accountsReceivable': {
-                            $exists: true,
-                            $gte: (<any>params.priceSpecification.accounting).minAccountsReceivable
-                        }
-                    });
-                }
-            }
-
-            if (params.priceSpecification.referenceQuantity !== undefined) {
-                if (typeof params.priceSpecification.referenceQuantity.value === 'number') {
-                    andConditions.push({
-                        'priceSpecification.referenceQuantity.value': {
-                            $exists: true,
-                            $eq: params.priceSpecification.referenceQuantity.value
-                        }
-                    });
-                }
-            }
-        }
-
-        if (params.category !== undefined) {
-            if (Array.isArray((<any>params.category).ids)) {
-                andConditions.push({
-                    'category.id': {
-                        $exists: true,
-                        $in: (<any>params.category).ids
-                    }
-                });
-            }
-
-            if (params.category.codeValue !== undefined && params.category.codeValue !== null) {
-                if (Array.isArray(params.category.codeValue.$in)) {
-                    andConditions.push({
-                        'category.codeValue': {
-                            $exists: true,
-                            $in: params.category.codeValue.$in
-                        }
-                    });
-                }
-            }
-        }
-
-        return andConditions;
-    }
-
     // tslint:disable-next-line:max-func-body-length
     public static CREATE_OFFER_MONGO_CONDITIONS(params: factory.offer.ISearchConditions) {
         // MongoDB検索条件
@@ -341,6 +186,26 @@ export class MongoRepository {
             }
         }
 
+        const availableAtOrFromIdEq = params.availableAtOrFrom?.id?.$eq;
+        if (typeof availableAtOrFromIdEq === 'string') {
+            andConditions.push({
+                'availableAtOrFrom.id': {
+                    $exists: true,
+                    $eq: availableAtOrFromIdEq
+                }
+            });
+        }
+
+        const availableAtOrFromIdIn = params.availableAtOrFrom?.id?.$in;
+        if (Array.isArray(availableAtOrFromIdIn)) {
+            andConditions.push({
+                'availableAtOrFrom.id': {
+                    $exists: true,
+                    $in: availableAtOrFromIdIn
+                }
+            });
+        }
+
         return andConditions;
     }
 
@@ -389,42 +254,6 @@ export class MongoRepository {
         offers = offers.sort((a, b) => sortedOfferIds.indexOf(a.id) - sortedOfferIds.indexOf(b.id));
 
         return offers;
-    }
-
-    /**
-     * 券種を検索する
-     */
-    public async searchTicketTypes(
-        params: factory.offer.ISearchConditions
-    ): Promise<factory.offer.IUnitPriceOffer[]> {
-        const conditions = MongoRepository.CREATE_TICKET_TYPE_MONGO_CONDITIONS(params);
-        conditions.push(...MongoRepository.CREATE_OFFER_MONGO_CONDITIONS(params));
-
-        const query = this.offerModel.find(
-            (conditions.length > 0) ? { $and: conditions } : {},
-            {
-                __v: 0,
-                createdAt: 0,
-                updatedAt: 0
-            }
-        );
-
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit)
-                .skip(params.limit * (params.page - 1));
-        }
-
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.sort !== undefined) {
-            query.sort(params.sort);
-        }
-
-        return query.setOptions({ maxTimeMS: 10000 })
-            .exec()
-            .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
     public async findById(params: {
