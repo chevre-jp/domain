@@ -10,20 +10,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## v14.0.0 - 2020-03-30
+
+### Changed
+
 - 券種検索条件をオファー検索条件に統合
 - ticketTypesコレクションをoffersコレクションへ移行
 - 予約コレクションのデフォルトソート条件を予約日時に変更
 - 予約検索条件拡張
 
-### Deprecated
-
 ### Removed
 
 - 旧細目リポジトリを削除
-
-### Fixed
-
-### Security
 
 ## v13.0.0 - 2020-03-04
 
