@@ -175,5 +175,15 @@ export function create(options: mongoose.SchemaOptions) {
         }
     );
 
+    schema.index(
+        { 'availableAtOrFrom.id': 1, 'priceSpecification.price': 1 },
+        {
+            name: 'searchByAvailableAtOrFromId',
+            partialFilterExpression: {
+                'availableAtOrFrom.id': { $exists: true }
+            }
+        }
+    );
+
     return schema;
 }
