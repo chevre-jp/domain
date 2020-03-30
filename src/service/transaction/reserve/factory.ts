@@ -47,7 +47,7 @@ export function createStartParams(params: factory.transaction.reserve.IStartPara
 
 export function createReservedTicket(params: {
     acceptedOffer: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail;
-    availableOffer: factory.ticketType.ITicketType;
+    availableOffer: factory.offer.IUnitPriceOffer;
     dateIssued: Date;
     event: factory.event.screeningEvent.IEvent;
     reservedSeatsOnly: boolean;
@@ -136,7 +136,7 @@ export function createReservedTicket(params: {
 }
 
 function validateDate(params: {
-    availableOffer: factory.ticketType.ITicketType;
+    availableOffer: factory.offer.IUnitPriceOffer;
     dateIssued: Date;
 }): void {
     const dateIssued = moment(params.dateIssued);
@@ -163,7 +163,7 @@ function validateDate(params: {
 }
 
 function validateEligibleSeatingType(params: {
-    availableOffer: factory.ticketType.ITicketType;
+    availableOffer: factory.offer.IUnitPriceOffer;
     seat: factory.place.seat.IPlace;
 }): void {
     const seat = params.seat;
@@ -188,7 +188,7 @@ function validateEligibleSeatingType(params: {
 }
 
 function validateEligibleSubReservation(params: {
-    availableOffer: factory.ticketType.ITicketType;
+    availableOffer: factory.offer.IUnitPriceOffer;
     acceptedOffer: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail;
     screeningRoomSection: factory.place.screeningRoomSection.IPlace;
 }): void {

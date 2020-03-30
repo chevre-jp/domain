@@ -24,6 +24,8 @@ type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     product: ProductRepo;
 }) => Promise<T>;
 
+export type IUnitPriceSpecification = factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>;
+
 /**
  * イベントに対する座席オファーを検索する
  */
@@ -150,8 +152,10 @@ export function searchScreeningEventTicketOffers(params: {
         const eventVideoFormatTypes
             = (Array.isArray(event.superEvent.videoFormat))
                 ? event.superEvent.videoFormat.map((f) => f.typeOf)
-                : [factory.videoFormatType['2D']];
-        const availableOffers = await repos.offer.findTicketTypesByOfferCatalogId({ offerCatalog: screeningEventOffers });
+                : ['2D'];
+        const availableOffers = await repos.offer.findOffersByOfferCatalogId({
+            offerCatalog: { id: <string>screeningEventOffers.id }
+        });
         const sortedOfferIds = availableOffers.map((o) => o.id);
 
         const soundFormatChargeSpecifications =
@@ -198,7 +202,7 @@ export function searchScreeningEventTicketOffers(params: {
             movieTicketOffers = availableOffers
                 .filter((t) => t.priceSpecification !== undefined)
                 .filter((t) => {
-                    const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
+                    const spec = <IUnitPriceSpecification>t.priceSpecification;
                     const movieTicketType = spec.appliesToMovieTicketType;
 
                     return movieTicketType !== undefined
@@ -208,7 +212,7 @@ export function searchScreeningEventTicketOffers(params: {
                 })
                 .map((t) => {
                     const spec = {
-                        ...<factory.ticketType.IPriceSpecification>t.priceSpecification,
+                        ...<IUnitPriceSpecification>t.priceSpecification,
                         name: t.name
                     };
 
@@ -226,7 +230,7 @@ export function searchScreeningEventTicketOffers(params: {
                     };
 
                     return {
-                        ...eventOffers,
+                        // ...eventOffers, // テスト終了後削除
                         ...t,
                         eligibleQuantity: eventOffers.eligibleQuantity,
                         priceSpecification: compoundPriceSpecification
@@ -238,14 +242,14 @@ export function searchScreeningEventTicketOffers(params: {
         const ticketTypeOffers = availableOffers
             .filter((t) => t.priceSpecification !== undefined)
             .filter((t) => {
-                const spec = <factory.ticketType.IPriceSpecification>t.priceSpecification;
+                const spec = <IUnitPriceSpecification>t.priceSpecification;
 
                 return spec.appliesToMovieTicketType === undefined
                     || spec.appliesToMovieTicketType === '';
             })
             .map((t) => {
                 const spec = {
-                    ...<factory.ticketType.IPriceSpecification>t.priceSpecification,
+                    ...<IUnitPriceSpecification>t.priceSpecification,
                     name: t.name
                 };
 
@@ -262,7 +266,7 @@ export function searchScreeningEventTicketOffers(params: {
                 };
 
                 return {
-                    ...eventOffers,
+                    // ...eventOffers, // テスト終了後削除
                     ...t,
                     eligibleQuantity: eventOffers.eligibleQuantity,
                     priceSpecification: compoundPriceSpecification
@@ -377,7 +381,7 @@ export function importFromCOA(params: {
         await Promise.all(ticketResults.map(async (ticketResult) => {
             const offer = coaTicket2offer({ project: params.project, theaterCode: params.theaterCode, ticketResult: ticketResult });
 
-            await repos.offer.saveTicketType(offer);
+            await repos.offer.save(offer);
 
             const additionalProperty: factory.propertyValue.IPropertyValue<string> = {
                 name: 'coaInfo',
@@ -386,7 +390,7 @@ export function importFromCOA(params: {
                 })
             };
 
-            await repos.offer.ticketTypeModel.findByIdAndUpdate(
+            await repos.offer.offerModel.findByIdAndUpdate(
                 offer.id,
                 {
                     $pull: {
@@ -396,7 +400,7 @@ export function importFromCOA(params: {
             )
                 .exec();
 
-            await repos.offer.ticketTypeModel.findByIdAndUpdate(
+            await repos.offer.offerModel.findByIdAndUpdate(
                 offer.id,
                 {
                     $push: {
@@ -416,7 +420,7 @@ function coaTicket2offer(params: {
     project: factory.project.IProject;
     theaterCode: string;
     ticketResult: COA.services.master.ITicketResult;
-}): factory.ticketType.ITicketType {
+}): factory.offer.IUnitPriceOffer {
     const additionalPaymentRequirements = (typeof params.ticketResult.usePoint === 'number' && params.ticketResult.usePoint > 0)
         ? [{
             typeOf: factory.paymentMethodType.Account,
@@ -429,7 +433,7 @@ function coaTicket2offer(params: {
         }]
         : undefined;
 
-    const unitPriceSpec: factory.ticketType.IPriceSpecification = {
+    const unitPriceSpec: IUnitPriceSpecification = {
         project: params.project,
         typeOf: factory.priceSpecificationType.UnitPriceSpecification,
         price: 0, // COAに定義なし

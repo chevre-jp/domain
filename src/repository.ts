@@ -46,10 +46,3 @@ export namespace rateLimit {
     // tslint:disable-next-line:no-shadowed-variable
     export class Offer extends OfferRateLimitRepo { }
 }
-
-import { MongoRepository as SubjectRepo } from './repo/subject';
-
-/**
- * @deprecated 東映ローカライズなのでそのうち廃止
- */
-export class Subject extends SubjectRepo { }
