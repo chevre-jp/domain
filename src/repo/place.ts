@@ -58,11 +58,21 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.name !== undefined) {
+        if (typeof params.name === 'string') {
             andConditions.push({
                 $or: [
-                    { 'name.ja': new RegExp(params.name) },
-                    { 'name.en': new RegExp(params.name) },
+                    {
+                        'name.ja': {
+                            $exists: true,
+                            $regex: new RegExp(params.name)
+                        }
+                    },
+                    {
+                        'name.en': {
+                            $exists: true,
+                            $regex: new RegExp(params.name)
+                        }
+                    },
                     {
                         kanaName: {
                             $exists: true,

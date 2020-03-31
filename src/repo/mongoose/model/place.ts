@@ -93,9 +93,19 @@ schema.index(
 );
 
 schema.index(
-    { 'project.id': 1 },
+    { branchCode: 1 },
+    { name: 'searchByBranchCode-v2' }
+);
+
+schema.index(
+    { typeOf: 1, branchCode: 1 },
+    { name: 'searchByTypeOf-v2' }
+);
+
+schema.index(
+    { 'project.id': 1, branchCode: 1 },
     {
-        name: 'searchByProjectId',
+        name: 'searchByProjectId-v2',
         partialFilterExpression: {
             'project.id': { $exists: true }
         }
@@ -103,31 +113,29 @@ schema.index(
 );
 
 schema.index(
-    { typeOf: 1, createdAt: 1 },
-    { name: 'searchByTypeOf' }
-);
-
-schema.index(
-    { branchCode: 1, createdAt: 1 },
+    { 'name.ja': 1, branchCode: 1 },
     {
-        name: 'searchByBranchCode',
+        name: 'searchByNameJa',
         partialFilterExpression: {
-            branchCode: { $exists: true }
+            'name.ja': { $exists: true }
         }
     }
 );
 
 schema.index(
-    { name: 1, createdAt: 1 },
+    { 'name.en': 1, branchCode: 1 },
     {
-        name: 'searchByName'
+        name: 'searchByNameEn',
+        partialFilterExpression: {
+            'name.en': { $exists: true }
+        }
     }
 );
 
 schema.index(
-    { kanaName: 1, createdAt: 1 },
+    { kanaName: 1, branchCode: 1 },
     {
-        name: 'searchByKanaName',
+        name: 'searchByKanaName-v2',
         partialFilterExpression: {
             kanaName: { $exists: true }
         }
