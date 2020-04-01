@@ -7,6 +7,14 @@ import * as factory from '../../factory';
 const debug = createDebug('chevre-domain:repo');
 
 export interface IOffer {
+    itemOffered?: {
+        serviceOutput?: {
+            /**
+             * 予約ID
+             */
+            id?: string;
+        };
+    };
     seatSection: string;
     seatNumber: string;
 }
@@ -16,9 +24,13 @@ export interface ILockKey {
     expires: Date;
     holder: string;
 }
+export interface IUnlockKey {
+    eventId: string;
+    offer: IOffer;
+}
 
 /**
- * 上映イベントに対する座席ごとの在庫状況を保管するリポジトリ
+ * イベントの座席在庫リポジトリ
  */
 export class RedisRepository {
     public static KEY_PREFIX: string = 'chevre:itemAvailability:screeningEvent';
@@ -26,6 +38,58 @@ export class RedisRepository {
 
     constructor(redisClient: redis.RedisClient) {
         this.redisClient = redisClient;
+    }
+
+    public static OFFER2FIELD(params: IOffer) {
+        // 予約IDをfieldにする場合
+        const serviceOutputId = params.itemOffered?.serviceOutput?.id;
+        if (typeof serviceOutputId === 'string') {
+            return serviceOutputId;
+        }
+
+        return `${params.seatSection}:${params.seatNumber}`;
+    }
+
+    /**
+     * 座席をロックする(maxキャパシティチェック有)
+     */
+    public async lockIfNotLimitExceeded(lockKey: ILockKey, maximum: number): Promise<void> {
+        const key = `${RedisRepository.KEY_PREFIX}:${lockKey.eventId}`;
+
+        await new Promise(async (resolve, reject) => {
+            this.redisClient.watch(key, (watchError) => {
+                if (watchError !== null) {
+                    reject(watchError);
+
+                    return;
+                }
+
+                this.redisClient.hlen(key, async (hlenError, hashCount) => {
+                    if (hlenError !== null) {
+                        reject(hlenError);
+
+                        return;
+                    }
+
+                    // Process result
+                    // Heavy and time consuming operation here
+                    debug('checking hash count...hashCount:', hashCount);
+                    if (hashCount + lockKey.offers.length >= maximum) {
+                        reject(new factory.errors.Argument('Event', 'maximumAttendeeCapacity exceeded'));
+
+                        return;
+                    }
+
+                    try {
+                        await this.lock(lockKey);
+
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
+                });
+            });
+        });
     }
 
     /**
@@ -36,7 +100,7 @@ export class RedisRepository {
         const key = `${RedisRepository.KEY_PREFIX}:${lockKey.eventId}`;
         const value = lockKey.holder;
         const multi = this.redisClient.multi();
-        const fields = lockKey.offers.map((offer) => `${offer.seatSection}:${offer.seatNumber}`);
+        const fields = lockKey.offers.map((offer) => RedisRepository.OFFER2FIELD(offer));
 
         fields.forEach((field) => {
             multi.hsetnx(key, field, value);
@@ -56,12 +120,14 @@ export class RedisRepository {
         });
 
         const lockedFields: string[] = [];
-        results.slice(0, fields.length)
-            .forEach((r, index) => {
-                if (r === 1) {
-                    lockedFields.push(fields[index]);
-                }
-            });
+        if (Array.isArray(results)) {
+            results.slice(0, fields.length)
+                .forEach((r, index) => {
+                    if (r === 1) {
+                        lockedFields.push(fields[index]);
+                    }
+                });
+        }
         debug('locked fields:', lockedFields);
         const lockedAll = lockedFields.length === fields.length;
         debug('lockedAll?', lockedAll);
@@ -89,12 +155,9 @@ export class RedisRepository {
     /**
      * 座席ロックを解除する
      */
-    public async unlock(params: {
-        eventId: string;
-        offer: IOffer;
-    }) {
+    public async unlock(params: IUnlockKey) {
         const key = `${RedisRepository.KEY_PREFIX}:${params.eventId}`;
-        const field = `${params.offer.seatSection}:${params.offer.seatNumber}`;
+        const field = RedisRepository.OFFER2FIELD(params.offer);
         await new Promise<void>((resolve, reject) => {
             this.redisClient.multi()
                 .hdel(key, field)
@@ -162,13 +225,10 @@ export class RedisRepository {
     /**
      * 保持者を取得する
      */
-    public async getHolder(params: {
-        eventId: string;
-        offer: IOffer;
-    }): Promise<string | null> {
+    public async getHolder(params: IUnlockKey): Promise<string | null> {
         return new Promise<string | null>((resolve, reject) => {
             const key = `${RedisRepository.KEY_PREFIX}:${params.eventId}`;
-            const field = `${params.offer.seatSection}:${params.offer.seatNumber}`;
+            const field = RedisRepository.OFFER2FIELD(params.offer);
             this.redisClient.hget(key, field, (err, result) => {
                 debug('result:', err, result);
                 if (err !== null) {

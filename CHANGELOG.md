@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- イベント固有のキャパシティ設定による在庫管理を実装
+
 ### Changed
 
 - 場所コレクションインデックス調整
