@@ -93,10 +93,10 @@ export function aggregateScreeningEvent(params: {
                 ...(aggregateReservation.attendeeCount !== undefined) ? { attendeeCount: aggregateReservation.attendeeCount } : undefined
             },
             ...(!reservedSeatsAvailable({ event }))
-                // 在庫なしイベントの場合収容人数削除
+                // 座席非指定イベントの場合収容人数削除
                 ? {
                     $unset: {
-                        maximumAttendeeCapacity: '',
+                        ...(maximumAttendeeCapacity === undefined) ? { maximumAttendeeCapacity: '' } : undefined,
                         remainingAttendeeCapacity: ''
                     }
                 }
@@ -367,15 +367,24 @@ function aggregateReservationByEvent(params: {
             reservationStatuses: [factory.reservationStatusType.ReservationConfirmed]
         });
 
+        const eventLocationMaximumAttendeeCapacity = params.event.location.maximumAttendeeCapacity;
+        if (typeof eventLocationMaximumAttendeeCapacity === 'number') {
+            maximumAttendeeCapacity = eventLocationMaximumAttendeeCapacity;
+        } else {
+            if (reservedSeatsAvailable({ event: params.event })) {
+                maximumAttendeeCapacity = params.screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0);
+            }
+        }
+
         if (reservedSeatsAvailable({ event: params.event })) {
-            maximumAttendeeCapacity = params.screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0);
+            if (typeof maximumAttendeeCapacity === 'number') {
+                // 残席数を予約数から計算する場合
+                // remainingAttendeeCapacity = maximumAttendeeCapacity - reservationCount;
 
-            // 残席数を予約数から計算する場合
-            // remainingAttendeeCapacity = maximumAttendeeCapacity - reservationCount;
-
-            // 残席数を座席ロック数から計算する場合
-            const unavailableOfferCount = await repos.eventAvailability.countUnavailableOffers({ event: { id: params.event.id } });
-            remainingAttendeeCapacity = maximumAttendeeCapacity - unavailableOfferCount;
+                // 残席数を座席ロック数から計算する場合
+                const unavailableOfferCount = await repos.eventAvailability.countUnavailableOffers({ event: { id: params.event.id } });
+                remainingAttendeeCapacity = maximumAttendeeCapacity - unavailableOfferCount;
+            }
         }
 
         attendeeCount = await repos.reservation.count({

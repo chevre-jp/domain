@@ -74,7 +74,7 @@ export class RedisRepository {
                     // Process result
                     // Heavy and time consuming operation here
                     debug('checking hash count...hashCount:', hashCount);
-                    if (hashCount + lockKey.offers.length >= maximum) {
+                    if (hashCount + lockKey.offers.length > maximum) {
                         reject(new factory.errors.Argument('Event', 'maximumAttendeeCapacity exceeded'));
 
                         return;
