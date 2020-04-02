@@ -92,15 +92,11 @@ export function aggregateScreeningEvent(params: {
                 ...(aggregateReservation.checkInCount !== undefined) ? { checkInCount: aggregateReservation.checkInCount } : undefined,
                 ...(aggregateReservation.attendeeCount !== undefined) ? { attendeeCount: aggregateReservation.attendeeCount } : undefined
             },
-            ...(!reservedSeatsAvailable({ event }))
-                // 座席非指定イベントの場合収容人数削除
-                ? {
-                    $unset: {
-                        ...(maximumAttendeeCapacity === undefined) ? { maximumAttendeeCapacity: '' } : undefined,
-                        remainingAttendeeCapacity: ''
-                    }
-                }
-                : undefined
+            $unset: {
+                noExistingAttributeName: 1, // $unsetは空だとエラーになるので
+                ...(maximumAttendeeCapacity === undefined) ? { maximumAttendeeCapacity: '' } : undefined,
+                ...(remainingAttendeeCapacity === undefined) ? { remainingAttendeeCapacity: '' } : undefined
+            }
         };
         debug('update:', update);
 
