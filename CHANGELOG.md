@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - 場所コレクションインデックス調整
+- Mongoose: the `safe` option -> writeConcerns
 
 ### Deprecated
 

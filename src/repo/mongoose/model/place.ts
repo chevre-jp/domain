@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 
 import MultilingualStringSchemaType from '../schemaTypes/multilingualString';
 
-const safe = { j: true, w: 'majority', wtimeout: 10000 };
+const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
 const containedInPlaceSchema = new mongoose.Schema(
     {},
@@ -71,7 +71,7 @@ const schema = new mongoose.Schema(
         collection: 'places',
         id: true,
         read: 'primaryPreferred',
-        safe: safe,
+        writeConcern: writeConcern,
         strict: true,
         useNestedStrict: true,
         timestamps: {

@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 
 import multilingualString from '../schemaTypes/multilingualString';
 
-const safe = { j: true, w: 'majority', wtimeout: 10000 };
+const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
 /**
  * オファースキーマクリエイター
@@ -45,7 +45,7 @@ export function create(options: mongoose.SchemaOptions) {
             collection: options.collection,
             id: true,
             read: 'primaryPreferred',
-            safe: safe,
+            writeConcern: writeConcern,
             strict: false,
             timestamps: {
                 createdAt: 'createdAt',
