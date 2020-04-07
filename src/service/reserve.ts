@@ -6,7 +6,7 @@ import * as moment from 'moment';
 import * as factory from '../factory';
 
 import { MongoRepository as ActionRepo } from '../repo/action';
-import { RedisRepository as ScreeningEventAvailabilityRepo } from '../repo/itemAvailability/screeningEvent';
+import { IUnlockKey, RedisRepository as ScreeningEventAvailabilityRepo } from '../repo/itemAvailability/screeningEvent';
 import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from '../repo/reservation';
 import { MongoRepository as TaskRepo } from '../repo/task';
@@ -275,17 +275,31 @@ function processUnlockSeat(params: {
     }) => {
         const reservation = params.reservation;
 
+        // 予約IDでロックされていれば解除
+        let lockKey: IUnlockKey = {
+            eventId: reservation.reservationFor.id,
+            offer: {
+                itemOffered: { serviceOutput: { id: reservation.id } },
+                seatNumber: '',
+                seatSection: ''
+            }
+        };
+        let holder = await repos.eventAvailability.getHolder(lockKey);
+        if (holder === params.expectedHolder) {
+            await repos.eventAvailability.unlock(lockKey);
+        }
+
         // 予約取引がまだ座席を保持していれば座席ロック解除
         const ticketedSeat = reservation.reservedTicket.ticketedSeat;
         if (ticketedSeat !== undefined) {
-            const lockKey = {
+            lockKey = {
                 eventId: reservation.reservationFor.id,
                 offer: {
                     seatNumber: ticketedSeat.seatNumber,
                     seatSection: ticketedSeat.seatSection
                 }
             };
-            const holder = await repos.eventAvailability.getHolder(lockKey);
+            holder = await repos.eventAvailability.getHolder(lockKey);
             if (holder === params.expectedHolder) {
                 await repos.eventAvailability.unlock(lockKey);
             }
@@ -299,14 +313,14 @@ function processUnlockSeat(params: {
                 const seatNumber4sub = subReservation.reservedTicket?.ticketedSeat?.seatNumber;
 
                 if (typeof seatSection4sub === 'string' && typeof seatNumber4sub === 'string') {
-                    const lockKey = {
+                    lockKey = {
                         eventId: reservation.reservationFor.id,
                         offer: {
                             seatNumber: seatNumber4sub,
                             seatSection: seatSection4sub
                         }
                     };
-                    const holder = await repos.eventAvailability.getHolder(lockKey);
+                    holder = await repos.eventAvailability.getHolder(lockKey);
                     if (holder === params.expectedHolder) {
                         await repos.eventAvailability.unlock(lockKey);
                     }

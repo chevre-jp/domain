@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-const safe = { j: true, w: 'majority', wtimeout: 10000 };
+const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
 const eligibleQuantitySchema = new mongoose.Schema(
     {},
@@ -63,7 +63,7 @@ const schema = new mongoose.Schema(
         collection: 'priceSpecifications',
         id: true,
         read: 'primaryPreferred',
-        safe: safe,
+        writeConcern: writeConcern,
         strict: false, // まだ型検討中なので柔軟に
         useNestedStrict: true,
         timestamps: {

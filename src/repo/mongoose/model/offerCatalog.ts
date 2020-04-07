@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-const safe = { j: true, w: 'majority', wtimeout: 10000 };
+const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
 /**
  * オファーカタログスキーマ
@@ -15,7 +15,7 @@ const schema = new mongoose.Schema(
         collection: 'offerCatalogs',
         id: true,
         read: 'primaryPreferred',
-        safe: safe,
+        writeConcern: writeConcern,
         strict: false,
         timestamps: {
             createdAt: 'createdAt',

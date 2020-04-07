@@ -18,6 +18,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v14.1.0 - 2020-04-07
+
+### Added
+
+- イベント固有のキャパシティ設定による在庫管理を実装
+
+### Changed
+
+- 場所コレクションインデックス調整
+- Mongoose: the `safe` option -> writeConcerns
+
 ## v14.0.0 - 2020-03-30
 
 ### Changed

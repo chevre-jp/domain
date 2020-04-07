@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-const safe = { j: true, w: 'majority', wtimeout: 10000 };
+const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
 /**
  * 勘定科目スキーマ
@@ -26,7 +26,7 @@ const schema = new mongoose.Schema(
         collection: 'accountTitles',
         id: true,
         read: 'primaryPreferred',
-        safe: safe,
+        writeConcern: writeConcern,
         timestamps: {
             createdAt: 'createdAt',
             updatedAt: 'updatedAt'

@@ -6,7 +6,7 @@ import * as moment from 'moment';
 import * as factory from '../../factory';
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as EventRepo } from '../../repo/event';
-import { RedisRepository as ScreeningEventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
+import { IOffer as IOffer4lock, RedisRepository as ScreeningEventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
 import { MongoRepository as OfferRepo } from '../../repo/offer';
 import { MongoRepository as OfferCatalogRepo } from '../../repo/offerCatalog';
 import { MongoRepository as PlaceRepo } from '../../repo/place';
@@ -316,14 +316,22 @@ export function addReservations(params: {
             throw error;
         }
 
+        // 座席指定でも座席ロック
+        // イベントキャパシティ設定のみでも座席ロック
+        await processLockSeats({
+            event: event,
+            reservations: reservations,
+            transaction: transaction
+        })(repos);
         // 指定席イベントであれば、座席ロック
-        if (reservedSeatsOnly) {
-            await processLockSeats({
-                event: event,
-                reservations: reservations,
-                transaction: transaction
-            })(repos);
-        }
+        // 不要と分かれば削除
+        // if (reservedSeatsOnly) {
+        //     await processLockSeats({
+        //         event: event,
+        //         reservations: reservations,
+        //         transaction: transaction
+        //     })(repos);
+        // }
 
         // 予約作成
         await Promise.all(reservations.map(async (r) => {
@@ -386,53 +394,71 @@ function processLockSeats(params: {
     return async (repos: {
         eventAvailability: ScreeningEventAvailabilityRepo;
     }) => {
-        const offers: {
-            seatSection: string;
-            seatNumber: string;
-        }[] = [];
+        const offers: IOffer4lock[] = [];
 
         params.reservations.forEach((r) => {
             const seatSection = r.reservedTicket.ticketedSeat?.seatSection;
             const seatNumber = r.reservedTicket.ticketedSeat?.seatNumber;
 
             // 指定席のみの場合、ticketedSeatの存在は保証されている
-            if (typeof seatSection !== 'string' || typeof seatNumber !== 'string') {
-                throw new factory.errors.ArgumentNull('ticketedSeat');
-            }
+            if (typeof seatSection === 'string' && typeof seatNumber === 'string') {
+                // subReservationがあれば、そちらもロック
+                const subReservations = r.subReservation;
+                if (Array.isArray(subReservations)) {
+                    subReservations.forEach((subReservation) => {
+                        const seatSection4sub = subReservation.reservedTicket?.ticketedSeat?.seatSection;
+                        const seatNumber4sub = subReservation.reservedTicket?.ticketedSeat?.seatNumber;
 
-            // subReservationがあれば、そちらもロック
-            const subReservations = r.subReservation;
-            if (Array.isArray(subReservations)) {
-                subReservations.forEach((subReservation) => {
-                    const seatSection4sub = subReservation.reservedTicket?.ticketedSeat?.seatSection;
-                    const seatNumber4sub = subReservation.reservedTicket?.ticketedSeat?.seatNumber;
+                        // 指定席のみの場合、ticketedSeatの存在は保証されている
+                        if (typeof seatSection4sub !== 'string' || typeof seatNumber4sub !== 'string') {
+                            throw new factory.errors.ArgumentNull('subReservation.reservedTicket.ticketedSeat');
+                        }
 
-                    // 指定席のみの場合、ticketedSeatの存在は保証されている
-                    if (typeof seatSection4sub !== 'string' || typeof seatNumber4sub !== 'string') {
-                        throw new factory.errors.ArgumentNull('subReservation.reservedTicket.ticketedSeat');
-                    }
-
-                    offers.push({
-                        seatSection: seatSection4sub,
-                        seatNumber: seatNumber4sub
+                        offers.push({
+                            seatSection: seatSection4sub,
+                            seatNumber: seatNumber4sub
+                        });
                     });
+                }
+
+                offers.push({
+                    seatSection: seatSection,
+                    seatNumber: seatNumber
+                });
+            } else {
+                // 指定席でない場合、予約IDでロック
+                offers.push({
+                    itemOffered: { serviceOutput: { id: r.id } },
+                    seatSection: '',
+                    seatNumber: ''
                 });
             }
+        });
 
-            offers.push({
-                seatSection: seatSection,
-                seatNumber: seatNumber
+        const expires = moment(params.event.endDate)
+            .add(1, 'month')
+            .toDate();
+        const holder: string = params.transaction.id;
+
+        const maximumAttendeeCapacity4event = params.event.location?.maximumAttendeeCapacity;
+        if (typeof maximumAttendeeCapacity4event === 'number') {
+            await repos.eventAvailability.lockIfNotLimitExceeded(
+                {
+                    eventId: params.event.id,
+                    offers,
+                    expires,
+                    holder
+                },
+                maximumAttendeeCapacity4event
+            );
+        } else {
+            await repos.eventAvailability.lock({
+                eventId: params.event.id,
+                offers,
+                expires,
+                holder
             });
-        });
-
-        await repos.eventAvailability.lock({
-            eventId: params.event.id,
-            offers: offers,
-            expires: moment(params.event.endDate)
-                .add(1, 'month')
-                .toDate(),
-            holder: params.transaction.id
-        });
+        }
     };
 }
 

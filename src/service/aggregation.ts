@@ -92,15 +92,11 @@ export function aggregateScreeningEvent(params: {
                 ...(aggregateReservation.checkInCount !== undefined) ? { checkInCount: aggregateReservation.checkInCount } : undefined,
                 ...(aggregateReservation.attendeeCount !== undefined) ? { attendeeCount: aggregateReservation.attendeeCount } : undefined
             },
-            ...(!reservedSeatsAvailable({ event }))
-                // 在庫なしイベントの場合収容人数削除
-                ? {
-                    $unset: {
-                        maximumAttendeeCapacity: '',
-                        remainingAttendeeCapacity: ''
-                    }
-                }
-                : undefined
+            $unset: {
+                noExistingAttributeName: 1, // $unsetは空だとエラーになるので
+                ...(maximumAttendeeCapacity === undefined) ? { maximumAttendeeCapacity: '' } : undefined,
+                ...(remainingAttendeeCapacity === undefined) ? { remainingAttendeeCapacity: '' } : undefined
+            }
         };
         debug('update:', update);
 
@@ -367,15 +363,29 @@ function aggregateReservationByEvent(params: {
             reservationStatuses: [factory.reservationStatusType.ReservationConfirmed]
         });
 
+        // maximumAttendeeCapacityを決定
+        const eventLocationMaximumAttendeeCapacity = params.event.location.maximumAttendeeCapacity;
+        if (typeof eventLocationMaximumAttendeeCapacity === 'number') {
+            maximumAttendeeCapacity = eventLocationMaximumAttendeeCapacity;
+        }
         if (reservedSeatsAvailable({ event: params.event })) {
-            maximumAttendeeCapacity = params.screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0);
+            const screeningRoomSeatCount = params.screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0);
+            maximumAttendeeCapacity = screeningRoomSeatCount;
 
-            // 残席数を予約数から計算する場合
-            // remainingAttendeeCapacity = maximumAttendeeCapacity - reservationCount;
+            // イベントのキャパシティ設定がスクリーン座席数より小さければmaximumAttendeeCapacityを上書き
+            if (typeof eventLocationMaximumAttendeeCapacity === 'number' && eventLocationMaximumAttendeeCapacity < screeningRoomSeatCount) {
+                maximumAttendeeCapacity = eventLocationMaximumAttendeeCapacity;
+            }
+        }
 
-            // 残席数を座席ロック数から計算する場合
+        // remainingAttendeeCapacityを決定
+        if (typeof maximumAttendeeCapacity === 'number') {
+            // 残席数を座席ロック数から計算
             const unavailableOfferCount = await repos.eventAvailability.countUnavailableOffers({ event: { id: params.event.id } });
             remainingAttendeeCapacity = maximumAttendeeCapacity - unavailableOfferCount;
+            if (remainingAttendeeCapacity < 0) {
+                remainingAttendeeCapacity = 0;
+            }
         }
 
         attendeeCount = await repos.reservation.count({
