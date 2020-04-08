@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- イベントの座席オファーのページング検索機能を追加
+
 ### Changed
 
 ### Deprecated

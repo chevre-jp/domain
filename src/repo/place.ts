@@ -177,4 +177,150 @@ export class MongoRepository {
 
         return doc.toObject();
     }
+
+    // tslint:disable-next-line:max-func-body-length
+    public async searchSeats(params: any): Promise<factory.place.seat.IPlace[]> {
+        const matchStages: any[] = [];
+        if (params.project !== undefined) {
+            if (params.project.id !== undefined) {
+                if (typeof params.project.id.$eq === 'string') {
+                    matchStages.push({
+                        $match: {
+                            'project.id': {
+                                $exists: true,
+                                $eq: params.project.id.$eq
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        const containedInPlaceBranchCodeEq = params.containedInPlace?.branchCode?.$eq;
+        if (typeof containedInPlaceBranchCodeEq === 'string') {
+            matchStages.push({
+                $match: {
+                    'containsPlace.containsPlace.branchCode': {
+                        $exists: true,
+                        $eq: containedInPlaceBranchCodeEq
+                    }
+                }
+            });
+        }
+
+        if (params.containedInPlace !== undefined) {
+            if (params.containedInPlace.containedInPlace !== undefined) {
+                if (params.containedInPlace.containedInPlace.branchCode !== undefined) {
+                    if (typeof params.containedInPlace.containedInPlace.branchCode.$eq === 'string') {
+                        matchStages.push({
+                            $match: {
+                                'containsPlace.branchCode': {
+                                    $exists: true,
+                                    $eq: params.containedInPlace.containedInPlace.branchCode.$eq
+                                }
+                            }
+                        });
+                    }
+                }
+
+                if (params.containedInPlace.containedInPlace.containedInPlace !== undefined) {
+                    if (params.containedInPlace.containedInPlace.containedInPlace.branchCode !== undefined) {
+                        if (typeof params.containedInPlace.containedInPlace.containedInPlace.branchCode.$eq === 'string') {
+                            matchStages.push({
+                                $match: {
+                                    branchCode: {
+                                        $exists: true,
+                                        $eq: params.containedInPlace.containedInPlace.containedInPlace.branchCode.$eq
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // 座席コード
+        if (params.branchCode !== undefined) {
+            if (typeof params.branchCode.$eq === 'string') {
+                matchStages.push({
+                    $match: {
+                        'containsPlace.containsPlace.containsPlace.branchCode': {
+                            $exists: true,
+                            $eq: params.branchCode.$eq
+                        }
+                    }
+                });
+            }
+        }
+
+        const branchCodeRegex = params.branchCode?.$regex;
+        if (typeof branchCodeRegex === 'string') {
+            matchStages.push({
+                $match: {
+                    'containsPlace.containsPlace.containsPlace.branchCode': {
+                        $exists: true,
+                        $regex: new RegExp(branchCodeRegex)
+                    }
+                }
+            });
+        }
+
+        const nameCodeRegex = params.name?.$regex;
+        if (typeof nameCodeRegex === 'string') {
+            matchStages.push({
+                $match: {
+                    $or: [
+                        {
+                            'containsPlace.containsPlace.containsPlace.name.ja': {
+                                $exists: true,
+                                $regex: new RegExp(nameCodeRegex)
+                            }
+                        }
+                    ]
+                }
+            });
+        }
+
+        const aggregate = this.placeModel.aggregate([
+            { $unwind: '$containsPlace' },
+            { $unwind: '$containsPlace.containsPlace' },
+            { $unwind: '$containsPlace.containsPlace.containsPlace' },
+            ...matchStages,
+            {
+                $project: {
+                    _id: 0,
+                    typeOf: '$containsPlace.containsPlace.containsPlace.typeOf',
+                    branchCode: '$containsPlace.containsPlace.containsPlace.branchCode',
+                    seatingType: '$containsPlace.containsPlace.containsPlace.seatingType',
+                    containedInPlace: {
+                        typeOf: '$containsPlace.containsPlace.typeOf',
+                        branchCode: '$containsPlace.containsPlace.branchCode',
+                        name: '$containsPlace.containsPlace.name',
+                        containedInPlace: {
+                            typeOf: '$containsPlace.typeOf',
+                            branchCode: '$containsPlace.branchCode',
+                            name: '$containsPlace.name',
+                            containedInPlace: {
+                                id: '$_id',
+                                typeOf: '$typeOf',
+                                branchCode: '$branchCode',
+                                name: '$name'
+                            }
+                        }
+                    },
+                    additionalProperty: '$containsPlace.containsPlace.containsPlace.additionalProperty'
+                }
+            }
+        ]);
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.limit !== undefined && params.page !== undefined) {
+            aggregate.limit(params.limit * params.page)
+                .skip(params.limit * (params.page - 1));
+        }
+
+        return aggregate.exec();
+    }
 }
