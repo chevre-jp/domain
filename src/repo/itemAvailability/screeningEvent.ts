@@ -240,4 +240,47 @@ export class RedisRepository {
             });
         });
     }
+
+    /**
+     * 在庫状況を検索する
+     */
+    public async searchAvailability(params: {
+        eventId: string;
+        offers: IOffer[];
+    }): Promise<{
+        seatSection: string;
+        seatNumber: string;
+        availability: factory.itemAvailability;
+    }[]> {
+        return new Promise((resolve, reject) => {
+            const key = `${RedisRepository.KEY_PREFIX}:${params.eventId}`;
+            const fields = params.offers.map((o) => {
+                return RedisRepository.OFFER2FIELD(o);
+            });
+
+            this.redisClient.hmget(key, fields, (err, result) => {
+                if (err !== null) {
+                    reject(err);
+                } else {
+                    if (!Array.isArray(result)) {
+                        reject(new factory.errors.ServiceUnavailable(`searchAvailability got non-array: ${typeof result}`));
+
+                        return;
+                    }
+
+                    // tslint:disable-next-line:no-magic-numbers
+                    resolve(params.offers.map((o, index) => {
+                        const value4offer = result[index];
+
+                        return {
+                            ...o,
+                            availability: (typeof value4offer === 'string')
+                                ? factory.itemAvailability.OutOfStock
+                                : factory.itemAvailability.InStock
+                        };
+                    }));
+                }
+            });
+        });
+    }
 }

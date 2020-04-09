@@ -34,6 +34,7 @@ function addOffers2Seat(params: {
     seat: factory.place.seat.IPlace;
     seatSection: string;
     unavailableOffers: IUnavailableSeatOffer[];
+    availability?: factory.itemAvailability;
     priceSpecs: factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.CategoryCodeChargeSpecification>[];
 }): factory.place.seat.IPlaceWithOffer {
     const seatNumber = params.seat.branchCode;
@@ -66,15 +67,20 @@ function addOffers2Seat(params: {
         priceComponent: priceComponent
     };
 
+    let availability = (unavailableOffer !== undefined)
+        ? factory.itemAvailability.OutOfStock
+        : factory.itemAvailability.InStock;
+    if (params.availability !== undefined) {
+        availability = params.availability;
+    }
+
     return {
         ...params.seat,
         offers: [{
             project: params.project,
             typeOf: factory.offerType.Offer,
             priceCurrency: factory.priceCurrency.JPY,
-            availability: (unavailableOffer !== undefined)
-                ? factory.itemAvailability.OutOfStock
-                : factory.itemAvailability.InStock,
+            availability: availability,
             priceSpecification: priceSpecification
         }]
     };
@@ -179,8 +185,6 @@ export function searchEventSeatOffersWithPaging(params: {
                     }
                 });
 
-            const unavailableOffers = await repos.eventAvailability.findUnavailableOffersByEventId({ eventId: params.event.id });
-
             const seats = await repos.place.searchSeats({
                 ...params,
                 project: { id: { $eq: event.project.id } },
@@ -194,12 +198,23 @@ export function searchEventSeatOffersWithPaging(params: {
                 }
             });
 
-            offers = seats.map((seat) => {
+            const availabilities = await repos.eventAvailability.searchAvailability({
+                eventId: params.event.id,
+                offers: seats.map((s) => {
+                    return {
+                        seatNumber: s.branchCode,
+                        seatSection: <string>s.containedInPlace?.branchCode
+                    };
+                })
+            });
+
+            offers = seats.map((seat, index) => {
                 return addOffers2Seat({
                     project: event.project,
                     seat: seat,
                     seatSection: <string>seat.containedInPlace?.branchCode,
-                    unavailableOffers: unavailableOffers,
+                    unavailableOffers: [],
+                    availability: availabilities[index].availability,
                     priceSpecs: priceSpecs
                 });
             });
