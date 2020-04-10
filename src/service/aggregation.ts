@@ -147,8 +147,7 @@ export function aggregateScreeningEvent(params: {
 function reservedSeatsAvailable(params: {
     event: factory.event.IEvent<factory.eventType.ScreeningEvent>;
 }) {
-    return !(params.event.offers?.itemOffered?.serviceOutput?.reservedTicket !== undefined
-        && params.event.offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat === undefined);
+    return params.event.offers?.itemOffered.serviceOutput?.reservedTicket?.ticketedSeat !== undefined;
 }
 
 function aggregateOfferByEvent(params: {
