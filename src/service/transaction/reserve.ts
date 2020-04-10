@@ -171,11 +171,8 @@ export function addReservations(params: {
 
         const eventOffers = <factory.event.screeningEvent.IOffer>event.offers;
 
-        const serviceOutput = eventOffers.itemOffered.serviceOutput;
         // 指定席のみかどうか
-        const reservedSeatsOnly = !(serviceOutput !== undefined
-            && serviceOutput.reservedTicket !== undefined
-            && serviceOutput.reservedTicket.ticketedSeat === undefined);
+        const reservedSeatsOnly = eventOffers.itemOffered.serviceOutput?.reservedTicket?.ticketedSeat !== undefined;
 
         // イベントオファー検索
         const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
@@ -323,15 +320,6 @@ export function addReservations(params: {
             reservations: reservations,
             transaction: transaction
         })(repos);
-        // 指定席イベントであれば、座席ロック
-        // 不要と分かれば削除
-        // if (reservedSeatsOnly) {
-        //     await processLockSeats({
-        //         event: event,
-        //         reservations: reservations,
-        //         transaction: transaction
-        //     })(repos);
-        // }
 
         // 予約作成
         await Promise.all(reservations.map(async (r) => {

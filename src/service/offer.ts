@@ -106,8 +106,7 @@ export function searchEventSeatOffers(params: {
         });
 
         // 座席指定利用可能かどうか
-        const reservedSeatsAvailable = event.offers?.itemOffered?.serviceOutput?.reservedTicket === undefined
-            || event.offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat !== undefined;
+        const reservedSeatsAvailable = event.offers?.itemOffered.serviceOutput?.reservedTicket?.ticketedSeat !== undefined;
 
         if (reservedSeatsAvailable) {
             // 座席タイプ価格仕様を検索
@@ -171,8 +170,7 @@ export function searchEventSeatOffersWithPaging(params: {
         });
 
         // 座席指定利用可能かどうか
-        const reservedSeatsAvailable = event.offers?.itemOffered?.serviceOutput?.reservedTicket === undefined
-            || event.offers.itemOffered.serviceOutput.reservedTicket.ticketedSeat !== undefined;
+        const reservedSeatsAvailable = event.offers?.itemOffered.serviceOutput?.reservedTicket?.ticketedSeat !== undefined;
 
         if (reservedSeatsAvailable) {
             // 座席タイプ価格仕様を検索
