@@ -8,11 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
-- イベントの座席オファーのページング検索機能を追加
-
 ### Changed
-
-- 座席有イベントかどうかの判断を最適化
 
 ### Deprecated
 
@@ -21,6 +17,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v14.2.0 - 2020-04-10
+
+### Added
+
+- イベントの座席オファーのページング検索機能を追加
+
+### Changed
+
+- 座席有イベントかどうかの判断を最適化
 
 ## v14.1.0 - 2020-04-07
 
