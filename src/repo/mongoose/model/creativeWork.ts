@@ -2,24 +2,6 @@ import * as mongoose from 'mongoose';
 
 const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
-const copyrightHolderSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const offersSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
 /**
  * 作品スキーマ
  */
@@ -35,7 +17,7 @@ const schema = new mongoose.Schema(
         alternateName: String,
         alternativeHeadline: String,
         description: String,
-        copyrightHolder: copyrightHolderSchema,
+        copyrightHolder: mongoose.SchemaTypes.Mixed,
         copyrightYear: Number,
         datePublished: Date,
         distributor: mongoose.SchemaTypes.Mixed,
@@ -44,7 +26,7 @@ const schema = new mongoose.Schema(
         thumbnailUrl: String,
         duration: String,
         contentRating: String,
-        offers: offersSchema,
+        offers: mongoose.SchemaTypes.Mixed,
         additionalProperty: mongoose.SchemaTypes.Mixed
     },
     {
@@ -58,8 +40,18 @@ const schema = new mongoose.Schema(
             createdAt: 'createdAt',
             updatedAt: 'updatedAt'
         },
-        toJSON: { getters: true },
-        toObject: { getters: true }
+        toJSON: {
+            getters: false,
+            virtuals: false,
+            minimize: false,
+            versionKey: false
+        },
+        toObject: {
+            getters: false,
+            virtuals: true,
+            minimize: false,
+            versionKey: false
+        }
     }
 );
 

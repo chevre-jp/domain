@@ -144,7 +144,7 @@ export class MongoRepository {
             .add(-params.intervalInMinutes, 'minutes')
             .toDate();
 
-        await this.taskModel.update(
+        await this.taskModel.updateMany(
             {
                 ...(params.project !== undefined)
                     ? {
@@ -162,8 +162,7 @@ export class MongoRepository {
             },
             {
                 status: factory.taskStatus.Ready // 実行前に変更
-            },
-            { multi: true }
+            }
         )
             .exec();
     }

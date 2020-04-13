@@ -1,44 +1,6 @@
 import * as mongoose from 'mongoose';
 
-import MultilingualStringSchemaType from '../schemaTypes/multilingualString';
-
 const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
-
-const containedInPlaceSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const containsPlaceSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const openingHoursSpecificationSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const offersSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
 
 /**
  * 場所スキーマ
@@ -50,22 +12,23 @@ const schema = new mongoose.Schema(
             type: String,
             required: true
         },
-        name: MultilingualStringSchemaType,
-        alternateName: MultilingualStringSchemaType,
-        description: MultilingualStringSchemaType,
-        address: MultilingualStringSchemaType,
+        name: mongoose.SchemaTypes.Mixed,
+        alternateName: mongoose.SchemaTypes.Mixed,
+        description: mongoose.SchemaTypes.Mixed,
+        address: mongoose.SchemaTypes.Mixed,
         branchCode: String,
-        containedInPlace: containedInPlaceSchema,
-        containsPlace: [containsPlaceSchema],
+        containedInPlace: mongoose.SchemaTypes.Mixed,
+        containsPlace: [mongoose.SchemaTypes.Mixed],
+        hasPOS: [mongoose.SchemaTypes.Mixed],
         maximumAttendeeCapacity: Number,
-        openingHoursSpecification: openingHoursSpecificationSchema,
+        openingHoursSpecification: mongoose.SchemaTypes.Mixed,
         smokingAllowed: Boolean,
         telephone: String,
         sameAs: String,
         url: String,
         kanaName: String,
-        offers: offersSchema,
-        additionalProperty: mongoose.SchemaTypes.Mixed
+        offers: mongoose.SchemaTypes.Mixed,
+        additionalProperty: [mongoose.SchemaTypes.Mixed]
     },
     {
         collection: 'places',
@@ -78,8 +41,18 @@ const schema = new mongoose.Schema(
             createdAt: 'createdAt',
             updatedAt: 'updatedAt'
         },
-        toJSON: { getters: true },
-        toObject: { getters: true }
+        toJSON: {
+            getters: false,
+            virtuals: false,
+            minimize: false,
+            versionKey: false
+        },
+        toObject: {
+            getters: false,
+            virtuals: true,
+            minimize: false,
+            versionKey: false
+        }
     }
 );
 

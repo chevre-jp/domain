@@ -18,6 +18,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v14.3.0 - 2020-04-13
+
+### Added
+
+- 劇場にPOS属性を追加
+
+### Changed
+
+- DeprecationWarning: collection.update is deprecated. -> updateMany
+- mongoose.Schemaの汎用性を全体的に強化
+
 ## v14.2.0 - 2020-04-10
 
 ### Added
