@@ -2,47 +2,6 @@ import * as mongoose from 'mongoose';
 
 const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
-const bookingAgentSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const priceSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const reservationForSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const reservedTicketSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const underNameSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
 /**
  * 予約スキーマ
  */
@@ -55,7 +14,7 @@ const schema = new mongoose.Schema(
             required: true
         },
         additionalTicketText: String,
-        bookingAgent: bookingAgentSchema,
+        bookingAgent: mongoose.SchemaTypes.Mixed,
         bookingTime: Date,
         cancelReservationUrl: String,
         checkinUrl: String,
@@ -63,10 +22,10 @@ const schema = new mongoose.Schema(
         modifiedTime: Date,
         modifyReservationUrl: String,
         numSeats: Number,
-        price: priceSchema,
+        price: mongoose.SchemaTypes.Mixed,
         priceCurrency: String,
         programMembershipUsed: String,
-        reservationFor: reservationForSchema,
+        reservationFor: mongoose.SchemaTypes.Mixed,
         reservationNumber: {
             type: String,
             required: true
@@ -75,9 +34,9 @@ const schema = new mongoose.Schema(
             type: String,
             required: true
         },
-        reservedTicket: reservedTicketSchema,
+        reservedTicket: mongoose.SchemaTypes.Mixed,
         subReservation: mongoose.SchemaTypes.Mixed,
-        underName: underNameSchema,
+        underName: mongoose.SchemaTypes.Mixed,
         checkedIn: { type: Boolean, default: false },
         attended: { type: Boolean, default: false },
         additionalProperty: mongoose.SchemaTypes.Mixed
@@ -93,8 +52,18 @@ const schema = new mongoose.Schema(
             createdAt: 'createdAt',
             updatedAt: 'updatedAt'
         },
-        toJSON: { getters: true },
-        toObject: { getters: true }
+        toJSON: {
+            getters: false,
+            virtuals: false,
+            minimize: false,
+            versionKey: false
+        },
+        toObject: {
+            getters: false,
+            virtuals: true,
+            minimize: false,
+            versionKey: false
+        }
     }
 );
 

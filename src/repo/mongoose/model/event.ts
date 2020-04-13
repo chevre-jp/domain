@@ -4,60 +4,6 @@ import MultilingualStringSchemaType from '../schemaTypes/multilingualString';
 
 const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
-const locationSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const workPerformedSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const superEventSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const videoFormatSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const soundFormatSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const offersSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
 /**
  * イベント(公演など)スキーマ
  */
@@ -80,16 +26,16 @@ const schema = new mongoose.Schema(
         endDate: Date,
         eventStatus: String,
         headline: MultilingualStringSchemaType,
-        location: locationSchema,
+        location: mongoose.SchemaTypes.Mixed,
         startDate: Date,
-        workPerformed: workPerformedSchema,
-        superEvent: superEventSchema,
-        videoFormat: [videoFormatSchema],
-        soundFormat: [soundFormatSchema],
+        workPerformed: mongoose.SchemaTypes.Mixed,
+        superEvent: mongoose.SchemaTypes.Mixed,
+        videoFormat: [mongoose.SchemaTypes.Mixed],
+        soundFormat: [mongoose.SchemaTypes.Mixed],
         subtitleLanguage: mongoose.SchemaTypes.Mixed,
         dubLanguage: mongoose.SchemaTypes.Mixed,
         kanaName: String,
-        offers: offersSchema,
+        offers: mongoose.SchemaTypes.Mixed,
         maximumAttendeeCapacity: { type: Number },
         remainingAttendeeCapacity: { type: Number },
         checkInCount: { type: Number, default: 0 },
@@ -108,8 +54,18 @@ const schema = new mongoose.Schema(
             createdAt: 'createdAt',
             updatedAt: 'updatedAt'
         },
-        toJSON: { getters: true },
-        toObject: { getters: true }
+        toJSON: {
+            getters: false,
+            virtuals: false,
+            minimize: false,
+            versionKey: false
+        },
+        toObject: {
+            getters: false,
+            virtuals: true,
+            minimize: false,
+            versionKey: false
+        }
     }
 );
 

@@ -2,39 +2,6 @@ import * as mongoose from 'mongoose';
 
 const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
-const eligibleQuantitySchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const eligibleTransactionVolumeSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const referenceQuantitySchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const priceComponentSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
 /**
  * 価格仕様スキーマ
  */
@@ -45,8 +12,8 @@ const schema = new mongoose.Schema(
             type: String,
             required: true
         },
-        eligibleQuantity: eligibleQuantitySchema,
-        eligibleTransactionVolume: [eligibleTransactionVolumeSchema],
+        eligibleQuantity: mongoose.SchemaTypes.Mixed,
+        eligibleTransactionVolume: [mongoose.SchemaTypes.Mixed],
         maxPrice: Number,
         minPrice: Number,
         price: Number,
@@ -54,10 +21,10 @@ const schema = new mongoose.Schema(
         validFrom: Date,
         validThrough: Date,
         valueAddedTaxIncluded: Boolean,
-        referenceQuantity: referenceQuantitySchema,
+        referenceQuantity: mongoose.SchemaTypes.Mixed,
         appliesToSoundFormat: String,
         appliesToVideoFormat: String,
-        priceComponent: [priceComponentSchema]
+        priceComponent: [mongoose.SchemaTypes.Mixed]
     },
     {
         collection: 'priceSpecifications',
@@ -70,8 +37,18 @@ const schema = new mongoose.Schema(
             createdAt: 'createdAt',
             updatedAt: 'updatedAt'
         },
-        toJSON: { getters: true },
-        toObject: { getters: true }
+        toJSON: {
+            getters: false,
+            virtuals: false,
+            minimize: false,
+            versionKey: false
+        },
+        toObject: {
+            getters: false,
+            virtuals: true,
+            minimize: false,
+            versionKey: false
+        }
     }
 );
 

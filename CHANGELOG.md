@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - DeprecationWarning: collection.update is deprecated. -> updateMany
+- mongoose.Schemaの汎用性を全体的に強化
 
 ### Deprecated
 
