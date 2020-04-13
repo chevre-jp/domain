@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- プロジェクトごとの集計タスクを追加
+
 ### Changed
 
 ### Deprecated
@@ -15,6 +17,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Removed
 
 ### Fixed
+
+- 座席のないイベントに対する座席を検索できないバグ対応
 
 ### Security
 

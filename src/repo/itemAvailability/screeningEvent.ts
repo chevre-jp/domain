@@ -243,6 +243,7 @@ export class RedisRepository {
 
     /**
      * 在庫状況を検索する
+     * offers.lengthが0だと"ERR wrong number of arguments for 'hmget' command"となるので注意
      */
     public async searchAvailability(params: {
         eventId: string;
