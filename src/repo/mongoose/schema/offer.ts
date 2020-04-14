@@ -1,7 +1,5 @@
 import * as mongoose from 'mongoose';
 
-import multilingualString from '../schemaTypes/multilingualString';
-
 const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
 /**
@@ -15,12 +13,12 @@ export function create(options: mongoose.SchemaOptions) {
             _id: String,
             identifier: mongoose.SchemaTypes.Mixed,
             typeOf: String,
-            name: multilingualString,
-            description: multilingualString,
+            name: mongoose.SchemaTypes.Mixed,
+            description: mongoose.SchemaTypes.Mixed,
             category: mongoose.SchemaTypes.Mixed,
             color: mongoose.SchemaTypes.Mixed,
             additionalProperty: mongoose.SchemaTypes.Mixed,
-            alternateName: multilingualString,
+            alternateName: mongoose.SchemaTypes.Mixed,
             acceptedPaymentMethod: mongoose.SchemaTypes.Mixed,
             addOn: mongoose.SchemaTypes.Mixed,
             availableAddOn: mongoose.SchemaTypes.Mixed,

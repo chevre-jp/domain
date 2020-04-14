@@ -2,7 +2,7 @@
  * 集計サービス
  */
 import * as createDebug from 'debug';
-import * as moment from 'moment';
+import * as moment from 'moment-timezone';
 
 import * as factory from '../factory';
 
@@ -110,37 +110,80 @@ export function aggregateScreeningEvent(params: {
         if (eventDoc !== null) {
             event = eventDoc.toObject();
 
-            // イベント通知タスク
-            const project = await repos.project.findById({ id: event.project.id });
-
-            if (project.settings !== undefined
-                && project.settings.onEventChanged !== undefined
-                && Array.isArray(project.settings.onEventChanged.informEvent)) {
-                await Promise.all(project.settings.onEventChanged.informEvent.map(async (informParams) => {
-                    const triggerWebhookTask: factory.task.triggerWebhook.IAttributes = {
-                        project: event.project,
-                        name: factory.taskName.TriggerWebhook,
-                        status: factory.taskStatus.Ready,
-                        runsAt: new Date(),
-                        remainingNumberOfTries: 3,
-                        numberOfTried: 0,
-                        executionResults: [],
-                        data: {
-                            project: event.project,
-                            typeOf: factory.actionType.InformAction,
-                            agent: event.project,
-                            recipient: {
-                                typeOf: 'Person',
-                                ...informParams.recipient
-                            },
-                            object: event
-                        }
-                    };
-
-                    await repos.task.save(triggerWebhookTask);
-                }));
-            }
+            await onAggregated({ event })({
+                project: repos.project,
+                task: repos.task
+            });
         }
+    };
+}
+
+/**
+ * 集計後アクション
+ */
+function onAggregated(params: {
+    event: factory.event.IEvent<factory.eventType.ScreeningEvent>;
+}) {
+    return async (repos: {
+        project: ProjectRepo;
+        task: TaskRepo;
+    }) => {
+        const event = params.event;
+
+        // イベント通知タスク
+        const project = await repos.project.findById({ id: event.project.id });
+
+        const informEvent = project.settings?.onEventChanged?.informEvent;
+        if (Array.isArray(informEvent)) {
+            await Promise.all(informEvent.map(async (informParams) => {
+                const triggerWebhookTask: factory.task.triggerWebhook.IAttributes = {
+                    project: event.project,
+                    name: factory.taskName.TriggerWebhook,
+                    status: factory.taskStatus.Ready,
+                    runsAt: new Date(),
+                    remainingNumberOfTries: 3,
+                    numberOfTried: 0,
+                    executionResults: [],
+                    data: {
+                        project: event.project,
+                        typeOf: factory.actionType.InformAction,
+                        agent: event.project,
+                        recipient: {
+                            typeOf: 'Person',
+                            ...informParams.recipient
+                        },
+                        object: event
+                    }
+                };
+
+                await repos.task.save(triggerWebhookTask);
+            }));
+        }
+
+        // プロジェクト集計タスク作成
+        const aggregateOnProjectTask: factory.task.IAttributes = {
+            name: <any>'aggregateOnProject',
+            project: event.project,
+            runsAt: new Date(),
+            data: {
+                project: { id: event.project.id },
+                reservationFor: {
+                    startFrom: moment()
+                        .tz('Asia/Tokyo')
+                        .startOf('month')
+                        .toDate(),
+                    startThrough: moment()
+                        .tz('Asia/Tokyo')
+                        .endOf('month')
+                        .toDate()
+                }
+            },
+            status: factory.taskStatus.Ready,
+            numberOfTried: 0,
+            remainingNumberOfTries: 3,
+            executionResults: []
+        };
+        await repos.task.save(aggregateOnProjectTask);
     };
 }
 

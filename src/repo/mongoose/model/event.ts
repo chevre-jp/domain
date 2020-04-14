@@ -1,7 +1,5 @@
 import * as mongoose from 'mongoose';
 
-import MultilingualStringSchemaType from '../schemaTypes/multilingualString';
-
 const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
 /**
@@ -16,16 +14,16 @@ const schema = new mongoose.Schema(
             required: true
         },
         identifier: String,
-        name: MultilingualStringSchemaType,
+        name: mongoose.SchemaTypes.Mixed,
         additionalProperty: mongoose.SchemaTypes.Mixed,
-        alternateName: MultilingualStringSchemaType,
-        alternativeHeadline: MultilingualStringSchemaType,
-        description: MultilingualStringSchemaType,
+        alternateName: mongoose.SchemaTypes.Mixed,
+        alternativeHeadline: mongoose.SchemaTypes.Mixed,
+        description: mongoose.SchemaTypes.Mixed,
         doorTime: Date,
         duration: String,
         endDate: Date,
         eventStatus: String,
-        headline: MultilingualStringSchemaType,
+        headline: mongoose.SchemaTypes.Mixed,
         location: mongoose.SchemaTypes.Mixed,
         startDate: Date,
         workPerformed: mongoose.SchemaTypes.Mixed,

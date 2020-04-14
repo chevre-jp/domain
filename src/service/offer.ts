@@ -162,7 +162,6 @@ export function searchEventSeatOffersWithPaging(params: {
         eventAvailability: EventAvailabilityRepo;
         place: PlaceRepo;
     }): Promise<factory.place.seat.IPlaceWithOffer[]> => {
-
         let offers: factory.place.seat.IPlaceWithOffer[] = [];
 
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
@@ -196,26 +195,28 @@ export function searchEventSeatOffersWithPaging(params: {
                 }
             });
 
-            const availabilities = await repos.eventAvailability.searchAvailability({
-                eventId: params.event.id,
-                offers: seats.map((s) => {
-                    return {
-                        seatNumber: s.branchCode,
-                        seatSection: <string>s.containedInPlace?.branchCode
-                    };
-                })
-            });
-
-            offers = seats.map((seat, index) => {
-                return addOffers2Seat({
-                    project: event.project,
-                    seat: seat,
-                    seatSection: <string>seat.containedInPlace?.branchCode,
-                    unavailableOffers: [],
-                    availability: availabilities[index].availability,
-                    priceSpecs: priceSpecs
+            if (seats.length > 0) {
+                const availabilities = await repos.eventAvailability.searchAvailability({
+                    eventId: params.event.id,
+                    offers: seats.map((s) => {
+                        return {
+                            seatNumber: s.branchCode,
+                            seatSection: <string>s.containedInPlace?.branchCode
+                        };
+                    })
                 });
-            });
+
+                offers = seats.map((seat, index) => {
+                    return addOffers2Seat({
+                        project: event.project,
+                        seat: seat,
+                        seatSection: <string>seat.containedInPlace?.branchCode,
+                        unavailableOffers: [],
+                        availability: availabilities[index].availability,
+                        priceSpecs: priceSpecs
+                    });
+                });
+            }
         }
 
         return offers;
