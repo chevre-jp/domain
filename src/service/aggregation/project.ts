@@ -2,6 +2,7 @@
  * 集計サービス
  */
 import * as createDebug from 'debug';
+import * as moment from 'moment';
 
 import * as factory from '../../factory';
 
@@ -38,7 +39,12 @@ export function aggregate(params: {
         const { aggregateReservation } = await aggregateReservationOnProject({
             aggregateDate: now,
             project: project,
-            reservationFor: params.reservationFor
+            reservationFor: {
+                startFrom: moment(params.reservationFor.startFrom)
+                    .toDate(),
+                startThrough: moment(params.reservationFor.startThrough)
+                    .toDate()
+            }
         })(repos);
 
         // 値がundefinedの場合に更新しないように注意
