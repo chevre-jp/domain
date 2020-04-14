@@ -15,6 +15,10 @@ import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../repo/ra
 import { MongoRepository as ReservationRepo } from '../repo/reservation';
 import { MongoRepository as TaskRepo } from '../repo/task';
 
+import * as ProjectAggregation from './aggregation/project';
+
+export import project = ProjectAggregation;
+
 const debug = createDebug('chevre-domain:service');
 
 export type IAggregateScreeningEventOperation<T> = (repos: {
@@ -131,9 +135,9 @@ function onAggregated(params: {
         const event = params.event;
 
         // イベント通知タスク
-        const project = await repos.project.findById({ id: event.project.id });
+        const targetProject = await repos.project.findById({ id: event.project.id });
 
-        const informEvent = project.settings?.onEventChanged?.informEvent;
+        const informEvent = targetProject.settings?.onEventChanged?.informEvent;
         if (Array.isArray(informEvent)) {
             await Promise.all(informEvent.map(async (informParams) => {
                 const triggerWebhookTask: factory.task.triggerWebhook.IAttributes = {

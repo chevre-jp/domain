@@ -83,39 +83,62 @@ function aggregateReservationOnProject(params: {
     return async (repos: {
         reservation: ReservationRepo;
     }): Promise<{
-        aggregateReservation: factory.event.screeningEvent.IAggregateReservation;
+        aggregateReservation: any;
     }> => {
-        let attendeeCount: number | undefined;
-        let checkInCount: number | undefined;
-        let reservationCount: number | undefined;
+        let attendeeCount: number = 0;
+        let checkInCount: number = 0;
+        let reservationCount: number = 0;
 
-        reservationCount = await repos.reservation.count({
-            project: { ids: [params.project.id] },
-            typeOf: factory.reservationType.EventReservation,
-            reservationFor: params.reservationFor,
-            reservationStatuses: [factory.reservationStatusType.ReservationConfirmed]
-        });
+        const reservationForConditions: {
+            startFrom: Date;
+            startThrough?: Date;
+        } = {
+            startFrom: moment(params.reservationFor.startFrom)
+                .add(-1, 'day')
+                .toDate()
+        };
 
-        attendeeCount = await repos.reservation.count({
-            project: { ids: [params.project.id] },
-            typeOf: factory.reservationType.EventReservation,
-            reservationFor: params.reservationFor,
-            reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
-            attended: true
-        });
+        while (moment(params.reservationFor.startThrough) > moment(reservationForConditions.startThrough)) {
+            reservationForConditions.startFrom = moment(reservationForConditions.startFrom)
+                .add(1, 'day')
+                .toDate();
+            reservationForConditions.startThrough = moment(reservationForConditions.startFrom)
+                .add(1, 'day')
+                .add(-1, 'millisecond')
+                .toDate();
+            debug('counting...', reservationForConditions);
 
-        checkInCount = await repos.reservation.count({
-            project: { ids: [params.project.id] },
-            typeOf: factory.reservationType.EventReservation,
-            reservationFor: params.reservationFor,
-            reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
-            checkedIn: true
-        });
+            reservationCount += await repos.reservation.count({
+                project: { ids: [params.project.id] },
+                typeOf: factory.reservationType.EventReservation,
+                reservationFor: reservationForConditions,
+                reservationStatuses: [factory.reservationStatusType.ReservationConfirmed]
+            });
+
+            attendeeCount += await repos.reservation.count({
+                project: { ids: [params.project.id] },
+                typeOf: factory.reservationType.EventReservation,
+                reservationFor: reservationForConditions,
+                reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+                attended: true
+            });
+
+            checkInCount += await repos.reservation.count({
+                project: { ids: [params.project.id] },
+                typeOf: factory.reservationType.EventReservation,
+                reservationFor: reservationForConditions,
+                reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+                checkedIn: true
+            });
+        }
 
         return {
             aggregateReservation: {
                 typeOf: 'AggregateReservation',
                 aggregateDate: params.aggregateDate,
+                reservationFor: `${moment(params.reservationFor.startFrom)
+                    .toISOString()}/${moment(params.reservationFor.startThrough)
+                        .toISOString()}`,
                 attendeeCount,
                 checkInCount,
                 reservationCount
