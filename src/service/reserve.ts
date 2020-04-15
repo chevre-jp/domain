@@ -27,7 +27,10 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
 
             try {
                 // 予約を確定状態に変更する
-                reservation = await repos.reservation.confirm<factory.reservationType.EventReservation>(actionAttributes.object);
+                reservation = await repos.reservation.confirm<factory.reservationType.EventReservation>({
+                    ...actionAttributes.object,
+                    previousReservationStatus: actionAttributes.object.reservationStatus
+                });
             } catch (error) {
                 // actionにエラー結果を追加
                 try {
@@ -139,7 +142,10 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
                     ids: [reservation.id]
                 });
                 if (reservationCount > 0) {
-                    reservation = await repos.reservation.cancel<factory.reservationType.EventReservation>({ id: reservation.id });
+                    reservation = await repos.reservation.cancel<factory.reservationType.EventReservation>({
+                        id: reservation.id,
+                        previousReservationStatus: reservation.reservationStatus
+                    });
                 }
             } catch (error) {
                 // actionにエラー結果を追加
@@ -230,7 +236,10 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
                 await processUnlockOfferRateLimit({ reservation })(repos);
 
                 // 予約をキャンセル状態に変更する
-                reservation = await repos.reservation.cancel<factory.reservationType.EventReservation>({ id: reservation.id });
+                reservation = await repos.reservation.cancel<factory.reservationType.EventReservation>({
+                    id: reservation.id,
+                    previousReservationStatus: reservation.reservationStatus
+                });
             } catch (error) {
                 // actionにエラー結果を追加
                 try {
