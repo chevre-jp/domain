@@ -8,11 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
-- 予約にpreviousReservationStatusを追加
-
 ### Changed
-
-- 発券カウントと入場カウント時に予約ステータスを条件に含めないように変更
 
 ### Deprecated
 
@@ -21,6 +17,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v14.5.0 - 2020-04-15
+
+### Added
+
+- 予約にpreviousReservationStatusを追加
+
+### Changed
+
+- 発券カウントと入場カウント時に予約ステータスを条件に含めないように変更
 
 ## v14.4.0 - 2020-04-14
 
