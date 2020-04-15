@@ -833,7 +833,9 @@ export class MongoRepository {
      * 予約確定
      */
     public async confirm<T extends factory.reservationType>(
-        params: factory.reservation.IReservation<T>
+        params: factory.reservation.IReservation<T> & {
+            previousReservationStatus?: factory.reservationStatusType;
+        }
     ): Promise<factory.reservation.IReservation<T>> {
         const doc = await this.reservationModel.findByIdAndUpdate(
             params.id,
@@ -859,11 +861,17 @@ export class MongoRepository {
      * 予約取消
      */
     public async cancel<T extends factory.reservationType>(
-        params: { id: string }
+        params: {
+            id: string;
+            previousReservationStatus?: factory.reservationStatusType;
+        }
     ): Promise<factory.reservation.IReservation<T>> {
         const doc = await this.reservationModel.findByIdAndUpdate(
             params.id,
             {
+                ... (typeof params.previousReservationStatus === 'string')
+                    ? { previousReservationStatus: params.previousReservationStatus }
+                    : undefined,
                 reservationStatus: factory.reservationStatusType.ReservationCancelled,
                 modifiedTime: new Date()
             },
@@ -919,6 +927,7 @@ export class MongoRepository {
             },
             { new: true }
         )
+            .select({ __v: 0, createdAt: 0, updatedAt: 0 })
             .exec();
         if (doc === null) {
             throw new factory.errors.NotFound(this.reservationModel.modelName);

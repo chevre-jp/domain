@@ -24,7 +24,7 @@ export function call(data: factory.task.aggregateScreeningEvent.IData): IOperati
             throw new factory.errors.Argument('settings', 'redisClient required');
         }
 
-        await AggregationService.aggregateScreeningEvent(data)({
+        await AggregationService.event.aggregateScreeningEvent(data)({
             event: new EventRepo(settings.connection),
             eventAvailability: new EventAvailabilityRepo(settings.redisClient),
             offer: new OfferRepo(settings.connection),

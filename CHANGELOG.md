@@ -8,7 +8,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- 予約にpreviousReservationStatusを追加
+
 ### Changed
+
+- 発券カウントと入場カウント時に予約ステータスを条件に含めないように変更
 
 ### Deprecated
 

@@ -1,5 +1,5 @@
 /**
- * 集計サービス
+ * プロジェクト集計サービス
  */
 import * as createDebug from 'debug';
 import * as moment from 'moment';
@@ -119,7 +119,7 @@ function aggregateReservationOnProject(params: {
                 project: { ids: [params.project.id] },
                 typeOf: factory.reservationType.EventReservation,
                 reservationFor: reservationForConditions,
-                reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+                // reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
                 attended: true
             });
 
@@ -127,7 +127,7 @@ function aggregateReservationOnProject(params: {
                 project: { ids: [params.project.id] },
                 typeOf: factory.reservationType.EventReservation,
                 reservationFor: reservationForConditions,
-                reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+                // reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
                 checkedIn: true
             });
         }
@@ -136,9 +136,11 @@ function aggregateReservationOnProject(params: {
             aggregateReservation: {
                 typeOf: 'AggregateReservation',
                 aggregateDate: params.aggregateDate,
-                reservationFor: `${moment(params.reservationFor.startFrom)
-                    .toISOString()}/${moment(params.reservationFor.startThrough)
-                        .toISOString()}`,
+                reservationFor: {
+                    startDate: `${moment(params.reservationFor.startFrom)
+                        .toISOString()}/${moment(params.reservationFor.startThrough)
+                            .toISOString()}`
+                },
                 attendeeCount,
                 checkInCount,
                 reservationCount

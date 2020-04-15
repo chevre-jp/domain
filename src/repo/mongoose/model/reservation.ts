@@ -22,6 +22,7 @@ const schema = new mongoose.Schema(
         modifiedTime: Date,
         modifyReservationUrl: String,
         numSeats: Number,
+        previousReservationStatus: String,
         price: mongoose.SchemaTypes.Mixed,
         priceCurrency: String,
         programMembershipUsed: String,
