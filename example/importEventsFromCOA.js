@@ -9,6 +9,7 @@ async function main() {
     const placeRepo = new domain.repository.Place(mongoose.connection);
 
     await domain.service.event.importFromCOA({
+        project: { typeOf: 'Project', id: 'sskts-development' },
         locationBranchCode: '113',
         importFrom: moment().toDate(),
         importThrough: moment().add(1, 'month').toDate()

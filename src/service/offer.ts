@@ -15,6 +15,8 @@ import { MongoRepository as TaskRepo } from '../repo/task';
 
 import * as factory from '../factory';
 
+import { credentials } from '../credentials';
+
 type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     event: EventRepo;
     priceSpecification: PriceSpecificationRepo;
@@ -25,6 +27,14 @@ type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
 }) => Promise<T>;
 
 export type IUnitPriceSpecification = factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>;
+
+// tslint:disable-next-line:no-magic-numbers
+// const COA_TIMEOUT = (typeof process.env.COA_TIMEOUT === 'string') ? Number(process.env.COA_TIMEOUT) : 20000;
+
+const coaAuthClient = new COA.auth.RefreshToken({
+    endpoint: credentials.coa.endpoint,
+    refreshToken: credentials.coa.refreshToken
+});
 
 /**
  * 座席にオファー情報を付加する
@@ -473,7 +483,12 @@ export function importFromCOA(params: {
     return async (repos: {
         offer: OfferRepo;
     }) => {
-        const ticketResults = await COA.services.master.ticket({ theaterCode: params.theaterCode });
+        const masterService = new COA.service.Master({
+            endpoint: credentials.coa.endpoint,
+            auth: coaAuthClient
+        });
+
+        const ticketResults = await masterService.ticket({ theaterCode: params.theaterCode });
 
         await Promise.all(ticketResults.map(async (ticketResult) => {
             const offer = coaTicket2offer({ project: params.project, theaterCode: params.theaterCode, ticketResult: ticketResult });
@@ -516,7 +531,7 @@ export function importFromCOA(params: {
 function coaTicket2offer(params: {
     project: factory.project.IProject;
     theaterCode: string;
-    ticketResult: COA.services.master.ITicketResult;
+    ticketResult: COA.factory.master.ITicketResult;
 }): factory.offer.IUnitPriceOffer {
     const additionalPaymentRequirements = (typeof params.ticketResult.usePoint === 'number' && params.ticketResult.usePoint > 0)
         ? [{
@@ -547,7 +562,7 @@ function coaTicket2offer(params: {
         // appliesToMovieTicketType?: string;
     };
 
-    const eligibleCustomerType = (params.ticketResult.flgMember === COA.services.master.FlgMember.Member)
+    const eligibleCustomerType = (params.ticketResult.flgMember === COA.factory.master.FlgMember.Member)
         ? ['Member']
         : undefined;
 
