@@ -41,16 +41,6 @@ export function importFromCOA(params: {
     }) => {
         const project: factory.project.IProject = params.project;
 
-        // DBから劇場取得
-        // const movieTheatersFromDB = await repos.place.searchMovieTheaters({
-        //     limit: 1,
-        //     branchCodes: [params.locationBranchCode]
-        // });
-        // const movieTheaterFromDB = movieTheatersFromDB[0];
-        // if (movieTheaterFromDB === undefined) {
-        //     throw new factory.errors.NotFound(`MovieTheater ${params.locationBranchCode}`);
-        // }
-
         const masterService = new COA.service.Master({
             endpoint: credentials.coa.endpoint,
             auth: coaAuthClient
@@ -63,25 +53,8 @@ export function importFromCOA(params: {
             await masterService.screen({ theaterCode: params.locationBranchCode })
         );
 
-        // 劇場がなければ保管
-        debug('storing movieTheater...', movieTheater);
-        movieTheater = await repos.place.placeModel.findOneAndUpdate(
-            {
-                'project.id': {
-                    $exists: true,
-                    $eq: movieTheater.project.id
-                },
-                branchCode: {
-                    $exists: true,
-                    $eq: movieTheater.branchCode
-                }
-            },
-            movieTheater,
-            { upsert: true, new: true }
-        )
-            .exec()
-            .then((doc) => doc.toObject());
-        debug('movieTheater stored.', movieTheater);
+        // 劇場保管
+        movieTheater = await saveMovieTheater({ movieTheater })(repos);
 
         const targetImportFrom = moment(`${moment(params.importFrom)
             .tz('Asia/Tokyo')
@@ -115,6 +88,44 @@ export function importFromCOA(params: {
             targetImportThrough: targetImportThrough.toDate(),
             idsShouldBe: screeningEvents.map((e) => e.id)
         })(repos);
+    };
+}
+
+/**
+ * 劇場保管
+ */
+function saveMovieTheater(params: {
+    movieTheater: factory.place.movieTheater.IPlace;
+}) {
+    return async (repos: {
+        place: PlaceRepo;
+    }): Promise<factory.place.movieTheater.IPlace> => {
+        debug('storing movieTheater...', params.movieTheater);
+
+        return repos.place.placeModel.findOneAndUpdate(
+            {
+                'project.id': {
+                    $exists: true,
+                    $eq: params.movieTheater.project.id
+                },
+                branchCode: {
+                    $exists: true,
+                    $eq: params.movieTheater.branchCode
+                }
+            },
+            params.movieTheater,
+            { new: true }
+        )
+            .exec()
+            .then((doc) => {
+                if (doc === null) {
+                    throw new factory.errors.NotFound(`MovieTheater ${params.movieTheater.branchCode}`);
+                }
+
+                debug('movieTheater stored.');
+
+                return doc.toObject();
+            });
     };
 }
 
