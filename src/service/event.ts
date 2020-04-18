@@ -18,7 +18,7 @@ import { credentials } from '../credentials';
 const debug = createDebug('chevre-domain:service');
 
 // tslint:disable-next-line:no-magic-numbers
-// const COA_TIMEOUT = (typeof process.env.COA_TIMEOUT === 'string') ? Number(process.env.COA_TIMEOUT) : 20000;
+const COA_TIMEOUT = (typeof process.env.COA_TIMEOUT === 'string') ? Number(process.env.COA_TIMEOUT) : 20000;
 
 const coaAuthClient = new COA.auth.RefreshToken({
     endpoint: credentials.coa.endpoint,
@@ -41,10 +41,13 @@ export function importFromCOA(params: {
     }) => {
         const project: factory.project.IProject = params.project;
 
-        const masterService = new COA.service.Master({
-            endpoint: credentials.coa.endpoint,
-            auth: coaAuthClient
-        });
+        const masterService = new COA.service.Master(
+            {
+                endpoint: credentials.coa.endpoint,
+                auth: coaAuthClient
+            },
+            { timeout: COA_TIMEOUT }
+        );
 
         // 劇場取得
         let movieTheater = createMovieTheaterFromCOA(
@@ -140,10 +143,13 @@ function saveScreeningEventSeries(params: {
         const movieTheater = params.movieTheater;
         const project = params.project;
 
-        const masterService = new COA.service.Master({
-            endpoint: credentials.coa.endpoint,
-            auth: coaAuthClient
-        });
+        const masterService = new COA.service.Master(
+            {
+                endpoint: credentials.coa.endpoint,
+                auth: coaAuthClient
+            },
+            { timeout: COA_TIMEOUT }
+        );
 
         // COAから作品取得
         const filmsFromCOA = await masterService.title({
@@ -208,10 +214,13 @@ function saveScreeningEvents(params: {
         const screeningEventSerieses = params.screeningEventSerieses;
         const project = params.project;
 
-        const masterService = new COA.service.Master({
-            endpoint: credentials.coa.endpoint,
-            auth: coaAuthClient
-        });
+        const masterService = new COA.service.Master(
+            {
+                endpoint: credentials.coa.endpoint,
+                auth: coaAuthClient
+            },
+            { timeout: COA_TIMEOUT }
+        );
 
         // COAからイベント取得;
         const schedulesFromCOA = await masterService.schedule({
