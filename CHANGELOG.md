@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - COAイベントインポート処理を調整
+- タスク中止時の通知メッセージを調整
 
 ### Deprecated
 

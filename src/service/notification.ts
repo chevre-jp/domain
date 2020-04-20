@@ -59,7 +59,8 @@ ${content}`
                     url: LINE_NOTIFY_URL,
                     auth: { bearer: LINE_NOTIFY_ACCESS_TOKEN },
                     form: formData,
-                    json: true
+                    json: true,
+                    timeout: TRIGGER_WEBHOOK_TIMEOUT
                 },
                 (error, response, body) => {
                     if (error !== null) {
