@@ -1,10 +1,9 @@
 /**
  * イベント集計サービス
  */
+import * as COA from '@motionpicture/coa-service';
 import * as createDebug from 'debug';
 import * as moment from 'moment-timezone';
-
-import * as factory from '../../factory';
 
 import { MongoRepository as EventRepo } from '../../repo/event';
 import { RedisRepository as EventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
@@ -15,7 +14,21 @@ import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../../repo
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 
+import * as factory from '../../factory';
+
+import { credentials } from '../../credentials';
+
+import { createScreeningEventIdFromCOA } from '../event';
+
 const debug = createDebug('chevre-domain:service');
+
+// tslint:disable-next-line:no-magic-numbers
+const COA_TIMEOUT = (typeof process.env.COA_TIMEOUT === 'string') ? Number(process.env.COA_TIMEOUT) : 20000;
+
+const coaAuthClient = new COA.auth.RefreshToken({
+    endpoint: credentials.coa.endpoint,
+    refreshToken: credentials.coa.refreshToken
+});
 
 export type IAggregateScreeningEventOperation<T> = (repos: {
     event: EventRepo;
@@ -456,5 +469,77 @@ function aggregateReservationByEvent(params: {
             }
         };
 
+    };
+}
+
+/**
+ * イベント席数を更新する
+ */
+export function importFromCOA(params: {
+    project: factory.project.IProject;
+    locationBranchCode: string;
+    // offeredThrough?: IOfferedThrough;
+    importFrom: Date;
+    importThrough: Date;
+}) {
+    return async (repos: {
+        event: EventRepo;
+    }) => {
+        const reserveService = new COA.service.Reserve(
+            {
+                endpoint: credentials.coa.endpoint,
+                auth: coaAuthClient
+            },
+            { timeout: COA_TIMEOUT }
+        );
+
+        // COAから空席状況取得
+        const countFreeSeatResult = await reserveService.countFreeSeat({
+            theaterCode: params.locationBranchCode,
+            begin: moment(params.importFrom)
+                .tz('Asia/Tokyo')
+                .format('YYYYMMDD'), // COAは日本時間で判断
+            end: moment(params.importThrough)
+                .tz('Asia/Tokyo')
+                .format('YYYYMMDD') // COAは日本時間で判断
+        });
+        debug('countFreeSeatResult:', countFreeSeatResult);
+
+        if (Array.isArray(countFreeSeatResult.listDate)) {
+            for (const countFreeSeatDate of countFreeSeatResult.listDate) {
+                if (Array.isArray(countFreeSeatDate.listPerformance)) {
+                    for (const countFreeSeatPerformance of countFreeSeatDate.listPerformance) {
+                        try {
+                            const eventId = createScreeningEventIdFromCOA({
+                                theaterCode: countFreeSeatResult.theaterCode,
+                                titleCode: countFreeSeatPerformance.titleCode,
+                                titleBranchNum: countFreeSeatPerformance.titleBranchNum,
+                                dateJouei: countFreeSeatDate.dateJouei,
+                                screenCode: countFreeSeatPerformance.screenCode,
+                                timeBegin: countFreeSeatPerformance.timeBegin
+                            });
+
+                            const remainingAttendeeCapacity: number = Math.max(0, Number(countFreeSeatPerformance.cntReserveFree));
+                            debug('updating capacity...', {
+                                eventId,
+                                remainingAttendeeCapacity
+                            });
+
+                            const doc = await repos.event.eventModel.findOneAndUpdate(
+                                {
+                                    _id: eventId,
+                                    remainingAttendeeCapacity: { $ne: remainingAttendeeCapacity }
+                                },
+                                { remainingAttendeeCapacity: remainingAttendeeCapacity }
+                            )
+                                .exec();
+                            debug('capacity update.', (doc !== null) ? doc.id : '');
+                        } catch (error) {
+                            console.error('importFromCOA error:', error);
+                        }
+                    }
+                }
+            }
+        }
     };
 }

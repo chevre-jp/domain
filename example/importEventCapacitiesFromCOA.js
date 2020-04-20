@@ -6,16 +6,14 @@ async function main() {
     await mongoose.connect(process.env.MONGOLAB_URI);
 
     const eventRepo = new domain.repository.Event(mongoose.connection);
-    const placeRepo = new domain.repository.Place(mongoose.connection);
 
-    await domain.service.event.importFromCOA({
+    await domain.service.aggregation.event.importFromCOA({
         project: { typeOf: 'Project', id: 'sskts-development' },
         locationBranchCode: '120',
         importFrom: moment().toDate(),
         importThrough: moment().add(1, 'day').toDate()
     })({
-        event: eventRepo,
-        place: placeRepo
+        event: eventRepo
     });
     console.log('imported');
 }

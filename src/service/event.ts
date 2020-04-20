@@ -207,6 +207,7 @@ function saveScreeningEvents(params: {
     targetImportFrom: Date;
     targetImportThrough: Date;
 }) {
+    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         event: EventRepo;
     }): Promise<factory.event.screeningEvent.IEvent[]> => {
@@ -289,9 +290,18 @@ function saveScreeningEvents(params: {
         debug(`storing ${screeningEvents.length} screeningEvents...`);
         for (const screeningEvent of screeningEvents) {
             try {
+                const attributes = {
+                    ...screeningEvent,
+                    ...{
+                        // 残席数は作成時のみ
+                        $setOnInsert: { remainingAttendeeCapacity: screeningEvent.remainingAttendeeCapacity }
+                    }
+                };
+                delete attributes.remainingAttendeeCapacity;
+
                 await repos.event.save<factory.eventType.ScreeningEvent>({
                     id: screeningEvent.id,
-                    attributes: screeningEvent,
+                    attributes: attributes,
                     upsert: true
                 });
             } catch (error) {
