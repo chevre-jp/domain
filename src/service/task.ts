@@ -129,7 +129,7 @@ export function abort(params: {
 
         await NotificationService.report2developers(
             ABORT_REPORT_SUBJECT,
-            `project:${(params.project !== undefined) ? params.project.id : ''}
+            `project:${abortedTask.project?.id}
 id:${abortedTask.id}
 name:${abortedTask.name}
 runsAt:${moment(abortedTask.runsAt)

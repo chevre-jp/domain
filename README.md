@@ -27,9 +27,13 @@ const chevre = require("@chevre/domain");
 
 ### Environment variables
 
-| Name    | Required | Value           | Purpose |
-| ------- | -------- | --------------- | ------- |
-| `DEBUG` | false    | chevre-domain:* | Debug   |
+| Name                       | Required | Value           | Purpose              |
+| -------------------------- | -------- | --------------- | -------------------- |
+| `DEBUG`                    | false    | chevre-domain:* | Debug                |
+| `COA_ENDPOINT`             | false    |                 | COA API Settings     |
+| `COA_REFRESH_TOKEN`        | false    |                 | COA API Settings     |
+| `LINE_NOTIFY_URL`          | false    |                 | LINE Notify Settings |
+| `LINE_NOTIFY_ACCESS_TOKEN` | false    |                 | LINE Notify Settings |
 
 ## Code Samples
 
