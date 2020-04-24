@@ -6,6 +6,7 @@ import * as createDebug from 'debug';
 // import { PhoneNumberFormat, PhoneNumberUtil } from 'google-libphonenumber';
 // @ts-ignore
 import * as difference from 'lodash.difference';
+// import { google } from 'googleapis';
 import * as moment from 'moment-timezone';
 
 import { MongoRepository as EventRepo } from '../repo/event';
@@ -14,6 +15,8 @@ import { MongoRepository as PlaceRepo } from '../repo/place';
 import * as factory from '../factory';
 
 import { credentials } from '../credentials';
+
+// const customsearch = google.customsearch('v1');
 
 const debug = createDebug('chevre-domain:service');
 
@@ -24,6 +27,50 @@ const coaAuthClient = new COA.auth.RefreshToken({
     endpoint: credentials.coa.endpoint,
     refreshToken: credentials.coa.refreshToken
 });
+
+/**
+ * Googleで作品画像を検索する
+ */
+// export async function findMovieImage(params: {
+//     query: string;
+// }): Promise<string | undefined> {
+//     // カスタム検索エンジンIDの指定がなければ検索しない
+//     if (typeof credentials.customSearch.engineId !== 'string' || typeof credentials.customSearch.apiKey !== 'string') {
+//         return;
+//     }
+
+//     return new Promise<string | undefined>((resolve) => {
+//         customsearch.cse.list(
+//             {
+//                 cx: credentials.customSearch.engineId,
+//                 q: params.query,
+//                 auth: credentials.customSearch.apiKey,
+//                 num: 1,
+//                 rights: 'cc_publicdomain cc_sharealike',
+//                 // start: 0,
+//                 // imgSize: 'medium',
+//                 searchType: 'image'
+//             },
+//             (err: any, res: any) => {
+//                 if (!(err instanceof Error)) {
+//                     if (typeof res.data === 'object' && Array.isArray(res.data.items) && res.data.items.length > 0) {
+//                         resolve(<string>res.data.items[0].image.thumbnailLink);
+//                         // resolve(<string>res.data.items[0].link);
+
+//                         return;
+//                         // thumbnails.push({
+//                         //     eventId: event.id,
+//                         //     link: res.data.items[0].link,
+//                         //     thumbnailLink: res.data.items[0].image.thumbnailLink
+//                         // });
+//                     }
+//                 }
+
+//                 resolve();
+//             }
+//         );
+//     });
+// }
 
 /**
  * イベントをインポートする
@@ -86,6 +133,7 @@ export function importFromCOA(params: {
 
         // COAから削除されたイベントをキャンセル済ステータスへ変更
         await cancelDeletedEvents({
+            project: params.project,
             locationBranchCode: params.locationBranchCode,
             targetImportFrom: targetImportFrom.toDate(),
             targetImportThrough: targetImportThrough.toDate(),
@@ -318,6 +366,7 @@ function saveScreeningEvents(params: {
 }
 
 function cancelDeletedEvents(params: {
+    project: { id: string };
     locationBranchCode: string;
     targetImportFrom: Date;
     targetImportThrough: Date;
@@ -328,6 +377,7 @@ function cancelDeletedEvents(params: {
     }) => {
         // COAから削除されたイベントをキャンセル済ステータスへ変更
         const ids = await repos.event.search({
+            project: { ids: [params.project.id] },
             typeOf: factory.eventType.ScreeningEvent,
             superEvent: {
                 locationBranchCodes: [params.locationBranchCode]
