@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- COAオファーインポート処理を調整
+
 ### Deprecated
 
 ### Removed

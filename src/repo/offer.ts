@@ -338,6 +338,39 @@ export class MongoRepository {
         return doc.toObject();
     }
 
+    public async saveByIdentifier(params: factory.offer.IUnitPriceOffer): Promise<factory.offer.IUnitPriceOffer> {
+        let doc: Document | null;
+
+        delete params.id;
+        const id = uniqid();
+        const update: any = {
+            $set: params,
+            $setOnInsert: { _id: id }
+        };
+
+        doc = await this.offerModel.findOneAndUpdate(
+            {
+                'project.id': {
+                    $exists: true,
+                    $eq: params.project.id
+                },
+                identifier: {
+                    $exists: true,
+                    $eq: params.identifier
+                }
+            },
+            update,
+            { upsert: true, new: true }
+        )
+            .exec();
+
+        if (doc === null) {
+            throw new factory.errors.NotFound(this.offerModel.modelName);
+        }
+
+        return doc.toObject();
+    }
+
     public async deleteById(params: {
         id: string;
     }) {

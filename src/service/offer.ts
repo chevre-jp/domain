@@ -1,4 +1,5 @@
 import * as COA from '@motionpicture/coa-service';
+import * as createDebug from 'debug';
 import * as moment from 'moment';
 import { format } from 'util';
 
@@ -16,6 +17,8 @@ import { MongoRepository as TaskRepo } from '../repo/task';
 import * as factory from '../factory';
 
 import { credentials } from '../credentials';
+
+const debug = createDebug('chevre-domain:service');
 
 type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     event: EventRepo;
@@ -493,38 +496,11 @@ export function importFromCOA(params: {
         await Promise.all(ticketResults.map(async (ticketResult) => {
             const offer = coaTicket2offer({ project: params.project, theaterCode: params.theaterCode, ticketResult: ticketResult });
 
-            await repos.offer.save(offer);
-
-            const additionalProperty: factory.propertyValue.IPropertyValue<string> = {
-                name: 'coaInfo',
-                value: JSON.stringify({
-                    theaterCode: params.theaterCode, ...ticketResult
-                })
-            };
-
-            await repos.offer.offerModel.findByIdAndUpdate(
-                offer.id,
-                {
-                    $pull: {
-                        additionalProperty: { name: additionalProperty.name }
-                    }
-                }
-            )
-                .exec();
-
-            await repos.offer.offerModel.findByIdAndUpdate(
-                offer.id,
-                {
-                    $push: {
-                        additionalProperty: {
-                            $each: [additionalProperty],
-                            $position: 0
-                        }
-                    }
-                }
-            )
-                .exec();
+            debug('saving offer...', ticketResult, 'to', offer);
+            await repos.offer.saveByIdentifier(offer);
         }));
+
+        debug(ticketResults.length, 'offers imported');
     };
 }
 
@@ -533,40 +509,30 @@ function coaTicket2offer(params: {
     theaterCode: string;
     ticketResult: COA.factory.master.ITicketResult;
 }): factory.offer.IUnitPriceOffer {
-    const additionalPaymentRequirements = (typeof params.ticketResult.usePoint === 'number' && params.ticketResult.usePoint > 0)
-        ? [{
-            typeOf: factory.paymentMethodType.Account,
-            totalPaymentDue: {
-                typeOf: 'MonetaryAmount',
-                value: params.ticketResult.usePoint,
-                currency: 'Point'
-            },
-            accountType: 'Point'
-        }]
-        : undefined;
+    const eligibleMonetaryAmount: factory.offer.IEligibleMonetaryAmount[] | undefined
+        = (typeof params.ticketResult.usePoint === 'number' && params.ticketResult.usePoint > 0)
+            ? [{ typeOf: 'MonetaryAmount', currency: 'Point', value: params.ticketResult.usePoint }]
+            : undefined;
 
     const unitPriceSpec: IUnitPriceSpecification = {
-        project: params.project,
+        project: { typeOf: params.project.typeOf, id: params.project.id },
         typeOf: factory.priceSpecificationType.UnitPriceSpecification,
         price: 0, // COAに定義なし
         priceCurrency: factory.priceCurrency.JPY,
         valueAddedTaxIncluded: true,
         referenceQuantity: {
             typeOf: 'QuantitativeValue',
-            unitCode: factory.unitCode.C62
-            // value: 1
-        },
-        ...{
-            additionalPaymentRequirements: additionalPaymentRequirements
+            unitCode: factory.unitCode.C62,
+            value: 1
         }
         // appliesToMovieTicketType?: string;
     };
 
-    const eligibleCustomerType = (params.ticketResult.flgMember === COA.factory.master.FlgMember.Member)
-        ? ['Member']
-        : undefined;
+    // const eligibleCustomerType = (params.ticketResult.flgMember === COA.factory.master.FlgMember.Member)
+    //     ? ['Member']
+    //     : undefined;
 
-    const id = format(
+    const identifier: string = format(
         '%s-%s-%s',
         'COA',
         params.theaterCode,
@@ -574,16 +540,16 @@ function coaTicket2offer(params: {
     );
 
     return {
-        project: params.project,
+        project: { typeOf: params.project.typeOf, id: params.project.id },
         typeOf: factory.offerType.Offer,
         priceCurrency: factory.priceCurrency.JPY,
-        id: id,
-        identifier: params.ticketResult.ticketCode,
+        id: '',
+        identifier: identifier,
         name: {
             ja: params.ticketResult.ticketName,
-            en: (params.ticketResult.ticketNameEng !== undefined && params.ticketResult.ticketNameEng !== '')
+            en: (typeof params.ticketResult.ticketNameEng === 'string')
                 ? params.ticketResult.ticketNameEng
-                : 'English Name'
+                : ''
         },
         description: {
             ja: '',
@@ -591,14 +557,32 @@ function coaTicket2offer(params: {
         },
         alternateName: {
             ja: params.ticketResult.ticketName,
-            en: (params.ticketResult.ticketNameEng !== undefined && params.ticketResult.ticketNameEng !== '')
+            en: (typeof params.ticketResult.ticketNameEng === 'string')
                 ? params.ticketResult.ticketNameEng
-                : 'English Name'
+                : ''
         },
         // kanaName: params.ticketResult.ticketNameKana,
-        priceSpecification: unitPriceSpec,
         availability: factory.itemAvailability.InStock,
-        eligibleCustomerType: eligibleCustomerType
+        itemOffered: {
+            project: { typeOf: params.project.typeOf, id: params.project.id },
+            typeOf: 'EventService'
+        },
+        priceSpecification: unitPriceSpec,
+        // eligibleCustomerType: eligibleCustomerType,
+        ...(Array.isArray(eligibleMonetaryAmount)) ? { eligibleMonetaryAmount } : undefined,
+        // ...{
+        //     coaInfo: {
+        //         theaterCode: params.theaterCode,
+        //         ...params.ticketResult
+        //     }
+        // },
+        additionalProperty: [
+            { name: 'theaterCode', value: params.theaterCode },
+            ...Object.keys(params.ticketResult)
+                .map((key) => {
+                    return { name: String(key), value: String((<any>params.ticketResult)[key]) };
+                })
+        ]
     };
 }
 
