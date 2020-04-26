@@ -10,8 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- COAオファーインポート処理を調整
-
 ### Deprecated
 
 ### Removed
@@ -19,6 +17,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v14.7.0 - 2020-04-26
+
+### Changed
+
+- COAオファーインポート処理を調整
 
 ## v14.6.0 - 2020-04-24
 
