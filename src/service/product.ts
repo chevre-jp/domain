@@ -1,5 +1,5 @@
 /**
- * Permitサービス
+ * プロダクトサービス
  */
 import * as moment from 'moment';
 

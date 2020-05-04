@@ -96,10 +96,8 @@ export function start(
         //     .then((docs) => docs.map((doc) => doc.toObject()));
 
         const serviceOutputType = product.serviceOutput?.typeOf;
-        const permitForType = product.serviceOutput?.permitFor.typeOf;
         const identifier = acceptedOffer.itemOffered?.serviceOutput?.identifier;
         const accessCode = acceptedOffer.itemOffered?.serviceOutput?.accessCode;
-        const permitFor = acceptedOffer.itemOffered?.serviceOutput?.permitFor;
 
         // サービスアウトプット作成
         let serviceOutput: any;
@@ -112,10 +110,6 @@ export function start(
                     issuedThrough: {
                         typeOf: product.typeOf,
                         id: product.id
-                    },
-                    permitFor: {
-                        ...permitFor,
-                        typeOf: permitForType
                     },
                     typeOf: serviceOutputType
                 };
@@ -169,7 +163,6 @@ export function start(
  * 取引確定
  */
 export function confirm(params: factory.transaction.registerService.IConfirmParams): ITransactionOperation<void> {
-    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
@@ -183,10 +176,7 @@ export function confirm(params: factory.transaction.registerService.IConfirmPara
         // 取引存在確認
         const transaction = await repos.transaction.transactionModel.findOne({
             typeOf: factory.transactionType.RegisterService,
-            'object.itemOffered.serviceOutput.identifier': {
-                $exists: true,
-                $eq: params.object?.itemOffered?.serviceOutput?.identifier
-            }
+            _id: (<any>params).id
         })
             .exec()
             .then((doc) => {
@@ -239,7 +229,7 @@ export function confirm(params: factory.transaction.registerService.IConfirmPara
 /**
  * 取引中止
  */
-export function cancel(params: { object: { identifier: string } }): ICancelOperation<void> {
+export function cancel(params: { id: string }): ICancelOperation<void> {
     return async (repos: {
         action: ActionRepo;
         serviceOutput: ServiceOutputRepo;
@@ -248,10 +238,7 @@ export function cancel(params: { object: { identifier: string } }): ICancelOpera
     }) => {
         const transaction = await repos.transaction.transactionModel.findOne({
             typeOf: factory.transactionType.RegisterService,
-            'object.identifier': {
-                $exists: true,
-                $eq: params.object?.identifier
-            }
+            _id: (<any>params).id
         })
             .exec()
             .then((doc) => {

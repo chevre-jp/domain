@@ -17,7 +17,7 @@ async function main() {
     const products = await productRepo.productModel.find({
         'project.id': { $eq: project.id },
         typeOf: { $eq: 'PaymentCard' },
-        'serviceOutput.permitFor.typeOf': 'PrepaidCard'
+        'serviceOutput.typeOf': 'PrepaidCard'
     }).exec()
         .then((docs) => docs.map((doc) => doc.toObject()));
     console.log(products);
@@ -53,11 +53,7 @@ async function main() {
                 id: product.id,
                 serviceOutput: {
                     identifier: identifier,
-                    accessCode: accessCode,
-                    permitFor: {
-                        typeOf: 'PrepaidCard',
-                        identifier: '12345'
-                    }
+                    accessCode: accessCode
                 }
             }
         }
@@ -72,13 +68,7 @@ async function main() {
     console.log('transaction started');
 
     await domain.service.transaction.registerService.confirm({
-        object: {
-            itemOffered: {
-                serviceOutput: {
-                    identifier: identifier
-                }
-            }
-        }
+        id: transaction.id
     })({
         transaction: transactionRepo
     });
