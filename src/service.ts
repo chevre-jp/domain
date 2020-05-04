@@ -9,6 +9,7 @@ import * as ReportService from './service/report';
 import * as TaskService from './service/task';
 import * as CancelReservationTransactionService from './service/transaction/cancelReservation';
 import * as RegisterProgramMembershipTransactionService from './service/transaction/registerProgramMembership';
+import * as RegisterServiceTransactionService from './service/transaction/registerService';
 import * as ReserveTransactionService from './service/transaction/reserve';
 
 export import aggregation = AggregationService;
@@ -20,5 +21,6 @@ export import task = TaskService;
 export namespace transaction {
     export import cancelReservation = CancelReservationTransactionService;
     export import registerProgramMembership = RegisterProgramMembershipTransactionService;
+    export import registerService = RegisterServiceTransactionService;
     export import reserve = ReserveTransactionService;
 }
