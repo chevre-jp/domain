@@ -98,11 +98,20 @@ export function start(
         const serviceOutputType = product.serviceOutput?.typeOf;
         const identifier = acceptedOffer.itemOffered?.serviceOutput?.identifier;
         const accessCode = acceptedOffer.itemOffered?.serviceOutput?.accessCode;
+        const name = acceptedOffer.itemOffered?.serviceOutput?.name;
+        const additionalProperty = acceptedOffer.itemOffered?.serviceOutput?.additionalProperty;
 
         // サービスアウトプット作成
         let serviceOutput: any;
         switch (product.typeOf) {
             case 'PaymentCard':
+                if (typeof identifier !== 'string' || identifier.length === 0) {
+                    throw new factory.errors.ArgumentNull('object.itemOffered.serviceOutput.identifier');
+                }
+                if (typeof accessCode !== 'string' || accessCode.length === 0) {
+                    throw new factory.errors.ArgumentNull('object.itemOffered.serviceOutput.accessCode');
+                }
+
                 serviceOutput = {
                     project: { typeOf: project.typeOf, id: project.id },
                     identifier: identifier,
@@ -111,7 +120,9 @@ export function start(
                         typeOf: product.typeOf,
                         id: product.id
                     },
-                    typeOf: serviceOutputType
+                    typeOf: serviceOutputType,
+                    ...(Array.isArray(additionalProperty)) ? { additionalProperty } : undefined,
+                    ...(name !== undefined) ? { name } : undefined
                 };
                 break;
 
