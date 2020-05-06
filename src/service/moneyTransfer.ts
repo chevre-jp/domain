@@ -23,7 +23,6 @@ const pecorinoAuthClient = new pecorinoapi.auth.ClientCredentials({
 });
 
 export type IAuthorizeOperation<T> = (repos: {
-    action: ActionRepo;
     project: ProjectRepo;
     transaction: TransactionRepo;
 }) => Promise<T>;
@@ -38,7 +37,6 @@ export function authorize(params: {
     purpose: any;
 }): IAuthorizeOperation<factory.action.transfer.moneyTransfer.IPendingTransaction> {
     return async (repos: {
-        action: ActionRepo;
         project: ProjectRepo;
         transaction: TransactionRepo;
     }) => {

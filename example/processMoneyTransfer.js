@@ -6,7 +6,6 @@ const project = { id: 'cinerino' };
 async function main() {
     await mongoose.connect(process.env.MONGOLAB_URI, { autoIndex: true });
 
-    const actionRepo = new domain.repository.Action(mongoose.connection);
     const projectRepo = new domain.repository.Project(mongoose.connection);
     const serviceOutputRepo = new domain.repository.ServiceOutput(mongoose.connection);
     const taskRepo = new domain.repository.Task(mongoose.connection);
@@ -37,11 +36,10 @@ async function main() {
                 typeOf: 'PrepaidCard',
                 identifier: '80205600010',
                 accessCode: accessCode
-            }
-            // description?: string;
+            },
+            description: 'sample'
         }
     })({
-        action: actionRepo,
         project: projectRepo,
         serviceOutput: serviceOutputRepo,
         transaction: transactionRepo

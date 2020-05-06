@@ -8,7 +8,6 @@ import { credentials } from '../../credentials';
 
 import * as factory from '../../factory';
 
-import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
@@ -27,7 +26,6 @@ const pecorinoAuthClient = new pecorino.auth.ClientCredentials({
 });
 
 export type IStartOperation<T> = (repos: {
-    action: ActionRepo;
     project: ProjectRepo;
     serviceOutput: ServiceOutputRepo;
     transaction: TransactionRepo;
@@ -39,7 +37,10 @@ export type ITaskAndTransactionOperation<T> = (repos: {
 }) => Promise<T>;
 
 export type IConfirmOperation<T> = (repos: {
-    action: ActionRepo;
+    transaction: TransactionRepo;
+}) => Promise<T>;
+
+export type ICancelOperation<T> = (repos: {
     transaction: TransactionRepo;
 }) => Promise<T>;
 
@@ -51,7 +52,6 @@ export function start(
     params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail
 ): IStartOperation<factory.transaction.moneyTransfer.ITransaction> {
     return async (repos: {
-        action: ActionRepo;
         project: ProjectRepo;
         serviceOutput: ServiceOutputRepo;
         transaction: TransactionRepo;
@@ -111,7 +111,6 @@ function authorizeAccount(params: {
     transaction: factory.transaction.ITransaction<factory.transactionType.MoneyTransfer>;
 }) {
     return async (repos: {
-        action: ActionRepo;
         project: ProjectRepo;
         transaction: TransactionRepo;
     }) => {
@@ -331,6 +330,20 @@ export function confirm(params: {
             id: transaction.id,
             result: {},
             potentialActions: potentialActions
+        });
+    };
+}
+
+/**
+ * 取引中止
+ */
+export function cancel(params: { id: string }): ICancelOperation<void> {
+    return async (repos: {
+        transaction: TransactionRepo;
+    }) => {
+        await repos.transaction.cancel({
+            typeOf: factory.transactionType.MoneyTransfer,
+            id: params.id
         });
     };
 }
