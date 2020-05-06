@@ -343,7 +343,7 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                             remainingNumberOfTries: 10,
                             numberOfTried: 0,
                             executionResults: [],
-                            data: <any>potentialActions.registerService
+                            data: potentialActions.registerService
                         };
                         taskAttributes.push(registerServiceTask);
                     }
