@@ -1,9 +1,12 @@
 /**
  * サービス登録取引サービス
  */
+import * as pecorino from '@pecorino/api-nodejs-client';
 import * as moment from 'moment';
 
 import * as factory from '../../factory';
+
+import { credentials } from '../../credentials';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as OfferRepo } from '../../repo/offer';
@@ -12,6 +15,14 @@ import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
+
+const pecorinoAuthClient = new pecorino.auth.ClientCredentials({
+    domain: credentials.pecorino.authorizeServerDomain,
+    clientId: credentials.pecorino.clientId,
+    clientSecret: credentials.pecorino.clientSecret,
+    scopes: [],
+    state: ''
+});
 
 export type IStartOperation<T> = (repos: {
     offer: OfferRepo;
@@ -177,8 +188,24 @@ export function start(
 
         // 必要あれば在庫確認など
 
-        // サービスアウトプット保管
         const serviceOutputs = transactionObject.map((o) => o.itemOffered?.serviceOutput);
+
+        // Pecorinoで口座開設
+        const accountService = new pecorino.service.Account({
+            endpoint: credentials.pecorino.endpoint,
+            auth: pecorinoAuthClient
+        });
+        await Promise.all(serviceOutputs.map(async (serviceOutput) => {
+            await accountService.open({
+                project: { typeOf: project.typeOf, id: project.id },
+                accountType: serviceOutput.typeOf,
+                accountNumber: serviceOutput.identifier,
+                name: (typeof serviceOutput.name === 'string') ? serviceOutput.name : String(serviceOutput.typeOf)
+            });
+
+        }));
+
+        // サービスアウトプット保管
         await repos.serviceOutput.serviceOutputModel.create(serviceOutputs);
 
         return transaction;
