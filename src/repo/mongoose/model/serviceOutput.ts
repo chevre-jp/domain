@@ -50,6 +50,20 @@ schema.index(
     { name: 'searchByUpdatedAt' }
 );
 
+schema.index(
+    {
+        typeOf: 1,
+        identifier: 1
+    },
+    {
+        name: 'uniqueIdentifier',
+        unique: true,
+        partialFilterExpression: {
+            identifier: { $exists: true }
+        }
+    }
+);
+
 mongoose.model(modelName, schema)
     .on(
         'index',

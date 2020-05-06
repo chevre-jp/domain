@@ -9,60 +9,63 @@ import { MongoRepository as ActionRepo } from '../repo/action';
 import { MongoRepository as ServiceOutputRepo } from '../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../repo/task';
 
-export function registerService(params: factory.action.interact.register.service.IAttributes) {
+export function registerService(params: factory.action.interact.register.service.IAttributes[]) {
     return async (repos: {
         action: ActionRepo;
         serviceOutput: ServiceOutputRepo;
         task: TaskRepo;
     }) => {
-        let serviceOutput = params.object;
 
-        const action = await repos.action.start<factory.actionType.RegisterAction>(params);
+        await Promise.all(params.map(async (actionAttributes) => {
+            let serviceOutput = actionAttributes.object;
 
-        try {
-            // Permitに有効期間を設定する
-            serviceOutput = await repos.serviceOutput.serviceOutputModel.findOneAndUpdate(
-                {
-                    typeOf: params.object.typeOf,
-                    identifier: params.object.identifier
-                },
-                {
-                    validFrom: moment(params.object.validFrom)
-                        .toDate(),
-                    ...(params.object.validUntil !== undefined && params.object.validUntil !== null)
-                        ? {
-                            validUntil: moment(params.object.validUntil)
-                                .toDate()
-                        }
-                        : undefined
+            const action = await repos.action.start<factory.actionType.RegisterAction>(actionAttributes);
 
-                }
-            )
-                .exec()
-                .then((doc) => {
-                    if (doc === null) {
-                        throw new factory.errors.NotFound(repos.serviceOutput.serviceOutputModel.modelName);
-                    }
-
-                    return doc.toObject();
-                });
-        } catch (error) {
-            // actionにエラー結果を追加
             try {
-                const actionError = { ...error, message: error.message, name: error.name };
-                await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
-            } catch (__) {
-                // 失敗したら仕方ない
+                // Permitに有効期間を設定する
+                serviceOutput = await repos.serviceOutput.serviceOutputModel.findOneAndUpdate(
+                    {
+                        typeOf: serviceOutput.typeOf,
+                        identifier: serviceOutput.identifier
+                    },
+                    {
+                        validFrom: moment(serviceOutput.validFrom)
+                            .toDate(),
+                        ...(serviceOutput.validUntil !== undefined && serviceOutput.validUntil !== null)
+                            ? {
+                                validUntil: moment(serviceOutput.validUntil)
+                                    .toDate()
+                            }
+                            : undefined
+
+                    }
+                )
+                    .exec()
+                    .then((doc) => {
+                        if (doc === null) {
+                            throw new factory.errors.NotFound(repos.serviceOutput.serviceOutputModel.modelName);
+                        }
+
+                        return doc.toObject();
+                    });
+            } catch (error) {
+                // actionにエラー結果を追加
+                try {
+                    const actionError = { ...error, message: error.message, name: error.name };
+                    await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
+                } catch (__) {
+                    // 失敗したら仕方ない
+                }
+
+                throw error;
             }
 
-            throw error;
-        }
+            // アクション完了
+            const actionResult: factory.action.reserve.IResult = {};
+            await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
 
-        // アクション完了
-        const actionResult: factory.action.reserve.IResult = {};
-        await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
-
-        await onRegistered(params, serviceOutput)(repos);
+            await onRegistered(actionAttributes, serviceOutput)(repos);
+        }));
 
         // const aggregateTask: factory.task.aggregateScreeningEvent.IAttributes = {
         //     project: actionAttributesList[0].project,

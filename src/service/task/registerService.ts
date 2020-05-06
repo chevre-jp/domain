@@ -18,7 +18,7 @@ export function call(data: factory.task.registerService.IData): IOperation<void>
         const serviceOutputRepo = new ServiceOutputRepo(settings.connection);
         const taskRepo = new TaskRepo(settings.connection);
 
-        await ProductService.registerService(data)({
+        await ProductService.registerService(<any>data)({
             action: actionRepo,
             serviceOutput: serviceOutputRepo,
             task: taskRepo

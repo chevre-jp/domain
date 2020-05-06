@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const project = { id: 'cinerino' };
 
 async function main() {
-    await mongoose.connect(process.env.MONGOLAB_URI);
+    await mongoose.connect(process.env.MONGOLAB_URI, { autoIndex: true });
 
     const offerRepo = new domain.repository.Offer(mongoose.connection);
     const productRepo = new domain.repository.Product(mongoose.connection);
@@ -48,15 +48,28 @@ async function main() {
     const transaction = await domain.service.transaction.registerService.start({
         project: { id: project.id },
         typeOf: domain.factory.transactionType.RegisterService,
-        object: {
-            itemOffered: {
-                id: product.id,
-                serviceOutput: {
-                    identifier: identifier,
-                    accessCode: accessCode
+        object: [
+            {
+                itemOffered: {
+                    id: product.id,
+                    serviceOutput: {
+                        identifier: `${identifier}00`,
+                        accessCode: accessCode,
+                        name: 'プリペ'
+                    }
+                }
+            },
+            {
+                itemOffered: {
+                    id: product.id,
+                    serviceOutput: {
+                        identifier: `${identifier}01`,
+                        accessCode: accessCode,
+                        name: 'プリペ'
+                    }
                 }
             }
-        }
+        ]
     })({
         offer: offerRepo,
         product: productRepo,
