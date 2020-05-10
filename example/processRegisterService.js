@@ -7,6 +7,7 @@ async function main() {
     await mongoose.connect(process.env.MONGOLAB_URI, { autoIndex: true });
 
     const offerRepo = new domain.repository.Offer(mongoose.connection);
+    const offerCatalogRepo = new domain.repository.OfferCatalog(mongoose.connection);
     const productRepo = new domain.repository.Product(mongoose.connection);
     const serviceOutputRepo = new domain.repository.ServiceOutput(mongoose.connection);
     const projectRepo = new domain.repository.Project(mongoose.connection);
@@ -16,8 +17,7 @@ async function main() {
     // プロダクト検索
     const products = await productRepo.productModel.find({
         'project.id': { $eq: project.id },
-        typeOf: { $eq: 'PaymentCard' },
-        'serviceOutput.typeOf': 'PrepaidCard'
+        typeOf: { $eq: 'PaymentCard' }
     }).exec()
         .then((docs) => docs.map((doc) => doc.toObject()));
     console.log(products);
@@ -50,6 +50,8 @@ async function main() {
         typeOf: domain.factory.transactionType.RegisterService,
         object: [
             {
+                // 7iri85wk5ggjsmg
+                id: '7k740xps6',
                 itemOffered: {
                     id: product.id,
                     serviceOutput: {
@@ -58,20 +60,11 @@ async function main() {
                         name: 'プリペ'
                     }
                 }
-            },
-            {
-                itemOffered: {
-                    id: product.id,
-                    serviceOutput: {
-                        identifier: `${identifier}01`,
-                        accessCode: accessCode,
-                        name: 'プリペ'
-                    }
-                }
             }
         ]
     })({
         offer: offerRepo,
+        offerCatalog: offerCatalogRepo,
         product: productRepo,
         serviceOutput: serviceOutputRepo,
         project: projectRepo,

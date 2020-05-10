@@ -114,7 +114,7 @@ export function start(
 
             const offer = offers.find((o) => o.id === acceptedOffer.id);
             if (offer === undefined) {
-                throw new factory.errors.NotFound('Offer', `Offer ${acceptedOffer.identifier} not found`);
+                throw new factory.errors.NotFound('Offer', `Offer ${acceptedOffer.id} not found`);
             }
 
             const serviceOutputType = product.serviceOutput?.typeOf;
@@ -124,7 +124,7 @@ export function start(
             const additionalProperty = acceptedOffer.itemOffered?.serviceOutput?.additionalProperty;
 
             // 初期金額はオファーに設定されている
-            const amount = offer.itemOffered?.seviceOutput?.amount;
+            const amount = offer.itemOffered?.serviceOutput?.amount;
 
             switch (product.typeOf) {
                 case 'PaymentCard':

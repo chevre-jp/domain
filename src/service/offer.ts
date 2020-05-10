@@ -490,7 +490,6 @@ export function searchProductOffers(params: {
         offerCatalog: OfferCatalogRepo;
         product: ProductRepo;
     }): Promise<factory.event.screeningEvent.ITicketOffer[]> => {
-
         // プロダクト検索
         const product = await repos.product.findById({ id: params.itemOffered.id });
 
