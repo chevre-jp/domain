@@ -494,8 +494,13 @@ export function searchProductOffers(params: {
         // プロダクト検索
         const product = await repos.product.findById({ id: params.itemOffered.id });
 
+        const offerCatalogId = product.hasOfferCatalog?.id;
+        if (typeof offerCatalogId !== 'string') {
+            return [];
+        }
+
         // オファーカタログ検索
-        const offerCatalog = await repos.offerCatalog.findById({ id: product.hasOfferCatalog.id });
+        const offerCatalog = await repos.offerCatalog.findById({ id: offerCatalogId });
 
         // オファー検索
         const offers = await repos.offer.search({
