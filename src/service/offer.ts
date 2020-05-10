@@ -479,6 +479,53 @@ export function searchAddOns(params: {
     };
 }
 
+/**
+ * プロダクトオファーを検索する
+ */
+export function searchProductOffers(params: {
+    itemOffered: { id: string };
+}) {
+    return async (repos: {
+        offer: OfferRepo;
+        offerCatalog: OfferCatalogRepo;
+        product: ProductRepo;
+    }): Promise<factory.event.screeningEvent.ITicketOffer[]> => {
+
+        // プロダクト検索
+        const product = await repos.product.findById({ id: params.itemOffered.id });
+
+        // オファーカタログ検索
+        const offerCatalog = await repos.offerCatalog.findById({ id: product.hasOfferCatalog.id });
+
+        // オファー検索
+        const offers = await repos.offer.search({
+            id: { $in: offerCatalog.itemListElement.map((e) => e.id) }
+        });
+
+        return offers
+            .map((o) => {
+                const unitSpec = o.priceSpecification;
+
+                // tslint:disable-next-line:max-line-length
+                const compoundPriceSpecification: factory.compoundPriceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>
+                    = {
+                    project: product.project,
+                    typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
+                    priceCurrency: factory.priceCurrency.JPY,
+                    valueAddedTaxIncluded: true,
+                    priceComponent: [
+                        ...(unitSpec !== undefined) ? [unitSpec] : []
+                    ]
+                };
+
+                return {
+                    ...o,
+                    priceSpecification: compoundPriceSpecification
+                };
+            });
+    };
+}
+
 export function importFromCOA(params: {
     project: factory.project.IProject;
     theaterCode: string;

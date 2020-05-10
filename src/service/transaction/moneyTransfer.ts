@@ -213,8 +213,9 @@ function fixFromLocation(
                 {
                     typeOf: { $eq: fromLocationObject.typeOf },
                     'project.id': { $exists: true, $eq: params.project.id },
-                    identifier: { $exists: true, $eq: fromLocationObject.identifier },
-                    accessCode: { $exists: true, $eq: fromLocationObject.accessCode }
+                    identifier: { $exists: true, $eq: fromLocationObject.identifier }
+                    // アクセスコードチェックはChevre使用側で実行
+                    // accessCode: { $exists: true, $eq: fromLocationObject.accessCode }
                 }
             )
                 .exec()

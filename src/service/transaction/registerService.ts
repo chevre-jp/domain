@@ -8,8 +8,11 @@ import * as factory from '../../factory';
 
 import { credentials } from '../../credentials';
 
+import * as OfferService from '../offer';
+
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as OfferRepo } from '../../repo/offer';
+import { MongoRepository as OfferCatalogRepo } from '../../repo/offerCatalog';
 import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
@@ -26,6 +29,7 @@ const pecorinoAuthClient = new pecorino.auth.ClientCredentials({
 
 export type IStartOperation<T> = (repos: {
     offer: OfferRepo;
+    offerCatalog: OfferCatalogRepo;
     product: ProductRepo;
     serviceOutput: ServiceOutputRepo;
     project: ProjectRepo;
@@ -57,6 +61,7 @@ export function start(
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         offer: OfferRepo;
+        offerCatalog: OfferCatalogRepo;
         product: ProductRepo;
         serviceOutput: ServiceOutputRepo;
         project: ProjectRepo;
@@ -100,30 +105,26 @@ export function start(
             id: productId
         });
 
-        // オファーカタログ検索
-        // const offerCatalog = await repos.offer.findOfferCatalogById({ id: program.hasOfferCatalog.id });
-
         // オファー検索
-        // const offers = await repos.offer.offerModel.find(
-        //     { _id: { $in: (<any[]>offerCatalog.itemListElement).map((e: any) => e.id) } },
-        //     {
-        //         __v: 0,
-        //         createdAt: 0,
-        //         updatedAt: 0
-        //     }
-        // )
-        //     .exec()
-        //     .then((docs) => docs.map((doc) => doc.toObject()));
+        const offers = await OfferService.searchProductOffers({ itemOffered: { id: product.id } })(repos);
 
         // サービスアウトプット作成
         const transactionObject: any[] = acceptedOffers.map((acceptedOffer) => {
             let serviceOutput: any;
+
+            const offer = offers.find((o) => o.id === acceptedOffer.id);
+            if (offer === undefined) {
+                throw new factory.errors.NotFound('Offer', `Offer ${acceptedOffer.identifier} not found`);
+            }
 
             const serviceOutputType = product.serviceOutput?.typeOf;
             const identifier = acceptedOffer.itemOffered?.serviceOutput?.identifier;
             const accessCode = acceptedOffer.itemOffered?.serviceOutput?.accessCode;
             const name = acceptedOffer.itemOffered?.serviceOutput?.name;
             const additionalProperty = acceptedOffer.itemOffered?.serviceOutput?.additionalProperty;
+
+            // 初期金額はオファーに設定されている
+            const amount = offer.itemOffered?.seviceOutput?.amount;
 
             switch (product.typeOf) {
                 case 'PaymentCard':
@@ -144,7 +145,8 @@ export function start(
                         },
                         typeOf: serviceOutputType,
                         ...(Array.isArray(additionalProperty)) ? { additionalProperty } : undefined,
-                        ...(name !== undefined) ? { name } : undefined
+                        ...(name !== undefined) ? { name } : undefined,
+                        ...(amount !== undefined) ? { amount } : undefined
                     };
                     break;
 
@@ -154,7 +156,7 @@ export function start(
 
             return {
                 typeOf: 'Offer',
-                id: acceptedOffer.id,
+                id: offer.id,
                 itemOffered: {
                     typeOf: product.typeOf,
                     id: product.id,
@@ -190,20 +192,31 @@ export function start(
 
         const serviceOutputs = transactionObject.map((o) => o.itemOffered?.serviceOutput);
 
-        // Pecorinoで口座開設
-        const accountService = new pecorino.service.Account({
-            endpoint: credentials.pecorino.endpoint,
-            auth: pecorinoAuthClient
-        });
-        await Promise.all(serviceOutputs.map(async (serviceOutput) => {
-            await accountService.open({
-                project: { typeOf: project.typeOf, id: project.id },
-                accountType: serviceOutput.typeOf,
-                accountNumber: serviceOutput.identifier,
-                name: (typeof serviceOutput.name === 'string') ? serviceOutput.name : String(serviceOutput.typeOf)
-            });
+        switch (product.typeOf) {
+            case 'PaymentCard':
+                // Pecorinoで口座開設
+                const accountService = new pecorino.service.Account({
+                    endpoint: credentials.pecorino.endpoint,
+                    auth: pecorinoAuthClient
+                });
+                await Promise.all(serviceOutputs.map(async (serviceOutput) => {
+                    const initialBalance = serviceOutput.amount?.value;
 
-        }));
+                    await accountService.open({
+                        project: { typeOf: project.typeOf, id: project.id },
+                        accountType: serviceOutput.typeOf,
+                        accountNumber: serviceOutput.identifier,
+                        name: (typeof serviceOutput.name === 'string') ? serviceOutput.name : String(serviceOutput.typeOf),
+                        ...(typeof initialBalance === 'number') ? { initialBalance } : undefined
+                    });
+
+                }));
+
+                break;
+
+            default:
+            // no op
+        }
 
         // サービスアウトプット保管
         await repos.serviceOutput.serviceOutputModel.create(serviceOutputs);
