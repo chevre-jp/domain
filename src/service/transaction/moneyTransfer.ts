@@ -198,6 +198,11 @@ function fixFromLocation(
     return async (repos: {
         serviceOutput: ServiceOutputRepo;
     }): Promise<factory.transaction.moneyTransfer.IFromLocation> => {
+        const amount = params.object.amount;
+        if (typeof amount?.value !== 'number') {
+            throw new factory.errors.ArgumentNull('amount.value');
+        }
+
         const accountService = new pecorino.service.Account({
             endpoint: credentials.pecorino.endpoint,
             auth: pecorinoAuthClient
@@ -226,6 +231,19 @@ function fixFromLocation(
 
                     return doc.toObject();
                 });
+
+            // 出金金額設定を確認
+            const paymentAmount = serviceOutput.paymentAmount;
+            if (typeof paymentAmount.minValue === 'number') {
+                if (amount.value < paymentAmount.minValue) {
+                    throw new factory.errors.Argument('fromLocation', `mininum payment amount requirement not satisfied`);
+                }
+            }
+            if (typeof paymentAmount.maxValue === 'number') {
+                if (amount.value > paymentAmount.maxValue) {
+                    throw new factory.errors.Argument('fromLocation', `maximum payment amount requirement not satisfied`);
+                }
+            }
 
             // 口座存在確認
             const searchAccountsResult = await accountService.search<string>({
@@ -257,6 +275,11 @@ function fixToLocation(
     return async (repos: {
         serviceOutput: ServiceOutputRepo;
     }): Promise<factory.transaction.moneyTransfer.IToLocation> => {
+        const amount = params.object.amount;
+        if (typeof amount?.value !== 'number') {
+            throw new factory.errors.ArgumentNull('amount.value');
+        }
+
         const accountService = new pecorino.service.Account({
             endpoint: credentials.pecorino.endpoint,
             auth: pecorinoAuthClient
@@ -283,6 +306,19 @@ function fixToLocation(
 
                     return doc.toObject();
                 });
+
+            // 入金金額設定を確認
+            const depositAmount = serviceOutput.depositAmount;
+            if (typeof depositAmount.minValue === 'number') {
+                if (amount.value < depositAmount.minValue) {
+                    throw new factory.errors.Argument('toLocation', `mininum deposit amount requirement not satisfied`);
+                }
+            }
+            if (typeof depositAmount.maxValue === 'number') {
+                if (amount.value > depositAmount.maxValue) {
+                    throw new factory.errors.Argument('toLocation', `maximum deposit amount requirement not satisfied`);
+                }
+            }
 
             // 口座存在確認
             const searchAccountsResult = await accountService.search<string>({
