@@ -234,12 +234,12 @@ function fixFromLocation(
 
             // 出金金額設定を確認
             const paymentAmount = serviceOutput.paymentAmount;
-            if (typeof paymentAmount.minValue === 'number') {
+            if (typeof paymentAmount?.minValue === 'number') {
                 if (amount.value < paymentAmount.minValue) {
                     throw new factory.errors.Argument('fromLocation', `mininum payment amount requirement not satisfied`);
                 }
             }
-            if (typeof paymentAmount.maxValue === 'number') {
+            if (typeof paymentAmount?.maxValue === 'number') {
                 if (amount.value > paymentAmount.maxValue) {
                     throw new factory.errors.Argument('fromLocation', `maximum payment amount requirement not satisfied`);
                 }
@@ -309,12 +309,12 @@ function fixToLocation(
 
             // 入金金額設定を確認
             const depositAmount = serviceOutput.depositAmount;
-            if (typeof depositAmount.minValue === 'number') {
+            if (typeof depositAmount?.minValue === 'number') {
                 if (amount.value < depositAmount.minValue) {
                     throw new factory.errors.Argument('toLocation', `mininum deposit amount requirement not satisfied`);
                 }
             }
-            if (typeof depositAmount.maxValue === 'number') {
+            if (typeof depositAmount?.maxValue === 'number') {
                 if (amount.value > depositAmount.maxValue) {
                     throw new factory.errors.Argument('toLocation', `maximum deposit amount requirement not satisfied`);
                 }
