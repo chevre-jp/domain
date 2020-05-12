@@ -123,8 +123,24 @@ export function start(
             const name = acceptedOffer.itemOffered?.serviceOutput?.name;
             const additionalProperty = acceptedOffer.itemOffered?.serviceOutput?.additionalProperty;
 
-            // 初期金額はオファーに設定されている
-            const amount = offer.itemOffered?.serviceOutput?.amount;
+            // 初期金額
+            const amount: factory.monetaryAmount.IMonetaryAmount = {
+                ...product.serviceOutput?.amount,
+                ...offer.itemOffered?.serviceOutput?.amount,
+                typeOf: 'MonetaryAmount'
+            };
+            // 入金設定
+            const depositAmount: factory.monetaryAmount.IMonetaryAmount = {
+                ...product.serviceOutput?.depositAmount,
+                ...offer.itemOffered?.serviceOutput?.depositAmount,
+                typeOf: 'MonetaryAmount'
+            };
+            // 取引設定
+            const paymentAmount: factory.monetaryAmount.IMonetaryAmount = {
+                ...product.serviceOutput?.paymentAmount,
+                ...offer.itemOffered?.serviceOutput?.paymentAmount,
+                typeOf: 'MonetaryAmount'
+            };
 
             switch (product.typeOf) {
                 case 'PaymentCard':
@@ -146,7 +162,9 @@ export function start(
                         typeOf: serviceOutputType,
                         ...(Array.isArray(additionalProperty)) ? { additionalProperty } : undefined,
                         ...(name !== undefined) ? { name } : undefined,
-                        ...(amount !== undefined) ? { amount } : undefined
+                        ...(amount !== undefined) ? { amount } : undefined,
+                        ...(depositAmount !== undefined) ? { depositAmount } : undefined,
+                        ...(paymentAmount !== undefined) ? { paymentAmount } : undefined
                     };
                     break;
 
