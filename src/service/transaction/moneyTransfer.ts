@@ -8,6 +8,7 @@ import { credentials } from '../../credentials';
 
 import * as factory from '../../factory';
 
+import { RedisRepository as MoneyTransferTransactionNumberRepo } from '../../repo/moneyTransferTransactionNumber';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
@@ -26,6 +27,7 @@ const pecorinoAuthClient = new pecorino.auth.ClientCredentials({
 });
 
 export type IStartOperation<T> = (repos: {
+    moneyTransferTransactionNumber: MoneyTransferTransactionNumberRepo;
     project: ProjectRepo;
     serviceOutput: ServiceOutputRepo;
     transaction: TransactionRepo;
@@ -52,10 +54,13 @@ export function start(
     params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail
 ): IStartOperation<factory.transaction.moneyTransfer.ITransaction> {
     return async (repos: {
+        moneyTransferTransactionNumber: MoneyTransferTransactionNumberRepo;
         project: ProjectRepo;
         serviceOutput: ServiceOutputRepo;
         transaction: TransactionRepo;
     }) => {
+        const now = new Date();
+
         // 金額をfix
         const amount = params.object.amount;
         if (typeof amount?.value !== 'number') {
@@ -65,6 +70,12 @@ export function start(
         // fromとtoをfix
         const fromLocation = await fixFromLocation(params)(repos);
         const toLocation = await fixToLocation(params)(repos);
+
+        // 通貨転送取引番号発行
+        const moneyTransferTransactionNumber = await repos.moneyTransferTransactionNumber.publishByTimestamp({
+            project: params.project,
+            startDate: now
+        });
 
         // 取引開始
         const startParams: factory.transaction.IStartParams<factory.transactionType.MoneyTransfer> = {
@@ -76,6 +87,9 @@ export function start(
                 amount: amount,
                 fromLocation: fromLocation,
                 toLocation: toLocation,
+                pendingTransaction: <any>{
+                    transactionNumber: moneyTransferTransactionNumber
+                },
                 ...(typeof params.object.description === 'string') ? { description: params.object.description } : {}
             },
             expires: params.expires
@@ -127,6 +141,7 @@ function authorizeAccount(params: {
 
             // 転送取引
             pendingTransaction = await MoneyTransferService.authorize({
+                transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
                 project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
                 agent: { id: transaction.agent.id },
                 object: {
@@ -151,9 +166,11 @@ function authorizeAccount(params: {
 
             // 出金取引
             pendingTransaction = await MoneyTransferService.authorize({
+                transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
                 project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
                 agent: { id: transaction.agent.id },
                 object: {
+                    transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
                     amount: transaction.object.amount.value,
                     typeOf: factory.paymentMethodType.Account,
                     fromAccount: {
@@ -170,9 +187,11 @@ function authorizeAccount(params: {
 
             // 入金取引
             pendingTransaction = await MoneyTransferService.authorize({
+                transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
                 project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
                 agent: { id: transaction.agent.id },
                 object: {
+                    transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
                     amount: transaction.object.amount.value,
                     typeOf: factory.paymentMethodType.Account,
                     toAccount: {

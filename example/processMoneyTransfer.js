@@ -1,11 +1,18 @@
 const domain = require('../lib');
 const mongoose = require('mongoose');
+const redis = require('redis');
 
 const project = { id: 'cinerino' };
 
 async function main() {
+    const client = redis.createClient({
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
+        password: process.env.REDIS_KEY
+    });
     await mongoose.connect(process.env.MONGOLAB_URI, { autoIndex: true });
 
+    const moneyTransferTransactionNumberRepo = new domain.repository.MoneyTransferTransactionNumber(client);
     const projectRepo = new domain.repository.Project(mongoose.connection);
     const serviceOutputRepo = new domain.repository.ServiceOutput(mongoose.connection);
     const taskRepo = new domain.repository.Task(mongoose.connection);
@@ -25,21 +32,22 @@ async function main() {
             //     name: 'fromLocation'
             // },
             fromLocation: {
-                typeOf: 'PrepaidCard',
-                identifier: '50022500006',
+                typeOf: 'PrepaidPaymentCard',
+                identifier: 'CIN1589110242217',
                 accessCode: accessCode
             },
             // toLocation: {
             //     name: 'toLocation'
             // },
             toLocation: {
-                typeOf: 'PrepaidCard',
-                identifier: '80205600010',
+                typeOf: 'PrepaidPaymentCard',
+                identifier: 'CIN1589110089232',
                 accessCode: accessCode
             },
             description: 'sample'
         }
     })({
+        moneyTransferTransactionNumber: moneyTransferTransactionNumberRepo,
         project: projectRepo,
         serviceOutput: serviceOutputRepo,
         transaction: transactionRepo

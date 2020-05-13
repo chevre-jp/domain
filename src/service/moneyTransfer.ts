@@ -31,6 +31,7 @@ export type IAuthorizeOperation<T> = (repos: {
  * 口座残高差し押さえ
  */
 export function authorize(params: {
+    transactionNumber?: string;
     project: factory.project.IProject;
     agent: { id: string };
     object: any;
@@ -53,6 +54,7 @@ export function authorize(params: {
 
         try {
             pendingTransaction = await processAccountTransaction({
+                transactionNumber: params.transactionNumber,
                 project: project,
                 object: params.object,
                 recipient: recipient,
@@ -70,6 +72,7 @@ export function authorize(params: {
 
 // tslint:disable-next-line:max-func-body-length
 async function processAccountTransaction(params: {
+    transactionNumber?: string;
     project: factory.project.IProject;
     object: any;
     recipient: factory.action.transfer.moneyTransfer.IRecipient;
@@ -115,6 +118,7 @@ async function processAccountTransaction(params: {
             auth: pecorinoAuthClient
         });
         pendingTransaction = await withdrawService.start({
+            transactionNumber: params.transactionNumber,
             project: { typeOf: params.project.typeOf, id: params.project.id },
             typeOf: pecorinoapi.factory.transactionType.Withdraw,
             agent: agent,
@@ -136,6 +140,7 @@ async function processAccountTransaction(params: {
             auth: pecorinoAuthClient
         });
         pendingTransaction = await transferService.start({
+            transactionNumber: params.transactionNumber,
             project: { typeOf: params.project.typeOf, id: params.project.id },
             typeOf: pecorinoapi.factory.transactionType.Transfer,
             agent: agent,
@@ -162,6 +167,7 @@ async function processAccountTransaction(params: {
             auth: pecorinoAuthClient
         });
         pendingTransaction = await depositService.start({
+            transactionNumber: params.transactionNumber,
             project: { typeOf: params.project.typeOf, id: params.project.id },
             typeOf: pecorinoapi.factory.transactionType.Deposit,
             agent: agent,
@@ -210,7 +216,7 @@ export function cancelMoneyTransfer(params: {
                         endpoint: credentials.pecorino.endpoint,
                         auth: pecorinoAuthClient
                     });
-                    await depositService.cancel({ id: pendingTransaction.id });
+                    await depositService.cancel({ transactionNumber: pendingTransaction.transactionNumber });
 
                     break;
 
@@ -219,7 +225,7 @@ export function cancelMoneyTransfer(params: {
                         endpoint: credentials.pecorino.endpoint,
                         auth: pecorinoAuthClient
                     });
-                    await withdrawService.cancel({ id: pendingTransaction.id });
+                    await withdrawService.cancel({ transactionNumber: pendingTransaction.transactionNumber });
 
                     break;
 
@@ -228,7 +234,7 @@ export function cancelMoneyTransfer(params: {
                         endpoint: credentials.pecorino.endpoint,
                         auth: pecorinoAuthClient
                     });
-                    await transferService.cancel({ id: pendingTransaction.id });
+                    await transferService.cancel({ transactionNumber: pendingTransaction.transactionNumber });
 
                     break;
 
@@ -258,7 +264,7 @@ export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
                         endpoint: credentials.pecorino.endpoint,
                         auth: pecorinoAuthClient
                     });
-                    await depositService.confirm({ id: pendingTransaction.id });
+                    await depositService.confirm({ transactionNumber: pendingTransaction.transactionNumber });
 
                     break;
 
@@ -267,7 +273,7 @@ export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
                         endpoint: credentials.pecorino.endpoint,
                         auth: pecorinoAuthClient
                     });
-                    await transferService.confirm({ id: pendingTransaction.id });
+                    await transferService.confirm({ transactionNumber: pendingTransaction.transactionNumber });
 
                     break;
 
@@ -276,7 +282,7 @@ export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
                         endpoint: credentials.pecorino.endpoint,
                         auth: pecorinoAuthClient
                     });
-                    await withdrawService.confirm({ id: pendingTransaction.id });
+                    await withdrawService.confirm({ transactionNumber: pendingTransaction.transactionNumber });
 
                     break;
 
