@@ -68,14 +68,17 @@ export function createServiceOutput(params: {
             break;
 
         case 'DepositService':
-            // 入金先
-            const toLocation = acceptedOffer.itemOffered?.serviceOutput?.toLocation;
-
             // 入金額
             const amount4deposit: factory.monetaryAmount.IMonetaryAmount = {
                 ...product.serviceOutput?.amount,
                 ...offer.itemOffered?.serviceOutput?.amount,
                 typeOf: 'MonetaryAmount'
+            };
+
+            // 入金先
+            const toLocation = {
+                ...acceptedOffer.itemOffered?.serviceOutput?.toLocation,
+                typeOf: amount4deposit.currency
             };
 
             serviceOutput = {

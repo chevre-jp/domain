@@ -159,6 +159,7 @@ function authorizeAccount(params: {
                     },
                     ...(typeof transaction.object.description === 'string') ? { description: transaction.object.description } : undefined
                 },
+                recipient: transaction.recipient,
                 purpose: { typeOf: transaction.typeOf, id: transaction.id }
             })(repos);
         } else if (typeof fromLocationType === 'string') {
@@ -180,6 +181,7 @@ function authorizeAccount(params: {
                     },
                     ...(typeof transaction.object.description === 'string') ? { description: transaction.object.description } : undefined
                 },
+                recipient: transaction.recipient,
                 purpose: { typeOf: transaction.typeOf, id: transaction.id }
             })(repos);
         } else if (typeof toLocationType === 'string') {
@@ -201,6 +203,7 @@ function authorizeAccount(params: {
                     },
                     ...(typeof transaction.object.description === 'string') ? { description: transaction.object.description } : undefined
                 },
+                recipient: transaction.recipient,
                 purpose: { typeOf: transaction.typeOf, id: transaction.id }
             })(repos);
         } else {

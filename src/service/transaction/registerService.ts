@@ -2,7 +2,6 @@
  * サービス登録取引サービス
  */
 import * as pecorino from '@pecorino/api-nodejs-client';
-import * as moment from 'moment';
 
 import * as factory from '../../factory';
 
@@ -19,7 +18,10 @@ import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
+import * as MoneyTransferService from '../moneyTransfer';
 import { createServiceOutput } from './registerService/factory';
+
+import { createPotentialActions } from './registerService/potentialActions';
 
 const pecorinoAuthClient = new pecorino.auth.ClientCredentials({
     domain: credentials.pecorino.authorizeServerDomain,
@@ -136,7 +138,8 @@ export function start(
             typeOf: factory.transactionType.RegisterService,
             agent: params.agent,
             object: transactionObject,
-            expires: params.expires
+            expires: params.expires,
+            ...(typeof (<any>params).transactionNumber === 'string') ? { transactionNumber: (<any>params).transactionNumber } : undefined
         };
 
         // 取引作成
@@ -179,6 +182,37 @@ export function start(
 
                 break;
 
+            case 'DepositService':
+                // 入金取引開始
+                await Promise.all(serviceOutputs.map(async (serviceOutput) => {
+                    const toLocation = serviceOutput.toLocation;
+
+                    await MoneyTransferService.authorize({
+                        transactionNumber: (<any>transaction).transactionNumber,
+                        project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
+                        agent: <any>transaction.agent,
+                        object: {
+                            amount: serviceOutput.amount?.value,
+                            typeOf: factory.paymentMethodType.Account,
+                            toAccount: {
+                                typeOf: pecorino.factory.account.TypeOf.Account,
+                                accountType: toLocation?.typeOf,
+                                accountNumber: toLocation?.identifier
+                            }
+                        },
+                        recipient: transaction.agent,
+                        purpose: { typeOf: transaction.typeOf, id: transaction.id }
+                    })(repos);
+
+                    // await repos.transaction.transactionModel.findByIdAndUpdate(
+                    //     { _id: transaction.id },
+                    //     { 'object.pendingTransaction': pendingTransaction }
+                    // )
+                    //     .exec();
+                }));
+
+                break;
+
             default:
             // no op
         }
@@ -197,58 +231,15 @@ export function confirm(params: factory.transaction.registerService.IConfirmPara
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        const validFrom = new Date();
-        // とりあえずデフォルトで有効期間6カ月
-        const validUntil = moment(validFrom)
-            // tslint:disable-next-line:no-magic-numbers
-            .add(6, 'months')
-            .toDate();
-
         // 取引存在確認
-        const transaction = await repos.transaction.transactionModel.findOne({
+        const transaction = await repos.transaction.findById({
             typeOf: factory.transactionType.RegisterService,
-            _id: params.id
-        })
-            .exec()
-            .then((doc) => {
-                if (doc === null) {
-                    throw new factory.errors.NotFound(repos.transaction.transactionModel.modelName);
-                }
+            id: <string>params.id
+        });
 
-                return doc.toObject();
-            });
-
-        // 予約アクション属性作成
-        let transactionObject: any[] = transaction.object;
-        if (!Array.isArray(transactionObject)) {
-            transactionObject = [transactionObject];
-        }
-        const serviceOutputs = transactionObject.map((o) => o.itemOffered.serviceOutput);
-
-        const registerServiceActionAttributes:
-            factory.action.interact.register.service.IAttributes[]
-            = serviceOutputs.map((serviceOutput) => {
-                return {
-                    project: transaction.project,
-                    typeOf: <factory.actionType.RegisterAction>factory.actionType.RegisterAction,
-                    result: {},
-                    object: {
-                        ...serviceOutput,
-                        validFrom: validFrom,
-                        validUntil: validUntil
-                    },
-                    agent: transaction.agent,
-                    potentialActions: {},
-                    purpose: {
-                        typeOf: transaction.typeOf,
-                        id: transaction.id
-                    }
-                };
-            });
-
-        const potentialActions: factory.transaction.registerService.IPotentialActions = {
-            registerService: registerServiceActionAttributes
-        };
+        const potentialActions = await createPotentialActions({
+            transaction: transaction
+        });
 
         // 取引確定
         const result: factory.transaction.registerService.IResult = {};
@@ -331,6 +322,9 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
         const potentialActions = transaction.potentialActions;
 
         const taskAttributes: factory.task.IAttributes[] = [];
+
+        const taskRunsAt = new Date();
+
         switch (transaction.status) {
             case factory.transactionStatusType.Confirmed:
                 // tslint:disable-next-line:no-single-line-block-comment
@@ -344,13 +338,34 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                             project: transaction.project,
                             name: factory.taskName.RegisterService,
                             status: factory.taskStatus.Ready,
-                            runsAt: new Date(), // なるはやで実行
+                            runsAt: taskRunsAt, // なるはやで実行
                             remainingNumberOfTries: 10,
                             numberOfTried: 0,
                             executionResults: [],
                             data: potentialActions.registerService
                         };
                         taskAttributes.push(registerServiceTask);
+                    }
+                }
+
+                // tslint:disable-next-line:no-single-line-block-comment
+                /* istanbul ignore else */
+                if (potentialActions !== undefined) {
+                    // tslint:disable-next-line:no-single-line-block-comment
+                    /* istanbul ignore else */
+                    if (potentialActions.moneyTransfer !== undefined) {
+                        taskAttributes.push(...potentialActions.moneyTransfer.map((a) => {
+                            return {
+                                project: transaction.project,
+                                name: <factory.taskName.MoneyTransfer>factory.taskName.MoneyTransfer,
+                                status: factory.taskStatus.Ready,
+                                runsAt: taskRunsAt,
+                                remainingNumberOfTries: 10,
+                                numberOfTried: 0,
+                                executionResults: [],
+                                data: a
+                            };
+                        }));
                     }
                 }
 

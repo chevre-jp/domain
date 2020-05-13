@@ -35,6 +35,7 @@ export function authorize(params: {
     project: factory.project.IProject;
     agent: { id: string };
     object: any;
+    recipient: factory.action.transfer.moneyTransfer.IRecipient;
     purpose: any;
 }): IAuthorizeOperation<factory.action.transfer.moneyTransfer.IPendingTransaction> {
     return async (repos: {
@@ -47,8 +48,6 @@ export function authorize(params: {
             id: params.purpose.id
         });
 
-        const recipient = transaction.recipient;
-
         // 口座取引開始
         let pendingTransaction: factory.action.transfer.moneyTransfer.IPendingTransaction;
 
@@ -57,7 +56,7 @@ export function authorize(params: {
                 transactionNumber: params.transactionNumber,
                 project: project,
                 object: params.object,
-                recipient: recipient,
+                recipient: params.recipient,
                 transaction: transaction
             });
         } catch (error) {
