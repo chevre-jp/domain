@@ -1,3 +1,4 @@
+import * as pecorinoapi from '@pecorino/api-nodejs-client';
 import * as moment from 'moment';
 import * as factory from '../../../factory';
 
@@ -20,6 +21,7 @@ function createMoneyTransferActions(params: {
                 },
                 object: {
                     pendingTransaction: {
+                        typeOf: pecorinoapi.factory.transactionType.Deposit,
                         transactionNumber: transaction.transactionNumber
                     }
                 },
@@ -35,13 +37,12 @@ function createMoneyTransferActions(params: {
         });
 }
 
-/**
- * 取引のポストアクションを作成する
- */
-export async function createPotentialActions(params: {
+function createRegisterServiceActions(params: {
     transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
-}): Promise<factory.transaction.IPotentialActions<factory.transactionType.RegisterService>> {
-    const serviceOutputs = params.transaction.object.map((o: any) => o.itemOffered.serviceOutput);
+}): factory.action.interact.register.service.IAttributes[] {
+    const transaction = params.transaction;
+
+    const serviceOutputs = transaction.object.map((o: any) => o.itemOffered.serviceOutput);
 
     const validFrom = new Date();
     // とりあえずデフォルトで有効期間6カ月
@@ -50,27 +51,32 @@ export async function createPotentialActions(params: {
         .add(6, 'months')
         .toDate();
 
-    const registerServiceActionAttributes:
-        factory.action.interact.register.service.IAttributes[]
-        = serviceOutputs.map((serviceOutput: any) => {
-            return {
-                project: params.transaction.project,
-                typeOf: <factory.actionType.RegisterAction>factory.actionType.RegisterAction,
-                result: {},
-                object: {
-                    ...serviceOutput,
-                    validFrom: validFrom,
-                    validUntil: validUntil
-                },
-                agent: params.transaction.agent,
-                potentialActions: {},
-                purpose: {
-                    typeOf: params.transaction.typeOf,
-                    id: params.transaction.id
-                }
-            };
-        });
+    return serviceOutputs.map((serviceOutput: any) => {
+        return {
+            project: params.transaction.project,
+            typeOf: <factory.actionType.RegisterAction>factory.actionType.RegisterAction,
+            result: {},
+            object: {
+                ...serviceOutput,
+                validFrom: validFrom,
+                validUntil: validUntil
+            },
+            agent: params.transaction.agent,
+            potentialActions: {},
+            purpose: {
+                typeOf: params.transaction.typeOf,
+                id: params.transaction.id
+            }
+        };
+    });
+}
 
+/**
+ * 取引のポストアクションを作成する
+ */
+export async function createPotentialActions(params: {
+    transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+}): Promise<factory.transaction.IPotentialActions<factory.transactionType.RegisterService>> {
     // 通貨転送アクション属性作成
     const moneyTransferActionAttributesList = createMoneyTransferActions(params);
 
@@ -78,6 +84,8 @@ export async function createPotentialActions(params: {
     if (moneyTransferActionAttributesList.length > 1) {
         throw new factory.errors.Argument('Transaction', 'Number of moneyTransfer actions must be 1');
     }
+
+    const registerServiceActionAttributes = createRegisterServiceActions(params);
 
     return {
         moneyTransfer: moneyTransferActionAttributesList,
