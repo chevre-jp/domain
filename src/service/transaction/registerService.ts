@@ -19,6 +19,8 @@ import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
+import { createServiceOutput } from './registerService/factory';
+
 const pecorinoAuthClient = new pecorino.auth.ClientCredentials({
     domain: credentials.pecorino.authorizeServerDomain,
     clientId: credentials.pecorino.clientId,
@@ -110,67 +112,12 @@ export function start(
 
         // サービスアウトプット作成
         const transactionObject: any[] = acceptedOffers.map((acceptedOffer) => {
-            let serviceOutput: any;
-
             const offer = offers.find((o) => o.id === acceptedOffer.id);
             if (offer === undefined) {
                 throw new factory.errors.NotFound('Offer', `Offer ${acceptedOffer.id} not found`);
             }
 
-            const serviceOutputType = product.serviceOutput?.typeOf;
-            const identifier = acceptedOffer.itemOffered?.serviceOutput?.identifier;
-            const accessCode = acceptedOffer.itemOffered?.serviceOutput?.accessCode;
-            const name = acceptedOffer.itemOffered?.serviceOutput?.name;
-            const additionalProperty = acceptedOffer.itemOffered?.serviceOutput?.additionalProperty;
-
-            // 初期金額
-            const amount: factory.monetaryAmount.IMonetaryAmount = {
-                ...product.serviceOutput?.amount,
-                ...offer.itemOffered?.serviceOutput?.amount,
-                typeOf: 'MonetaryAmount'
-            };
-            // 入金設定
-            const depositAmount: factory.monetaryAmount.IMonetaryAmount = {
-                ...product.serviceOutput?.depositAmount,
-                ...offer.itemOffered?.serviceOutput?.depositAmount,
-                typeOf: 'MonetaryAmount'
-            };
-            // 取引設定
-            const paymentAmount: factory.monetaryAmount.IMonetaryAmount = {
-                ...product.serviceOutput?.paymentAmount,
-                ...offer.itemOffered?.serviceOutput?.paymentAmount,
-                typeOf: 'MonetaryAmount'
-            };
-
-            switch (product.typeOf) {
-                case 'PaymentCard':
-                    if (typeof identifier !== 'string' || identifier.length === 0) {
-                        throw new factory.errors.ArgumentNull('object.itemOffered.serviceOutput.identifier');
-                    }
-                    if (typeof accessCode !== 'string' || accessCode.length === 0) {
-                        throw new factory.errors.ArgumentNull('object.itemOffered.serviceOutput.accessCode');
-                    }
-
-                    serviceOutput = {
-                        project: { typeOf: project.typeOf, id: project.id },
-                        identifier: identifier,
-                        accessCode: accessCode,
-                        issuedThrough: {
-                            typeOf: product.typeOf,
-                            id: product.id
-                        },
-                        typeOf: serviceOutputType,
-                        ...(Array.isArray(additionalProperty)) ? { additionalProperty } : undefined,
-                        ...(name !== undefined) ? { name } : undefined,
-                        ...(amount !== undefined) ? { amount } : undefined,
-                        ...(depositAmount !== undefined) ? { depositAmount } : undefined,
-                        ...(paymentAmount !== undefined) ? { paymentAmount } : undefined
-                    };
-                    break;
-
-                default:
-                    throw new factory.errors.NotImplemented(`Product type ${product.typeOf} not implemented`);
-            }
+            const serviceOutput = createServiceOutput({ product: product, acceptedOffer: acceptedOffer, offer: offer });
 
             return {
                 typeOf: 'Offer',

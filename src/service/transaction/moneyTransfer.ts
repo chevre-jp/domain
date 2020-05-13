@@ -246,7 +246,7 @@ function fixFromLocation(
             }
 
             // 口座存在確認
-            const searchAccountsResult = await accountService.search<string>({
+            const searchAccountsResult = await accountService.search({
                 limit: 1,
                 project: { id: { $eq: params.project.id } },
                 accountType: serviceOutput.typeOf,
@@ -321,7 +321,7 @@ function fixToLocation(
             }
 
             // 口座存在確認
-            const searchAccountsResult = await accountService.search<string>({
+            const searchAccountsResult = await accountService.search({
                 limit: 1,
                 project: { id: { $eq: params.project.id } },
                 accountType: serviceOutput.typeOf,

@@ -69,7 +69,7 @@ export function authorize(params: {
 }
 
 // tslint:disable-next-line:max-func-body-length
-async function processAccountTransaction<T extends string>(params: {
+async function processAccountTransaction(params: {
     project: factory.project.IProject;
     object: any;
     recipient: factory.action.transfer.moneyTransfer.IRecipient;
@@ -114,7 +114,7 @@ async function processAccountTransaction<T extends string>(params: {
             endpoint: credentials.pecorino.endpoint,
             auth: pecorinoAuthClient
         });
-        pendingTransaction = await withdrawService.start<T>({
+        pendingTransaction = await withdrawService.start({
             project: { typeOf: params.project.typeOf, id: params.project.id },
             typeOf: pecorinoapi.factory.transactionType.Withdraw,
             agent: agent,
@@ -135,7 +135,7 @@ async function processAccountTransaction<T extends string>(params: {
             endpoint: credentials.pecorino.endpoint,
             auth: pecorinoAuthClient
         });
-        pendingTransaction = await transferService.start<T>({
+        pendingTransaction = await transferService.start({
             project: { typeOf: params.project.typeOf, id: params.project.id },
             typeOf: pecorinoapi.factory.transactionType.Transfer,
             agent: agent,
@@ -161,7 +161,7 @@ async function processAccountTransaction<T extends string>(params: {
             endpoint: credentials.pecorino.endpoint,
             auth: pecorinoAuthClient
         });
-        pendingTransaction = await depositService.start<T>({
+        pendingTransaction = await depositService.start({
             project: { typeOf: params.project.typeOf, id: params.project.id },
             typeOf: pecorinoapi.factory.transactionType.Deposit,
             agent: agent,
