@@ -217,8 +217,8 @@ function aggregateOfferByEvent(params: {
         reservation: ReservationRepo;
     }): Promise<factory.event.screeningEvent.IAggregateOffer> => {
         let availableOffers: factory.offer.IUnitPriceOffer[] = [];
-        if (params.event.offers !== undefined) {
-            availableOffers = await repos.offer.findOffersByOfferCatalogId({ offerCatalog: { id: <string>params.event.offers.id } });
+        if (typeof params.event.hasOfferCatalog?.id === 'string') {
+            availableOffers = await repos.offer.findOffersByOfferCatalogId({ offerCatalog: { id: params.event.hasOfferCatalog.id } });
         }
 
         // オファーごとの予約集計

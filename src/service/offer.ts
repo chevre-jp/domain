@@ -254,8 +254,6 @@ export function searchScreeningEventTicketOffers(params: {
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
             id: params.eventId
         });
-        const screeningEventOffers = <factory.event.screeningEvent.IOffer>event.offers;
-
         const superEvent = await repos.event.findById(event.superEvent);
         const eventSoundFormatTypes
             = (Array.isArray(event.superEvent.soundFormat)) ? event.superEvent.soundFormat.map((f) => f.typeOf) : [];
@@ -263,9 +261,13 @@ export function searchScreeningEventTicketOffers(params: {
             = (Array.isArray(event.superEvent.videoFormat))
                 ? event.superEvent.videoFormat.map((f) => f.typeOf)
                 : ['2D'];
-        const availableOffers = await repos.offer.findOffersByOfferCatalogId({
-            offerCatalog: { id: <string>screeningEventOffers.id }
-        });
+
+        let availableOffers: factory.offer.IUnitPriceOffer[] = [];
+        if (typeof event.hasOfferCatalog?.id === 'string') {
+            availableOffers = await repos.offer.findOffersByOfferCatalogId({
+                offerCatalog: { id: event.hasOfferCatalog.id }
+            });
+        }
         const sortedOfferIds = availableOffers.map((o) => o.id);
 
         const soundFormatChargeSpecifications =
@@ -301,7 +303,7 @@ export function searchScreeningEventTicketOffers(params: {
 
         const eventOffers = {
             ...superEvent.offers,
-            ...screeningEventOffers
+            ...<factory.event.screeningEvent.IOffer>event.offers
         };
 
         // ムビチケが決済方法として許可されていれば、ムビチケオファーを作成

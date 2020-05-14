@@ -169,14 +169,15 @@ export function addReservations(params: {
             throw new factory.errors.Argument('Event', `Event status ${event.eventStatus}`);
         }
 
-        const eventOffers = <factory.event.screeningEvent.IOffer>event.offers;
-
         // 指定席のみかどうか
-        const reservedSeatsOnly = eventOffers.itemOffered.serviceOutput?.reservedTicket?.ticketedSeat !== undefined;
+        const reservedSeatsOnly = event.offers?.itemOffered.serviceOutput?.reservedTicket?.ticketedSeat !== undefined;
 
         // イベントオファー検索
         const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
-        const availableOffers = await repos.offer.findOffersByOfferCatalogId({ offerCatalog: { id: <string>eventOffers.id } });
+        let availableOffers: factory.offer.IUnitPriceOffer[] = [];
+        if (typeof event.hasOfferCatalog?.id === 'string') {
+            availableOffers = await repos.offer.findOffersByOfferCatalogId({ offerCatalog: { id: event.hasOfferCatalog.id } });
+        }
 
         // 座席オファー検索
         const availableSeatOffers = await OfferService.searchEventSeatOffers({ event: { id: event.id } })(repos);

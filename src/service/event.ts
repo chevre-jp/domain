@@ -461,11 +461,11 @@ export function createScreeningEventFromCOA(params: {
             .toDate();
     }
 
-    const validFrom = moment(`${params.performanceFromCOA.rsvStartDate} 00:00:00+09:00`, 'YYYYMMDD HH:mm:ssZ')
-        .toDate();
-    const validThrough = moment(`${params.performanceFromCOA.rsvEndDate} 00:00:00+09:00`, 'YYYYMMDD HH:mm:ssZ')
-        .add(1, 'day')
-        .toDate();
+    // const validFrom = moment(`${params.performanceFromCOA.rsvStartDate} 00:00:00+09:00`, 'YYYYMMDD HH:mm:ssZ')
+    //     .toDate();
+    // const validThrough = moment(`${params.performanceFromCOA.rsvEndDate} 00:00:00+09:00`, 'YYYYMMDD HH:mm:ssZ')
+    //     .add(1, 'day')
+    //     .toDate();
 
     const coaInfo: factory.event.screeningEvent.ICOAInfo = {
         theaterCode: params.superEvent.location.branchCode,
@@ -485,31 +485,31 @@ export function createScreeningEventFromCOA(params: {
         flgEarlyBooking: params.performanceFromCOA.flgEarlyBooking
     };
 
-    const offers: factory.event.screeningEvent.IOffer = {
+    const offers: factory.event.screeningEvent.IOffer = <any>{
         project: { typeOf: params.project.typeOf, id: params.project.id },
-        id: '',
-        identifier: '',
-        name: {
-            ja: '',
-            en: ''
-        },
+        // id: '',
+        // identifier: '',
+        // name: {
+        //     ja: '',
+        //     en: ''
+        // },
         typeOf: factory.offerType.Offer,
-        priceCurrency: factory.priceCurrency.JPY,
-        availabilityEnds: validThrough,
-        availabilityStarts: validFrom,
-        validFrom: validFrom,
-        validThrough: validThrough,
-        eligibleQuantity: {
-            maxValue: params.performanceFromCOA.availableNum,
-            unitCode: factory.unitCode.C62,
-            typeOf: 'QuantitativeValue'
-        },
-        itemOffered: {
-            serviceType: <any>{
-                project: { typeOf: params.project.typeOf, id: params.project.id },
-                typeOf: 'CategoryCode'
-            }
-        },
+        // priceCurrency: factory.priceCurrency.JPY,
+        // availabilityEnds: validThrough,
+        // availabilityStarts: validFrom,
+        // validFrom: validFrom,
+        // validThrough: validThrough,
+        // eligibleQuantity: {
+        //     maxValue: params.performanceFromCOA.availableNum,
+        //     unitCode: factory.unitCode.C62,
+        //     typeOf: 'QuantitativeValue'
+        // },
+        // itemOffered: {
+        //     serviceType: <any>{
+        //         project: { typeOf: params.project.typeOf, id: params.project.id },
+        //         typeOf: 'CategoryCode'
+        //     }
+        // },
         ...{
             offeredThrough: {
                 typeOf: 'WebAPI',
