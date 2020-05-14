@@ -33,6 +33,7 @@ const schema = new mongoose.Schema(
         subtitleLanguage: mongoose.SchemaTypes.Mixed,
         dubLanguage: mongoose.SchemaTypes.Mixed,
         kanaName: String,
+        hasOfferCatalog: mongoose.SchemaTypes.Mixed,
         offers: mongoose.SchemaTypes.Mixed,
         maximumAttendeeCapacity: { type: Number },
         remainingAttendeeCapacity: { type: Number },
