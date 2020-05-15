@@ -71,15 +71,24 @@ export function start(
         const fromLocation = await fixFromLocation(params)(repos);
         const toLocation = await fixToLocation(params)(repos);
 
-        // 通貨転送取引番号発行
-        const moneyTransferTransactionNumber = await repos.moneyTransferTransactionNumber.publishByTimestamp({
-            project: params.project,
-            startDate: now
-        });
+        let transactionNumber: string | undefined = params.transactionNumber;
+        // 通貨転送取引番号の指定がなければ発行
+        if (typeof transactionNumber !== 'string' || transactionNumber.length === 0) {
+            transactionNumber = await repos.moneyTransferTransactionNumber.publishByTimestamp({
+                project: params.project,
+                startDate: now
+            });
+        }
+
+        const transationType: pecorino.factory.transactionType | undefined = params.object.pendingTransaction?.typeOf;
+        if (typeof transationType !== 'string') {
+            throw new factory.errors.ArgumentNull('object.pendingTransaction.typeOf');
+        }
 
         // 取引開始
         const startParams: factory.transaction.IStartParams<factory.transactionType.MoneyTransfer> = {
             project: params.project,
+            transactionNumber: transactionNumber,
             typeOf: factory.transactionType.MoneyTransfer,
             agent: params.agent,
             recipient: params.recipient,
@@ -88,7 +97,8 @@ export function start(
                 fromLocation: fromLocation,
                 toLocation: toLocation,
                 pendingTransaction: <any>{
-                    transactionNumber: moneyTransferTransactionNumber
+                    typeOf: transationType,
+                    transactionNumber: transactionNumber
                 },
                 ...(typeof params.object.description === 'string') ? { description: params.object.description } : {}
             },
@@ -124,6 +134,7 @@ export function start(
 function authorizeAccount(params: {
     transaction: factory.transaction.ITransaction<factory.transactionType.MoneyTransfer>;
 }) {
+    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         project: ProjectRepo;
         transaction: TransactionRepo;
@@ -135,80 +146,34 @@ function authorizeAccount(params: {
         const fromLocationType = transaction.object.fromLocation.typeOf;
         const toLocationType = transaction.object.toLocation.typeOf;
 
-        if (typeof fromLocationType === 'string' && typeof toLocationType === 'string') {
-            const fromLocation = <factory.action.transfer.moneyTransfer.IPaymentCard>transaction.object.fromLocation;
-            const toLocation = <factory.action.transfer.moneyTransfer.IPaymentCard>transaction.object.toLocation;
+        const fromLocation = transaction.object.fromLocation;
+        const toLocation = transaction.object.toLocation;
 
-            // 転送取引
-            pendingTransaction = await MoneyTransferService.authorize({
-                transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
-                project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
-                agent: { id: transaction.agent.id },
-                object: {
-                    amount: transaction.object.amount.value,
-                    typeOf: factory.paymentMethodType.Account,
-                    fromAccount: {
-                        typeOf: pecorino.factory.account.TypeOf.Account,
-                        accountType: fromLocationType,
-                        accountNumber: fromLocation.identifier
-                    },
-                    toAccount: {
-                        typeOf: pecorino.factory.account.TypeOf.Account,
-                        accountType: toLocationType,
-                        accountNumber: toLocation.identifier
-                    },
-                    ...(typeof transaction.object.description === 'string') ? { description: transaction.object.description } : undefined
+        pendingTransaction = await MoneyTransferService.authorize({
+            typeOf: transaction.object.pendingTransaction?.typeOf,
+            transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
+            project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
+            agent: { id: transaction.agent.id },
+            object: {
+                amount: transaction.object.amount.value,
+                typeOf: factory.paymentMethodType.Account,
+                fromAccount: {
+                    typeOf: pecorino.factory.account.TypeOf.Account,
+                    accountType: fromLocationType,
+                    accountNumber: (<any>fromLocation).identifier
                 },
-                recipient: transaction.recipient,
-                purpose: { typeOf: transaction.typeOf, id: transaction.id }
-            })(repos);
-        } else if (typeof fromLocationType === 'string') {
-            const fromLocation = <factory.action.transfer.moneyTransfer.IPaymentCard>transaction.object.fromLocation;
-
-            // 出金取引
-            pendingTransaction = await MoneyTransferService.authorize({
-                transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
-                project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
-                agent: { id: transaction.agent.id },
-                object: {
-                    transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
-                    amount: transaction.object.amount.value,
-                    typeOf: factory.paymentMethodType.Account,
-                    fromAccount: {
-                        typeOf: pecorino.factory.account.TypeOf.Account,
-                        accountType: fromLocationType,
-                        accountNumber: fromLocation.identifier
-                    },
-                    ...(typeof transaction.object.description === 'string') ? { description: transaction.object.description } : undefined
+                toAccount: {
+                    typeOf: pecorino.factory.account.TypeOf.Account,
+                    accountType: toLocationType,
+                    accountNumber: (<any>toLocation).identifier
                 },
-                recipient: transaction.recipient,
-                purpose: { typeOf: transaction.typeOf, id: transaction.id }
-            })(repos);
-        } else if (typeof toLocationType === 'string') {
-            const toLocation = <factory.action.transfer.moneyTransfer.IPaymentCard>transaction.object.toLocation;
-
-            // 入金取引
-            pendingTransaction = await MoneyTransferService.authorize({
-                transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
-                project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
-                agent: { id: transaction.agent.id },
-                object: {
-                    transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
-                    amount: transaction.object.amount.value,
-                    typeOf: factory.paymentMethodType.Account,
-                    toAccount: {
-                        typeOf: pecorino.factory.account.TypeOf.Account,
-                        accountType: toLocationType,
-                        accountNumber: toLocation.identifier
-                    },
-                    ...(typeof transaction.object.description === 'string') ? { description: transaction.object.description } : undefined
-                },
-                recipient: transaction.recipient,
-                purpose: { typeOf: transaction.typeOf, id: transaction.id }
-            })(repos);
-        } else {
-            throw new factory.errors.NotImplemented('location types invalid');
-        }
+                ...(typeof transaction.object.description === 'string')
+                    ? { description: transaction.object.description }
+                    : undefined
+            },
+            recipient: transaction.recipient,
+            purpose: { typeOf: transaction.typeOf, id: transaction.id }
+        })(repos);
 
         return pendingTransaction;
     };
@@ -230,61 +195,74 @@ function fixFromLocation(
             auth: pecorinoAuthClient
         });
 
+        const ignorePaymentCard = params.object.ignorePaymentCard === true;
+
         let fromLocation = params.object.fromLocation;
 
-        if (typeof fromLocation.typeOf === 'string') {
-            const fromLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>fromLocation;
+        const transactionType = params.object.pendingTransaction?.typeOf;
 
-            // サービスアウトプット存在確認
-            const serviceOutput = await repos.serviceOutput.serviceOutputModel.findOne(
-                {
-                    typeOf: { $eq: fromLocationObject.typeOf },
-                    'project.id': { $exists: true, $eq: params.project.id },
-                    identifier: { $exists: true, $eq: fromLocationObject.identifier }
-                    // アクセスコードチェックはChevre使用側で実行
-                    // accessCode: { $exists: true, $eq: fromLocationObject.accessCode }
-                }
-            )
-                .exec()
-                .then((doc) => {
-                    if (doc === null) {
-                        throw new factory.errors.NotFound('fromLocation');
+        switch (transactionType) {
+            case pecorino.factory.transactionType.Withdraw:
+            case pecorino.factory.transactionType.Transfer:
+                const fromLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>fromLocation;
+
+                if (!ignorePaymentCard) {
+                    // サービスアウトプット存在確認
+                    const serviceOutput = await repos.serviceOutput.serviceOutputModel.findOne(
+                        {
+                            typeOf: { $eq: fromLocationObject.typeOf },
+                            'project.id': { $exists: true, $eq: params.project.id },
+                            identifier: { $exists: true, $eq: fromLocationObject.identifier }
+                            // アクセスコードチェックはChevre使用側で実行
+                            // accessCode: { $exists: true, $eq: fromLocationObject.accessCode }
+                        }
+                    )
+                        .exec()
+                        .then((doc) => {
+                            if (doc === null) {
+                                throw new factory.errors.NotFound('fromLocation');
+                            }
+
+                            return doc.toObject();
+                        });
+
+                    // 出金金額設定を確認
+                    const paymentAmount = serviceOutput.paymentAmount;
+                    if (typeof paymentAmount?.minValue === 'number') {
+                        if (amount.value < paymentAmount.minValue) {
+                            throw new factory.errors.Argument('fromLocation', `mininum payment amount requirement not satisfied`);
+                        }
                     }
+                    if (typeof paymentAmount?.maxValue === 'number') {
+                        if (amount.value > paymentAmount.maxValue) {
+                            throw new factory.errors.Argument('fromLocation', `maximum payment amount requirement not satisfied`);
+                        }
+                    }
+                }
 
-                    return doc.toObject();
+                // 口座存在確認
+                const searchAccountsResult = await accountService.search({
+                    limit: 1,
+                    project: { id: { $eq: params.project.id } },
+                    accountType: fromLocationObject.typeOf,
+                    accountNumbers: [fromLocationObject.identifier],
+                    statuses: [pecorino.factory.accountStatusType.Opened]
                 });
 
-            // 出金金額設定を確認
-            const paymentAmount = serviceOutput.paymentAmount;
-            if (typeof paymentAmount?.minValue === 'number') {
-                if (amount.value < paymentAmount.minValue) {
-                    throw new factory.errors.Argument('fromLocation', `mininum payment amount requirement not satisfied`);
+                const account = searchAccountsResult.data.shift();
+                if (account === undefined) {
+                    throw new factory.errors.NotFound('Account', 'To Location Not Found');
                 }
-            }
-            if (typeof paymentAmount?.maxValue === 'number') {
-                if (amount.value > paymentAmount.maxValue) {
-                    throw new factory.errors.Argument('fromLocation', `maximum payment amount requirement not satisfied`);
-                }
-            }
 
-            // 口座存在確認
-            const searchAccountsResult = await accountService.search({
-                limit: 1,
-                project: { id: { $eq: params.project.id } },
-                accountType: serviceOutput.typeOf,
-                accountNumbers: [serviceOutput.identifier],
-                statuses: [pecorino.factory.accountStatusType.Opened]
-            });
+                fromLocation = {
+                    typeOf: fromLocation.typeOf,
+                    identifier: account.accountNumber
+                };
 
-            const account = searchAccountsResult.data.shift();
-            if (account === undefined) {
-                throw new factory.errors.NotFound('Account', 'To Location Not Found');
-            }
+                break;
 
-            fromLocation = {
-                typeOf: fromLocation.typeOf,
-                identifier: account.accountNumber
-            };
+            default:
+            // no op
         }
 
         return fromLocation;
@@ -307,59 +285,72 @@ function fixToLocation(
             auth: pecorinoAuthClient
         });
 
+        const ignorePaymentCard = params.object.ignorePaymentCard === true;
+
         let toLocation: factory.transaction.moneyTransfer.IToLocation = params.object.toLocation;
 
-        if (typeof toLocation.typeOf === 'string') {
-            const toLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>params.object.toLocation;
+        const transactionType = params.object.pendingTransaction?.typeOf;
 
-            // サービスアウトプット存在確認
-            const serviceOutput = await repos.serviceOutput.serviceOutputModel.findOne(
-                {
-                    typeOf: { $eq: toLocationObject.typeOf },
-                    'project.id': { $exists: true, $eq: params.project.id },
-                    identifier: { $exists: true, $eq: toLocationObject.identifier }
-                }
-            )
-                .exec()
-                .then((doc) => {
-                    if (doc === null) {
-                        throw new factory.errors.NotFound('toLocation');
+        switch (transactionType) {
+            case pecorino.factory.transactionType.Deposit:
+            case pecorino.factory.transactionType.Transfer:
+                const toLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>params.object.toLocation;
+
+                if (!ignorePaymentCard) {
+                    // サービスアウトプット存在確認
+                    const serviceOutput = await repos.serviceOutput.serviceOutputModel.findOne(
+                        {
+                            typeOf: { $eq: toLocationObject.typeOf },
+                            'project.id': { $exists: true, $eq: params.project.id },
+                            identifier: { $exists: true, $eq: toLocationObject.identifier }
+                        }
+                    )
+                        .exec()
+                        .then((doc) => {
+                            if (doc === null) {
+                                throw new factory.errors.NotFound('toLocation');
+                            }
+
+                            return doc.toObject();
+                        });
+
+                    // 入金金額設定を確認
+                    const depositAmount = serviceOutput.depositAmount;
+                    if (typeof depositAmount?.minValue === 'number') {
+                        if (amount.value < depositAmount.minValue) {
+                            throw new factory.errors.Argument('toLocation', `mininum deposit amount requirement not satisfied`);
+                        }
                     }
+                    if (typeof depositAmount?.maxValue === 'number') {
+                        if (amount.value > depositAmount.maxValue) {
+                            throw new factory.errors.Argument('toLocation', `maximum deposit amount requirement not satisfied`);
+                        }
+                    }
+                }
 
-                    return doc.toObject();
+                // 口座存在確認
+                const searchAccountsResult = await accountService.search({
+                    limit: 1,
+                    project: { id: { $eq: params.project.id } },
+                    accountType: toLocationObject.typeOf,
+                    accountNumbers: [toLocationObject.identifier],
+                    statuses: [pecorino.factory.accountStatusType.Opened]
                 });
 
-            // 入金金額設定を確認
-            const depositAmount = serviceOutput.depositAmount;
-            if (typeof depositAmount?.minValue === 'number') {
-                if (amount.value < depositAmount.minValue) {
-                    throw new factory.errors.Argument('toLocation', `mininum deposit amount requirement not satisfied`);
+                const account = searchAccountsResult.data.shift();
+                if (account === undefined) {
+                    throw new factory.errors.NotFound('Account', 'To Location Not Found');
                 }
-            }
-            if (typeof depositAmount?.maxValue === 'number') {
-                if (amount.value > depositAmount.maxValue) {
-                    throw new factory.errors.Argument('toLocation', `maximum deposit amount requirement not satisfied`);
-                }
-            }
 
-            // 口座存在確認
-            const searchAccountsResult = await accountService.search({
-                limit: 1,
-                project: { id: { $eq: params.project.id } },
-                accountType: serviceOutput.typeOf,
-                accountNumbers: [serviceOutput.identifier],
-                statuses: [pecorino.factory.accountStatusType.Opened]
-            });
+                toLocation = {
+                    typeOf: toLocation.typeOf,
+                    identifier: account.accountNumber
+                };
 
-            const account = searchAccountsResult.data.shift();
-            if (account === undefined) {
-                throw new factory.errors.NotFound('Account', 'To Location Not Found');
-            }
+                break;
 
-            toLocation = {
-                typeOf: toLocation.typeOf,
-                identifier: (<any>account).accountNumber
-            };
+            default:
+            // no op
         }
 
         return toLocation;

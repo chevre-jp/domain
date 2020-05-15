@@ -18,33 +18,33 @@ async function main() {
     const taskRepo = new domain.repository.Task(mongoose.connection);
     const transactionRepo = new domain.repository.Transaction(mongoose.connection);
 
-    const accessCode = '123';
     const transaction = await domain.service.transaction.moneyTransfer.start({
         project: { id: project.id },
         typeOf: domain.factory.transactionType.MoneyTransfer,
-        agent: { typeOf: 'Person', name: 'Agent' },
-        recipient: { typeOf: 'Person', name: 'Recipient' },
+        agent: { typeOf: 'Person', name: 'テスト入金元名称' },
+        recipient: { typeOf: 'Person', name: 'テスト入金先名称' },
         object: {
+            ignorePaymentCard: true,
             amount: {
                 value: 1,
             },
-            // fromLocation: {
-            //     name: 'fromLocation'
-            // },
             fromLocation: {
                 typeOf: 'PrepaidPaymentCard',
-                identifier: 'CIN1589110242217',
-                accessCode: accessCode
+                identifier: 'CIN1589110242217'
             },
-            // toLocation: {
-            //     name: 'toLocation'
-            // },
             toLocation: {
                 typeOf: 'PrepaidPaymentCard',
-                identifier: 'CIN1589110089232',
-                accessCode: accessCode
+                identifier: 'CIN1589110089232'
             },
-            description: 'sample'
+            // toLocation: {
+            //     typeOf: 'Point',
+            //     identifier: '10030041020'
+            // },
+            description: 'テスト取引説明',
+            pendingTransaction: {
+                typeOf: 'Transfer'
+                // typeOf: 'Deposit'
+            }
         }
     })({
         moneyTransferTransactionNumber: moneyTransferTransactionNumberRepo,

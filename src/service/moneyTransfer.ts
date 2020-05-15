@@ -31,6 +31,7 @@ export type IAuthorizeOperation<T> = (repos: {
  * 口座残高差し押さえ
  */
 export function authorize(params: {
+    typeOf?: pecorinoapi.factory.transactionType;
     transactionNumber?: string;
     project: factory.project.IProject;
     agent: { id: string };
@@ -53,6 +54,7 @@ export function authorize(params: {
 
         try {
             pendingTransaction = await processAccountTransaction({
+                typeOf: params.typeOf,
                 transactionNumber: params.transactionNumber,
                 project: project,
                 object: params.object,
@@ -71,6 +73,7 @@ export function authorize(params: {
 
 // tslint:disable-next-line:max-func-body-length
 async function processAccountTransaction(params: {
+    typeOf?: pecorinoapi.factory.transactionType;
     transactionNumber?: string;
     project: factory.project.IProject;
     object: any;
@@ -108,82 +111,87 @@ async function processAccountTransaction(params: {
         .add(1, 'month')
         .toDate();
 
-    // tslint:disable-next-line:no-single-line-block-comment
-    /* istanbul ignore else *//* istanbul ignore next */
-    if (params.object.fromAccount !== undefined && params.object.toAccount === undefined) {
-        // 転送先口座が指定されていない場合は、出金取引
-        const withdrawService = new pecorinoapi.service.transaction.Withdraw({
-            endpoint: credentials.pecorino.endpoint,
-            auth: pecorinoAuthClient
-        });
-        pendingTransaction = await withdrawService.start({
-            transactionNumber: params.transactionNumber,
-            project: { typeOf: params.project.typeOf, id: params.project.id },
-            typeOf: pecorinoapi.factory.transactionType.Withdraw,
-            agent: agent,
-            expires: expires,
-            recipient: recipient,
-            object: {
-                amount: params.object.amount,
-                description: description,
-                fromLocation: {
-                    typeOf: pecorinoapi.factory.account.TypeOf.Account,
-                    accountType: params.object.fromAccount.accountType,
-                    accountNumber: params.object.fromAccount.accountNumber
+    switch (params.typeOf) {
+        case pecorinoapi.factory.transactionType.Deposit:
+            const depositService = new pecorinoapi.service.transaction.Deposit({
+                endpoint: credentials.pecorino.endpoint,
+                auth: pecorinoAuthClient
+            });
+            pendingTransaction = await depositService.start({
+                transactionNumber: params.transactionNumber,
+                project: { typeOf: params.project.typeOf, id: params.project.id },
+                typeOf: pecorinoapi.factory.transactionType.Deposit,
+                agent: agent,
+                expires: expires,
+                recipient: recipient,
+                object: {
+                    amount: params.object.amount,
+                    description: description,
+                    toLocation: {
+                        typeOf: pecorinoapi.factory.account.TypeOf.Account,
+                        accountType: params.object.toAccount.accountType,
+                        accountNumber: params.object.toAccount.accountNumber
+                    }
                 }
-            }
-        });
-    } else if (params.object.fromAccount !== undefined && params.object.toAccount !== undefined) {
-        const transferService = new pecorinoapi.service.transaction.Transfer({
-            endpoint: credentials.pecorino.endpoint,
-            auth: pecorinoAuthClient
-        });
-        pendingTransaction = await transferService.start({
-            transactionNumber: params.transactionNumber,
-            project: { typeOf: params.project.typeOf, id: params.project.id },
-            typeOf: pecorinoapi.factory.transactionType.Transfer,
-            agent: agent,
-            expires: expires,
-            recipient: recipient,
-            object: {
-                amount: params.object.amount,
-                description: description,
-                fromLocation: {
-                    typeOf: pecorinoapi.factory.account.TypeOf.Account,
-                    accountType: params.object.fromAccount.accountType,
-                    accountNumber: params.object.fromAccount.accountNumber
-                },
-                toLocation: {
-                    typeOf: pecorinoapi.factory.account.TypeOf.Account,
-                    accountType: params.object.toAccount.accountType,
-                    accountNumber: params.object.toAccount.accountNumber
+            });
+            break;
+
+        case pecorinoapi.factory.transactionType.Transfer:
+            const transferService = new pecorinoapi.service.transaction.Transfer({
+                endpoint: credentials.pecorino.endpoint,
+                auth: pecorinoAuthClient
+            });
+            pendingTransaction = await transferService.start({
+                transactionNumber: params.transactionNumber,
+                project: { typeOf: params.project.typeOf, id: params.project.id },
+                typeOf: pecorinoapi.factory.transactionType.Transfer,
+                agent: agent,
+                expires: expires,
+                recipient: recipient,
+                object: {
+                    amount: params.object.amount,
+                    description: description,
+                    fromLocation: {
+                        typeOf: pecorinoapi.factory.account.TypeOf.Account,
+                        accountType: params.object.fromAccount.accountType,
+                        accountNumber: params.object.fromAccount.accountNumber
+                    },
+                    toLocation: {
+                        typeOf: pecorinoapi.factory.account.TypeOf.Account,
+                        accountType: params.object.toAccount.accountType,
+                        accountNumber: params.object.toAccount.accountNumber
+                    }
                 }
-            }
-        });
-    } else if (params.object.fromAccount === undefined && params.object.toAccount !== undefined) {
-        const depositService = new pecorinoapi.service.transaction.Deposit({
-            endpoint: credentials.pecorino.endpoint,
-            auth: pecorinoAuthClient
-        });
-        pendingTransaction = await depositService.start({
-            transactionNumber: params.transactionNumber,
-            project: { typeOf: params.project.typeOf, id: params.project.id },
-            typeOf: pecorinoapi.factory.transactionType.Deposit,
-            agent: agent,
-            expires: expires,
-            recipient: recipient,
-            object: {
-                amount: params.object.amount,
-                description: description,
-                toLocation: {
-                    typeOf: pecorinoapi.factory.account.TypeOf.Account,
-                    accountType: params.object.toAccount.accountType,
-                    accountNumber: params.object.toAccount.accountNumber
+            });
+            break;
+
+        case pecorinoapi.factory.transactionType.Withdraw:
+            // 転送先口座が指定されていない場合は、出金取引
+            const withdrawService = new pecorinoapi.service.transaction.Withdraw({
+                endpoint: credentials.pecorino.endpoint,
+                auth: pecorinoAuthClient
+            });
+            pendingTransaction = await withdrawService.start({
+                transactionNumber: params.transactionNumber,
+                project: { typeOf: params.project.typeOf, id: params.project.id },
+                typeOf: pecorinoapi.factory.transactionType.Withdraw,
+                agent: agent,
+                expires: expires,
+                recipient: recipient,
+                object: {
+                    amount: params.object.amount,
+                    description: description,
+                    fromLocation: {
+                        typeOf: pecorinoapi.factory.account.TypeOf.Account,
+                        accountType: params.object.fromAccount.accountType,
+                        accountNumber: params.object.fromAccount.accountNumber
+                    }
                 }
-            }
-        });
-    } else {
-        throw new factory.errors.Argument('Object', 'At least one of accounts from and to must be specified');
+            });
+            break;
+
+        default:
+            throw new factory.errors.Argument('Object', 'At least one of accounts from and to must be specified');
     }
 
     return pendingTransaction;
