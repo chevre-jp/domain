@@ -361,15 +361,28 @@ function fixToLocation(
  * 取引確定
  */
 export function confirm(params: {
-    id: string;
+    id?: string;
+    transactionNumber?: string;
 }): IConfirmOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.MoneyTransfer,
-            id: params.id
-        });
+        let transaction: factory.transaction.ITransaction<factory.transactionType.MoneyTransfer>;
+
+        // 取引存在確認
+        if (typeof params.id === 'string') {
+            transaction = await repos.transaction.findById({
+                typeOf: factory.transactionType.MoneyTransfer,
+                id: params.id
+            });
+        } else if (typeof params.transactionNumber === 'string') {
+            transaction = await repos.transaction.findByTransactionNumber({
+                typeOf: factory.transactionType.MoneyTransfer,
+                transactionNumber: params.transactionNumber
+            });
+        } else {
+            throw new factory.errors.ArgumentNull('Transaction ID or Transaction Number');
+        }
 
         const potentialActions = await createPotentialActions({
             transaction: transaction
@@ -387,13 +400,17 @@ export function confirm(params: {
 /**
  * 取引中止
  */
-export function cancel(params: { id: string }): ICancelOperation<void> {
+export function cancel(params: {
+    id?: string;
+    transactionNumber?: string;
+}): ICancelOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
         await repos.transaction.cancel({
             typeOf: factory.transactionType.MoneyTransfer,
-            id: params.id
+            id: params.id,
+            transactionNumber: params.transactionNumber
         });
     };
 }
