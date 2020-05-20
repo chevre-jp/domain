@@ -112,6 +112,12 @@ export function start(
         // オファー検索
         const offers = await OfferService.searchProductOffers({ itemOffered: { id: product.id } })(repos);
 
+        const transactionNumber: string | undefined = params.transactionNumber;
+        // 通貨転送取引番号の指定がなければ発行
+        if (typeof transactionNumber !== 'string' || transactionNumber.length === 0) {
+            throw new factory.errors.ArgumentNull('transactionNumber');
+        }
+
         // サービスアウトプット作成
         const transactionObject: any[] = acceptedOffers.map((acceptedOffer) => {
             const offer = offers.find((o) => o.id === acceptedOffer.id);
@@ -119,7 +125,12 @@ export function start(
                 throw new factory.errors.NotFound('Offer', `Offer ${acceptedOffer.id} not found`);
             }
 
-            const serviceOutput = createServiceOutput({ product: product, acceptedOffer: acceptedOffer, offer: offer });
+            const serviceOutput = createServiceOutput({
+                product: product,
+                acceptedOffer: acceptedOffer,
+                offer: offer,
+                transactionNumber: transactionNumber
+            });
 
             return {
                 typeOf: 'Offer',
@@ -139,7 +150,7 @@ export function start(
             agent: params.agent,
             object: transactionObject,
             expires: params.expires,
-            ...(typeof (<any>params).transactionNumber === 'string') ? { transactionNumber: (<any>params).transactionNumber } : undefined
+            transactionNumber: transactionNumber
         };
 
         // 取引作成
@@ -182,15 +193,19 @@ export function start(
 
                 break;
 
-            case 'DepositService':
+            case 'MoneyTransfer':
                 // 入金取引開始
                 await Promise.all(serviceOutputs.map(async (serviceOutput) => {
                     const toLocation = serviceOutput.toLocation;
 
                     await MoneyTransferService.authorize({
-                        transactionNumber: (<any>transaction).transactionNumber,
+                        typeOf: pecorino.factory.transactionType.Deposit,
+                        transactionNumber: transaction.transactionNumber,
                         project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
-                        agent: <any>transaction.agent,
+                        agent: {
+                            typeOf: project.typeOf,
+                            name: project.name
+                        },
                         object: {
                             amount: serviceOutput.amount?.value,
                             typeOf: factory.paymentMethodType.Account,
@@ -198,7 +213,8 @@ export function start(
                                 typeOf: pecorino.factory.account.TypeOf.Account,
                                 accountType: toLocation?.typeOf,
                                 accountNumber: toLocation?.identifier
-                            }
+                            },
+                            description: serviceOutput.description
                         },
                         recipient: transaction.agent,
                         purpose: { typeOf: transaction.typeOf, id: transaction.id }

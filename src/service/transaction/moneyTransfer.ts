@@ -153,7 +153,7 @@ function authorizeAccount(params: {
             typeOf: transaction.object.pendingTransaction?.typeOf,
             transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
             project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
-            agent: { id: transaction.agent.id },
+            agent: transaction.agent,
             object: {
                 amount: transaction.object.amount.value,
                 typeOf: factory.paymentMethodType.Account,

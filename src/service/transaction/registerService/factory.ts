@@ -8,6 +8,7 @@ export function createServiceOutput(params: {
     product: any;
     acceptedOffer: any;
     offer: factory.offer.IOffer;
+    transactionNumber: string;
 }): any {
     let serviceOutput: any;
     const product = params.product;
@@ -67,7 +68,7 @@ export function createServiceOutput(params: {
 
             break;
 
-        case 'DepositService':
+        case 'MoneyTransfer':
             // 入金額
             const amount4deposit: factory.monetaryAmount.IMonetaryAmount = {
                 ...product.serviceOutput?.amount,
@@ -81,13 +82,20 @@ export function createServiceOutput(params: {
                 typeOf: amount4deposit.currency
             };
 
+            // 説明
+            const description: string = (typeof acceptedOffer.itemOffered?.serviceOutput?.description === 'string')
+                ? acceptedOffer.itemOffered?.serviceOutput?.description
+                : product.name.ja;
+
             serviceOutput = {
                 project: { typeOf: product.project.typeOf, id: product.project.id },
+                identifier: params.transactionNumber,
                 issuedThrough: {
                     typeOf: product.typeOf,
                     id: product.id
                 },
                 typeOf: serviceOutputType,
+                description: description,
                 ...(amount4deposit !== undefined) ? { amount: amount4deposit } : undefined,
                 ...(toLocation !== undefined) ? { toLocation } : undefined
             };

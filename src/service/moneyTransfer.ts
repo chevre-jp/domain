@@ -34,7 +34,7 @@ export function authorize(params: {
     typeOf?: pecorinoapi.factory.transactionType;
     transactionNumber?: string;
     project: factory.project.IProject;
-    agent: { id: string };
+    agent: factory.action.transfer.moneyTransfer.IAgent;
     object: any;
     recipient: factory.action.transfer.moneyTransfer.IRecipient;
     purpose: any;
@@ -58,6 +58,7 @@ export function authorize(params: {
                 transactionNumber: params.transactionNumber,
                 project: project,
                 object: params.object,
+                agent: params.agent,
                 recipient: params.recipient,
                 transaction: transaction
             });
@@ -77,6 +78,7 @@ async function processAccountTransaction(params: {
     transactionNumber?: string;
     project: factory.project.IProject;
     object: any;
+    agent: factory.action.transfer.moneyTransfer.IAgent;
     recipient: factory.action.transfer.moneyTransfer.IRecipient;
     transaction: factory.transaction.ITransaction<factory.transactionType>;
 }): Promise<factory.action.transfer.moneyTransfer.IPendingTransaction> {
@@ -84,11 +86,20 @@ async function processAccountTransaction(params: {
 
     const transaction = params.transaction;
 
+    // const agent = {
+    //     typeOf: transaction.agent.typeOf,
+    //     id: transaction.agent.id,
+    // tslint:disable-next-line:max-line-length
+    //     name: (typeof transaction.agent.name === 'string') ? transaction.agent.name : `${transaction.typeOf} Transaction ${transaction.id}`,
+    //     ...(typeof transaction.agent.url === 'string') ? { url: transaction.agent.url } : undefined
+    // };
+
     const agent = {
-        typeOf: transaction.agent.typeOf,
-        id: transaction.agent.id,
-        name: (typeof transaction.agent.name === 'string') ? transaction.agent.name : `${transaction.typeOf} Transaction ${transaction.id}`,
-        ...(typeof transaction.agent.url === 'string') ? { url: transaction.agent.url } : undefined
+        typeOf: params.agent.typeOf,
+        id: params.agent.id,
+        name: (typeof params.agent.name === 'string')
+            ? params.agent.name
+            : `${transaction.typeOf} Transaction ${transaction.id}`
     };
 
     const recipient = {

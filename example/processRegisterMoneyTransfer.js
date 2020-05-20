@@ -17,7 +17,7 @@ async function main() {
     // プロダクト検索
     const products = await productRepo.productModel.find({
         'project.id': { $eq: project.id },
-        typeOf: { $eq: 'DepositService' }
+        typeOf: { $eq: 'MoneyTransfer' }
     }).exec()
         .then((docs) => docs.map((doc) => doc.toObject()));
     console.log(products);
@@ -25,11 +25,15 @@ async function main() {
     const product = products[0];
     console.log(product);
 
-    // オファーカタログ検索
-    // const offerCatalog = await offerRepo.findOfferCatalogById({ id: product.hasOfferCatalog.id });
-    // console.log(offerCatalog);
-
     // オファー検索
+    const offers = await domain.service.offer.searchProductOffers({ itemOffered: { id: product.id } })({
+        offer: offerRepo,
+        offerCatalog: offerCatalogRepo,
+        product: productRepo
+    });
+
+    const offer = offers[0];
+    console.log(offer);
     // const offers = await offerRepo.offerModel.find(
     //     { _id: { $in: (offerCatalog.itemListElement).map((e) => e.id) } },
     //     {
@@ -53,13 +57,14 @@ async function main() {
         object: [
             {
                 // 7iri85wk5ggjsmg
-                id: '7k740xps7',
+                id: offer.id,
                 itemOffered: {
                     id: product.id,
                     serviceOutput: {
                         toLocation: {
                             identifier: identifier
-                        }
+                        },
+                        description: 'サンプル入金サービス登録'
                     }
                 }
             }
