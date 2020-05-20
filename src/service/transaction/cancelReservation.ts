@@ -278,19 +278,23 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                     // tslint:disable-next-line:no-single-line-block-comment
                     /* istanbul ignore else */
                     if (potentialActions.cancelReservation !== undefined) {
-                        const cancelReservationTask: factory.task.cancelReservation.IAttributes = {
-                            project: transaction.project,
-                            name: factory.taskName.CancelReservation,
-                            status: factory.taskStatus.Ready,
-                            runsAt: new Date(), // なるはやで実行
-                            remainingNumberOfTries: 10,
-                            numberOfTried: 0,
-                            executionResults: [],
-                            data: {
-                                actionAttributes: potentialActions.cancelReservation
-                            }
-                        };
-                        taskAttributes.push(cancelReservationTask);
+                        const cancelReservationTasks: factory.task.cancelReservation.IAttributes[] =
+                            potentialActions.cancelReservation.map((a) => {
+                                return {
+                                    project: transaction.project,
+                                    name: factory.taskName.CancelReservation,
+                                    status: factory.taskStatus.Ready,
+                                    runsAt: new Date(), // なるはやで実行
+                                    remainingNumberOfTries: 10,
+                                    numberOfTried: 0,
+                                    executionResults: [],
+                                    data: {
+                                        actionAttributes: [a]
+                                    }
+                                };
+                            });
+
+                        taskAttributes.push(...cancelReservationTasks);
                     }
                 }
                 break;
@@ -317,6 +321,7 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
         }
         debug('taskAttributes prepared', taskAttributes);
 
-        return Promise.all(taskAttributes.map(async (a) => repos.task.save(a)));
+        return repos.task.saveMany(taskAttributes);
+        // return Promise.all(taskAttributes.map(async (a) => repos.task.save(a)));
     };
 }

@@ -322,6 +322,7 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                 throw new factory.errors.NotImplemented(`Transaction status "${transaction.status}" not implemented.`);
         }
 
-        return Promise.all(taskAttributes.map(async (a) => repos.task.save(a)));
+        return repos.task.saveMany(taskAttributes);
+        // return Promise.all(taskAttributes.map(async (a) => repos.task.save(a)));
     };
 }

@@ -212,17 +212,14 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
                 if (reserveTransaction !== undefined) {
                     exectedHolder = reserveTransaction.id;
                 } else {
-                    // 東京タワーデータ移行対応として(Chevre以降前の東京タワーデータに関しては、予約取引が存在しない)
-                    if (reservation.project !== undefined
-                        && reservation.project !== null
+                    try {
+                        // 東京タワーデータ移行対応として(Chevre以降前の東京タワーデータに関しては、予約取引が存在しない)
                         // tslint:disable-next-line:no-magic-numbers
-                        && reservation.project.id.slice(0, 4) === 'ttts') {
-                        if (reservation.underName !== undefined && Array.isArray(reservation.underName.identifier)) {
-                            const transactionProperty = reservation.underName.identifier.find((p) => p.name === 'transaction');
-                            if (transactionProperty !== undefined) {
-                                exectedHolder = transactionProperty.value;
-                            }
+                        if (reservation.project?.id?.slice(0, 4) === 'ttts') {
+                            exectedHolder = reservation.underName?.identifier?.find((p) => p.name === 'transaction')?.value;
                         }
+                    } catch (error) {
+                        console.error('cancelReservation:ttts exectedHolder:', error);
                     }
                 }
 

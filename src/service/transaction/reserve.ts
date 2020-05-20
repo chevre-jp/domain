@@ -502,9 +502,10 @@ function onReservationCreated(
         }
 
         // タスク保管
-        await Promise.all(taskAttributes.map(async (taskAttribute) => {
-            return repos.task.save(taskAttribute);
-        }));
+        await repos.task.saveMany(taskAttributes);
+        // await Promise.all(taskAttributes.map(async (taskAttribute) => {
+        //     return repos.task.save(taskAttribute);
+        // }));
     };
 }
 
@@ -730,20 +731,23 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                         };
                     });
 
-                    const cancelPendingReservationTask: factory.task.cancelPendingReservation.IAttributes = {
-                        project: transaction.project,
-                        name: factory.taskName.CancelPendingReservation,
-                        status: factory.taskStatus.Ready,
-                        runsAt: new Date(), // なるはやで実行
-                        remainingNumberOfTries: 10,
-                        numberOfTried: 0,
-                        executionResults: [],
-                        data: {
-                            actionAttributes: actionAttributes
-                        }
-                    };
+                    const cancelPendingReservationTasks: factory.task.cancelPendingReservation.IAttributes[] =
+                        actionAttributes.map((a) => {
+                            return {
+                                project: transaction.project,
+                                name: factory.taskName.CancelPendingReservation,
+                                status: factory.taskStatus.Ready,
+                                runsAt: new Date(), // なるはやで実行
+                                remainingNumberOfTries: 10,
+                                numberOfTried: 0,
+                                executionResults: [],
+                                data: {
+                                    actionAttributes: [a]
+                                }
+                            };
+                        });
 
-                    taskAttributes.push(cancelPendingReservationTask);
+                    taskAttributes.push(...cancelPendingReservationTasks);
                 }
 
                 break;
@@ -752,6 +756,7 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                 throw new factory.errors.NotImplemented(`Transaction status "${transaction.status}" not implemented.`);
         }
 
-        return Promise.all(taskAttributes.map(async (a) => repos.task.save(a)));
+        return repos.task.saveMany(taskAttributes);
+        // return Promise.all(taskAttributes.map(async (a) => repos.task.save(a)));
     };
 }

@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - イベントのカタログ情報をoffersからhasOfferCatalogへ分離
+- 取引ステータス変更時の複数タスク作成を一度に実行するように変更
 
 ### Deprecated
 
