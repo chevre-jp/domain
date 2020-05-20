@@ -1,5 +1,4 @@
 import * as COA from '@motionpicture/coa-service';
-import * as createDebug from 'debug';
 import * as moment from 'moment';
 import { format } from 'util';
 
@@ -18,7 +17,8 @@ import * as factory from '../factory';
 
 import { credentials } from '../credentials';
 
-const debug = createDebug('chevre-domain:service');
+// tslint:disable-next-line:no-magic-numbers
+const COA_TIMEOUT = (typeof process.env.COA_TIMEOUT === 'string') ? Number(process.env.COA_TIMEOUT) : 20000;
 
 type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     event: EventRepo;
@@ -539,21 +539,39 @@ export function importFromCOA(params: {
     return async (repos: {
         offer: OfferRepo;
     }) => {
-        const masterService = new COA.service.Master({
-            endpoint: credentials.coa.endpoint,
-            auth: coaAuthClient
-        });
+        const masterService = new COA.service.Master(
+            {
+                endpoint: credentials.coa.endpoint,
+                auth: coaAuthClient
+            },
+            { timeout: COA_TIMEOUT }
+        );
 
-        const ticketResults = await masterService.ticket({ theaterCode: params.theaterCode });
+        try {
+            const ticketResults = await masterService.ticket({ theaterCode: params.theaterCode });
 
-        await Promise.all(ticketResults.map(async (ticketResult) => {
-            const offer = coaTicket2offer({ project: params.project, theaterCode: params.theaterCode, ticketResult: ticketResult });
+            await Promise.all(ticketResults.map(async (ticketResult) => {
+                const offer = coaTicket2offer({ project: params.project, theaterCode: params.theaterCode, ticketResult: ticketResult });
 
-            debug('saving offer...', ticketResult, 'to', offer);
-            await repos.offer.saveByIdentifier(offer);
-        }));
+                await repos.offer.saveByIdentifier(offer);
+            }));
+        } catch (error) {
+            let throwsError = true;
 
-        debug(ticketResults.length, 'offers imported');
+            // "name": "COAServiceError",
+            // "code": 500,
+            // "status": "",
+            // "message": "ESOCKETTIMEDOUT",
+            if (error.name === 'COAServiceError') {
+                if (error.message === 'ESOCKETTIMEDOUT') {
+                    throwsError = false;
+                }
+            }
+
+            if (throwsError) {
+                throw error;
+            }
+        }
     };
 }
 

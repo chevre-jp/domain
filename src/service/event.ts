@@ -121,24 +121,42 @@ export function importFromCOA(params: {
             project: project
         })(repos);
 
-        // イベントごとに永続化トライ
-        const screeningEvents = await saveScreeningEvents({
-            locationBranchCode: params.locationBranchCode,
-            movieTheater: movieTheater,
-            screeningEventSerieses: screeningEventSerieses,
-            project: project,
-            targetImportFrom: targetImportFrom.toDate(),
-            targetImportThrough: targetImportThrough.toDate()
-        })(repos);
+        try {
+            // イベントごとに永続化トライ
+            const screeningEvents = await saveScreeningEvents({
+                locationBranchCode: params.locationBranchCode,
+                movieTheater: movieTheater,
+                screeningEventSerieses: screeningEventSerieses,
+                project: project,
+                targetImportFrom: targetImportFrom.toDate(),
+                targetImportThrough: targetImportThrough.toDate()
+            })(repos);
 
-        // COAから削除されたイベントをキャンセル済ステータスへ変更
-        await cancelDeletedEvents({
-            project: params.project,
-            locationBranchCode: params.locationBranchCode,
-            targetImportFrom: targetImportFrom.toDate(),
-            targetImportThrough: targetImportThrough.toDate(),
-            idsShouldBe: screeningEvents.map((e) => e.id)
-        })(repos);
+            // COAから削除されたイベントをキャンセル済ステータスへ変更
+            await cancelDeletedEvents({
+                project: params.project,
+                locationBranchCode: params.locationBranchCode,
+                targetImportFrom: targetImportFrom.toDate(),
+                targetImportThrough: targetImportThrough.toDate(),
+                idsShouldBe: screeningEvents.map((e) => e.id)
+            })(repos);
+        } catch (error) {
+            let throwsError = true;
+
+            // "name": "COAServiceError",
+            // "code": 500,
+            // "status": "",
+            // "message": "ESOCKETTIMEDOUT",
+            if (error.name === 'COAServiceError') {
+                if (error.message === 'ESOCKETTIMEDOUT') {
+                    throwsError = false;
+                }
+            }
+
+            if (throwsError) {
+                throw error;
+            }
+        }
     };
 }
 
