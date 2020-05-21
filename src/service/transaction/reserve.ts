@@ -519,11 +519,22 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
+        let transaction: factory.transaction.ITransaction<factory.transactionType.Reserve>;
+
         // 取引存在確認
-        const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.Reserve,
-            id: params.id
-        });
+        if (typeof params.id === 'string') {
+            transaction = await repos.transaction.findById({
+                typeOf: factory.transactionType.Reserve,
+                id: params.id
+            });
+        } else if (typeof params.transactionNumber === 'string') {
+            transaction = await repos.transaction.findByTransactionNumber({
+                typeOf: factory.transactionType.Reserve,
+                transactionNumber: params.transactionNumber
+            });
+        } else {
+            throw new factory.errors.ArgumentNull('Transaction ID or Transaction Number');
+        }
 
         // potentialActions作成
         const potentialActions: factory.transaction.reserve.IPotentialActions = createPotentialActions({
@@ -545,7 +556,10 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
 /**
  * 取引中止
  */
-export function cancel(params: { id: string }): ICancelOperation<void> {
+export function cancel(params: {
+    id?: string;
+    transactionNumber?: string;
+}): ICancelOperation<void> {
     return async (repos: {
         action: ActionRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
@@ -557,7 +571,8 @@ export function cancel(params: { id: string }): ICancelOperation<void> {
         // まず取引状態変更
         const transaction = await repos.transaction.cancel({
             typeOf: factory.transactionType.Reserve,
-            id: params.id
+            id: params.id,
+            transactionNumber: params.transactionNumber
         });
 
         // 本来非同期でタスクが実行されるが、同期的に仮予約取消が実行されていないと、サービス利用側が困る可能性があるので、
