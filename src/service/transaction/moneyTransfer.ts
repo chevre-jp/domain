@@ -8,11 +8,11 @@ import { credentials } from '../../credentials';
 
 import * as factory from '../../factory';
 
-import { RedisRepository as MoneyTransferTransactionNumberRepo } from '../../repo/moneyTransferTransactionNumber';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
+import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
 
 import * as MoneyTransferService from '../moneyTransfer';
 
@@ -27,10 +27,10 @@ const pecorinoAuthClient = new pecorino.auth.ClientCredentials({
 });
 
 export type IStartOperation<T> = (repos: {
-    moneyTransferTransactionNumber: MoneyTransferTransactionNumberRepo;
     project: ProjectRepo;
     serviceOutput: ServiceOutputRepo;
     transaction: TransactionRepo;
+    transactionNumber: TransactionNumberRepo;
 }) => Promise<T>;
 
 export type ITaskAndTransactionOperation<T> = (repos: {
@@ -54,10 +54,10 @@ export function start(
     params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail
 ): IStartOperation<factory.transaction.moneyTransfer.ITransaction> {
     return async (repos: {
-        moneyTransferTransactionNumber: MoneyTransferTransactionNumberRepo;
         project: ProjectRepo;
         serviceOutput: ServiceOutputRepo;
         transaction: TransactionRepo;
+        transactionNumber: TransactionNumberRepo;
     }) => {
         const now = new Date();
 
@@ -74,7 +74,7 @@ export function start(
         let transactionNumber: string | undefined = params.transactionNumber;
         // 通貨転送取引番号の指定がなければ発行
         if (typeof transactionNumber !== 'string' || transactionNumber.length === 0) {
-            transactionNumber = await repos.moneyTransferTransactionNumber.publishByTimestamp({
+            transactionNumber = await repos.transactionNumber.publishByTimestamp({
                 project: params.project,
                 startDate: now
             });

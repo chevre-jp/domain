@@ -13,17 +13,14 @@ export function createStartParams(params: factory.transaction.reserve.IStartPara
 
     const informReservationParams: factory.transaction.reserve.IInformReservationParams[] = [];
 
-    if (params.projectSettings !== undefined
-        && params.projectSettings !== null
-        && params.projectSettings.onReservationStatusChanged !== undefined
-        && Array.isArray(params.projectSettings.onReservationStatusChanged.informReservation)) {
-        informReservationParams.push(...params.projectSettings.onReservationStatusChanged.informReservation);
+    const informReservationSettings = params.projectSettings?.onReservationStatusChanged?.informReservation;
+    if (Array.isArray(informReservationSettings)) {
+        informReservationParams.push(...informReservationSettings);
     }
 
-    if (params.object !== undefined
-        && params.object.onReservationStatusChanged !== undefined
-        && Array.isArray(params.object.onReservationStatusChanged.informReservation)) {
-        informReservationParams.push(...params.object.onReservationStatusChanged.informReservation);
+    const informReservationObject = params.object.onReservationStatusChanged?.informReservation;
+    if (Array.isArray(informReservationObject)) {
+        informReservationParams.push(...informReservationObject);
     }
 
     const reservationPackage: factory.transaction.reserve.IObject = {
@@ -39,6 +36,7 @@ export function createStartParams(params: factory.transaction.reserve.IStartPara
     return {
         project: params.project,
         typeOf: factory.transactionType.Reserve,
+        transactionNumber: reservationNumber,
         agent: params.agent,
         object: reservationPackage,
         expires: params.expires

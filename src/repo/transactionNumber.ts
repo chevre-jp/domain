@@ -12,10 +12,10 @@ import * as factory from '../factory';
 const debug = createDebug('chevre-domain:repo');
 
 /**
- * 通貨転送取引番号リポジトリ
+ * 取引番号リポジトリ
  */
 export class RedisRepository {
-    public static REDIS_KEY_PREFIX: string = 'chevre:moneyTransferTransactionNumber';
+    public static REDIS_KEY_PREFIX: string = 'chevre:transactionNumber';
     public readonly redisClient: redis.RedisClient;
 
     constructor(redisClient: redis.RedisClient) {
@@ -27,9 +27,6 @@ export class RedisRepository {
      */
     public async publishByTimestamp(params: {
         project: { id: string };
-        /**
-         * 取引開始日時
-         */
         startDate: Date;
     }): Promise<string> {
         return new Promise<string>((resolve, reject) => {

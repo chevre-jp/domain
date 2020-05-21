@@ -15,9 +15,9 @@ import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../../repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
-import { RedisRepository as ReservationNumberRepo } from '../../repo/reservationNumber';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
+import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
 
 import * as OfferService from '../offer';
 import * as ReserveService from '../reserve';
@@ -33,8 +33,8 @@ import {
 
 export type IStartOperation<T> = (repos: {
     project: ProjectRepo;
-    reservationNumber: ReservationNumberRepo;
     transaction: TransactionRepo;
+    transactionNumber: TransactionNumberRepo;
 }) => Promise<T>;
 
 export type IAddReservationsOperation<T> = (repos: {
@@ -78,18 +78,21 @@ export function start(
 ): IStartOperation<factory.transaction.ITransaction<factory.transactionType.Reserve>> {
     return async (repos: {
         project: ProjectRepo;
-        reservationNumber: ReservationNumberRepo;
         transaction: TransactionRepo;
+        transactionNumber: TransactionNumberRepo;
     }) => {
         const now = new Date();
 
         const project = await repos.project.findById({ id: params.project.id });
 
         // 予約番号発行
-        const reservationNumber = await repos.reservationNumber.publishByTimestamp({
-            project: params.project,
-            reserveDate: now
-        });
+        let reservationNumber: string | undefined = params.transactionNumber;
+        if (typeof reservationNumber !== 'string') {
+            reservationNumber = await repos.transactionNumber.publishByTimestamp({
+                project: params.project,
+                startDate: now
+            });
+        }
 
         const startParams = createStartParams({
             ...params,

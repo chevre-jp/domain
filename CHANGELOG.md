@@ -18,7 +18,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - イベントのカタログ情報をoffersからhasOfferCatalogへ分離
 - 取引ステータス変更時の複数タスク作成を一度に実行するように変更
-- COA情報インポートタスクのれらーハンドリング調整
+- COA情報インポートタスクのエラーハンドリング調整
+- 予約取引に取引番号を指定できるように調整
+- 予約番号を取引番号として拡張
 
 ### Deprecated
 
