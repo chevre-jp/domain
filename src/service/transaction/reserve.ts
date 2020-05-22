@@ -136,7 +136,7 @@ export function start(
 
         // 指定があれば予約追加
         if (typeof params.object.event?.id === 'string') {
-            await addReservations({
+            transaction = await addReservations({
                 id: transaction.id,
                 object: params.object
             })(repos);
