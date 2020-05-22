@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## v15.0.0 - 2020-05-22
+
+### Added
+
 - サービス登録取引を追加
 - 通貨転送取引を追加
 - 通貨転送取引番号リポジトリを追加
@@ -23,14 +37,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 予約番号を取引番号として拡張
 - 予約取引を取引番号で確定できるように調整
 - 予約取引開始時に座席オファーを指定できるように調整
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 
 ## v14.7.0 - 2020-04-26
 
