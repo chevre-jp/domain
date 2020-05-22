@@ -175,7 +175,7 @@ function onAggregated(params: {
 
         // プロジェクト集計タスク作成
         const aggregateOnProjectTask: factory.task.IAttributes = {
-            name: <any>'aggregateOnProject',
+            name: factory.taskName.AggregateOnProject,
             project: event.project,
             runsAt: new Date(),
             data: {
@@ -193,7 +193,7 @@ function onAggregated(params: {
             },
             status: factory.taskStatus.Ready,
             numberOfTried: 0,
-            remainingNumberOfTries: 3,
+            remainingNumberOfTries: 1,
             executionResults: []
         };
         await repos.task.save(aggregateOnProjectTask);
