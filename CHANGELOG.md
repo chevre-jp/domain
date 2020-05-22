@@ -10,8 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- イベントのカタログ検索条件を調整
-
 ### Deprecated
 
 ### Removed
@@ -19,6 +17,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.0.1 - 2020-05-22
+
+### Changed
+
+- イベントのカタログ検索条件を調整
 
 ## v15.0.0 - 2020-05-22
 
