@@ -175,7 +175,7 @@ function onAggregated(params: {
 
         // プロジェクト集計タスク作成
         const aggregateOnProjectTask: factory.task.IAttributes = {
-            name: <any>'aggregateOnProject',
+            name: factory.taskName.AggregateOnProject,
             project: event.project,
             runsAt: new Date(),
             data: {
@@ -193,7 +193,7 @@ function onAggregated(params: {
             },
             status: factory.taskStatus.Ready,
             numberOfTried: 0,
-            remainingNumberOfTries: 3,
+            remainingNumberOfTries: 1,
             executionResults: []
         };
         await repos.task.save(aggregateOnProjectTask);
@@ -217,8 +217,8 @@ function aggregateOfferByEvent(params: {
         reservation: ReservationRepo;
     }): Promise<factory.event.screeningEvent.IAggregateOffer> => {
         let availableOffers: factory.offer.IUnitPriceOffer[] = [];
-        if (params.event.offers !== undefined) {
-            availableOffers = await repos.offer.findOffersByOfferCatalogId({ offerCatalog: { id: <string>params.event.offers.id } });
+        if (typeof params.event.hasOfferCatalog?.id === 'string') {
+            availableOffers = await repos.offer.findOffersByOfferCatalogId({ offerCatalog: { id: params.event.hasOfferCatalog.id } });
         }
 
         // オファーごとの予約集計
@@ -493,52 +493,70 @@ export function importFromCOA(params: {
             { timeout: COA_TIMEOUT }
         );
 
-        // COAから空席状況取得
-        const countFreeSeatResult = await reserveService.countFreeSeat({
-            theaterCode: params.locationBranchCode,
-            begin: moment(params.importFrom)
-                .tz('Asia/Tokyo')
-                .format('YYYYMMDD'), // COAは日本時間で判断
-            end: moment(params.importThrough)
-                .tz('Asia/Tokyo')
-                .format('YYYYMMDD') // COAは日本時間で判断
-        });
-        debug('countFreeSeatResult:', countFreeSeatResult);
+        try {
+            // COAから空席状況取得
+            const countFreeSeatResult = await reserveService.countFreeSeat({
+                theaterCode: params.locationBranchCode,
+                begin: moment(params.importFrom)
+                    .tz('Asia/Tokyo')
+                    .format('YYYYMMDD'), // COAは日本時間で判断
+                end: moment(params.importThrough)
+                    .tz('Asia/Tokyo')
+                    .format('YYYYMMDD') // COAは日本時間で判断
+            });
+            debug('countFreeSeatResult:', countFreeSeatResult);
 
-        if (Array.isArray(countFreeSeatResult.listDate)) {
-            for (const countFreeSeatDate of countFreeSeatResult.listDate) {
-                if (Array.isArray(countFreeSeatDate.listPerformance)) {
-                    for (const countFreeSeatPerformance of countFreeSeatDate.listPerformance) {
-                        try {
-                            const eventId = createScreeningEventIdFromCOA({
-                                theaterCode: countFreeSeatResult.theaterCode,
-                                titleCode: countFreeSeatPerformance.titleCode,
-                                titleBranchNum: countFreeSeatPerformance.titleBranchNum,
-                                dateJouei: countFreeSeatDate.dateJouei,
-                                screenCode: countFreeSeatPerformance.screenCode,
-                                timeBegin: countFreeSeatPerformance.timeBegin
-                            });
+            if (Array.isArray(countFreeSeatResult.listDate)) {
+                for (const countFreeSeatDate of countFreeSeatResult.listDate) {
+                    if (Array.isArray(countFreeSeatDate.listPerformance)) {
+                        for (const countFreeSeatPerformance of countFreeSeatDate.listPerformance) {
+                            try {
+                                const eventId = createScreeningEventIdFromCOA({
+                                    theaterCode: countFreeSeatResult.theaterCode,
+                                    titleCode: countFreeSeatPerformance.titleCode,
+                                    titleBranchNum: countFreeSeatPerformance.titleBranchNum,
+                                    dateJouei: countFreeSeatDate.dateJouei,
+                                    screenCode: countFreeSeatPerformance.screenCode,
+                                    timeBegin: countFreeSeatPerformance.timeBegin
+                                });
 
-                            const remainingAttendeeCapacity: number = Math.max(0, Number(countFreeSeatPerformance.cntReserveFree));
-                            debug('updating capacity...', {
-                                eventId,
-                                remainingAttendeeCapacity
-                            });
+                                const remainingAttendeeCapacity: number = Math.max(0, Number(countFreeSeatPerformance.cntReserveFree));
+                                debug('updating capacity...', {
+                                    eventId,
+                                    remainingAttendeeCapacity
+                                });
 
-                            const doc = await repos.event.eventModel.findOneAndUpdate(
-                                {
-                                    _id: eventId,
-                                    remainingAttendeeCapacity: { $ne: remainingAttendeeCapacity }
-                                },
-                                { remainingAttendeeCapacity: remainingAttendeeCapacity }
-                            )
-                                .exec();
-                            debug('capacity update.', (doc !== null) ? doc.id : '');
-                        } catch (error) {
-                            console.error('importFromCOA error:', error);
+                                const doc = await repos.event.eventModel.findOneAndUpdate(
+                                    {
+                                        _id: eventId,
+                                        remainingAttendeeCapacity: { $ne: remainingAttendeeCapacity }
+                                    },
+                                    { remainingAttendeeCapacity: remainingAttendeeCapacity }
+                                )
+                                    .exec();
+                                debug('capacity update.', (doc !== null) ? doc.id : '');
+                            } catch (error) {
+                                console.error('importFromCOA error:', error);
+                            }
                         }
                     }
                 }
+            }
+        } catch (error) {
+            let throwsError = true;
+
+            // "name": "COAServiceError",
+            // "code": 500,
+            // "status": "",
+            // "message": "ESOCKETTIMEDOUT",
+            if (error.name === 'COAServiceError') {
+                if (error.message === 'ESOCKETTIMEDOUT') {
+                    throwsError = false;
+                }
+            }
+
+            if (throwsError) {
+                throw error;
             }
         }
     };

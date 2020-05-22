@@ -9,5 +9,11 @@ export const credentials = {
     lineNotify: {
         url: <string>process.env.LINE_NOTIFY_URL,
         accessToken: <string>process.env.LINE_NOTIFY_ACCESS_TOKEN
+    },
+    pecorino: {
+        authorizeServerDomain: <string>process.env.PECORINO_AUTHORIZE_SERVER_DOMAIN,
+        clientId: <string>process.env.PECORINO_CLIENT_ID,
+        clientSecret: <string>process.env.PECORINO_CLIENT_SECRET,
+        endpoint: <string>process.env.PECORINO_ENDPOINT
     }
 };

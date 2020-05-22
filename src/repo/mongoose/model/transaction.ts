@@ -10,6 +10,7 @@ const schema = new mongoose.Schema(
         project: mongoose.SchemaTypes.Mixed,
         status: String,
         typeOf: String,
+        transactionNumber: String,
         agent: mongoose.SchemaTypes.Mixed,
         recipient: mongoose.SchemaTypes.Mixed,
         error: mongoose.SchemaTypes.Mixed,
@@ -55,6 +56,25 @@ schema.index(
 schema.index(
     { updatedAt: 1 },
     { name: 'searchByUpdatedAt' }
+);
+
+schema.index(
+    { transactionNumber: 1 },
+    {
+        unique: true,
+        partialFilterExpression: {
+            transactionNumber: { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { transactionNumber: 1, startDate: -1 },
+    {
+        partialFilterExpression: {
+            transactionNumber: { $exists: true }
+        }
+    }
 );
 
 schema.index(

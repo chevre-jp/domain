@@ -1,5 +1,4 @@
 import * as COA from '@motionpicture/coa-service';
-import * as createDebug from 'debug';
 import * as moment from 'moment';
 import { format } from 'util';
 
@@ -18,7 +17,8 @@ import * as factory from '../factory';
 
 import { credentials } from '../credentials';
 
-const debug = createDebug('chevre-domain:service');
+// tslint:disable-next-line:no-magic-numbers
+const COA_TIMEOUT = (typeof process.env.COA_TIMEOUT === 'string') ? Number(process.env.COA_TIMEOUT) : 20000;
 
 type ISearchScreeningEventTicketOffersOperation<T> = (repos: {
     event: EventRepo;
@@ -254,8 +254,6 @@ export function searchScreeningEventTicketOffers(params: {
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
             id: params.eventId
         });
-        const screeningEventOffers = <factory.event.screeningEvent.IOffer>event.offers;
-
         const superEvent = await repos.event.findById(event.superEvent);
         const eventSoundFormatTypes
             = (Array.isArray(event.superEvent.soundFormat)) ? event.superEvent.soundFormat.map((f) => f.typeOf) : [];
@@ -263,9 +261,13 @@ export function searchScreeningEventTicketOffers(params: {
             = (Array.isArray(event.superEvent.videoFormat))
                 ? event.superEvent.videoFormat.map((f) => f.typeOf)
                 : ['2D'];
-        const availableOffers = await repos.offer.findOffersByOfferCatalogId({
-            offerCatalog: { id: <string>screeningEventOffers.id }
-        });
+
+        let availableOffers: factory.offer.IUnitPriceOffer[] = [];
+        if (typeof event.hasOfferCatalog?.id === 'string') {
+            availableOffers = await repos.offer.findOffersByOfferCatalogId({
+                offerCatalog: { id: event.hasOfferCatalog.id }
+            });
+        }
         const sortedOfferIds = availableOffers.map((o) => o.id);
 
         const soundFormatChargeSpecifications =
@@ -301,7 +303,7 @@ export function searchScreeningEventTicketOffers(params: {
 
         const eventOffers = {
             ...superEvent.offers,
-            ...screeningEventOffers
+            ...<factory.event.screeningEvent.IOffer>event.offers
         };
 
         // ムビチケが決済方法として許可されていれば、ムビチケオファーを作成
@@ -479,6 +481,57 @@ export function searchAddOns(params: {
     };
 }
 
+/**
+ * プロダクトオファーを検索する
+ */
+export function searchProductOffers(params: {
+    itemOffered: { id: string };
+}) {
+    return async (repos: {
+        offer: OfferRepo;
+        offerCatalog: OfferCatalogRepo;
+        product: ProductRepo;
+    }): Promise<factory.event.screeningEvent.ITicketOffer[]> => {
+        // プロダクト検索
+        const product = await repos.product.findById({ id: params.itemOffered.id });
+
+        const offerCatalogId = product.hasOfferCatalog?.id;
+        if (typeof offerCatalogId !== 'string') {
+            return [];
+        }
+
+        // オファーカタログ検索
+        const offerCatalog = await repos.offerCatalog.findById({ id: offerCatalogId });
+
+        // オファー検索
+        const offers = await repos.offer.search({
+            id: { $in: offerCatalog.itemListElement.map((e) => e.id) }
+        });
+
+        return offers
+            .map((o) => {
+                const unitSpec = o.priceSpecification;
+
+                // tslint:disable-next-line:max-line-length
+                const compoundPriceSpecification: factory.compoundPriceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>
+                    = {
+                    project: product.project,
+                    typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
+                    priceCurrency: factory.priceCurrency.JPY,
+                    valueAddedTaxIncluded: true,
+                    priceComponent: [
+                        ...(unitSpec !== undefined) ? [unitSpec] : []
+                    ]
+                };
+
+                return {
+                    ...o,
+                    priceSpecification: compoundPriceSpecification
+                };
+            });
+    };
+}
+
 export function importFromCOA(params: {
     project: factory.project.IProject;
     theaterCode: string;
@@ -486,21 +539,39 @@ export function importFromCOA(params: {
     return async (repos: {
         offer: OfferRepo;
     }) => {
-        const masterService = new COA.service.Master({
-            endpoint: credentials.coa.endpoint,
-            auth: coaAuthClient
-        });
+        const masterService = new COA.service.Master(
+            {
+                endpoint: credentials.coa.endpoint,
+                auth: coaAuthClient
+            },
+            { timeout: COA_TIMEOUT }
+        );
 
-        const ticketResults = await masterService.ticket({ theaterCode: params.theaterCode });
+        try {
+            const ticketResults = await masterService.ticket({ theaterCode: params.theaterCode });
 
-        await Promise.all(ticketResults.map(async (ticketResult) => {
-            const offer = coaTicket2offer({ project: params.project, theaterCode: params.theaterCode, ticketResult: ticketResult });
+            await Promise.all(ticketResults.map(async (ticketResult) => {
+                const offer = coaTicket2offer({ project: params.project, theaterCode: params.theaterCode, ticketResult: ticketResult });
 
-            debug('saving offer...', ticketResult, 'to', offer);
-            await repos.offer.saveByIdentifier(offer);
-        }));
+                await repos.offer.saveByIdentifier(offer);
+            }));
+        } catch (error) {
+            let throwsError = true;
 
-        debug(ticketResults.length, 'offers imported');
+            // "name": "COAServiceError",
+            // "code": 500,
+            // "status": "",
+            // "message": "ESOCKETTIMEDOUT",
+            if (error.name === 'COAServiceError') {
+                if (error.message === 'ESOCKETTIMEDOUT') {
+                    throwsError = false;
+                }
+            }
+
+            if (throwsError) {
+                throw error;
+            }
+        }
     };
 }
 

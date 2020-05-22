@@ -94,9 +94,21 @@ export class MongoRepository {
 
     public async save(taskAttributes: factory.task.IAttributes): Promise<factory.task.ITask> {
         return this.taskModel.create(taskAttributes)
-            .then(
-                (doc) => <factory.task.ITask>doc.toObject()
-            );
+            .then((doc) => <factory.task.ITask>doc.toObject());
+    }
+
+    public async saveMany(taskAttributes: factory.task.IAttributes[]): Promise<any> {
+        if (taskAttributes.length > 0) {
+            const result = <any>await this.taskModel.insertMany(taskAttributes, { ordered: false, rawResult: true });
+
+            if (result.insertedCount !== taskAttributes.length) {
+                throw new factory.errors.ServiceUnavailable('all tasks not saved');
+            }
+
+            return result.ops;
+        } else {
+            return [];
+        }
     }
 
     public async executeOneByName<T extends factory.taskName>(params: {

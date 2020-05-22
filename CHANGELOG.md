@@ -18,6 +18,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.0.0 - 2020-05-22
+
+### Added
+
+- サービス登録取引を追加
+- 通貨転送取引を追加
+- 通貨転送取引番号リポジトリを追加
+- DepositServiceを追加
+- イベントにhasOfferCatalogを追加
+
+### Changed
+
+- イベントのカタログ情報をoffersからhasOfferCatalogへ分離
+- 取引ステータス変更時の複数タスク作成を一度に実行するように変更
+- COA情報インポートタスクのエラーハンドリング調整
+- 予約取引に取引番号を指定できるように調整
+- 予約番号を取引番号として拡張
+- 予約取引を取引番号で確定できるように調整
+- 予約取引開始時に座席オファーを指定できるように調整
+
 ## v14.7.0 - 2020-04-26
 
 ### Changed

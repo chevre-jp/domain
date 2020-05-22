@@ -15,9 +15,9 @@ import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../../repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
-import { RedisRepository as ReservationNumberRepo } from '../../repo/reservationNumber';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
+import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
 
 import * as OfferService from '../offer';
 import * as ReserveService from '../reserve';
@@ -32,9 +32,19 @@ import {
 } from './reserve/factory';
 
 export type IStartOperation<T> = (repos: {
+    eventAvailability: ScreeningEventAvailabilityRepo;
+    event: EventRepo;
+    offer: OfferRepo;
+    offerCatalog: OfferCatalogRepo;
+    offerRateLimit: OfferRateLimitRepo;
+    product: ProductRepo;
+    place: PlaceRepo;
+    priceSpecification: PriceSpecificationRepo;
     project: ProjectRepo;
-    reservationNumber: ReservationNumberRepo;
+    reservation: ReservationRepo;
+    task: TaskRepo;
     transaction: TransactionRepo;
+    transactionNumber: TransactionNumberRepo;
 }) => Promise<T>;
 
 export type IAddReservationsOperation<T> = (repos: {
@@ -77,19 +87,32 @@ export function start(
     params: factory.transaction.reserve.IStartParamsWithoutDetail
 ): IStartOperation<factory.transaction.ITransaction<factory.transactionType.Reserve>> {
     return async (repos: {
+        eventAvailability: ScreeningEventAvailabilityRepo;
+        event: EventRepo;
+        offer: OfferRepo;
+        offerCatalog: OfferCatalogRepo;
+        offerRateLimit: OfferRateLimitRepo;
+        product: ProductRepo;
+        place: PlaceRepo;
+        priceSpecification: PriceSpecificationRepo;
         project: ProjectRepo;
-        reservationNumber: ReservationNumberRepo;
+        reservation: ReservationRepo;
+        task: TaskRepo;
         transaction: TransactionRepo;
+        transactionNumber: TransactionNumberRepo;
     }) => {
         const now = new Date();
 
         const project = await repos.project.findById({ id: params.project.id });
 
         // 予約番号発行
-        const reservationNumber = await repos.reservationNumber.publishByTimestamp({
-            project: params.project,
-            reserveDate: now
-        });
+        let reservationNumber: string | undefined = params.transactionNumber;
+        if (typeof reservationNumber !== 'string') {
+            reservationNumber = await repos.transactionNumber.publishByTimestamp({
+                project: params.project,
+                startDate: now
+            });
+        }
 
         const startParams = createStartParams({
             ...params,
@@ -109,6 +132,14 @@ export function start(
             }
 
             throw error;
+        }
+
+        // 指定があれば予約追加
+        if (typeof params.object.event?.id === 'string') {
+            transaction = await addReservations({
+                id: transaction.id,
+                object: params.object
+            })(repos);
         }
 
         return transaction;
@@ -169,14 +200,15 @@ export function addReservations(params: {
             throw new factory.errors.Argument('Event', `Event status ${event.eventStatus}`);
         }
 
-        const eventOffers = <factory.event.screeningEvent.IOffer>event.offers;
-
         // 指定席のみかどうか
-        const reservedSeatsOnly = eventOffers.itemOffered.serviceOutput?.reservedTicket?.ticketedSeat !== undefined;
+        const reservedSeatsOnly = event.offers?.itemOffered.serviceOutput?.reservedTicket?.ticketedSeat !== undefined;
 
         // イベントオファー検索
         const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
-        const availableOffers = await repos.offer.findOffersByOfferCatalogId({ offerCatalog: { id: <string>eventOffers.id } });
+        let availableOffers: factory.offer.IUnitPriceOffer[] = [];
+        if (typeof event.hasOfferCatalog?.id === 'string') {
+            availableOffers = await repos.offer.findOffersByOfferCatalogId({ offerCatalog: { id: event.hasOfferCatalog.id } });
+        }
 
         // 座席オファー検索
         const availableSeatOffers = await OfferService.searchEventSeatOffers({ event: { id: event.id } })(repos);
@@ -501,9 +533,10 @@ function onReservationCreated(
         }
 
         // タスク保管
-        await Promise.all(taskAttributes.map(async (taskAttribute) => {
-            return repos.task.save(taskAttribute);
-        }));
+        await repos.task.saveMany(taskAttributes);
+        // await Promise.all(taskAttributes.map(async (taskAttribute) => {
+        //     return repos.task.save(taskAttribute);
+        // }));
     };
 }
 
@@ -514,11 +547,22 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
+        let transaction: factory.transaction.ITransaction<factory.transactionType.Reserve>;
+
         // 取引存在確認
-        const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.Reserve,
-            id: params.id
-        });
+        if (typeof params.id === 'string') {
+            transaction = await repos.transaction.findById({
+                typeOf: factory.transactionType.Reserve,
+                id: params.id
+            });
+        } else if (typeof params.transactionNumber === 'string') {
+            transaction = await repos.transaction.findByTransactionNumber({
+                typeOf: factory.transactionType.Reserve,
+                transactionNumber: params.transactionNumber
+            });
+        } else {
+            throw new factory.errors.ArgumentNull('Transaction ID or Transaction Number');
+        }
 
         // potentialActions作成
         const potentialActions: factory.transaction.reserve.IPotentialActions = createPotentialActions({
@@ -540,7 +584,10 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
 /**
  * 取引中止
  */
-export function cancel(params: { id: string }): ICancelOperation<void> {
+export function cancel(params: {
+    id?: string;
+    transactionNumber?: string;
+}): ICancelOperation<void> {
     return async (repos: {
         action: ActionRepo;
         eventAvailability: ScreeningEventAvailabilityRepo;
@@ -552,7 +599,8 @@ export function cancel(params: { id: string }): ICancelOperation<void> {
         // まず取引状態変更
         const transaction = await repos.transaction.cancel({
             typeOf: factory.transactionType.Reserve,
-            id: params.id
+            id: params.id,
+            transactionNumber: params.transactionNumber
         });
 
         // 本来非同期でタスクが実行されるが、同期的に仮予約取消が実行されていないと、サービス利用側が困る可能性があるので、
@@ -729,20 +777,23 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                         };
                     });
 
-                    const cancelPendingReservationTask: factory.task.cancelPendingReservation.IAttributes = {
-                        project: transaction.project,
-                        name: factory.taskName.CancelPendingReservation,
-                        status: factory.taskStatus.Ready,
-                        runsAt: new Date(), // なるはやで実行
-                        remainingNumberOfTries: 10,
-                        numberOfTried: 0,
-                        executionResults: [],
-                        data: {
-                            actionAttributes: actionAttributes
-                        }
-                    };
+                    const cancelPendingReservationTasks: factory.task.cancelPendingReservation.IAttributes[] =
+                        actionAttributes.map((a) => {
+                            return {
+                                project: transaction.project,
+                                name: factory.taskName.CancelPendingReservation,
+                                status: factory.taskStatus.Ready,
+                                runsAt: new Date(), // なるはやで実行
+                                remainingNumberOfTries: 10,
+                                numberOfTried: 0,
+                                executionResults: [],
+                                data: {
+                                    actionAttributes: [a]
+                                }
+                            };
+                        });
 
-                    taskAttributes.push(cancelPendingReservationTask);
+                    taskAttributes.push(...cancelPendingReservationTasks);
                 }
 
                 break;
@@ -751,6 +802,7 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                 throw new factory.errors.NotImplemented(`Transaction status "${transaction.status}" not implemented.`);
         }
 
-        return Promise.all(taskAttributes.map(async (a) => repos.task.save(a)));
+        return repos.task.saveMany(taskAttributes);
+        // return Promise.all(taskAttributes.map(async (a) => repos.task.save(a)));
     };
 }

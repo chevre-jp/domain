@@ -179,6 +179,23 @@ export class MongoRepository {
         return doc.toObject();
     }
 
+    public async findByTransactionNumber<T extends factory.transactionType>(params: {
+        typeOf: T;
+        transactionNumber: string;
+    }): Promise<factory.transaction.ITransaction<T>> {
+        const doc = await this.transactionModel.findOne({
+            transactionNumber: { $exists: true, $eq: params.transactionNumber },
+            typeOf: params.typeOf
+        })
+            .exec();
+
+        if (doc === null) {
+            throw new factory.errors.NotFound(this.transactionModel.modelName);
+        }
+
+        return doc.toObject();
+    }
+
     /**
      * 取引を確定する
      */
@@ -336,7 +353,8 @@ export class MongoRepository {
      */
     public async cancel<T extends factory.transactionType>(params: {
         typeOf: T;
-        id: string;
+        id?: string;
+        transactionNumber?: string;
     }): Promise<factory.transaction.ITransaction<T>> {
         const endDate = moment()
             .toDate();
@@ -345,7 +363,10 @@ export class MongoRepository {
         const doc = await this.transactionModel.findOneAndUpdate(
             {
                 typeOf: params.typeOf,
-                _id: params.id,
+                ...(typeof params.id === 'string') ? { _id: params.id } : undefined,
+                ...(typeof params.transactionNumber === 'string')
+                    ? { transactionNumber: { $exists: true, $eq: params.transactionNumber } }
+                    : undefined,
                 status: factory.transactionStatusType.InProgress
             },
             {
@@ -357,7 +378,18 @@ export class MongoRepository {
             .exec();
         // NotFoundであれば取引状態確認
         if (doc === null) {
-            const transaction = await this.findById<T>(params);
+            let transaction: factory.transaction.ITransaction<T>;
+            if (typeof params.id === 'string') {
+                transaction = await this.findById<T>({ typeOf: params.typeOf, id: params.id });
+            } else if (typeof params.transactionNumber === 'string') {
+                transaction = await this.findByTransactionNumber<T>({
+                    typeOf: params.typeOf,
+                    transactionNumber: params.transactionNumber
+                });
+            } else {
+                throw new factory.errors.ArgumentNull('Transaction ID or Transaction Number');
+            }
+
             if (transaction.status === factory.transactionStatusType.Canceled) {
                 // すでに中止済の場合
                 return transaction;

@@ -13,8 +13,9 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "^4.5.0",
+    "@chevre/factory": "^4.16.0",
     "@motionpicture/coa-service": "^8.0.1",
+    "@pecorino/api-nodejs-client": "^5.0.0",
     "JSONStream": "^1.3.5",
     "cdigit": "^2.4.0",
     "debug": "^3.2.6",
@@ -107,5 +108,5 @@
     "postversion": "git push origin --tags",
     "prepublishOnly": "npm run clean && npm run build && npm test && npm run doc"
   },
-  "version": "14.7.0"
+  "version": "15.0.0"
 }

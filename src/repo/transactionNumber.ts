@@ -12,10 +12,10 @@ import * as factory from '../factory';
 const debug = createDebug('chevre-domain:repo');
 
 /**
- * 予約番号リポジトリ
+ * 取引番号リポジトリ
  */
 export class RedisRepository {
-    public static REDIS_KEY_PREFIX: string = 'chevre:reservationNumber';
+    public static REDIS_KEY_PREFIX: string = 'chevre:transactionNumber';
     public readonly redisClient: redis.RedisClient;
 
     constructor(redisClient: redis.RedisClient) {
@@ -27,21 +27,18 @@ export class RedisRepository {
      */
     public async publishByTimestamp(params: {
         project: { id: string };
-        /**
-         * 予約日時
-         */
-        reserveDate: Date;
+        startDate: Date;
     }): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             // tslint:disable-next-line:no-magic-numbers
             const projectPrefix = params.project.id.slice(0, 3)
                 .toUpperCase();
-            const timestamp = moment(params.reserveDate)
+            const timestamp = moment(params.startDate)
                 .valueOf()
                 .toString();
 
             const now = moment();
-            const TTL = moment(params.reserveDate)
+            const TTL = moment(params.startDate)
                 .add(1, 'minute') // ミリ秒でカウントしていくので、予約日時後1分で十分
                 .diff(now, 'seconds');
             debug(`TTL:${TTL} seconds`);
@@ -65,25 +62,25 @@ export class RedisRepository {
                         // tslint:disable-next-line:no-single-line-block-comment
                         /* istanbul ignore else: please write tests */
                         if (Number.isInteger(results[0])) {
-                            let reservationNumber = timestamp;
+                            let transactionNumber = timestamp;
                             const no: number = results[0];
                             debug('no incremented.', no);
 
-                            reservationNumber = `${reservationNumber}${no}`;
+                            transactionNumber = `${transactionNumber}${no}`;
 
                             // checkdigit
-                            const cd = cdigit.luhn.compute(reservationNumber);
+                            const cd = cdigit.luhn.compute(transactionNumber);
 
                             const cipher = fpe({ password: cd });
-                            reservationNumber = cipher.encrypt(reservationNumber);
+                            transactionNumber = cipher.encrypt(transactionNumber);
 
-                            debug('publishing reservationNumber from', projectPrefix, timestamp, no, cd);
-                            reservationNumber = `${projectPrefix}${cd}${reservationNumber}`;
+                            debug('publishing transactionNumber from', projectPrefix, timestamp, no, cd);
+                            transactionNumber = `${projectPrefix}${cd}${transactionNumber}`;
 
-                            resolve(reservationNumber);
+                            resolve(transactionNumber);
                         } else {
                             // 基本的にありえないフロー
-                            reject(new factory.errors.ServiceUnavailable('Reservation number not published'));
+                            reject(new factory.errors.ServiceUnavailable('Transaction number not published'));
                         }
                     }
                 });
