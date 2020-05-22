@@ -114,6 +114,18 @@ export class MongoRepository {
             });
         }
 
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        const hasOfferCatalogIdEq = conditions.hasOfferCatalog?.id?.$eq;
+        if (typeof hasOfferCatalogIdEq === 'string') {
+            andConditions.push({
+                'hasOfferCatalog.id': {
+                    $exists: true,
+                    $eq: hasOfferCatalogIdEq
+                }
+            });
+        }
+
         let params: factory.event.ISearchConditions<factory.eventType>;
 
         switch (conditions.typeOf) {
@@ -205,16 +217,6 @@ export class MongoRepository {
                             'offers.validFrom': {
                                 $exists: true,
                                 $lte: params.offers.validThrough
-                            }
-                        });
-                    }
-                    // tslint:disable-next-line:no-single-line-block-comment
-                    /* istanbul ignore else */
-                    if (Array.isArray(params.offers.ids)) {
-                        andConditions.push({
-                            'offers.id': {
-                                $exists: true,
-                                $in: params.offers.ids
                             }
                         });
                     }
