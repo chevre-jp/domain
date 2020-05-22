@@ -32,7 +32,17 @@ import {
 } from './reserve/factory';
 
 export type IStartOperation<T> = (repos: {
+    eventAvailability: ScreeningEventAvailabilityRepo;
+    event: EventRepo;
+    offer: OfferRepo;
+    offerCatalog: OfferCatalogRepo;
+    offerRateLimit: OfferRateLimitRepo;
+    product: ProductRepo;
+    place: PlaceRepo;
+    priceSpecification: PriceSpecificationRepo;
     project: ProjectRepo;
+    reservation: ReservationRepo;
+    task: TaskRepo;
     transaction: TransactionRepo;
     transactionNumber: TransactionNumberRepo;
 }) => Promise<T>;
@@ -77,7 +87,17 @@ export function start(
     params: factory.transaction.reserve.IStartParamsWithoutDetail
 ): IStartOperation<factory.transaction.ITransaction<factory.transactionType.Reserve>> {
     return async (repos: {
+        eventAvailability: ScreeningEventAvailabilityRepo;
+        event: EventRepo;
+        offer: OfferRepo;
+        offerCatalog: OfferCatalogRepo;
+        offerRateLimit: OfferRateLimitRepo;
+        product: ProductRepo;
+        place: PlaceRepo;
+        priceSpecification: PriceSpecificationRepo;
         project: ProjectRepo;
+        reservation: ReservationRepo;
+        task: TaskRepo;
         transaction: TransactionRepo;
         transactionNumber: TransactionNumberRepo;
     }) => {
@@ -112,6 +132,14 @@ export function start(
             }
 
             throw error;
+        }
+
+        // 指定があれば予約追加
+        if (typeof params.object.event?.id === 'string') {
+            await addReservations({
+                id: transaction.id,
+                object: params.object
+            })(repos);
         }
 
         return transaction;

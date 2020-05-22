@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 予約取引に取引番号を指定できるように調整
 - 予約番号を取引番号として拡張
 - 予約取引を取引番号で確定できるように調整
+- 予約取引開始時に座席オファーを指定できるように調整
 
 ### Deprecated
 
