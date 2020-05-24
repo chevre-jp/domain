@@ -174,6 +174,16 @@ schema.index(
 );
 
 schema.index(
+    { 'hasOfferCatalog.id': 1, startDate: 1 },
+    {
+        name: 'searchByHasOfferCatalog',
+        partialFilterExpression: {
+            'hasOfferCatalog.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'offers.availabilityEnds': 1, startDate: 1 },
     {
         name: 'searchByOffersAvailabilityEnds-v2',
