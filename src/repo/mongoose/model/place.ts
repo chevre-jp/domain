@@ -28,7 +28,8 @@ const schema = new mongoose.Schema(
         url: String,
         kanaName: String,
         offers: mongoose.SchemaTypes.Mixed,
-        additionalProperty: [mongoose.SchemaTypes.Mixed]
+        additionalProperty: [mongoose.SchemaTypes.Mixed],
+        parentOrganization: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'places',
@@ -111,6 +112,16 @@ schema.index(
         name: 'searchByKanaName-v2',
         partialFilterExpression: {
             kanaName: { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'parentOrganization.id': 1, branchCode: 1 },
+    {
+        name: 'searchByParentOrganization',
+        partialFilterExpression: {
+            'parentOrganization.id': { $exists: true }
         }
     }
 );

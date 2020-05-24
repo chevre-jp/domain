@@ -83,6 +83,16 @@ export class MongoRepository {
             });
         }
 
+        const parentOrganizationIdEq = (<any>params).parentOrganization?.id?.$eq;
+        if (typeof parentOrganizationIdEq === 'string') {
+            andConditions.push({
+                'parentOrganization.id': {
+                    $exists: true,
+                    $eq: parentOrganizationIdEq
+                }
+            });
+        }
+
         return andConditions;
     }
 

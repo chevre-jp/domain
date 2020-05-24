@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- 劇場に親組織を追加
+
 ### Changed
 
 ### Deprecated
