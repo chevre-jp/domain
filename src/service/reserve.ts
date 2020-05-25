@@ -319,16 +319,16 @@ function processUnlockSeat(params: {
                 const seatNumber4sub = subReservation.reservedTicket?.ticketedSeat?.seatNumber;
 
                 if (typeof seatSection4sub === 'string' && typeof seatNumber4sub === 'string') {
-                    lockKey = {
+                    const lockKey4sub: IUnlockKey = {
                         eventId: reservation.reservationFor.id,
                         offer: {
                             seatNumber: seatNumber4sub,
                             seatSection: seatSection4sub
                         }
                     };
-                    holder = await repos.eventAvailability.getHolder(lockKey);
-                    if (holder === params.expectedHolder) {
-                        await repos.eventAvailability.unlock(lockKey);
+                    const holder4sub = await repos.eventAvailability.getHolder(lockKey4sub);
+                    if (holder4sub === params.expectedHolder) {
+                        await repos.eventAvailability.unlock(lockKey4sub);
                     }
                 }
             }));
