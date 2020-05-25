@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Fixed
 
+- 予約取消時のサブ予約取消処理を調整
+
 ### Security
 
 ## v15.1.0 - 2020-05-24
