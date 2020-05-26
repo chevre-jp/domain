@@ -506,6 +506,8 @@ export function importFromCOA(params: {
             });
             debug('countFreeSeatResult:', countFreeSeatResult);
 
+            const bulkWriteOps: any = [];
+
             if (Array.isArray(countFreeSeatResult.listDate)) {
                 for (const countFreeSeatDate of countFreeSeatResult.listDate) {
                     if (Array.isArray(countFreeSeatDate.listPerformance)) {
@@ -521,27 +523,27 @@ export function importFromCOA(params: {
                                 });
 
                                 const remainingAttendeeCapacity: number = Math.max(0, Number(countFreeSeatPerformance.cntReserveFree));
-                                debug('updating capacity...', {
-                                    eventId,
-                                    remainingAttendeeCapacity
-                                });
 
-                                const doc = await repos.event.eventModel.findOneAndUpdate(
-                                    {
-                                        _id: eventId,
-                                        remainingAttendeeCapacity: { $ne: remainingAttendeeCapacity }
-                                    },
-                                    { remainingAttendeeCapacity: remainingAttendeeCapacity }
-                                )
-                                    .exec();
-                                debug('capacity update.', (doc !== null) ? doc.id : '');
+                                bulkWriteOps.push({
+                                    updateOne: {
+                                        filter: {
+                                            _id: eventId,
+                                            remainingAttendeeCapacity: { $ne: remainingAttendeeCapacity }
+                                        },
+                                        update: { remainingAttendeeCapacity: remainingAttendeeCapacity }
+                                    }
+                                });
                             } catch (error) {
-                                console.error('importFromCOA error:', error);
+                                console.error('createScreeningEventIdFromCOA error:', error);
                             }
                         }
                     }
                 }
             }
+
+            debug(bulkWriteOps.length, 'ops writing...');
+            const res = await repos.event.eventModel.bulkWrite(bulkWriteOps, { ordered: false });
+            debug('bulkWrite res:', res);
         } catch (error) {
             let throwsError = true;
 
