@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- 1トランザクションでの予約取消取引処理を追加
+
 ### Changed
 
 ### Deprecated
