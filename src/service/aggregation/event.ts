@@ -542,8 +542,10 @@ export function importFromCOA(params: {
             }
 
             debug(bulkWriteOps.length, 'ops writing...');
-            const res = await repos.event.eventModel.bulkWrite(bulkWriteOps, { ordered: false });
-            debug('bulkWrite res:', res);
+            if (bulkWriteOps.length > 0) {
+                const res = await repos.event.eventModel.bulkWrite(bulkWriteOps, { ordered: false });
+                debug('bulkWrite res:', res);
+            }
         } catch (error) {
             let throwsError = true;
 
