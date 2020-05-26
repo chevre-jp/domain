@@ -270,6 +270,30 @@ export class MongoRepository {
     }
 
     /**
+     * 取引を開始&確定
+     */
+    public async startAndConfirm<T extends factory.transactionType>(
+        params: factory.transaction.IStartParams<T> & {
+            id: string;
+            result: factory.transaction.IResult<T>;
+            potentialActions: factory.transaction.IPotentialActions<T>;
+        }
+    ): Promise<factory.transaction.ITransaction<T>> {
+        return this.transactionModel.create({
+            _id: params.id,
+            typeOf: params.typeOf,
+            ...<Object>params,
+            startDate: new Date(),
+            status: factory.transactionStatusType.Confirmed,
+            tasksExportationStatus: factory.transactionTasksExportationStatus.Unexported,
+            endDate: new Date(),
+            result: params.result,
+            potentialActions: params.potentialActions
+        })
+            .then((doc) => doc.toObject());
+    }
+
+    /**
      * タスク未エクスポートの取引をひとつ取得してエクスポートを開始する
      */
     public async startExportTasks<T extends factory.transactionType>(params: {
