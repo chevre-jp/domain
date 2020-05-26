@@ -361,6 +361,43 @@ export class MongoRepository {
         return doc.toObject();
     }
 
+    public async saveMany<T extends factory.eventType>(params: {
+        id?: string;
+        attributes: factory.event.IAttributes<T>;
+        upsert?: boolean;
+    }[]): Promise<void> {
+        const bulkWriteOps: any = [];
+
+        if (Array.isArray(params)) {
+            params.forEach((p) => {
+                if (p.id === undefined) {
+                    const id = uniqid();
+
+                    bulkWriteOps.push({
+                        insertOne: {
+                            document: { ...p.attributes, _id: id }
+                        }
+                    });
+                } else {
+                    bulkWriteOps.push({
+                        updateOne: {
+                            filter: {
+                                _id: p.id,
+                                typeOf: p.attributes.typeOf
+                            },
+                            update: p.attributes,
+                            upsert: (p.upsert !== undefined) ? p.upsert : false
+                        }
+                    });
+                }
+            });
+        }
+
+        if (bulkWriteOps.length > 0) {
+            await this.eventModel.bulkWrite(bulkWriteOps, { ordered: false });
+        }
+    }
+
     public async count<T extends factory.eventType>(
         params: factory.event.ISearchConditions<T>
     ): Promise<number> {
