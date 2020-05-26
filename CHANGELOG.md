@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.4.0 - 2020-05-26
+
+### Changed
+
+- COAイベントインポート処理をbulkWriteへ変更
+
 ## v15.3.0 - 2020-05-26
 
 ### Added

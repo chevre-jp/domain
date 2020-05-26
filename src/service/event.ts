@@ -252,14 +252,30 @@ function saveScreeningEventSeries(params: {
                 jimakufukikaeKubuns: jimakufukikaeKubuns
             });
         });
+
         // 永続化
+        debug('saving', screeningEventSerieses.length, 'ScreeningEventSeries...');
+        const saveParams: {
+            id?: string;
+            attributes: factory.event.IAttributes<factory.eventType.ScreeningEventSeries>;
+            upsert?: boolean;
+        }[] = [];
+
         for (const screeningEventSeries of screeningEventSerieses) {
-            await repos.event.save({
+            saveParams.push({
                 id: screeningEventSeries.id,
                 attributes: screeningEventSeries,
                 upsert: true
             });
+            // await repos.event.save({
+            //     id: screeningEventSeries.id,
+            //     attributes: screeningEventSeries,
+            //     upsert: true
+            // });
         }
+
+        await repos.event.saveMany(saveParams);
+        debug('saved', screeningEventSerieses.length, 'ScreeningEventSeries...');
 
         return screeningEventSerieses;
     };
@@ -354,6 +370,12 @@ function saveScreeningEvents(params: {
 
         // 永続化
         debug(`storing ${screeningEvents.length} screeningEvents...`);
+        const saveParams: {
+            id?: string;
+            attributes: factory.event.IAttributes<factory.eventType.ScreeningEvent>;
+            upsert?: boolean;
+        }[] = [];
+
         for (const screeningEvent of screeningEvents) {
             try {
                 const attributes = {
@@ -365,11 +387,16 @@ function saveScreeningEvents(params: {
                 };
                 delete attributes.remainingAttendeeCapacity;
 
-                await repos.event.save<factory.eventType.ScreeningEvent>({
+                saveParams.push({
                     id: screeningEvent.id,
                     attributes: attributes,
                     upsert: true
                 });
+                // await repos.event.save<factory.eventType.ScreeningEvent>({
+                //     id: screeningEvent.id,
+                //     attributes: attributes,
+                //     upsert: true
+                // });
             } catch (error) {
                 // tslint:disable-next-line:no-single-line-block-comment
                 /* istanbul ignore next */
@@ -377,6 +404,8 @@ function saveScreeningEvents(params: {
                 console.error(error);
             }
         }
+
+        await repos.event.saveMany(saveParams);
         debug(`${screeningEvents.length} screeningEvents stored.`);
 
         return screeningEvents;
