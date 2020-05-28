@@ -163,6 +163,16 @@ schema.index(
 );
 
 schema.index(
+    { 'object.reservationNumber': 1, startDate: -1 },
+    {
+        name: 'searchByObjectReservationNumber',
+        partialFilterExpression: {
+            'object.reservationNumber': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'object.membershipNumber': 1, startDate: -1 },
     {
         name: 'searchByObjectMembershipNumber',

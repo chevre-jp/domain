@@ -93,11 +93,31 @@ export class MongoRepository {
             }
         }
 
+        const transactionNumberEq = params.transactionNumber?.$eq;
+        if (typeof transactionNumberEq === 'string') {
+            andConditions.push({
+                transactionNumber: {
+                    $exists: true,
+                    $eq: transactionNumberEq
+                }
+            });
+        }
+
         switch (params.typeOf) {
             case factory.transactionType.CancelReservation:
                 break;
 
             case factory.transactionType.Reserve:
+                const objectReservationNumberEq = params.object?.reservationNumber?.$eq;
+                if (typeof objectReservationNumberEq === 'string') {
+                    andConditions.push({
+                        'object.reservationNumber': {
+                            $exists: true,
+                            $eq: objectReservationNumberEq
+                        }
+                    });
+                }
+
                 if (params.object !== undefined) {
                     if (params.object.reservations !== undefined) {
                         if (params.object.reservations.id !== undefined) {
