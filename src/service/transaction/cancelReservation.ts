@@ -47,12 +47,25 @@ function validateStartParams(params: factory.transaction.cancelReservation.IStar
             });
         }
 
-        // 予約存在確認
-        if (typeof params.object.reservation?.id === 'string') {
-            const reservation = await repos.reservation.findById<factory.reservationType.EventReservation>({
-                id: params.object.reservation.id
+        // 予約番号で取引存在確認
+        if (typeof params.object.reservation?.reservationNumber === 'string') {
+            const transactions = await repos.transaction.search<factory.transactionType.Reserve>({
+                limit: 1,
+                typeOf: factory.transactionType.Reserve,
+                object: { reservationNumber: { $eq: params.object.reservation?.reservationNumber } }
             });
-            reservations = [reservation];
+            reserveTransaction = transactions.shift();
+        }
+
+        // 取引指定が確認できなければ、予約指定を確認
+        if (reserveTransaction === undefined) {
+            // 予約存在確認
+            if (typeof params.object.reservation?.id === 'string') {
+                const reservation = await repos.reservation.findById<factory.reservationType.EventReservation>({
+                    id: params.object.reservation.id
+                });
+                reservations = [reservation];
+            }
         }
 
         if (reserveTransaction === undefined && reservations === undefined) {
