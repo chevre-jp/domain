@@ -119,6 +119,7 @@ export function start(
         }
 
         // サービスアウトプット作成
+        const dateIssued = new Date();
         const transactionObject: any[] = acceptedOffers.map((acceptedOffer) => {
             const offer = offers.find((o) => o.id === acceptedOffer.id);
             if (offer === undefined) {
@@ -126,6 +127,7 @@ export function start(
             }
 
             const serviceOutput = createServiceOutput({
+                dateIssued: dateIssued,
                 product: product,
                 acceptedOffer: acceptedOffer,
                 offer: offer,
@@ -254,7 +256,8 @@ export function confirm(params: factory.transaction.registerService.IConfirmPara
         });
 
         const potentialActions = await createPotentialActions({
-            transaction: transaction
+            transaction: transaction,
+            endDate: params.endDate
         });
 
         // 取引確定
