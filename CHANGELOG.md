@@ -10,8 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- サービス登録取引をメンバーシップサービスに対応
-
 ### Deprecated
 
 ### Removed
@@ -19,6 +17,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.6.0 - 2020-06-10
+
+### Changed
+
+- サービス登録取引をメンバーシップサービスに対応
 
 ## v15.5.0 - 2020-05-29
 
