@@ -1,5 +1,6 @@
 const domain = require('../lib');
 const mongoose = require('mongoose');
+const moment = require('moment');
 
 const project = { id: 'cinerino' };
 
@@ -17,7 +18,7 @@ async function main() {
     // プロダクト検索
     const products = await productRepo.productModel.find({
         'project.id': { $eq: project.id },
-        typeOf: { $eq: 'PaymentCard' }
+        typeOf: { $eq: 'MembershipService' }
     }).exec()
         .then((docs) => docs.map((doc) => doc.toObject()));
     console.log(products);
@@ -44,20 +45,19 @@ async function main() {
     // console.log(offers.length, 'offers found');
 
     const identifier = `CIN${(new Date()).valueOf()}`;
-    const accessCode = '123';
     const transaction = await domain.service.transaction.registerService.start({
         project: { id: project.id },
         typeOf: domain.factory.transactionType.RegisterService,
+        transactionNumber: identifier,
         object: [
             {
                 // 7iri85wk5ggjsmg
-                id: '7k740xps6',
+                id: '7iri85wk5ggf685',
                 itemOffered: {
                     id: product.id,
                     serviceOutput: {
-                        identifier: `${identifier}00`,
-                        accessCode: accessCode,
-                        name: 'プリペ'
+                        additionalProperty: [{ name: 'sampleName', value: 'sampleValue' }],
+                        name: 'サンプルメンバーシップ'
                     }
                 }
             }
@@ -74,7 +74,8 @@ async function main() {
     console.log('transaction started');
 
     await domain.service.transaction.registerService.confirm({
-        id: transaction.id
+        id: transaction.id,
+        endDate: moment('2020-06-10T00:00:00Z').toDate()
     })({
         transaction: transactionRepo
     });

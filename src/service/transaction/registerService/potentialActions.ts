@@ -1,57 +1,61 @@
-import * as pecorinoapi from '@pecorino/api-nodejs-client';
+// import * as pecorinoapi from '@pecorino/api-nodejs-client';
 import * as moment from 'moment';
 import * as factory from '../../../factory';
 
-function createMoneyTransferActions(params: {
+function createMoneyTransferActions(__: {
     transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
 }): factory.action.transfer.moneyTransfer.IAttributes[] {
-    const transaction = params.transaction;
+    return [];
+    // const transaction = params.transaction;
 
-    const serviceOutputs = transaction.object.map((o: any) => o.itemOffered.serviceOutput);
+    // const serviceOutputs = transaction.object.map((o) => o.itemOffered.serviceOutput);
 
-    return serviceOutputs
-        .filter((serviceOutput: any) => serviceOutput.typeOf === 'MoneyTransfer')
-        .map((serviceOutput: any) => {
-            return {
-                project: transaction.project,
-                typeOf: factory.actionType.MoneyTransfer,
-                description: transaction.object.description,
-                result: {
-                    amount: serviceOutput.amount
-                },
-                object: {
-                    pendingTransaction: {
-                        typeOf: pecorinoapi.factory.transactionType.Deposit,
-                        transactionNumber: transaction.transactionNumber
-                    }
-                },
-                agent: transaction.agent,
-                recipient: transaction.recipient,
-                amount: serviceOutput.amount,
-                toLocation: serviceOutput.toLocation,
-                purpose: {
-                    typeOf: transaction.typeOf,
-                    id: transaction.id
-                }
-            };
-        });
+    // return serviceOutputs
+    //     .filter((serviceOutput: any) => serviceOutput.typeOf === 'MoneyTransfer')
+    //     .map((serviceOutput: any) => {
+    //         return {
+    //             project: transaction.project,
+    //             typeOf: factory.actionType.MoneyTransfer,
+    //             description: transaction.object.description,
+    //             result: {
+    //                 amount: serviceOutput.amount
+    //             },
+    //             object: {
+    //                 pendingTransaction: {
+    //                     typeOf: pecorinoapi.factory.transactionType.Deposit,
+    //                     transactionNumber: transaction.transactionNumber
+    //                 }
+    //             },
+    //             agent: transaction.agent,
+    //             recipient: transaction.recipient,
+    //             amount: serviceOutput.amount,
+    //             toLocation: serviceOutput.toLocation,
+    //             purpose: {
+    //                 typeOf: transaction.typeOf,
+    //                 id: transaction.id
+    //             }
+    //         };
+    //     });
 }
 
 function createRegisterServiceActions(params: {
     transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+    endDate?: Date;
 }): factory.action.interact.register.service.IAttributes[] {
     const transaction = params.transaction;
 
-    const serviceOutputs = transaction.object.map((o: any) => o.itemOffered.serviceOutput);
+    const serviceOutputs = transaction.object.map((o) => o.itemOffered.serviceOutput);
 
-    const validFrom = new Date();
-    // とりあえずデフォルトで有効期間6カ月
-    const validUntil = moment(validFrom)
-        // tslint:disable-next-line:no-magic-numbers
-        .add(6, 'months')
-        .toDate();
+    const validFrom = (params.endDate instanceof Date) ? params.endDate : new Date();
 
-    return serviceOutputs.map((serviceOutput: any) => {
+    return serviceOutputs.map((serviceOutput) => {
+        const duration = moment.duration(serviceOutput?.validFor);
+
+        // オファーの単価単位で有効期限を決定
+        const validUntil = moment(validFrom)
+            .add(duration)
+            .toDate();
+
         return {
             project: params.transaction.project,
             typeOf: <factory.actionType.RegisterAction>factory.actionType.RegisterAction,
@@ -76,6 +80,7 @@ function createRegisterServiceActions(params: {
  */
 export async function createPotentialActions(params: {
     transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+    endDate?: Date;
 }): Promise<factory.transaction.IPotentialActions<factory.transactionType.RegisterService>> {
     // 通貨転送アクション属性作成
     const moneyTransferActionAttributesList = createMoneyTransferActions(params);

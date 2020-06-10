@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.6.0 - 2020-06-10
+
+### Changed
+
+- サービス登録取引をメンバーシップサービスに対応
+
 ## v15.5.0 - 2020-05-29
 
 ### Added
