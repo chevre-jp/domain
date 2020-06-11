@@ -249,11 +249,22 @@ export function confirm(params: factory.transaction.registerService.IConfirmPara
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
+        let transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+
         // 取引存在確認
-        const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.RegisterService,
-            id: <string>params.id
-        });
+        if (typeof params.id === 'string') {
+            transaction = await repos.transaction.findById({
+                typeOf: factory.transactionType.RegisterService,
+                id: params.id
+            });
+        } else if (typeof (<any>params).transactionNumber === 'string') {
+            transaction = await repos.transaction.findByTransactionNumber({
+                typeOf: factory.transactionType.RegisterService,
+                transactionNumber: (<any>params).transactionNumber
+            });
+        } else {
+            throw new factory.errors.ArgumentNull('Transaction ID or Transaction Number');
+        }
 
         const potentialActions = await createPotentialActions({
             transaction: transaction,
