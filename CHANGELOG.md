@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.7.0 - 2020-06-11
+
+### Changed
+
+- サービス登録取引を取引番号で確定できるように調整
+
 ## v15.6.0 - 2020-06-10
 
 ### Changed
