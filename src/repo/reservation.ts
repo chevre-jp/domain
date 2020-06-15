@@ -838,9 +838,9 @@ export class MongoRepository {
         }
     ): Promise<factory.reservation.IReservation<T>> {
         const doc = await this.reservationModel.findByIdAndUpdate(
-            params.id,
+            String(params.id),
             {
-                ...params,
+                ...<any>params,
                 reservationStatus: factory.reservationStatusType.ReservationConfirmed,
                 modifiedTime: new Date()
             },

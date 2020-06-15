@@ -43,7 +43,7 @@ export class MongoRepository {
 
     public async findById(params: {
         id: string;
-    }): Promise<any> {
+    }): Promise<factory.service.IService> {
         const doc = await this.productModel.findOne(
             {
                 _id: params.id
@@ -64,7 +64,7 @@ export class MongoRepository {
 
     public async search(
         params: any
-    ): Promise<any[]> {
+    ): Promise<factory.service.IService[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.productModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
