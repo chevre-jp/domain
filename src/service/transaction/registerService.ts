@@ -19,7 +19,7 @@ import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
 import * as MoneyTransferService from '../moneyTransfer';
-import { createServiceOutput } from './registerService/factory';
+import { createPointAward, createServiceOutput } from './registerService/factory';
 
 import { createPotentialActions } from './registerService/potentialActions';
 
@@ -126,6 +126,11 @@ export function start(
                 throw new factory.errors.NotFound('Offer', `Offer ${acceptedOffer.id} not found`);
             }
 
+            const pointAward = createPointAward({
+                acceptedOffer: acceptedOffer,
+                offer: offer
+            });
+
             const serviceOutput = createServiceOutput({
                 dateIssued: dateIssued,
                 product: product,
@@ -141,7 +146,8 @@ export function start(
                     project: product.project,
                     typeOf: product.typeOf,
                     id: String(product.id),
-                    serviceOutput: serviceOutput
+                    serviceOutput: serviceOutput,
+                    ...(pointAward !== undefined) ? { pointAward } : undefined
                 }
             };
         });

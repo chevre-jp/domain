@@ -1,4 +1,4 @@
-// import * as pecorinoapi from '@pecorino/api-nodejs-client';
+import * as pecorinoapi from '@pecorino/api-nodejs-client';
 import * as moment from 'moment';
 import * as factory from '../../../factory';
 
@@ -45,7 +45,7 @@ function createRegisterServiceActions(params: {
     const validFrom = (params.endDate instanceof Date) ? params.endDate : new Date();
 
     return params.transaction.object.map((o) => {
-        // const pointAward = o.itemOffered.pointAward;
+        const pointAward = o.itemOffered.pointAward;
         const serviceOutput = o.itemOffered.serviceOutput;
         const duration = moment.duration(serviceOutput?.validFor);
 
@@ -57,41 +57,40 @@ function createRegisterServiceActions(params: {
         const moneyTransfer: factory.action.transfer.moneyTransfer.IAttributes[] = [];
 
         // ポイント特典があれば適用
-        // if (pointAward !== undefined) {
-        //     if (typeof pointAward.amount?.value === 'number') {
-        //         const fromLocation: factory.action.transfer.moneyTransfer.IAnonymousLocation = {
-        //             typeOf: (typeof serviceOutput?.issuedBy?.typeOf === 'string') ? serviceOutput?.issuedBy?.typeOf : 'Organization',
-        //             name: (serviceOutput?.issuedBy?.name !== undefined)
-        //                 ? (typeof serviceOutput?.issuedBy?.name === 'string')
-        //                     ? serviceOutput?.issuedBy?.name
-        //                     : serviceOutput?.issuedBy?.name.ja
-        //                 : 'chevre'
-        //         };
+        if (pointAward !== undefined) {
+            if (typeof pointAward.amount?.value === 'number') {
+                const fromLocation: factory.action.transfer.moneyTransfer.IAnonymousLocation = {
+                    typeOf: (typeof serviceOutput?.issuedBy?.typeOf === 'string')
+                        ? serviceOutput?.issuedBy?.typeOf
+                        : params.transaction.typeOf,
+                    name: (serviceOutput?.issuedBy?.name !== undefined)
+                        ? (typeof serviceOutput?.issuedBy?.name === 'string')
+                            ? serviceOutput?.issuedBy?.name
+                            : serviceOutput?.issuedBy?.name.ja
+                        : params.transaction.id
+                };
 
-        //         moneyTransfer.push({
-        //             project: params.transaction.project,
-        //             typeOf: factory.actionType.MoneyTransfer,
-        //             agent: fromLocation,
-        //             object: {
-        //                 pendingTransaction: <any>{
-        //                     typeOf: pecorinoapi.factory.transactionType.Deposit,
-        //                     transactionNumber: '' // どう処理するか
-        //                 }
-        //             },
-        //             purpose: {
-        //                 typeOf: params.transaction.typeOf,
-        //                 id: params.transaction.id
-        //             },
-        //             amount: {
-        //                 typeOf: 'MonetaryAmount',
-        //                 value: pointAward.amount?.value,
-        //                 currency: pointAward.amount?.currency
-        //             },
-        //             fromLocation: fromLocation,
-        //             toLocation: pointAward.toLocation
-        //         });
-        //     }
-        // }
+                moneyTransfer.push({
+                    project: params.transaction.project,
+                    typeOf: factory.actionType.MoneyTransfer,
+                    agent: fromLocation,
+                    object: {
+                        typeOf: pecorinoapi.factory.transactionType.Deposit
+                    },
+                    purpose: {
+                        typeOf: params.transaction.typeOf,
+                        id: params.transaction.id
+                    },
+                    amount: {
+                        typeOf: 'MonetaryAmount',
+                        value: pointAward.amount?.value,
+                        currency: pointAward.amount?.currency
+                    },
+                    fromLocation: fromLocation,
+                    toLocation: pointAward.toLocation
+                });
+            }
+        }
 
         return {
             project: params.transaction.project,

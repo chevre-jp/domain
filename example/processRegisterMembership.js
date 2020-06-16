@@ -2,7 +2,8 @@ const domain = require('../lib');
 const mongoose = require('mongoose');
 const moment = require('moment');
 
-const project = { id: 'cinerino' };
+// const project = { id: 'cinerino' };
+const project = { id: 'sskts-development' };
 
 async function main() {
     await mongoose.connect(process.env.MONGOLAB_URI, { autoIndex: true });
@@ -52,9 +53,11 @@ async function main() {
         object: [
             {
                 // 7iri85wk5ggjsmg
-                id: '7iri85wk5ggf685',
+                // id: '7iri85wk5ggf685',
+                id: '7k9f3ht34',
                 itemOffered: {
                     id: product.id,
+                    pointAward: { toLocation: { identifier: '72001740002' } },
                     serviceOutput: {
                         additionalProperty: [{ name: 'sampleName', value: 'sampleValue' }],
                         name: 'サンプルメンバーシップ'
