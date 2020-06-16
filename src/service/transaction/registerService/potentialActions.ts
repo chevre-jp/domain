@@ -1,4 +1,4 @@
-// import * as pecorinoapi from '@pecorino/api-nodejs-client';
+import * as pecorinoapi from '@pecorino/api-nodejs-client';
 import * as moment from 'moment';
 import * as factory from '../../../factory';
 
@@ -42,19 +42,57 @@ function createRegisterServiceActions(params: {
     transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
     endDate?: Date;
 }): factory.action.interact.register.service.IAttributes[] {
-    const transaction = params.transaction;
-
-    const serviceOutputs = transaction.object.map((o) => o.itemOffered.serviceOutput);
-
     const validFrom = (params.endDate instanceof Date) ? params.endDate : new Date();
 
-    return serviceOutputs.map((serviceOutput) => {
+    return params.transaction.object.map((o) => {
+        const pointAward = o.itemOffered.pointAward;
+        const serviceOutput = o.itemOffered.serviceOutput;
         const duration = moment.duration(serviceOutput?.validFor);
 
         // オファーの単価単位で有効期限を決定
         const validUntil = moment(validFrom)
             .add(duration)
             .toDate();
+
+        const moneyTransfer: factory.action.transfer.moneyTransfer.IAttributes[] = [];
+
+        // ポイント特典があれば適用
+        if (pointAward !== undefined) {
+            if (typeof pointAward.amount?.value === 'number') {
+                const fromLocation: factory.action.transfer.moneyTransfer.IAnonymousLocation = {
+                    typeOf: (typeof serviceOutput?.issuedBy?.typeOf === 'string')
+                        ? serviceOutput?.issuedBy?.typeOf
+                        : params.transaction.typeOf,
+                    name: (serviceOutput?.issuedBy?.name !== undefined)
+                        ? (typeof serviceOutput?.issuedBy?.name === 'string')
+                            ? serviceOutput?.issuedBy?.name
+                            : serviceOutput?.issuedBy?.name.ja
+                        : params.transaction.id
+                };
+
+                moneyTransfer.push({
+                    project: params.transaction.project,
+                    typeOf: factory.actionType.MoneyTransfer,
+                    agent: fromLocation,
+                    object: {
+                        typeOf: pecorinoapi.factory.transactionType.Deposit
+                    },
+                    purpose: {
+                        typeOf: params.transaction.typeOf,
+                        id: params.transaction.id
+                    },
+                    amount: {
+                        typeOf: 'MonetaryAmount',
+                        value: pointAward.amount?.value,
+                        currency: pointAward.amount?.currency
+                    },
+                    fromLocation: fromLocation,
+                    toLocation: pointAward.toLocation,
+                    ...(typeof (<any>pointAward).description === 'string') ? { description: (<any>pointAward).description } : undefined,
+                    ...((<any>pointAward).recipient !== undefined) ? { recipient: (<any>pointAward).recipient } : undefined
+                });
+            }
+        }
 
         return {
             project: params.transaction.project,
@@ -66,7 +104,9 @@ function createRegisterServiceActions(params: {
                 validUntil: validUntil
             },
             agent: params.transaction.agent,
-            potentialActions: {},
+            potentialActions: {
+                moneyTransfer: moneyTransfer
+            },
             purpose: {
                 typeOf: params.transaction.typeOf,
                 id: params.transaction.id

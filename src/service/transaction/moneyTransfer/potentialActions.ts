@@ -35,6 +35,8 @@ function createMoneyTransferActions(params: {
                 amount: transaction.object.amount
             },
             object: {
+                typeOf: transaction.object.pendingTransaction.typeOf,
+                transactionNumber: transaction.object.pendingTransaction.transactionNumber,
                 pendingTransaction: transaction.object.pendingTransaction
             },
             agent: transaction.agent,

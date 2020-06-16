@@ -11,6 +11,7 @@ import * as factory from '../factory';
 import { MongoRepository as ActionRepo } from '../repo/action';
 import { MongoRepository as ProjectRepo } from '../repo/project';
 import { MongoRepository as TransactionRepo } from '../repo/transaction';
+import { RedisRepository as TransactionNumberRepo } from '../repo/transactionNumber';
 
 import { handlePecorinoError } from '../errorHandler';
 
@@ -268,21 +269,86 @@ export function cancelMoneyTransfer(params: {
 }
 
 export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
+    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     return async (repos: {
         action: ActionRepo;
+        transactionNumber: TransactionNumberRepo;
     }) => {
         const action = await repos.action.start(params);
 
         try {
-            const pendingTransaction = params.object.pendingTransaction;
+            let pendingTransaction = params.object.pendingTransaction;
 
-            switch (pendingTransaction.typeOf) {
+            let transactionType = params.object.typeOf;
+            if (pendingTransaction !== undefined) {
+                transactionType = pendingTransaction.typeOf;
+            }
+
+            let transactionNumber = params.object.transactionNumber;
+            if (pendingTransaction !== undefined) {
+                transactionNumber = pendingTransaction.transactionNumber;
+            }
+
+            // 取引番号指定でなければ発行
+            if (typeof transactionNumber !== 'string') {
+                transactionNumber = await repos.transactionNumber.publishByTimestamp({
+                    project: params.project,
+                    startDate: new Date()
+                });
+            }
+
+            switch (transactionType) {
                 case pecorinoapi.factory.transactionType.Deposit:
                     const depositService = new pecorinoapi.service.transaction.Deposit({
                         endpoint: credentials.pecorino.endpoint,
                         auth: pecorinoAuthClient
                     });
-                    await depositService.confirm({ transactionNumber: pendingTransaction.transactionNumber });
+
+                    // 入金取引の場合、承認済でないケースがある(ポイント付与など)
+                    if (pendingTransaction === undefined) {
+                        const agent = {
+                            typeOf: params.agent.typeOf,
+                            name: (typeof params.agent.name === 'string')
+                                ? params.agent.name
+                                : (typeof params.agent.name?.ja === 'string') ? params.agent.name?.ja : params.fromLocation.typeOf,
+                            ...(typeof params.agent.id === 'string') ? { id: params.agent.id } : undefined,
+                            ...(typeof params.agent.url === 'string') ? { url: params.agent.url } : undefined
+                        };
+                        const recipient = {
+                            typeOf: (typeof params.recipient?.typeOf === 'string') ? params.recipient?.typeOf : params.toLocation.typeOf,
+                            name: (typeof params.recipient?.name === 'string')
+                                ? params.recipient.name
+                                : (typeof params.recipient?.name?.ja === 'string') ? params.recipient.name?.ja : params.toLocation.typeOf,
+                            ...(typeof params.recipient?.id === 'string') ? { id: params.recipient.id } : undefined,
+                            ...(typeof params.recipient?.url === 'string') ? { url: params.recipient.url } : undefined
+                        };
+                        const expires = moment()
+                            .add(1, 'minutes')
+                            .toDate();
+                        const amount = (typeof params.amount.value === 'number') ? params.amount.value : 0;
+                        const description = (typeof params.description === 'string') ? params.description : params.purpose.typeOf;
+
+                        pendingTransaction = await depositService.start({
+                            transactionNumber: transactionNumber,
+                            project: { typeOf: params.project.typeOf, id: params.project.id },
+                            typeOf: pecorinoapi.factory.transactionType.Deposit,
+                            agent: agent,
+                            expires: expires,
+                            recipient: recipient,
+                            object: {
+                                amount: amount,
+                                description: description,
+                                fromLocation: params.fromLocation,
+                                toLocation: {
+                                    typeOf: pecorinoapi.factory.account.TypeOf.Account,
+                                    accountNumber: (<factory.action.transfer.moneyTransfer.IPaymentCard>params.toLocation).identifier,
+                                    accountType: params.amount.currency
+                                }
+                            }
+                        });
+                    }
+
+                    await depositService.confirm({ transactionNumber: transactionNumber });
 
                     break;
 
@@ -291,7 +357,7 @@ export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
                         endpoint: credentials.pecorino.endpoint,
                         auth: pecorinoAuthClient
                     });
-                    await transferService.confirm({ transactionNumber: pendingTransaction.transactionNumber });
+                    await transferService.confirm({ transactionNumber: transactionNumber });
 
                     break;
 
@@ -300,7 +366,7 @@ export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
                         endpoint: credentials.pecorino.endpoint,
                         auth: pecorinoAuthClient
                     });
-                    await withdrawService.confirm({ transactionNumber: pendingTransaction.transactionNumber });
+                    await withdrawService.confirm({ transactionNumber: transactionNumber });
 
                     break;
 

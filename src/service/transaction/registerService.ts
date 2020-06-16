@@ -19,7 +19,7 @@ import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
 import * as MoneyTransferService from '../moneyTransfer';
-import { createServiceOutput } from './registerService/factory';
+import { createPointAward, createServiceOutput } from './registerService/factory';
 
 import { createPotentialActions } from './registerService/potentialActions';
 
@@ -110,7 +110,7 @@ export function start(
         });
 
         // オファー検索
-        const offers = await OfferService.searchProductOffers({ itemOffered: { id: product.id } })(repos);
+        const offers = await OfferService.searchProductOffers({ itemOffered: { id: String(product.id) } })(repos);
 
         const transactionNumber: string | undefined = params.transactionNumber;
         // 通貨転送取引番号の指定がなければ発行
@@ -120,11 +120,16 @@ export function start(
 
         // サービスアウトプット作成
         const dateIssued = new Date();
-        const transactionObject: any[] = acceptedOffers.map((acceptedOffer) => {
+        const transactionObject: factory.transaction.registerService.IObject = acceptedOffers.map((acceptedOffer) => {
             const offer = offers.find((o) => o.id === acceptedOffer.id);
             if (offer === undefined) {
                 throw new factory.errors.NotFound('Offer', `Offer ${acceptedOffer.id} not found`);
             }
+
+            const pointAward = createPointAward({
+                acceptedOffer: acceptedOffer,
+                offer: offer
+            });
 
             const serviceOutput = createServiceOutput({
                 dateIssued: dateIssued,
@@ -135,12 +140,14 @@ export function start(
             });
 
             return {
-                typeOf: 'Offer',
-                id: offer.id,
+                typeOf: factory.offerType.Offer,
+                id: String(offer.id),
                 itemOffered: {
+                    project: product.project,
                     typeOf: product.typeOf,
-                    id: product.id,
-                    serviceOutput: serviceOutput
+                    id: String(product.id),
+                    serviceOutput: serviceOutput,
+                    ...(pointAward !== undefined) ? { pointAward } : undefined
                 }
             };
         });
@@ -181,16 +188,17 @@ export function start(
                     auth: pecorinoAuthClient
                 });
                 await Promise.all(serviceOutputs.map(async (serviceOutput) => {
-                    const initialBalance = serviceOutput.amount?.value;
+                    const initialBalance = serviceOutput?.amount?.value;
 
-                    await accountService.open({
-                        project: { typeOf: project.typeOf, id: project.id },
-                        accountType: serviceOutput.typeOf,
-                        accountNumber: serviceOutput.identifier,
-                        name: (typeof serviceOutput.name === 'string') ? serviceOutput.name : String(serviceOutput.typeOf),
-                        ...(typeof initialBalance === 'number') ? { initialBalance } : undefined
-                    });
-
+                    if (typeof serviceOutput?.typeOf === 'string' && typeof serviceOutput.identifier === 'string') {
+                        await accountService.open({
+                            project: { typeOf: project.typeOf, id: project.id },
+                            accountType: serviceOutput.typeOf,
+                            accountNumber: serviceOutput.identifier,
+                            name: (typeof serviceOutput.name === 'string') ? serviceOutput.name : String(serviceOutput.typeOf),
+                            ...(typeof initialBalance === 'number') ? { initialBalance } : undefined
+                        });
+                    }
                 }));
 
                 break;
@@ -198,7 +206,7 @@ export function start(
             case 'MoneyTransfer':
                 // 入金取引開始
                 await Promise.all(serviceOutputs.map(async (serviceOutput) => {
-                    const toLocation = serviceOutput.toLocation;
+                    const toLocation = (<any>serviceOutput).toLocation;
 
                     await MoneyTransferService.authorize({
                         typeOf: pecorino.factory.transactionType.Deposit,
@@ -209,14 +217,14 @@ export function start(
                             name: project.name
                         },
                         object: {
-                            amount: serviceOutput.amount?.value,
+                            amount: (<any>serviceOutput).amount?.value,
                             typeOf: factory.paymentMethodType.Account,
                             toAccount: {
                                 typeOf: pecorino.factory.account.TypeOf.Account,
                                 accountType: toLocation?.typeOf,
                                 accountNumber: toLocation?.identifier
                             },
-                            description: serviceOutput.description
+                            description: (<any>serviceOutput).description
                         },
                         recipient: transaction.agent,
                         purpose: { typeOf: transaction.typeOf, id: transaction.id }
@@ -257,10 +265,10 @@ export function confirm(params: factory.transaction.registerService.IConfirmPara
                 typeOf: factory.transactionType.RegisterService,
                 id: params.id
             });
-        } else if (typeof (<any>params).transactionNumber === 'string') {
+        } else if (typeof params.transactionNumber === 'string') {
             transaction = await repos.transaction.findByTransactionNumber({
                 typeOf: factory.transactionType.RegisterService,
-                transactionNumber: (<any>params).transactionNumber
+                transactionNumber: params.transactionNumber
             });
         } else {
             throw new factory.errors.ArgumentNull('Transaction ID or Transaction Number');
@@ -294,7 +302,7 @@ export function cancel(params: { id: string }): ICancelOperation<void> {
     }) => {
         const transaction = await repos.transaction.transactionModel.findOne({
             typeOf: factory.transactionType.RegisterService,
-            _id: (<any>params).id
+            _id: params.id
         })
             .exec()
             .then((doc) => {

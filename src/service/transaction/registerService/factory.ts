@@ -1,7 +1,38 @@
+import * as pecorino from '@pecorino/api-nodejs-client';
 import * as moment from 'moment';
 import * as factory from '../../../factory';
 
 export type IUnitPriceSpecification = factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>;
+
+/**
+ * ポイント特典を作成する
+ */
+export function createPointAward(params: {
+    acceptedOffer: factory.transaction.registerService.IAcceptedOffer;
+    offer: factory.event.screeningEvent.ITicketOffer;
+}): factory.service.IPointAward | undefined {
+    let pointAward: factory.service.IPointAward | undefined;
+    const pointAwardAmount = params.offer.itemOffered?.pointAward?.amount;
+    const pointAwardDescription = params.offer.itemOffered?.pointAward?.description;
+    const pointAwardToLocation = params.acceptedOffer.itemOffered?.pointAward?.toLocation;
+    const pointAwardRecipient = (<any>params.acceptedOffer).itemOffered?.pointAward?.recipient;
+    if (typeof pointAwardAmount?.value === 'number'
+        && typeof pointAwardAmount?.currency === 'string'
+        && typeof pointAwardToLocation?.identifier === 'string') {
+        pointAward = {
+            amount: pointAwardAmount,
+            toLocation: {
+                typeOf: pecorino.factory.account.TypeOf.Account,
+                identifier: pointAwardToLocation?.identifier
+            },
+            typeOf: factory.actionType.MoneyTransfer,
+            ...(typeof pointAwardDescription === 'string') ? { description: pointAwardDescription } : undefined,
+            ...(pointAwardRecipient !== undefined) ? { recipient: pointAwardRecipient } : undefined
+        };
+    }
+
+    return pointAward;
+}
 
 /**
  * サービスアウトプットを作成する

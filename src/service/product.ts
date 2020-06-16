@@ -82,7 +82,7 @@ export function registerService(params: factory.action.interact.register.service
 }
 
 /**
- * 予約確定後のアクション
+ * サービス登録後アクション
  */
 function onRegistered(
     actionAttributes: factory.action.interact.register.service.IAttributes,
@@ -92,32 +92,27 @@ function onRegistered(
         task: TaskRepo;
     }) => {
         const potentialActions = actionAttributes.potentialActions;
-        // const now = new Date();
+        const now = new Date();
 
         const taskAttributes: factory.task.IAttributes[] = [];
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (potentialActions !== undefined) {
-            // if (Array.isArray(potentialActions.informReservation)) {
-            //     taskAttributes.push(...potentialActions.informReservation.map(
-            //         (a): factory.task.triggerWebhook.IAttributes => {
-            //             return {
-            //                 project: a.project,
-            //                 name: factory.taskName.TriggerWebhook,
-            //                 status: factory.taskStatus.Ready,
-            //                 runsAt: now, // なるはやで実行
-            //                 remainingNumberOfTries: 10,
-            //                 numberOfTried: 0,
-            //                 executionResults: [],
-            //                 data: {
-            //                     ...a,
-            //                     object: reservation
-            //                 }
-            //             };
-            //         })
-            //     );
-            // }
+            if (Array.isArray(potentialActions.moneyTransfer)) {
+                taskAttributes.push(...potentialActions.moneyTransfer.map((a) => {
+                    return {
+                        project: a.project,
+                        name: <factory.taskName.MoneyTransfer>factory.taskName.MoneyTransfer,
+                        status: factory.taskStatus.Ready,
+                        runsAt: now,
+                        remainingNumberOfTries: 10,
+                        numberOfTried: 0,
+                        executionResults: [],
+                        data: a
+                    };
+                }));
+            }
         }
 
         // タスク保管
