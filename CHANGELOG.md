@@ -8,11 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
-- サービス登録時にオファーのポイント特典を適用するように調整
-
 ### Changed
-
-- update packages
 
 ### Deprecated
 
@@ -21,6 +17,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.8.0 - 2020-06-16
+
+### Added
+
+- サービス登録時にオファーのポイント特典を適用するように調整
+
+### Changed
+
+- update packages
 
 ## v15.7.0 - 2020-06-11
 
