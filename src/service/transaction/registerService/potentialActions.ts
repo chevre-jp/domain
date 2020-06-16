@@ -87,7 +87,9 @@ function createRegisterServiceActions(params: {
                         currency: pointAward.amount?.currency
                     },
                     fromLocation: fromLocation,
-                    toLocation: pointAward.toLocation
+                    toLocation: pointAward.toLocation,
+                    ...(typeof (<any>pointAward).description === 'string') ? { description: (<any>pointAward).description } : undefined,
+                    ...((<any>pointAward).recipient !== undefined) ? { recipient: (<any>pointAward).recipient } : undefined
                 });
             }
         }

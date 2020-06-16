@@ -57,10 +57,17 @@ async function main() {
                 id: '7k9f3ht34',
                 itemOffered: {
                     id: product.id,
-                    pointAward: { toLocation: { identifier: '72001740002' } },
+                    pointAward: {
+                        toLocation: { identifier: '72001740002' },
+                        recipient: { typeOf: 'Person', name: 'サンプル受取人', id: 'sampleId' }
+                    },
                     serviceOutput: {
                         additionalProperty: [{ name: 'sampleName', value: 'sampleValue' }],
-                        name: 'サンプルメンバーシップ'
+                        name: 'サンプルメンバーシップ',
+                        issuedBy: {
+                            typeOf: 'MovieTheater',
+                            name: 'サンプルシアター'
+                        }
                     }
                 }
             }
