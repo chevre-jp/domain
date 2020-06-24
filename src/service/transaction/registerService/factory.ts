@@ -53,7 +53,7 @@ export function createServiceOutput(params: {
         throw new factory.errors.NotFound('Product serviceOutput type undefined');
     }
 
-    let identifier = acceptedOffer.itemOffered?.serviceOutput?.identifier;
+    const identifier = acceptedOffer.itemOffered?.serviceOutput?.identifier;
     const accessCode = acceptedOffer.itemOffered?.serviceOutput?.accessCode;
     const name = acceptedOffer.itemOffered?.serviceOutput?.name;
     const additionalProperty = acceptedOffer.itemOffered?.serviceOutput?.additionalProperty;
@@ -80,11 +80,12 @@ export function createServiceOutput(params: {
 
     const validFor = offer2validFor({ offer: params.offer });
 
+    if (typeof identifier !== 'string' || identifier.length === 0) {
+        throw new factory.errors.ArgumentNull('object.itemOffered.serviceOutput.identifier');
+    }
+
     switch (product.typeOf) {
         case 'PaymentCard':
-            if (typeof identifier !== 'string' || identifier.length === 0) {
-                throw new factory.errors.ArgumentNull('object.itemOffered.serviceOutput.identifier');
-            }
             if (typeof accessCode !== 'string' || accessCode.length === 0) {
                 throw new factory.errors.ArgumentNull('object.itemOffered.serviceOutput.accessCode');
             }
@@ -92,7 +93,7 @@ export function createServiceOutput(params: {
             break;
 
         case 'MembershipService':
-            identifier = params.transactionNumber;
+            // identifier = params.transactionNumber;
 
             break;
 
