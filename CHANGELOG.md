@@ -8,8 +8,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
-- サービスアウトプット識別子リポジトリを追加
-
 ### Changed
 
 ### Deprecated
@@ -19,6 +17,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.9.0 - 2020-06-24
+
+### Added
+
+- サービスアウトプット識別子リポジトリを追加
 
 ## v15.8.0 - 2020-06-16
 
