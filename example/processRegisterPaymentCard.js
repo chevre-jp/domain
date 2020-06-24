@@ -17,7 +17,7 @@ async function main() {
     // プロダクト検索
     const products = await productRepo.productModel.find({
         'project.id': { $eq: project.id },
-        typeOf: { $eq: 'PaymentCard' }
+        typeOf: { $eq: 'Account' }
     }).exec()
         .then((docs) => docs.map((doc) => doc.toObject()));
     console.log(products);
@@ -53,7 +53,7 @@ async function main() {
         object: [
             {
                 // 7iri85wk5ggjsmg
-                id: '7k740xps6',
+                id: '7k740xps8',
                 itemOffered: {
                     id: product.id,
                     serviceOutput: {

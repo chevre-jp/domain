@@ -4,6 +4,13 @@ import * as factory from '../../../factory';
 
 export type IUnitPriceSpecification = factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>;
 
+export enum ProductType {
+    Account = 'Account',
+    PaymentCard = 'PaymentCard',
+    PointCard = 'PointCard',
+    MembershipService = 'MembershipService'
+}
+
 /**
  * ポイント特典を作成する
  */
@@ -59,22 +66,29 @@ export function createServiceOutput(params: {
     const additionalProperty = acceptedOffer.itemOffered?.serviceOutput?.additionalProperty;
     const issuedBy = acceptedOffer.itemOffered?.serviceOutput?.issuedBy;
 
+    const currency: string = (typeof product.serviceOutput?.amount?.currency === 'string')
+        ? product.serviceOutput?.amount.currency
+        : factory.priceCurrency.JPY;
+
     // 初期金額
     const amount: factory.monetaryAmount.IMonetaryAmount = {
         ...product.serviceOutput?.amount,
         ...params.offer.itemOffered?.serviceOutput?.amount,
+        currency: currency,
         typeOf: 'MonetaryAmount'
     };
     // 入金設定
     const depositAmount: factory.monetaryAmount.IMonetaryAmount = {
         ...product.serviceOutput?.depositAmount,
         ...params.offer.itemOffered?.serviceOutput?.depositAmount,
+        currency: currency,
         typeOf: 'MonetaryAmount'
     };
     // 取引設定
     const paymentAmount: factory.monetaryAmount.IMonetaryAmount = {
         ...product.serviceOutput?.paymentAmount,
         ...params.offer.itemOffered?.serviceOutput?.paymentAmount,
+        currency: currency,
         typeOf: 'MonetaryAmount'
     };
 
@@ -85,14 +99,16 @@ export function createServiceOutput(params: {
     }
 
     switch (product.typeOf) {
-        case 'PaymentCard':
+        case ProductType.PaymentCard:
+        case ProductType.PointCard:
             if (typeof accessCode !== 'string' || accessCode.length === 0) {
                 throw new factory.errors.ArgumentNull('object.itemOffered.serviceOutput.accessCode');
             }
 
             break;
 
-        case 'MembershipService':
+        case ProductType.MembershipService:
+        case ProductType.Account:
             // identifier = params.transactionNumber;
 
             break;
