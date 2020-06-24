@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.9.0 - 2020-06-24
+
+### Added
+
+- サービスアウトプット識別子リポジトリを追加
+
 ## v15.8.0 - 2020-06-16
 
 ### Added

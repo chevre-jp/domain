@@ -18,6 +18,7 @@ import { MongoRepository as ProjectRepo } from './repo/project';
 import { RedisRepository as OfferRateLimitRepo } from './repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from './repo/reservation';
 import { MongoRepository as ServiceOutputRepo } from './repo/serviceOutput';
+import { RedisRepository as ServiceOutputIdentifierRepo } from './repo/serviceOutputIdentifier';
 import { MongoRepository as TaskRepo } from './repo/task';
 import { MongoRepository as TransactionRepo } from './repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from './repo/transactionNumber';
@@ -36,6 +37,7 @@ export class ProgramMembership extends ProgramMembershipRepo { }
 export class Project extends ProjectRepo { }
 export class Reservation extends ReservationRepo { }
 export class ServiceOutput extends ServiceOutputRepo { }
+export class ServiceOutputIdentifier extends ServiceOutputIdentifierRepo { }
 export class Task extends TaskRepo { }
 export class Transaction extends TransactionRepo { }
 export class TransactionNumber extends TransactionNumberRepo { }
