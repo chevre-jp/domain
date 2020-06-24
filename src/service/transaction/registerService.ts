@@ -18,8 +18,8 @@ import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
-import * as MoneyTransferService from '../moneyTransfer';
-import { createPointAward, createServiceOutput } from './registerService/factory';
+// import * as MoneyTransferService from '../moneyTransfer';
+import { createPointAward, createServiceOutput, ProductType } from './registerService/factory';
 
 import { createPotentialActions } from './registerService/potentialActions';
 
@@ -72,6 +72,11 @@ export function start(
         transaction: TransactionRepo;
     }) => {
         const project = await repos.project.findById({ id: params.project.id });
+
+        const accountService = new pecorino.service.Account({
+            endpoint: credentials.pecorino.endpoint,
+            auth: pecorinoAuthClient
+        });
 
         // const informProgramMembershipParams: factory.transaction.registerProgramMembership.IInformProgramMembershipParams[] = [];
 
@@ -181,12 +186,9 @@ export function start(
         const serviceOutputs = transactionObject.map((o) => o.itemOffered?.serviceOutput);
 
         switch (product.typeOf) {
-            case 'PaymentCard':
+            case ProductType.PaymentCard:
+            case ProductType.PointCard:
                 // Pecorinoで口座開設
-                const accountService = new pecorino.service.Account({
-                    endpoint: credentials.pecorino.endpoint,
-                    auth: pecorinoAuthClient
-                });
                 await Promise.all(serviceOutputs.map(async (serviceOutput) => {
                     const initialBalance = serviceOutput?.amount?.value;
 
@@ -203,41 +205,64 @@ export function start(
 
                 break;
 
-            case 'MoneyTransfer':
-                // 入金取引開始
+            case ProductType.Account:
+                // Pecorinoで口座開設
                 await Promise.all(serviceOutputs.map(async (serviceOutput) => {
-                    const toLocation = (<any>serviceOutput).toLocation;
+                    const accountType = serviceOutput?.amount?.currency;
+                    const initialBalance = serviceOutput?.amount?.value;
 
-                    await MoneyTransferService.authorize({
-                        typeOf: pecorino.factory.transactionType.Deposit,
-                        transactionNumber: transaction.transactionNumber,
-                        project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
-                        agent: {
-                            typeOf: project.typeOf,
-                            name: project.name
-                        },
-                        object: {
-                            amount: (<any>serviceOutput).amount?.value,
-                            typeOf: factory.paymentMethodType.Account,
-                            toAccount: {
-                                typeOf: pecorino.factory.account.TypeOf.Account,
-                                accountType: toLocation?.typeOf,
-                                accountNumber: toLocation?.identifier
-                            },
-                            description: (<any>serviceOutput).description
-                        },
-                        recipient: transaction.agent,
-                        purpose: { typeOf: transaction.typeOf, id: transaction.id }
-                    })(repos);
+                    if (typeof accountType !== 'string') {
+                        throw new factory.errors.ServiceUnavailable('Account currency undefined');
+                    }
 
-                    // await repos.transaction.transactionModel.findByIdAndUpdate(
-                    //     { _id: transaction.id },
-                    //     { 'object.pendingTransaction': pendingTransaction }
-                    // )
-                    //     .exec();
+                    if (typeof serviceOutput?.typeOf === 'string' && typeof serviceOutput.identifier === 'string') {
+                        await accountService.open({
+                            project: { typeOf: project.typeOf, id: project.id },
+                            accountType: accountType,
+                            accountNumber: serviceOutput.identifier,
+                            name: (typeof serviceOutput.name === 'string') ? serviceOutput.name : String(serviceOutput.typeOf),
+                            ...(typeof initialBalance === 'number') ? { initialBalance } : undefined
+                        });
+                    }
                 }));
 
                 break;
+
+            // case 'MoneyTransfer':
+            //     // 入金取引開始
+            //     await Promise.all(serviceOutputs.map(async (serviceOutput) => {
+            //         const toLocation = (<any>serviceOutput).toLocation;
+
+            //         await MoneyTransferService.authorize({
+            //             typeOf: pecorino.factory.transactionType.Deposit,
+            //             transactionNumber: transaction.transactionNumber,
+            //             project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
+            //             agent: {
+            //                 typeOf: project.typeOf,
+            //                 name: project.name
+            //             },
+            //             object: {
+            //                 amount: (<any>serviceOutput).amount?.value,
+            //                 typeOf: factory.paymentMethodType.Account,
+            //                 toAccount: {
+            //                     typeOf: pecorino.factory.account.TypeOf.Account,
+            //                     accountType: toLocation?.typeOf,
+            //                     accountNumber: toLocation?.identifier
+            //                 },
+            //                 description: (<any>serviceOutput).description
+            //             },
+            //             recipient: transaction.agent,
+            //             purpose: { typeOf: transaction.typeOf, id: transaction.id }
+            //         })(repos);
+
+            //         // await repos.transaction.transactionModel.findByIdAndUpdate(
+            //         //     { _id: transaction.id },
+            //         //     { 'object.pendingTransaction': pendingTransaction }
+            //         // )
+            //         //     .exec();
+            //     }));
+
+            //     break;
 
             default:
             // no op
