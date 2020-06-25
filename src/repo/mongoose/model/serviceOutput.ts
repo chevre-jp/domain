@@ -86,6 +86,46 @@ schema.index(
     }
 );
 
+schema.index(
+    { identifier: 1, dateIssued: -1 },
+    {
+        name: 'searchByIdentifier',
+        partialFilterExpression: {
+            identifier: { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'issuedBy.id': 1, dateIssued: -1 },
+    {
+        name: 'searchByIssuedById',
+        partialFilterExpression: {
+            'issuedBy.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'issuedThrough.typeOf': 1, dateIssued: -1 },
+    {
+        name: 'searchByIssuedThroughTypeOf',
+        partialFilterExpression: {
+            'issuedThrough.typeOf': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'issuedThrough.id': 1, dateIssued: -1 },
+    {
+        name: 'searchByIssuedThroughId',
+        partialFilterExpression: {
+            'issuedThrough.id': { $exists: true }
+        }
+    }
+);
+
 mongoose.model(modelName, schema)
     .on(
         'index',
