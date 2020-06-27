@@ -318,30 +318,20 @@ export function confirm(params: factory.transaction.registerService.IConfirmPara
 /**
  * 取引中止
  */
-export function cancel(params: { id: string }): ICancelOperation<void> {
+export function cancel(params: {
+    id?: string;
+    transactionNumber?: string;
+}): ICancelOperation<void> {
     return async (repos: {
         action: ActionRepo;
         serviceOutput: ServiceOutputRepo;
         task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
-        const transaction = await repos.transaction.transactionModel.findOne({
-            typeOf: factory.transactionType.RegisterService,
-            _id: params.id
-        })
-            .exec()
-            .then((doc) => {
-                if (doc === null) {
-                    throw new factory.errors.NotFound(repos.transaction.transactionModel.modelName);
-                }
-
-                return doc.toObject();
-            });
-
-        // 取引状態変更
         await repos.transaction.cancel({
-            typeOf: transaction.typeOf,
-            id: transaction.id
+            typeOf: factory.transactionType.RegisterService,
+            id: params.id,
+            transactionNumber: params.transactionNumber
         });
     };
 }
