@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.14.0 - 2020-06-28
+
+### Removed
+
+- メンバーシップ登録取引を削除
+
 ## v15.13.0 - 2020-06-27
 
 ### Changed
