@@ -17,8 +17,8 @@ export enum ProductType {
 export function createPointAward(params: {
     acceptedOffer: factory.transaction.registerService.IAcceptedOffer;
     offer: factory.event.screeningEvent.ITicketOffer;
-}): factory.service.IPointAward | undefined {
-    let pointAward: factory.service.IPointAward | undefined;
+}): factory.product.IPointAward | undefined {
+    let pointAward: factory.product.IPointAward | undefined;
     const pointAwardAmount = params.offer.itemOffered?.pointAward?.amount;
     const pointAwardDescription = params.offer.itemOffered?.pointAward?.description;
     const pointAwardToLocation = params.acceptedOffer.itemOffered?.pointAward?.toLocation;
@@ -47,7 +47,7 @@ export function createPointAward(params: {
 // tslint:disable-next-line:max-func-body-length
 export function createServiceOutput(params: {
     dateIssued: Date;
-    product: factory.service.IService;
+    product: factory.product.IProduct;
     acceptedOffer: factory.transaction.registerService.IAcceptedOffer;
     offer: factory.event.screeningEvent.ITicketOffer;
     transactionNumber: string;

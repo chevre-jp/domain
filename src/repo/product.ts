@@ -14,7 +14,7 @@ export class MongoRepository {
         this.productModel = connection.model(modelName);
     }
 
-    public static CREATE_MONGO_CONDITIONS(params: any) {
+    public static CREATE_MONGO_CONDITIONS(params: factory.product.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [];
 
@@ -38,12 +38,66 @@ export class MongoRepository {
             });
         }
 
+        const idEq = params.id?.$eq;
+        if (typeof idEq === 'string') {
+            andConditions.push({
+                _id: {
+                    $eq: idEq
+                }
+            });
+        }
+
+        const productIDEq = params.productID?.$eq;
+        if (typeof productIDEq === 'string') {
+            andConditions.push({
+                productID: {
+                    $eq: productIDEq
+                }
+            });
+        }
+
+        const productIDIn = params.productID?.$in;
+        if (Array.isArray(productIDIn)) {
+            andConditions.push({
+                productID: {
+                    $in: productIDIn
+                }
+            });
+        }
+
+        // const offersValidFromGte = params.offers?.validFrom?.$gte;
+        // if (offersValidFromGte instanceof Date) {
+        //     andConditions.push({
+        //         'offers.validFrom': {
+        //             $exists: true,
+        //             $gte: offersValidFromGte
+        //         }
+        //     });
+        // }
+
+        // const offersSellerIdIn = params.offers?.seller?.id?.$in;
+        // if (Array.isArray(offersSellerIdIn)) {
+        //     andConditions.push({
+        //         'offers.seller.id': {
+        //             $exists: true,
+        //             $in: offersSellerIdIn
+        //         }
+        //     });
+        // }
+
+        const offersElemMatch = params.offers?.$elemMatch;
+        if (offersElemMatch !== undefined && offersElemMatch !== null) {
+            andConditions.push({
+                offers: {
+                    $elemMatch: offersElemMatch
+                }
+            });
+        }
+
         return andConditions;
     }
 
-    public async findById(params: {
-        id: string;
-    }): Promise<factory.service.IService> {
+    public async findById(params: { id: string }): Promise<factory.product.IProduct> {
         const doc = await this.productModel.findOne(
             {
                 _id: params.id
@@ -62,9 +116,7 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    public async search(
-        params: any
-    ): Promise<factory.service.IService[]> {
+    public async search(params: factory.product.ISearchConditions): Promise<factory.product.IProduct[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.productModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
@@ -93,9 +145,7 @@ export class MongoRepository {
             .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
-    public async deleteById(params: {
-        id: string;
-    }) {
+    public async deleteById(params: { id: string }) {
         await this.productModel.findOneAndDelete({ _id: params.id })
             .exec();
     }
