@@ -16,9 +16,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Fixed
 
-- イベント保管メソッドがパラメータ変数を上書きしてしまうバグ対応
-
 ### Security
+
+## v15.15.1 - 2020-07-01
+
+### Fixed
+
+- イベント保管メソッドがパラメータ変数を上書きしてしまうバグ対応
 
 ## v15.15.0 - 2020-06-30
 
