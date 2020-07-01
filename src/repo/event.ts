@@ -348,7 +348,7 @@ export class MongoRepository {
                     _id: params.id,
                     typeOf: params.attributes.typeOf
                 },
-                params.attributes,
+                { ...params.attributes },
                 { upsert: (params.upsert !== undefined) ? params.upsert : false, new: true }
             )
                 .exec();
@@ -385,7 +385,7 @@ export class MongoRepository {
                                 _id: p.id,
                                 typeOf: p.attributes.typeOf
                             },
-                            update: p.attributes,
+                            update: { ...p.attributes },
                             upsert: (p.upsert !== undefined) ? p.upsert : false
                         }
                     });

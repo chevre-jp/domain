@@ -10,7 +10,7 @@ async function main() {
 
     await domain.service.event.importFromCOA({
         project: { typeOf: 'Project', id: 'sskts-development' },
-        locationBranchCode: '120',
+        locationBranchCode: '112',
         importFrom: moment().toDate(),
         importThrough: moment().add(1, 'day').toDate()
     })({
