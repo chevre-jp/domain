@@ -31,6 +31,11 @@ import {
     createStartParams
 } from './reserve/factory';
 
+const MAXIMUM_RESERVATION_GRACE_PERIOD_IN_DAYS = (process.env.MAXIMUM_RESERVATION_GRACE_PERIOD_IN_DAYS === 'string')
+    ? Number(process.env.MAXIMUM_RESERVATION_GRACE_PERIOD_IN_DAYS)
+    // tslint:disable-next-line:no-magic-numbers
+    : 93;
+
 export type IStartOperation<T> = (repos: {
     eventAvailability: ScreeningEventAvailabilityRepo;
     event: EventRepo;
@@ -198,6 +203,14 @@ export function addReservations(params: {
         // キャンセルステータスであれば予約不可
         if (event.eventStatus === factory.eventStatusType.EventCancelled) {
             throw new factory.errors.Argument('Event', `Event status ${event.eventStatus}`);
+        }
+
+        // イベントが一定期間後であれば予約不可
+        const reservableThrough = moment(now)
+            .add(MAXIMUM_RESERVATION_GRACE_PERIOD_IN_DAYS, 'days');
+        if (moment(event.startDate)
+            .isAfter(reservableThrough)) {
+            throw new factory.errors.Argument('Event', `Maximum reservation grace period is ${MAXIMUM_RESERVATION_GRACE_PERIOD_IN_DAYS} days`);
         }
 
         // 指定席のみかどうか

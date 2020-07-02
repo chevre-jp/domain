@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- 最大予約猶予期間設定を追加
+
 ### Changed
 
 ### Deprecated
