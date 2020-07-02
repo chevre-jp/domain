@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.16.0 - 2020-07-02
+
+### Added
+
+- 最大予約猶予期間設定を追加
+
 ## v15.15.1 - 2020-07-01
 
 ### Fixed
