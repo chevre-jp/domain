@@ -315,12 +315,12 @@ export function searchScreeningEventTicketOffers(params: {
                 .filter((t) => t.priceSpecification !== undefined)
                 .filter((t) => {
                     const spec = <IUnitPriceSpecification>t.priceSpecification;
-                    const movieTicketType = spec.appliesToMovieTicketType;
+                    const movieTicketType = spec.appliesToMovieTicket?.serviceType;
 
                     return movieTicketType !== undefined
                         && movieTicketType !== ''
                         // 万が一ムビチケチャージ仕様が存在しないオファーは除外する
-                        && movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketType).length > 0;
+                        && movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicket?.serviceType === movieTicketType).length > 0;
                 })
                 .map((t) => {
                     const spec = {
@@ -328,8 +328,8 @@ export function searchScreeningEventTicketOffers(params: {
                         name: t.name
                     };
 
-                    const movieTicketType = <string>spec.appliesToMovieTicketType;
-                    const mvtkSpecs = movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicketType === movieTicketType);
+                    const movieTicketType = <string>spec.appliesToMovieTicket?.serviceType;
+                    const mvtkSpecs = movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicket?.serviceType === movieTicketType);
                     const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
                         project: event.project,
                         typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
@@ -356,8 +356,7 @@ export function searchScreeningEventTicketOffers(params: {
             .filter((t) => {
                 const spec = <IUnitPriceSpecification>t.priceSpecification;
 
-                return spec.appliesToMovieTicketType === undefined
-                    || spec.appliesToMovieTicketType === '';
+                return spec.appliesToMovieTicket?.serviceType === undefined;
             })
             .map((t) => {
                 const spec = {
@@ -596,7 +595,7 @@ function coaTicket2offer(params: {
             unitCode: factory.unitCode.C62,
             value: 1
         }
-        // appliesToMovieTicketType?: string;
+        // appliesToMovieTicket?: {};
     };
 
     // const eligibleCustomerType = (params.ticketResult.flgMember === COA.factory.master.FlgMember.Member)

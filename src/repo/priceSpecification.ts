@@ -134,7 +134,7 @@ export class MongoRepository {
         if (params.appliesToMovieTicket !== undefined) {
             if (Array.isArray(params.appliesToMovieTicket.serviceTypes)) {
                 andConditions.push({
-                    appliesToMovieTicketType: {
+                    'appliesToMovieTicket.serviceType': {
                         $exists: true,
                         $in: params.appliesToMovieTicket.serviceTypes
                     }
