@@ -10,8 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- オファーと価格仕様のappliesToMovieTicketTypeをappliesToMovieTicketに変更
-
 ### Deprecated
 
 ### Removed
@@ -19,6 +17,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.17.0 - 2020-07-08
+
+### Changed
+
+- オファーと価格仕様のappliesToMovieTicketTypeをappliesToMovieTicketに変更
 
 ## v15.16.0 - 2020-07-02
 
