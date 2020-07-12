@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- イベントオファー検索処理を最適化
+
 ### Deprecated
 
 ### Removed

@@ -14,6 +14,7 @@ import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../repo/ra
 import { MongoRepository as TaskRepo } from '../repo/task';
 
 import * as factory from '../factory';
+import { createCompoundPriceSpec4event } from './offer/factory';
 
 import { credentials } from '../credentials';
 
@@ -242,7 +243,6 @@ export function searchEventSeatOffersWithPaging(params: {
 export function searchScreeningEventTicketOffers(params: {
     eventId: string;
 }): ISearchScreeningEventTicketOffersOperation<factory.event.screeningEvent.ITicketOffer[]> {
-    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         event: EventRepo;
         priceSpecification: PriceSpecificationRepo;
@@ -251,16 +251,8 @@ export function searchScreeningEventTicketOffers(params: {
         offerRateLimit: OfferRateLimitRepo;
         product: ProductRepo;
     }) => {
-        const event = await repos.event.findById<factory.eventType.ScreeningEvent>({
-            id: params.eventId
-        });
+        const event = await repos.event.findById<factory.eventType.ScreeningEvent>({ id: params.eventId });
         const superEvent = await repos.event.findById(event.superEvent);
-        const eventSoundFormatTypes
-            = (Array.isArray(event.superEvent.soundFormat)) ? event.superEvent.soundFormat.map((f) => f.typeOf) : [];
-        const eventVideoFormatTypes
-            = (Array.isArray(event.superEvent.videoFormat))
-                ? event.superEvent.videoFormat.map((f) => f.typeOf)
-                : ['2D'];
 
         let availableOffers: factory.offer.IUnitPriceOffer[] = [];
         if (typeof event.hasOfferCatalog?.id === 'string') {
@@ -268,7 +260,97 @@ export function searchScreeningEventTicketOffers(params: {
                 offerCatalog: { id: event.hasOfferCatalog.id }
             });
         }
-        const sortedOfferIds = availableOffers.map((o) => o.id);
+
+        // (テスト確認したら削除)
+        // const sortedOfferIds = availableOffers.map((o) => o.id);
+
+        const { soundFormatChargeSpecifications, videoFormatChargeSpecifications, movieTicketTypeChargeSpecs }
+            = await searchPriceSpecs4event({ event })(repos);
+
+        const eventOffers = {
+            ...superEvent.offers,
+            ...<factory.event.screeningEvent.IOffer>event.offers
+        };
+
+        // ムビチケが決済方法として許可されていなければ、ムビチケオファーを除外
+        const movieTicketPaymentAccepted = eventOffers.acceptedPaymentMethod === undefined
+            || eventOffers.acceptedPaymentMethod.indexOf(factory.paymentMethodType.MovieTicket) >= 0;
+        if (!movieTicketPaymentAccepted) {
+            availableOffers = availableOffers.filter(
+                (o) => o.priceSpecification?.appliesToMovieTicket?.typeOf !== factory.paymentMethodType.MovieTicket
+            );
+        }
+
+        // 万が一ムビチケチャージ仕様が存在しないオファーは除外する
+        availableOffers = availableOffers.filter((o) => {
+            const paymentMethodType = o.priceSpecification?.appliesToMovieTicket?.typeOf;
+            const movieTicketType = o.priceSpecification?.appliesToMovieTicket?.serviceType;
+
+            return typeof paymentMethodType !== 'string'
+                || (typeof paymentMethodType === 'string'
+                    && movieTicketTypeChargeSpecs.some((s) => {
+                        return s.appliesToMovieTicket?.typeOf === paymentMethodType
+                            && s.appliesToMovieTicket?.serviceType === movieTicketType;
+                    }));
+        });
+
+        let offers4event: factory.event.screeningEvent.ITicketOffer[] = availableOffers.map((t) => {
+            return createCompoundPriceSpec4event({
+                project: event.project,
+                eligibleQuantity: eventOffers.eligibleQuantity,
+                offer: t,
+                videoFormatChargeSpecifications,
+                soundFormatChargeSpecifications,
+                movieTicketTypeChargeSpecs
+            });
+        });
+
+        // レート制限を確認
+        offers4event = await Promise.all(offers4event.map(async (offer) => {
+            return checkAvailability({ event, offer })(repos);
+        }));
+
+        // アドオン設定があれば、プロダクトオファーを検索
+        for (const offer of offers4event) {
+            const offerAddOn: factory.offer.IAddOn[] = [];
+
+            if (Array.isArray(offer.addOn)) {
+                for (const addOn of offer.addOn) {
+                    const productId = addOn.itemOffered?.id;
+                    if (typeof productId === 'string') {
+                        const productOffers = await searchAddOns({ product: { id: productId } })(repos);
+                        offerAddOn.push(...productOffers);
+                    }
+
+                }
+            }
+
+            offer.addOn = offerAddOn;
+        }
+
+        // sorting(テスト確認したら削除)
+        // offers4event = offers4event.sort((a, b) => {
+        //     return sortedOfferIds.indexOf(a.id) - sortedOfferIds.indexOf(b.id);
+        // });
+
+        return offers4event;
+    };
+}
+
+function searchPriceSpecs4event(params: {
+    event: factory.event.screeningEvent.IEvent;
+}) {
+    return async (repos: {
+        priceSpecification: PriceSpecificationRepo;
+    }) => {
+        const event = params.event;
+
+        const eventSoundFormatTypes
+            = (Array.isArray(event.superEvent.soundFormat)) ? event.superEvent.soundFormat.map((f) => f.typeOf) : [];
+        const eventVideoFormatTypes
+            = (Array.isArray(event.superEvent.videoFormat))
+                ? event.superEvent.videoFormat.map((f) => f.typeOf)
+                : ['2D'];
 
         const soundFormatChargeSpecifications =
             await repos.priceSpecification.search<factory.priceSpecificationType.CategoryCodeChargeSpecification>({
@@ -301,144 +383,47 @@ export function searchScreeningEventTicketOffers(params: {
                 appliesToVideoFormats: eventVideoFormatTypes
             });
 
-        const eventOffers = {
-            ...superEvent.offers,
-            ...<factory.event.screeningEvent.IOffer>event.offers
-        };
+        return { soundFormatChargeSpecifications, videoFormatChargeSpecifications, movieTicketTypeChargeSpecs };
+    };
+}
 
-        // ムビチケが決済方法として許可されていれば、ムビチケオファーを作成
-        let movieTicketOffers: factory.event.screeningEvent.ITicketOffer[] = [];
-        const movieTicketPaymentAccepted = eventOffers.acceptedPaymentMethod === undefined
-            || eventOffers.acceptedPaymentMethod.indexOf(factory.paymentMethodType.MovieTicket) >= 0;
-        if (movieTicketPaymentAccepted) {
-            movieTicketOffers = availableOffers
-                .filter((t) => t.priceSpecification !== undefined)
-                .filter((t) => {
-                    const spec = <IUnitPriceSpecification>t.priceSpecification;
-                    const movieTicketType = spec.appliesToMovieTicket?.serviceType;
-
-                    return movieTicketType !== undefined
-                        && movieTicketType !== ''
-                        // 万が一ムビチケチャージ仕様が存在しないオファーは除外する
-                        && movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicket?.serviceType === movieTicketType).length > 0;
-                })
-                .map((t) => {
-                    const spec = {
-                        ...<IUnitPriceSpecification>t.priceSpecification,
-                        name: t.name
-                    };
-
-                    const movieTicketType = <string>spec.appliesToMovieTicket?.serviceType;
-                    const mvtkSpecs = movieTicketTypeChargeSpecs.filter((s) => s.appliesToMovieTicket?.serviceType === movieTicketType);
-                    const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
-                        project: event.project,
-                        typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
-                        priceCurrency: factory.priceCurrency.JPY,
-                        valueAddedTaxIncluded: true,
-                        priceComponent: [
-                            spec,
-                            ...mvtkSpecs
-                        ]
-                    };
-
-                    return {
-                        // ...eventOffers, // テスト終了後削除
-                        ...t,
-                        eligibleQuantity: eventOffers.eligibleQuantity,
-                        priceSpecification: compoundPriceSpecification
-                    };
-                });
-        }
-
-        // ムビチケ以外のオファーを作成
-        const ticketTypeOffers = availableOffers
-            .filter((t) => t.priceSpecification !== undefined)
-            .filter((t) => {
-                const spec = <IUnitPriceSpecification>t.priceSpecification;
-
-                return spec.appliesToMovieTicket?.serviceType === undefined;
-            })
-            .map((t) => {
-                const spec = {
-                    ...<IUnitPriceSpecification>t.priceSpecification,
-                    name: t.name
-                };
-
-                const compoundPriceSpecification: factory.event.screeningEvent.ITicketPriceSpecification = {
-                    project: event.project,
-                    typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
-                    priceCurrency: factory.priceCurrency.JPY,
-                    valueAddedTaxIncluded: true,
-                    priceComponent: [
-                        spec,
-                        ...videoFormatChargeSpecifications,
-                        ...soundFormatChargeSpecifications
-                    ]
-                };
-
-                return {
-                    // ...eventOffers, // テスト終了後削除
-                    ...t,
-                    eligibleQuantity: eventOffers.eligibleQuantity,
-                    priceSpecification: compoundPriceSpecification
-                };
-            });
-
-        let offers4event: factory.event.screeningEvent.ITicketOffer[] = [...ticketTypeOffers, ...movieTicketOffers];
+function checkAvailability(params: {
+    event: factory.event.screeningEvent.IEvent;
+    offer: factory.event.screeningEvent.ITicketOffer;
+}) {
+    return async (repos: {
+        offerRateLimit: OfferRateLimitRepo;
+    }): Promise<factory.event.screeningEvent.ITicketOffer> => {
+        const offer4event = params.offer;
 
         // レート制限を確認
-        for (const offer4event of offers4event) {
-            const scope = offer4event.validRateLimit?.scope;
-            const unitInSeconds = offer4event.validRateLimit?.unitInSeconds;
-            if (typeof scope === 'string' && typeof unitInSeconds === 'number') {
-                const rateLimitKey: IRateLimitKey = {
-                    reservedTicket: {
-                        ticketType: {
-                            validRateLimit: {
-                                scope: scope,
-                                unitInSeconds: unitInSeconds
-                            }
+        const scope = offer4event.validRateLimit?.scope;
+        const unitInSeconds = offer4event.validRateLimit?.unitInSeconds;
+        if (typeof scope === 'string' && typeof unitInSeconds === 'number') {
+            const rateLimitKey: IRateLimitKey = {
+                reservedTicket: {
+                    ticketType: {
+                        validRateLimit: {
+                            scope: scope,
+                            unitInSeconds: unitInSeconds
                         }
-                    },
-                    reservationFor: {
-                        startDate: moment(event.startDate)
-                            .toDate()
-                    },
-                    reservationNumber: ''
-                };
-
-                const holder = await repos.offerRateLimit.getHolder(rateLimitKey);
-                // ロックされていればOutOfStock
-                if (typeof holder === 'string' && holder.length > 0) {
-                    offer4event.availability = factory.itemAvailability.OutOfStock;
-                }
-            }
-        }
-
-        // アドオン設定があれば、プロダクトオファーを検索
-        for (const offer of offers4event) {
-            const offerAddOn: factory.offer.IAddOn[] = [];
-
-            if (Array.isArray(offer.addOn)) {
-                for (const addOn of offer.addOn) {
-                    const productId = addOn.itemOffered?.id;
-                    if (typeof productId === 'string') {
-                        const productOffers = await searchAddOns({ product: { id: productId } })(repos);
-                        offerAddOn.push(...productOffers);
                     }
+                },
+                reservationFor: {
+                    startDate: moment(params.event.startDate)
+                        .toDate()
+                },
+                reservationNumber: ''
+            };
 
-                }
+            const holder = await repos.offerRateLimit.getHolder(rateLimitKey);
+            // ロックされていればOutOfStock
+            if (typeof holder === 'string' && holder.length > 0) {
+                offer4event.availability = factory.itemAvailability.OutOfStock;
             }
-
-            offer.addOn = offerAddOn;
         }
 
-        // sorting
-        offers4event = offers4event.sort((a, b) => {
-            return sortedOfferIds.indexOf(a.id) - sortedOfferIds.indexOf(b.id);
-        });
-
-        return offers4event;
+        return offer4event;
     };
 }
 
