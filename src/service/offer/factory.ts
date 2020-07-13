@@ -31,7 +31,7 @@ export function createCompoundPriceSpec4event(params: {
         });
 
         compoundPriceSpecification = {
-            project: { typeOf: 'Project', id: params.project.id },
+            project: { typeOf: factory.organizationType.Project, id: params.project.id },
             typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
             priceCurrency: factory.priceCurrency.JPY,
             valueAddedTaxIncluded: true,
@@ -42,7 +42,7 @@ export function createCompoundPriceSpec4event(params: {
         };
     } else {
         compoundPriceSpecification = {
-            project: { typeOf: 'Project', id: params.project.id },
+            project: { typeOf: factory.organizationType.Project, id: params.project.id },
             typeOf: factory.priceSpecificationType.CompoundPriceSpecification,
             priceCurrency: factory.priceCurrency.JPY,
             valueAddedTaxIncluded: true,
