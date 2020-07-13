@@ -11,7 +11,7 @@ import { MongoRepository as TaskRepo } from '../repo/task';
 import * as TriggerWebhookTask from './task/triggerWebhook';
 
 let sandbox: sinon.SinonSandbox;
-const project = { typeOf: <'Project'>'Project', id: 'projectId' };
+const project = { typeOf: <domain.factory.organizationType.Project>domain.factory.organizationType.Project, id: 'projectId' };
 
 before(() => {
     sandbox = sinon.createSandbox();
