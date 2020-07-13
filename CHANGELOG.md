@@ -18,6 +18,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.18.0 - 2020-07-13
+
+### Added
+
+- 決済取引を追加
+- 販売者リポジトリを追加
+
 ## v15.17.1 - 2020-07-12
 
 ### Changed

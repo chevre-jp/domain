@@ -446,7 +446,7 @@ function cancelDeletedEvents(params: {
 /* istanbul ignore next */
 // tslint:disable-next-line:max-func-body-length
 export function createScreeningEventFromCOA(params: {
-    project: { typeOf: 'Project'; id: string };
+    project: { typeOf: factory.organizationType.Project; id: string };
     performanceFromCOA: COA.factory.master.IScheduleResult;
     screenRoom: factory.place.screeningRoom.IPlace;
     superEvent: factory.event.screeningEventSeries.IEvent;
@@ -597,7 +597,7 @@ export function createScreeningEventFromCOA(params: {
 /* istanbul ignore next */
 // tslint:disable-next-line:max-func-body-length
 export function createScreeningEventSeriesFromCOA(params: {
-    project: { typeOf: 'Project'; id: string };
+    project: { typeOf: factory.organizationType.Project; id: string };
     filmFromCOA: COA.factory.master.ITitleResult;
     movieTheater: factory.place.movieTheater.IPlace;
     eirinKubuns: COA.factory.master.IKubunNameResult[];
@@ -748,7 +748,7 @@ export function createScreeningEventSeriesId(params: {
 // tslint:disable-next-line:no-single-line-block-comment
 /* istanbul ignore next */
 export function createMovieTheaterFromCOA(
-    project: { typeOf: 'Project'; id: string },
+    project: { typeOf: factory.organizationType.Project; id: string },
     theaterFromCOA: COA.factory.master.ITheaterResult,
     screensFromCOA: COA.factory.master.IScreenResult[]
 ): factory.place.movieTheater.IPlace {
@@ -798,7 +798,7 @@ export function createMovieTheaterFromCOA(
 // tslint:disable-next-line:no-single-line-block-comment
 /* istanbul ignore next */
 export function createScreeningRoomFromCOA(
-    project: { typeOf: 'Project'; id: string },
+    project: { typeOf: factory.organizationType.Project; id: string },
     screenFromCOA: COA.factory.master.IScreenResult
 ): factory.place.screeningRoom.IPlace {
     const sections: factory.place.screeningRoomSection.IPlaceWithOffer[] = [];
