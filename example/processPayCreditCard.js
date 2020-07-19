@@ -33,10 +33,6 @@ async function main() {
 
     // プロジェクトからサービスエンドポイントを取得
     const project = await projectRepo.findById({ id: projectId });
-    const movieTicketPayment = project.settings.paymentServices.find(
-        (s) => s.typeOf === domain.factory.service.paymentService.PaymentServiceType.CreditCard
-            && s.serviceOutput.typeOf === paymentMethodType
-    );
 
     const transactionNumber = await transactionNumberRepo.publishByTimestamp({
         project: { id: projectId },

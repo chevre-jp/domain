@@ -9,20 +9,11 @@ import { MongoRepository as EventRepo } from '../../repo/event';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
 
-import { credentials } from '../../credentials';
 import * as factory from '../../factory';
 
 import { createSeatInfoSyncIn } from './movieTicket/factory';
 
 import { handleMvtkReserveError } from '../../errorHandler';
-
-const mvtkReserveAuthClient = new mvtkapi.auth.ClientCredentials({
-    domain: credentials.mvtkReserve.authorizeServerDomain,
-    clientId: credentials.mvtkReserve.clientId,
-    clientSecret: credentials.mvtkReserve.clientSecret,
-    scopes: [],
-    state: ''
-});
 
 export type IMovieTicket = factory.paymentMethod.paymentCard.movieTicket.IMovieTicket;
 export interface ICheckResult {
@@ -54,7 +45,7 @@ export function checkByIdentifier(params: {
             throw new factory.errors.ArgumentNull('movieTickets.typeOf');
         }
 
-        const paymentServiceUrl = await getMvtkReserveEndpoint({
+        const availableChannel = await getMvtkReserveEndpoint({
             project: params.screeningEvent.project,
             paymentMethodType: paymentMethodType
         })(repos);
@@ -101,8 +92,16 @@ export function checkByIdentifier(params: {
                 .format('YYYY/MM/DD')
         };
 
+        const mvtkReserveAuthClient = new mvtkapi.auth.ClientCredentials({
+            domain: String(availableChannel.credentials?.authorizeServerDomain),
+            clientId: String(availableChannel.credentials?.clientId),
+            clientSecret: String(availableChannel.credentials?.clientSecret),
+            scopes: [],
+            state: ''
+        });
+
         const authService = new mvtkapi.service.Auth({
-            endpoint: paymentServiceUrl,
+            endpoint: String(availableChannel.serviceUrl),
             auth: mvtkReserveAuthClient
         });
         purchaseNumberAuthResult = await authService.purchaseNumberAuth(purchaseNumberAuthIn);
@@ -259,13 +258,21 @@ export function payMovieTicket(params: factory.task.pay.IData) {
                 (a, b) => [...a, ...b.movieTickets], []
             );
 
-            const paymentServiceUrl = await getMvtkReserveEndpoint({
+            const availableChannel = await getMvtkReserveEndpoint({
                 project: params.project,
                 paymentMethodType: paymentMethodType
             })(repos);
 
+            const mvtkReserveAuthClient = new mvtkapi.auth.ClientCredentials({
+                domain: String(availableChannel.credentials?.authorizeServerDomain),
+                clientId: String(availableChannel.credentials?.clientId),
+                clientSecret: String(availableChannel.credentials?.clientSecret),
+                scopes: [],
+                state: ''
+            });
+
             const movieTicketSeatService = new mvtkapi.service.Seat({
-                endpoint: paymentServiceUrl,
+                endpoint: String(availableChannel.serviceUrl),
                 auth: mvtkReserveAuthClient
             });
 
@@ -306,7 +313,7 @@ function getMvtkReserveEndpoint(params: {
 }) {
     return async (repos: {
         project: ProjectRepo;
-    }): Promise<string> => {
+    }): Promise<factory.service.paymentService.IAvailableChannel> => {
         const project = await repos.project.findById({ id: params.project.id });
         const paymentServiceSetting = project.settings?.paymentServices?.find((s) => {
             return s.typeOf === factory.service.paymentService.PaymentServiceType.MovieTicket
@@ -315,11 +322,11 @@ function getMvtkReserveEndpoint(params: {
         if (paymentServiceSetting === undefined) {
             throw new factory.errors.NotFound('PaymentService');
         }
-        const paymentServiceUrl = paymentServiceSetting.availableChannel?.serviceUrl;
-        if (typeof paymentServiceUrl !== 'string') {
-            throw new factory.errors.NotFound('paymentService.availableChannel.serviceUrl');
+        const availableChannel = paymentServiceSetting.availableChannel;
+        if (availableChannel === undefined) {
+            throw new factory.errors.NotFound('paymentService.availableChannel');
         }
 
-        return paymentServiceUrl;
+        return availableChannel;
     };
 }

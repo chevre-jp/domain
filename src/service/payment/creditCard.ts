@@ -48,7 +48,7 @@ export function authorize(
 
         const sellerId = params.recipient?.id;
         if (typeof sellerId !== 'string') {
-            throw new factory.errors.ArgumentNull('object.recipient.id');
+            throw new factory.errors.ArgumentNull('recipient.id');
         }
 
         const seller = await repos.seller.findById({ id: sellerId });
@@ -142,8 +142,8 @@ async function processAuthorizeCreditCard(params: {
         accessPass: entryTranResult.accessPass,
         orderId: params.orderId,
         method: <any>params.object.method,
-        siteId: params.availableChannel.siteId,
-        sitePass: params.availableChannel.sitePass,
+        siteId: params.availableChannel.credentials?.siteId,
+        sitePass: params.availableChannel.credentials?.sitePass,
         cardNo: (<IUncheckedCardRaw>creditCard).cardNo,
         cardPass: (<IUncheckedCardRaw>creditCard).cardPass,
         expire: (<IUncheckedCardRaw>creditCard).expire,
@@ -637,7 +637,6 @@ function getGMOInfoFromSeller(params: {
 
     return {
         shopId: creditCardPaymentAccepted.gmoInfo.shopId,
-        shopPass: creditCardPaymentAccepted.gmoInfo.shopPass,
-        siteId: creditCardPaymentAccepted.gmoInfo.siteId
+        shopPass: creditCardPaymentAccepted.gmoInfo.shopPass
     };
 }
