@@ -2,6 +2,7 @@
  * 決済サービス
  */
 import * as mvtkapi from '@movieticket/reserve-api-nodejs-client';
+import * as moment from 'moment-timezone';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as EventRepo } from '../../repo/event';
@@ -22,6 +23,171 @@ const mvtkReserveAuthClient = new mvtkapi.auth.ClientCredentials({
     scopes: [],
     state: ''
 });
+
+export type IMovieTicket = factory.paymentMethod.paymentCard.movieTicket.IMovieTicket;
+export interface ICheckResult {
+    purchaseNumberAuthIn: factory.action.check.paymentMethod.movieTicket.IPurchaseNumberAuthIn;
+    purchaseNumberAuthResult: factory.action.check.paymentMethod.movieTicket.IPurchaseNumberAuthResult;
+    movieTickets: IMovieTicket[];
+}
+
+/**
+ * ムビチケ認証
+ */
+export function checkByIdentifier(params: {
+    movieTickets: IMovieTicket[];
+    movieTicketInfo: factory.seller.IMovieTicketInfo;
+    screeningEvent: factory.event.IEvent<factory.eventType.ScreeningEvent>;
+}) {
+    // tslint:disable-next-line:max-func-body-length
+    return async (repos: {
+        project: ProjectRepo;
+    }): Promise<ICheckResult> => {
+
+        const movieTickets: factory.action.check.paymentMethod.movieTicket.IMovieTicketResult[] = [];
+        let purchaseNumberAuthIn: factory.action.check.paymentMethod.movieTicket.IPurchaseNumberAuthIn;
+        let purchaseNumberAuthResult: factory.action.check.paymentMethod.movieTicket.IPurchaseNumberAuthResult;
+
+        // ムビチケ系統の決済方法タイプは動的
+        const paymentMethodType = params.movieTickets[0]?.typeOf;
+        if (typeof paymentMethodType !== 'string') {
+            throw new factory.errors.ArgumentNull('movieTickets.typeOf');
+        }
+
+        const paymentServiceUrl = await getMvtkReserveEndpoint({
+            project: params.screeningEvent.project,
+            paymentMethodType: paymentMethodType
+        })(repos);
+
+        const movieTicketIdentifiers: string[] = [];
+        const knyknrNoInfoIn: mvtkapi.mvtk.services.auth.purchaseNumberAuth.IKnyknrNoInfoIn[] = [];
+        params.movieTickets.forEach((movieTicket) => {
+            if (movieTicketIdentifiers.indexOf(movieTicket.identifier) < 0) {
+                movieTicketIdentifiers.push(movieTicket.identifier);
+                knyknrNoInfoIn.push({
+                    knyknrNo: movieTicket.identifier,
+                    pinCd: movieTicket.accessCode
+                });
+            }
+        });
+
+        let skhnCd = params.screeningEvent.superEvent.workPerformed.identifier;
+
+        const eventOffers = params.screeningEvent.offers;
+        if (eventOffers === undefined) {
+            throw new factory.errors.NotFound('EventOffers', 'Event offers undefined');
+        }
+
+        const offeredThrough = eventOffers.offeredThrough;
+        // イベントインポート元がCOAの場合、作品コード連携方法が異なる
+        if (offeredThrough !== undefined && offeredThrough.identifier === factory.service.webAPI.Identifier.COA) {
+            const DIGITS = -2;
+            let eventCOAInfo: any;
+            if (Array.isArray(params.screeningEvent.additionalProperty)) {
+                const coaInfoProperty = params.screeningEvent.additionalProperty.find((p) => p.name === 'coaInfo');
+                eventCOAInfo = (coaInfoProperty !== undefined) ? JSON.parse(coaInfoProperty.value) : undefined;
+            }
+            skhnCd = `${eventCOAInfo.titleCode}${`00${eventCOAInfo.titleBranchNum}`.slice(DIGITS)}`;
+        }
+
+        purchaseNumberAuthIn = {
+            kgygishCd: params.movieTicketInfo.kgygishCd,
+            jhshbtsCd: mvtkapi.mvtk.services.auth.purchaseNumberAuth.InformationTypeCode.All,
+            knyknrNoInfoIn: knyknrNoInfoIn,
+            skhnCd: skhnCd,
+            stCd: params.movieTicketInfo.stCd,
+            jeiYmd: moment(params.screeningEvent.startDate)
+                .tz('Asia/Tokyo')
+                .format('YYYY/MM/DD')
+        };
+
+        const authService = new mvtkapi.service.Auth({
+            endpoint: paymentServiceUrl,
+            auth: mvtkReserveAuthClient
+        });
+        purchaseNumberAuthResult = await authService.purchaseNumberAuth(purchaseNumberAuthIn);
+
+        // ムビチケ配列に成形
+        if (Array.isArray(purchaseNumberAuthResult.knyknrNoInfoOut)) {
+            purchaseNumberAuthResult.knyknrNoInfoOut.forEach((knyknrNoInfoOut) => {
+                const knyknrNoInfo = knyknrNoInfoIn.find((info) => info.knyknrNo === knyknrNoInfoOut.knyknrNo);
+                if (knyknrNoInfo !== undefined) {
+                    if (Array.isArray(knyknrNoInfoOut.ykknInfo)) {
+                        knyknrNoInfoOut.ykknInfo.forEach((ykknInfo) => {
+                            // tslint:disable-next-line:prefer-array-literal
+                            [...Array(Number(ykknInfo.ykknKnshbtsmiNum))].forEach(() => {
+                                movieTickets.push({
+                                    project: { typeOf: factory.organizationType.Project, id: params.screeningEvent.project.id },
+                                    typeOf: paymentMethodType,
+                                    identifier: knyknrNoInfo.knyknrNo,
+                                    accessCode: knyknrNoInfo.pinCd,
+                                    serviceType: ykknInfo.ykknshTyp,
+                                    serviceOutput: {
+                                        reservationFor: {
+                                            typeOf: params.screeningEvent.typeOf,
+                                            id: params.screeningEvent.id
+                                        },
+                                        reservedTicket: {
+                                            ticketedSeat: {
+                                                typeOf: factory.placeType.Seat,
+                                                // seatingType: 'Default', // 情報空でよし
+                                                seatNumber: '', // 情報空でよし
+                                                seatRow: '', // 情報空でよし
+                                                seatSection: '' // 情報空でよし
+                                            }
+                                        }
+                                    }
+                                });
+                            });
+                        });
+                    }
+                    if (Array.isArray(knyknrNoInfoOut.mkknInfo)) {
+                        knyknrNoInfoOut.mkknInfo.forEach((mkknInfo) => {
+                            // tslint:disable-next-line:prefer-array-literal
+                            [...Array(Number(mkknInfo.mkknKnshbtsmiNum))].forEach(() => {
+                                movieTickets.push({
+                                    project: { typeOf: factory.organizationType.Project, id: params.screeningEvent.project.id },
+                                    typeOf: paymentMethodType,
+                                    identifier: knyknrNoInfo.knyknrNo,
+                                    accessCode: knyknrNoInfo.pinCd,
+                                    amount: {
+                                        typeOf: <'MonetaryAmount'>'MonetaryAmount',
+                                        currency: factory.priceCurrency.JPY,
+                                        validThrough: moment(`${mkknInfo.yykDt}+09:00`, 'YYYY/MM/DD HH:mm:ssZ')
+                                            .toDate()
+
+                                    },
+                                    serviceType: mkknInfo.mkknshTyp,
+                                    serviceOutput: {
+                                        reservationFor: {
+                                            typeOf: params.screeningEvent.typeOf,
+                                            id: params.screeningEvent.id
+                                        },
+                                        reservedTicket: {
+                                            ticketedSeat: {
+                                                typeOf: factory.placeType.Seat,
+                                                // seatingType: 'Default', // 情報空でよし
+                                                seatNumber: '', // 情報空でよし
+                                                seatRow: '', // 情報空でよし
+                                                seatSection: '' // 情報空でよし
+                                            }
+                                        }
+                                    },
+                                    ...{
+                                        validThrough: moment(`${mkknInfo.yykDt}+09:00`, 'YYYY/MM/DD HH:mm:ssZ')
+                                            .toDate()
+                                    }
+                                });
+                            });
+                        });
+                    }
+                }
+            });
+        }
+
+        return { purchaseNumberAuthIn, purchaseNumberAuthResult, movieTickets };
+    };
+}
 
 export function voidTransaction(params: factory.task.voidPayment.IData) {
     return async (_: {
@@ -89,7 +255,7 @@ export function payMovieTicket(params: factory.task.pay.IData) {
             const seller = await repos.seller.findById({ id: String(params.recipient?.id) });
 
             // 全購入管理番号のムビチケをマージ
-            const movieTickets = payObject.reduce<factory.paymentMethod.paymentCard.movieTicket.IMovieTicket[]>(
+            const movieTickets = payObject.reduce<IMovieTicket[]>(
                 (a, b) => [...a, ...b.movieTickets], []
             );
 

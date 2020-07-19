@@ -4,16 +4,16 @@
 import * as factory from '../../../../factory';
 
 import { MongoRepository as EventRepo } from '../../../../repo/event';
-import { MvtkRepository as MovieTicketRepo } from '../../../../repo/paymentMethod/movieTicket';
 import { MongoRepository as ProjectRepo } from '../../../../repo/project';
 import { MongoRepository as SellerRepo } from '../../../../repo/seller';
+
+import { checkByIdentifier } from '../../../payment/movieTicket';
 
 export function validateMovieTicket(
     params: factory.transaction.pay.IStartParamsWithoutDetail
 ) {
     return async (repos: {
         event: EventRepo;
-        movieTicket?: MovieTicketRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
@@ -45,10 +45,6 @@ export function validateMovieTicket(
             id: eventIds[0]
         });
 
-        if (repos.movieTicket === undefined) {
-            throw new factory.errors.ServiceUnavailable('repos.movieTicket undefined');
-        }
-
         // 販売者からムビチケ決済情報取得
         const sellerId = params.recipient?.id;
         if (typeof sellerId !== 'string') {
@@ -61,11 +57,11 @@ export function validateMovieTicket(
             throw new factory.errors.Argument('recipient', 'Movie Ticket payment not accepted');
         }
 
-        const checkResult = await repos.movieTicket.checkByIdentifier({
+        const checkResult = await checkByIdentifier({
             movieTickets: movieTickets,
             movieTicketInfo: movieTicketPaymentAccepted.movieTicketInfo,
             screeningEvent: screeningEvent
-        });
+        })(repos);
 
         // 要求に対して十分かどうか検証する
         const availableMovieTickets = checkResult.movieTickets.filter((t) => t.amount?.validThrough === undefined);

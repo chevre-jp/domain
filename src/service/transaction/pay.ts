@@ -7,7 +7,6 @@ import { handleMvtkReserveError } from '../../errorHandler';
 import * as factory from '../../factory';
 
 import { MongoRepository as EventRepo } from '../../repo/event';
-import { MvtkRepository as MovieTicketRepo } from '../../repo/paymentMethod/movieTicket';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
 import { MongoRepository as TaskRepo } from '../../repo/task';
@@ -20,14 +19,12 @@ import { createPotentialActions } from './pay/potentialActions';
 
 export type IStartOperation<T> = (repos: {
     event: EventRepo;
-    movieTicket?: MovieTicketRepo;
     project: ProjectRepo;
     seller: SellerRepo;
     transaction: TransactionRepo;
 }) => Promise<T>;
 
-export type ITaskAndTransactionOperation<T> = (repos: {
-    task: TaskRepo;
+export type ICancelOperation<T> = (repos: {
     transaction: TransactionRepo;
 }) => Promise<T>;
 
@@ -35,7 +32,8 @@ export type IConfirmOperation<T> = (repos: {
     transaction: TransactionRepo;
 }) => Promise<T>;
 
-export type ICancelOperation<T> = (repos: {
+export type IExportTasksOperation<T> = (repos: {
+    task: TaskRepo;
     transaction: TransactionRepo;
 }) => Promise<T>;
 
@@ -48,7 +46,6 @@ export function start(
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         event: EventRepo;
-        movieTicket?: MovieTicketRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;
@@ -235,7 +232,7 @@ export function exportTasksById(params: {
      * タスク実行日時バッファ
      */
     runsTasksAfterInSeconds?: number;
-}): ITaskAndTransactionOperation<factory.task.ITask[]> {
+}): IExportTasksOperation<factory.task.ITask[]> {
     return async (repos: {
         task: TaskRepo;
         transaction: TransactionRepo;

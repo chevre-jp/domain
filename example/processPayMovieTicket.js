@@ -13,14 +13,6 @@ async function main() {
     });
     await mongoose.connect(process.env.MONGOLAB_URI, { autoIndex: false });
 
-    const mvtkReserveAuthClient = new domain.mvtkreserveapi.auth.ClientCredentials({
-        domain: process.env.MVTK_RESERVE_AUTHORIZE_SERVER_DOMAIN,
-        clientId: process.env.MVTK_RESERVE_CLIENT_ID,
-        clientSecret: process.env.MVTK_RESERVE_CLIENT_SECRET,
-        scopes: [],
-        state: ''
-    });
-
     const projectRepo = new domain.repository.Project(mongoose.connection);
     const eventRepo = new domain.repository.Event(mongoose.connection);
     const sellerRepo = new domain.repository.Seller(mongoose.connection);
@@ -33,15 +25,6 @@ async function main() {
 
     // プロジェクトからサービスエンドポイントを取得
     const project = await projectRepo.findById({ id: projectId });
-    const movieTicketPayment = project.settings.paymentServices.find(
-        (s) => s.typeOf === domain.factory.service.paymentService.PaymentServiceType.MovieTicket
-            && s.serviceOutput.typeOf === paymentMethodType
-    );
-
-    const movieTicketRepo = new domain.repository.paymentMethod.MovieTicket({
-        endpoint: movieTicketPayment.availableChannel.serviceUrl,
-        auth: mvtkReserveAuthClient
-    });
 
     const transactionNumber = await transactionNumberRepo.publishByTimestamp({
         project: { id: projectId },
@@ -94,7 +77,6 @@ async function main() {
         }
     })({
         event: eventRepo,
-        movieTicket: movieTicketRepo,
         project: projectRepo,
         seller: sellerRepo,
         transaction: transactionRepo,
