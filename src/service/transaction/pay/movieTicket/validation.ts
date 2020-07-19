@@ -6,6 +6,7 @@ import * as factory from '../../../../factory';
 import { MongoRepository as EventRepo } from '../../../../repo/event';
 import { MvtkRepository as MovieTicketRepo } from '../../../../repo/paymentMethod/movieTicket';
 import { MongoRepository as ProjectRepo } from '../../../../repo/project';
+import { MongoRepository as SellerRepo } from '../../../../repo/seller';
 
 export function validateMovieTicket(
     params: factory.transaction.pay.IStartParamsWithoutDetail
@@ -14,15 +15,11 @@ export function validateMovieTicket(
         event: EventRepo;
         movieTicket?: MovieTicketRepo;
         project: ProjectRepo;
+        seller: SellerRepo;
     }) => {
         const movieTickets = params.object.paymentMethod?.movieTickets;
         if (!Array.isArray(movieTickets)) {
             throw new factory.errors.Argument('object.paymentMethod.movieTickets must be an array');
-        }
-
-        const movieTicketInfo = params.object.paymentMethod?.movieTicketInfo;
-        if (movieTicketInfo === undefined) {
-            throw new factory.errors.ArgumentNull('object.paymentMethod.movieTicketInfo');
         }
 
         // イベント1つのみ許可
@@ -52,9 +49,21 @@ export function validateMovieTicket(
             throw new factory.errors.ServiceUnavailable('repos.movieTicket undefined');
         }
 
+        // 販売者からムビチケ決済情報取得
+        const sellerId = params.recipient?.id;
+        if (typeof sellerId !== 'string') {
+            throw new factory.errors.ArgumentNull('recipient.id');
+        }
+        const seller = await repos.seller.findById({ id: sellerId });
+        const movieTicketPaymentAccepted = <factory.seller.IPaymentAccepted<factory.paymentMethodType.MovieTicket>>
+            seller.paymentAccepted?.find((a) => a.paymentMethodType === paymentMethodType);
+        if (movieTicketPaymentAccepted === undefined) {
+            throw new factory.errors.Argument('recipient', 'Movie Ticket payment not accepted');
+        }
+
         const checkResult = await repos.movieTicket.checkByIdentifier({
             movieTickets: movieTickets,
-            movieTicketInfo: movieTicketInfo,
+            movieTicketInfo: movieTicketPaymentAccepted.movieTicketInfo,
             screeningEvent: screeningEvent
         });
 

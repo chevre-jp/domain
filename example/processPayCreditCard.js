@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const redis = require('redis');
 
 const projectId = 'cinerino';
-const paymentMethodType = 'MovieTicket';
+const paymentMethodType = 'CreditCard';
 
 async function main() {
     const client = redis.createClient({
@@ -34,14 +34,9 @@ async function main() {
     // プロジェクトからサービスエンドポイントを取得
     const project = await projectRepo.findById({ id: projectId });
     const movieTicketPayment = project.settings.paymentServices.find(
-        (s) => s.typeOf === domain.factory.service.paymentService.PaymentServiceType.MovieTicket
+        (s) => s.typeOf === domain.factory.service.paymentService.PaymentServiceType.CreditCard
             && s.serviceOutput.typeOf === paymentMethodType
     );
-
-    const movieTicketRepo = new domain.repository.paymentMethod.MovieTicket({
-        endpoint: movieTicketPayment.availableChannel.serviceUrl,
-        auth: mvtkReserveAuthClient
-    });
 
     const transactionNumber = await transactionNumberRepo.publishByTimestamp({
         project: { id: projectId },
@@ -55,52 +50,44 @@ async function main() {
         agent: { typeOf: 'Person', name: 'サンプル決済者名称' },
         recipient: { typeOf: seller.typeOf, name: seller.name, id: seller.id },
         object: {
-            typeOf: domain.factory.service.paymentService.PaymentServiceType.MovieTicket,
+            typeOf: domain.factory.service.paymentService.PaymentServiceType.CreditCard,
             paymentMethod: {
                 typeOf: paymentMethodType,
-                amount: 0,
+                amount: 10,
                 additionalProperty: [],
-                movieTickets: [
-                    {
-                        project: {
-                            typeOf: "Project",
-                            id: projectId
-                        },
-                        typeOf: paymentMethodType,
-                        identifier: "7760491907",
-                        accessCode: "3896",
-                        serviceType: "01",
-                        serviceOutput: {
-                            reservationFor: {
-                                typeOf: "ScreeningEvent",
-                                id: "7k9ayn1y9"
-                            },
-                            reservedTicket: {
-                                ticketedSeat: {
-                                    "seatSection": "Default",
-                                    "seatNumber": "B-1",
-                                    "seatRow": "",
-                                    "seatingType": [],
-                                    "typeOf": "Seat",
-                                    "branchCode": "I-13",
-                                    "additionalProperty": [],
-                                    "offers": []
-                                }
-                            }
-                        }
-                    }
-                ]
+                method: "1",
+                creditCard: {
+                    cardNo: '4111111111111111',
+                    expire: '2411',
+                    holderName: 'A B'
+                }
             }
         }
     })({
         event: eventRepo,
-        movieTicket: movieTicketRepo,
         project: projectRepo,
         seller: sellerRepo,
-        transaction: transactionRepo,
-        transactionNumber: transactionNumberRepo
+        transaction: transactionRepo
     });
     console.log('transaction started', transaction);
+
+    await domain.service.transaction.pay.cancel({
+        transactionNumber: transaction.transactionNumber
+    })({
+        transaction: transactionRepo
+    });
+    console.log('transaction confirmed');
+
+    await domain.service.transaction.pay.exportTasks(domain.factory.transactionStatusType.Canceled)({
+        task: taskRepo,
+        transaction: transactionRepo
+    });
+
+    await domain.service.task.executeByName({ name: domain.factory.taskName.VoidPayment })({
+        connection: mongoose.connection
+    });
+    return;
+
 
     await domain.service.transaction.pay.confirm({
         transactionNumber: transaction.transactionNumber,

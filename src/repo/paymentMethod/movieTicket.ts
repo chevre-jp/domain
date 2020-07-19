@@ -4,7 +4,7 @@ import * as moment from 'moment-timezone';
 
 import * as factory from '../../factory';
 
-const debug = createDebug('cinerino-domain:repository');
+const debug = createDebug('chevre-domain:repository');
 export type IMovieTicket = factory.paymentMethod.paymentCard.movieTicket.IMovieTicket;
 export interface IOptions {
     endpoint: string;
@@ -32,16 +32,7 @@ export class MvtkRepository {
     // tslint:disable-next-line:max-func-body-length
     public async checkByIdentifier(params: {
         movieTickets: IMovieTicket[];
-        movieTicketInfo: {
-            /**
-             * ムビチケ興行会社コード
-             */
-            kgygishCd: string;
-            /**
-             * ムビチケサイトコード
-             */
-            stCd: string;
-        };
+        movieTicketInfo: factory.seller.IMovieTicketInfo;
         screeningEvent: factory.event.IEvent<factory.eventType.ScreeningEvent>;
     }): Promise<ICheckResult> {
         const movieTickets: factory.action.check.paymentMethod.movieTicket.IMovieTicketResult[] = [];
