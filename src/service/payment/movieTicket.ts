@@ -231,6 +231,8 @@ export function payMovieTicket(params: factory.task.pay.IData) {
             throw new factory.errors.ArgumentNull('object.movieTickets.typeOf');
         }
 
+        const paymentMethodId = payObject[0]?.paymentMethod.paymentMethodId;
+
         // アクション開始
         const action = await repos.action.start(params);
 
@@ -278,6 +280,7 @@ export function payMovieTicket(params: factory.task.pay.IData) {
 
             seatInfoSyncIn = createSeatInfoSyncIn({
                 paymentMethodType: paymentMethodType,
+                paymentMethodId: paymentMethodId,
                 movieTickets: movieTickets,
                 event: event,
                 order: params.purpose,

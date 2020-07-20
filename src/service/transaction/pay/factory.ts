@@ -8,6 +8,11 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
     paymentServiceType: factory.service.paymentService.PaymentServiceType;
     amount: number;
 }): factory.transaction.IStartParams<factory.transactionType.Pay> {
+    const paymentMethodType = params.object.paymentMethod?.typeOf;
+    if (typeof paymentMethodType !== 'string') {
+        throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
+    }
+
     return {
         project: { typeOf: factory.organizationType.Project, id: params.project.id },
         transactionNumber: params.transactionNumber,
@@ -20,7 +25,7 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
             paymentMethod: {
                 paymentMethodId: params.transactionNumber,
                 amount: params.amount,
-                typeOf: params.object.paymentMethod?.typeOf,
+                typeOf: paymentMethodType,
                 additionalProperty: (Array.isArray(params.object.paymentMethod?.additionalProperty))
                     ? params.object.paymentMethod?.additionalProperty
                     : [],

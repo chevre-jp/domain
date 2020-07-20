@@ -146,11 +146,7 @@ export function start(
 /**
  * 取引確定
  */
-export function confirm(params: {
-    id?: string;
-    transactionNumber?: string;
-    potentialActions?: any;
-}): IConfirmOperation<void> {
+export function confirm(params: factory.transaction.pay.IConfirmParams): IConfirmOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {

@@ -5,6 +5,7 @@ import * as factory from '../../../factory';
 
 export function createSeatInfoSyncIn(params: {
     paymentMethodType: string;
+    paymentMethodId: string;
     movieTickets: factory.paymentMethod.paymentCard.movieTicket.IMovieTicket[];
     event: factory.event.screeningEvent.IEvent;
     order: any;
@@ -61,8 +62,8 @@ export function createSeatInfoSyncIn(params: {
         kgygishCd: movieTicketPaymentAccepted.movieTicketInfo.kgygishCd,
         yykDvcTyp: mvtkapi.mvtk.services.seat.seatInfoSync.ReserveDeviceType.EntertainerSitePC, // 予約デバイス区分
         trkshFlg: mvtkapi.mvtk.services.seat.seatInfoSync.DeleteFlag.False, // 取消フラグ
-        kgygishSstmZskyykNo: params.order.orderNumber, // 興行会社システム座席予約番号
-        kgygishUsrZskyykNo: params.order.confirmationNumber.toString(), // 興行会社ユーザー座席予約番号
+        kgygishSstmZskyykNo: params.paymentMethodId, // 興行会社システム座席予約番号
+        kgygishUsrZskyykNo: String(params.order?.confirmationNumber), // 興行会社ユーザー座席予約番号
         jeiDt: moment(event.startDate)
             .tz('Asia/Tokyo')
             .format('YYYY/MM/DD HH:mm:ss'), // 上映日時
