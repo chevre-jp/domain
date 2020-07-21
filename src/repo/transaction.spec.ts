@@ -141,7 +141,7 @@ describe('startExportTasks()', () => {
             .chain('exec')
             .resolves(new repository.transactionModel());
 
-        const result = await repository.startExportTasks({ typeOf: transaction.typeOf, status: transaction.status });
+        const result = await repository.startExportTasks({ typeOf: { $in: [transaction.typeOf] }, status: transaction.status });
         assert.equal(typeof result, 'object');
         sandbox.verify();
     });
@@ -160,7 +160,7 @@ describe('startExportTasks()', () => {
             // tslint:disable-next-line:no-null-keyword
             .resolves(null);
 
-        const result = await repository.startExportTasks({ typeOf: transaction.typeOf, status: transaction.status });
+        const result = await repository.startExportTasks({ typeOf: { $in: [transaction.typeOf] }, status: transaction.status });
         // tslint:disable-next-line:no-null-keyword
         assert.equal(result, null);
         sandbox.verify();

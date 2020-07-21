@@ -317,12 +317,21 @@ export class MongoRepository {
      * タスク未エクスポートの取引をひとつ取得してエクスポートを開始する
      */
     public async startExportTasks<T extends factory.transactionType>(params: {
-        typeOf: T;
+        project?: { id: string };
+        typeOf?: { $in: T[] };
         status: factory.transactionStatusType;
     }): Promise<factory.transaction.ITransaction<T> | null> {
         return this.transactionModel.findOneAndUpdate(
             {
-                typeOf: params.typeOf,
+                ...(typeof params.project?.id === 'string')
+                    ? {
+                        'project.id': {
+                            $exists: true,
+                            $eq: params.project.id
+                        }
+                    } : undefined,
+                ...(Array.isArray(params.typeOf?.$in))
+                    ? { typeOf: { $in: params.typeOf?.$in } } : undefined,
                 status: params.status,
                 tasksExportationStatus: factory.transactionTasksExportationStatus.Unexported
             },
