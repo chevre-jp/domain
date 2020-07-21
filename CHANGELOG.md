@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- 取引タイプごとのタスクエクスポート処理を共通化
+
 ### Deprecated
 
 ### Removed
