@@ -47,7 +47,6 @@ export type IAggregateScreeningEventOperation<T> = (repos: {
 export function aggregateScreeningEvent(params: {
     id: string;
 }): IAggregateScreeningEventOperation<void> {
-    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         event: EventRepo;
         eventAvailability: EventAvailabilityRepo;
@@ -212,6 +211,7 @@ function aggregateOfferByEvent(params: {
     screeningRoom: factory.place.screeningRoom.IPlace;
 }) {
     return async (repos: {
+        eventAvailability: EventAvailabilityRepo;
         offer: OfferRepo;
         offerRateLimit: OfferRateLimitRepo;
         reservation: ReservationRepo;
@@ -230,6 +230,9 @@ function aggregateOfferByEvent(params: {
                 screeningRoom: params.screeningRoom,
                 offer: o
             })(repos);
+            debug(
+                'reservations by offer aggregated.',
+                o.identifier, maximumAttendeeCapacity, remainingAttendeeCapacity, aggregateReservation);
 
             offersWithAggregateReservation.push({
                 typeOf: <factory.offerType.Offer>o.typeOf,
@@ -258,8 +261,8 @@ function aggregateReservationByOffer(params: {
     screeningRoom: factory.place.screeningRoom.IPlace;
     offer: factory.offer.IUnitPriceOffer;
 }) {
-    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
+        eventAvailability: EventAvailabilityRepo;
         offerRateLimit: OfferRateLimitRepo;
         reservation: ReservationRepo;
     }): Promise<{
@@ -267,8 +270,6 @@ function aggregateReservationByOffer(params: {
         remainingAttendeeCapacity?: number;
         aggregateReservation: factory.event.screeningEvent.IAggregateReservation;
     }> => {
-        let maximumAttendeeCapacity: number | undefined;
-        let remainingAttendeeCapacity: number | undefined;
         let reservationCount4offer: number | undefined;
         let attendeeCount4offer: number | undefined;
         let checkInCount4offer: number | undefined;
@@ -296,6 +297,42 @@ function aggregateReservationByOffer(params: {
             checkedIn: true
         });
 
+        const { maximumAttendeeCapacity, remainingAttendeeCapacity } = await calculateCapacityByOffer(params)(repos);
+
+        return {
+            aggregateReservation: {
+                typeOf: 'AggregateReservation',
+                aggregateDate: params.aggregateDate,
+                reservationCount: reservationCount4offer,
+                attendeeCount: attendeeCount4offer,
+                checkInCount: checkInCount4offer
+            },
+            ...(typeof maximumAttendeeCapacity === 'number') ? { maximumAttendeeCapacity } : undefined,
+            ...(typeof remainingAttendeeCapacity === 'number') ? { remainingAttendeeCapacity } : undefined
+        };
+    };
+}
+
+/**
+ * オファーごとのキャパシティを算出する
+ */
+function calculateCapacityByOffer(params: {
+    event: factory.event.IEvent<factory.eventType.ScreeningEvent>;
+    screeningRoom: factory.place.screeningRoom.IPlace;
+    offer: factory.offer.IUnitPriceOffer;
+}) {
+    // tslint:disable-next-line:max-func-body-length
+    return async (repos: {
+        eventAvailability: EventAvailabilityRepo;
+        offerRateLimit: OfferRateLimitRepo;
+        // reservation: ReservationRepo;
+    }): Promise<{
+        maximumAttendeeCapacity?: number;
+        remainingAttendeeCapacity?: number;
+    }> => {
+        let maximumAttendeeCapacity: number | undefined;
+        let remainingAttendeeCapacity: number | undefined;
+
         if (reservedSeatsAvailable({ event: params.event })) {
             // 基本的にはイベントのキャパシティに同じ
             maximumAttendeeCapacity = params.event.maximumAttendeeCapacity;
@@ -305,36 +342,57 @@ function aggregateReservationByOffer(params: {
             const eligibleSeatingTypes = params.offer.eligibleSeatingType;
             if (Array.isArray(eligibleSeatingTypes)) {
                 // 適用座席タイプに絞る
-                maximumAttendeeCapacity = params.screeningRoom.containsPlace.reduce(
+                const eligibleSeatOffers = params.screeningRoom.containsPlace.reduce<{
+                    seatSection: string;
+                    seatNumber: string;
+                }[]>(
                     (a, b) => {
-                        return a + b.containsPlace.filter((place) => {
-                            const seatingTypes = (Array.isArray(place.seatingType)) ? place.seatingType
-                                : (typeof place.seatingType === 'string') ? [place.seatingType]
-                                    : [];
+                        return [
+                            ...a,
+                            ...b.containsPlace.filter((place) => {
+                                const seatingTypes = (Array.isArray(place.seatingType)) ? place.seatingType
+                                    : (typeof place.seatingType === 'string') ? [place.seatingType]
+                                        : [];
 
-                            return seatingTypes.some((seatingTypeCodeValue) => eligibleSeatingTypes.some(
-                                (eligibleSeatingType) => eligibleSeatingType.codeValue === seatingTypeCodeValue)
-                            );
-                        }).length;
+                                return seatingTypes.some((seatingTypeCodeValue) => eligibleSeatingTypes.some(
+                                    (eligibleSeatingType) => eligibleSeatingType.codeValue === seatingTypeCodeValue)
+                                );
+                            })
+                                .map((place) => {
+                                    return {
+                                        seatSection: b.branchCode,
+                                        seatNumber: place.branchCode
+                                    };
+                                })
+                        ];
                     },
-                    0
+                    []
                 );
 
-                // 適用座席タイプに対する予約数
-                const reseravtionCount4eligibleSeatingType = await repos.reservation.count({
-                    typeOf: factory.reservationType.EventReservation,
-                    reservationFor: { ids: [params.event.id] },
-                    reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
-                    reservedTicket: {
-                        ticketedSeat: <any>{
-                            ...{
-                                seatingType: { $in: eligibleSeatingTypes.map((eligibleSeatingType) => eligibleSeatingType.codeValue) }
-                            }
-                        }
-                    }
+                maximumAttendeeCapacity = eligibleSeatOffers.length;
+
+                const availabilities = await repos.eventAvailability.searchAvailability({
+                    eventId: params.event.id,
+                    offers: eligibleSeatOffers
                 });
 
-                remainingAttendeeCapacity = maximumAttendeeCapacity - reseravtionCount4eligibleSeatingType;
+                remainingAttendeeCapacity = availabilities.filter((a) => a.availability === factory.itemAvailability.InStock).length;
+
+                // 適用座席タイプに対する予約数から算出する場合はこちら↓
+                // const reseravtionCount4eligibleSeatingType = await repos.reservation.count({
+                //     typeOf: factory.reservationType.EventReservation,
+                //     reservationFor: { ids: [params.event.id] },
+                //     reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+                //     reservedTicket: {
+                //         ticketedSeat: <any>{
+                //             ...{
+                //                 seatingType: { $in: eligibleSeatingTypes.map((eligibleSeatingType) => eligibleSeatingType.codeValue) }
+                //             }
+                //         }
+                //     }
+                // });
+
+                // remainingAttendeeCapacity = maximumAttendeeCapacity - reseravtionCount4eligibleSeatingType;
             }
 
             // 単価スペックの単位が1より大きい場合
@@ -377,17 +435,7 @@ function aggregateReservationByOffer(params: {
             }
         }
 
-        return {
-            aggregateReservation: {
-                typeOf: 'AggregateReservation',
-                aggregateDate: params.aggregateDate,
-                reservationCount: reservationCount4offer,
-                attendeeCount: attendeeCount4offer,
-                checkInCount: checkInCount4offer
-            },
-            ...(typeof maximumAttendeeCapacity === 'number') ? { maximumAttendeeCapacity } : undefined,
-            ...(typeof remainingAttendeeCapacity === 'number') ? { remainingAttendeeCapacity } : undefined
-        };
+        return { maximumAttendeeCapacity, remainingAttendeeCapacity };
     };
 }
 
@@ -398,7 +446,6 @@ function aggregateReservationByEvent(params: {
 }) {
     return async (repos: {
         eventAvailability: EventAvailabilityRepo;
-        // place: PlaceRepo;
         reservation: ReservationRepo;
     }): Promise<{
         maximumAttendeeCapacity?: number;

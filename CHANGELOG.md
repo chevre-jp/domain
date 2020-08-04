@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - 取引タイプごとのタスクエクスポート処理を共通化
+- 余分確保分座席が残席数に反映されるように集計処理を調整
 
 ### Deprecated
 
