@@ -55,7 +55,7 @@ export function confirmReservation(actionAttributesList: factory.action.reserve.
             name: factory.taskName.AggregateScreeningEvent,
             status: factory.taskStatus.Ready,
             runsAt: new Date(), // なるはやで実行
-            remainingNumberOfTries: 10,
+            remainingNumberOfTries: 3,
             numberOfTried: 0,
             executionResults: [],
             data: actionAttributesList[0].object.reservationFor
@@ -171,7 +171,7 @@ export function cancelPendingReservation(actionAttributesList: factory.action.ca
             name: factory.taskName.AggregateScreeningEvent,
             status: factory.taskStatus.Ready,
             runsAt: new Date(), // なるはやで実行
-            remainingNumberOfTries: 10,
+            remainingNumberOfTries: 3,
             numberOfTried: 0,
             executionResults: [],
             data: actionAttributesList[0].object.reservationFor
@@ -260,7 +260,7 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
             name: factory.taskName.AggregateScreeningEvent,
             status: factory.taskStatus.Ready,
             runsAt: new Date(), // なるはやで実行
-            remainingNumberOfTries: 10,
+            remainingNumberOfTries: 3,
             numberOfTried: 0,
             executionResults: [],
             data: actionAttributesList[0].object.reservationFor

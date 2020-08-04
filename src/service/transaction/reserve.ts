@@ -374,6 +374,8 @@ export function addReservations(params: {
             await onReservationCreated(transaction, reservation)(repos);
         }));
 
+        await onReservationsCreated({ event })(repos);
+
         return transaction;
     };
 }
@@ -547,9 +549,36 @@ function onReservationCreated(
 
         // タスク保管
         await repos.task.saveMany(taskAttributes);
-        // await Promise.all(taskAttributes.map(async (taskAttribute) => {
-        //     return repos.task.save(taskAttribute);
-        // }));
+    };
+}
+
+/**
+ * 予約作成時イベント
+ */
+function onReservationsCreated(params: {
+    event: factory.event.IEvent<factory.eventType.ScreeningEvent>;
+}) {
+    return async (repos: {
+        task: TaskRepo;
+    }) => {
+        const now = new Date();
+        const taskAttributes: factory.task.IAttributes[] = [];
+
+        // 集計タスク
+        const aggregateTask: factory.task.aggregateScreeningEvent.IAttributes = {
+            project: params.event.project,
+            name: factory.taskName.AggregateScreeningEvent,
+            status: factory.taskStatus.Ready,
+            runsAt: now, // なるはやで実行
+            remainingNumberOfTries: 3,
+            numberOfTried: 0,
+            executionResults: [],
+            data: { typeOf: params.event.typeOf, id: params.event.id }
+        };
+        taskAttributes.push(aggregateTask);
+
+        // タスク保管
+        await repos.task.saveMany(taskAttributes);
     };
 }
 
