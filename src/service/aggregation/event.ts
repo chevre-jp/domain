@@ -72,6 +72,7 @@ export function aggregateScreeningEvent(params: {
             limit: 100,
             project: { ids: [event.project.id] },
             typeOf: event.typeOf,
+            eventStatuses: [factory.eventStatusType.EventScheduled],
             startFrom: startFrom,
             startThrough: startThrough
         });
@@ -257,6 +258,8 @@ function aggregateOfferByEvent(params: {
     }): Promise<factory.event.screeningEvent.IAggregateOffer> => {
         let availableOffers: factory.offer.IUnitPriceOffer[] = [];
         if (typeof params.event.hasOfferCatalog?.id === 'string') {
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO カタログが見つからない場合に対応
             availableOffers = await repos.offer.findOffersByOfferCatalogId({ offerCatalog: { id: params.event.hasOfferCatalog.id } });
         }
 
