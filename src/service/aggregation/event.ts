@@ -22,6 +22,8 @@ import { createScreeningEventIdFromCOA } from '../event';
 
 const debug = createDebug('chevre-domain:service');
 
+const USE_AGGREGATE_ON_PROJECT = process.env.USE_AGGREGATE_ON_PROJECT === '1';
+
 // tslint:disable-next-line:no-magic-numbers
 const COA_TIMEOUT = (typeof process.env.COA_TIMEOUT === 'string') ? Number(process.env.COA_TIMEOUT) : 20000;
 
@@ -212,30 +214,32 @@ function onAggregated(params: {
             }));
         }
 
-        // プロジェクト集計タスク作成
-        const aggregateOnProjectTask: factory.task.IAttributes = {
-            name: factory.taskName.AggregateOnProject,
-            project: event.project,
-            runsAt: new Date(),
-            data: {
-                project: { id: event.project.id },
-                reservationFor: {
-                    startFrom: moment()
-                        .tz('Asia/Tokyo')
-                        .startOf('month')
-                        .toDate(),
-                    startThrough: moment()
-                        .tz('Asia/Tokyo')
-                        .endOf('month')
-                        .toDate()
-                }
-            },
-            status: factory.taskStatus.Ready,
-            numberOfTried: 0,
-            remainingNumberOfTries: 1,
-            executionResults: []
-        };
-        await repos.task.save(aggregateOnProjectTask);
+        if (USE_AGGREGATE_ON_PROJECT) {
+            // プロジェクト集計タスク作成
+            const aggregateOnProjectTask: factory.task.IAttributes = {
+                name: factory.taskName.AggregateOnProject,
+                project: event.project,
+                runsAt: new Date(),
+                data: {
+                    project: { id: event.project.id },
+                    reservationFor: {
+                        startFrom: moment()
+                            .tz('Asia/Tokyo')
+                            .startOf('month')
+                            .toDate(),
+                        startThrough: moment()
+                            .tz('Asia/Tokyo')
+                            .endOf('month')
+                            .toDate()
+                    }
+                },
+                status: factory.taskStatus.Ready,
+                numberOfTried: 0,
+                remainingNumberOfTries: 1,
+                executionResults: []
+            };
+            await repos.task.save(aggregateOnProjectTask);
+        }
     };
 }
 
