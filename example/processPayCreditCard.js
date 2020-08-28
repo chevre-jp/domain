@@ -13,14 +13,6 @@ async function main() {
     });
     await mongoose.connect(process.env.MONGOLAB_URI, { autoIndex: false });
 
-    const mvtkReserveAuthClient = new domain.mvtkreserveapi.auth.ClientCredentials({
-        domain: process.env.MVTK_RESERVE_AUTHORIZE_SERVER_DOMAIN,
-        clientId: process.env.MVTK_RESERVE_CLIENT_ID,
-        clientSecret: process.env.MVTK_RESERVE_CLIENT_SECRET,
-        scopes: [],
-        state: ''
-    });
-
     const projectRepo = new domain.repository.Project(mongoose.connection);
     const eventRepo = new domain.repository.Event(mongoose.connection);
     const sellerRepo = new domain.repository.Seller(mongoose.connection);
@@ -28,19 +20,21 @@ async function main() {
     const transactionRepo = new domain.repository.Transaction(mongoose.connection);
     const transactionNumberRepo = new domain.repository.TransactionNumber(client);
 
+    const order = { orderNumber: `CIN${(new Date()).valueOf()}`, confirmationNumber: `CIN${(new Date()).valueOf()}` };
+
     const sellers = await sellerRepo.search({ project: { id: { $eq: projectId } }, limit: 1 });
     const seller = sellers[0];
 
     // プロジェクトからサービスエンドポイントを取得
-    const project = await projectRepo.findById({ id: projectId });
+    // const project = await projectRepo.findById({ id: projectId });
 
-    const transactionNumber = await transactionNumberRepo.publishByTimestamp({
+    let transactionNumber = await transactionNumberRepo.publishByTimestamp({
         project: { id: projectId },
         startDate: new Date()
     });
 
     const transaction = await domain.service.transaction.pay.start({
-        project: { id: project.id },
+        project: { id: projectId },
         typeOf: domain.factory.transactionType.Pay,
         transactionNumber: transactionNumber,
         agent: { typeOf: 'Person', name: 'サンプル決済者名称' },
@@ -67,29 +61,29 @@ async function main() {
     });
     console.log('transaction started', transaction);
 
-    await domain.service.transaction.pay.cancel({
-        transactionNumber: transaction.transactionNumber
-    })({
-        transaction: transactionRepo
-    });
-    console.log('transaction confirmed');
+    // await domain.service.transaction.pay.cancel({
+    //     transactionNumber: transaction.transactionNumber
+    // })({
+    //     transaction: transactionRepo
+    // });
+    // console.log('transaction confirmed');
 
-    await domain.service.transaction.pay.exportTasks(domain.factory.transactionStatusType.Canceled)({
-        task: taskRepo,
-        transaction: transactionRepo
-    });
+    // await domain.service.transaction.pay.exportTasks(domain.factory.transactionStatusType.Canceled)({
+    //     task: taskRepo,
+    //     transaction: transactionRepo
+    // });
 
-    await domain.service.task.executeByName({ name: domain.factory.taskName.VoidPayment })({
-        connection: mongoose.connection
-    });
-    return;
+    // await domain.service.task.executeByName({ name: domain.factory.taskName.VoidPayment })({
+    //     connection: mongoose.connection
+    // });
+    // return;
 
 
     await domain.service.transaction.pay.confirm({
         transactionNumber: transaction.transactionNumber,
         potentialActions: {
             pay: {
-                purpose: { orderNumber: `CIN${(new Date()).valueOf()}`, confirmationNumber: `CIN${(new Date()).valueOf()}` }
+                purpose: order
             }
         }
     })({
@@ -97,7 +91,12 @@ async function main() {
     });
     console.log('transaction confirmed');
 
-    await domain.service.transaction.pay.exportTasks(domain.factory.transactionStatusType.Confirmed)({
+    await domain.service.transaction.exportTasks({
+        status: domain.factory.transactionStatusType.Confirmed,
+        typeOf: {
+            $in: domain.factory.transactionType.Pay
+        }
+    })({
         task: taskRepo,
         transaction: transactionRepo
     });
@@ -105,6 +104,66 @@ async function main() {
     await domain.service.task.executeByName({ name: domain.factory.taskName.Pay })({
         connection: mongoose.connection
     });
+
+
+
+
+    // 返金プロセス↓
+    const paymentMethodId = transaction.object.paymentMethod.paymentMethodId;
+
+    transactionNumber = await transactionNumberRepo.publishByTimestamp({
+        project: { id: projectId },
+        startDate: new Date()
+    });
+
+    const refundTransaction = await domain.service.transaction.refund.start({
+        project: { id: projectId },
+        typeOf: domain.factory.transactionType.Refund,
+        transactionNumber: transactionNumber,
+        agent: { typeOf: seller.typeOf, name: seller.name, id: seller.id },
+        recipient: { typeOf: 'Person', name: 'サンプル決済者名称' },
+        object: {
+            typeOf: domain.factory.service.paymentService.PaymentServiceType.CreditCard,
+            paymentMethod: {
+                typeOf: paymentMethodType,
+                // additionalProperty: [],
+                paymentMethodId: paymentMethodId
+            },
+            refundFee: 0
+        }
+    })({
+        project: projectRepo,
+        seller: sellerRepo,
+        transaction: transactionRepo
+    });
+    console.log('refundTransaction started', refundTransaction);
+
+    await domain.service.transaction.refund.confirm({
+        transactionNumber: refundTransaction.transactionNumber,
+        potentialActions: {
+            refund: {
+                purpose: order
+            }
+        }
+    })({
+        transaction: transactionRepo
+    });
+    console.log('refundTransaction confirmed');
+
+    await domain.service.transaction.exportTasks({
+        status: domain.factory.transactionStatusType.Confirmed,
+        typeOf: {
+            $in: domain.factory.transactionType.Refund
+        }
+    })({
+        task: taskRepo,
+        transaction: transactionRepo
+    });
+
+    await domain.service.task.executeByName({ name: domain.factory.taskName.Refund })({
+        connection: mongoose.connection
+    });
+
 }
 
 main().then(console.log).catch(console.error);

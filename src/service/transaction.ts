@@ -10,12 +10,14 @@ import { MongoRepository as TransactionRepo } from '../repo/transaction';
 import * as CancelReservationTransactionService from './transaction/cancelReservation';
 import * as MoneyTransferTransactionService from './transaction/moneyTransfer';
 import * as PayTransactionService from './transaction/pay';
+import * as RefundTransactionService from './transaction/refund';
 import * as RegisterServiceTransactionService from './transaction/registerService';
 import * as ReserveTransactionService from './transaction/reserve';
 
 export import cancelReservation = CancelReservationTransactionService;
 export import moneyTransfer = MoneyTransferTransactionService;
 export import pay = PayTransactionService;
+export import refund = RefundTransactionService;
 export import registerService = RegisterServiceTransactionService;
 export import reserve = ReserveTransactionService;
 
@@ -65,6 +67,13 @@ export function exportTasks<T extends factory.transactionType>(params: {
 
             case factory.transactionType.Pay:
                 tasks = await PayTransactionService.exportTasksById({
+                    id: transaction.id,
+                    runsTasksAfterInSeconds: params.runsTasksAfterInSeconds
+                })(repos);
+                break;
+
+            case factory.transactionType.Refund:
+                tasks = await RefundTransactionService.exportTasksById({
                     id: transaction.id,
                     runsTasksAfterInSeconds: params.runsTasksAfterInSeconds
                 })(repos);

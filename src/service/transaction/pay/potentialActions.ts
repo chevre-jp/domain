@@ -8,10 +8,10 @@ function createPayActions(params: {
     const payActions: factory.action.trade.pay.IAttributes<any>[] = [];
     const paymentMethod = transaction.object.paymentMethod;
     const paymentMethodType = String(paymentMethod?.typeOf);
+    const additionalProperty = paymentMethod?.additionalProperty;
 
     switch (transaction.object.typeOf) {
         case factory.service.paymentService.PaymentServiceType.CreditCard:
-            const additionalProperty = paymentMethod?.additionalProperty;
             const payObject: factory.action.trade.pay.ICreditCardPaymentMethod = {
                 typeOf: transaction.object.typeOf,
                 paymentMethod: {
@@ -53,9 +53,11 @@ function createPayActions(params: {
                     typeOf: transaction.object.typeOf,
                     paymentMethod: {
                         accountId: paymentMethod?.accountId,
-                        additionalProperty: (Array.isArray(paymentMethod?.additionalProperty)) ? paymentMethod?.additionalProperty : [],
-                        name: paymentMethod?.name,
-                        paymentMethodId: paymentMethod?.paymentMethodId,
+                        additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : [],
+                        name: (typeof paymentMethod?.name === 'string') ? paymentMethod?.name : paymentMethodType,
+                        paymentMethodId: (typeof paymentMethod?.paymentMethodId === 'string')
+                            ? paymentMethod?.paymentMethodId
+                            : transaction.id,
                         totalPaymentDue: {
                             typeOf: 'MonetaryAmount',
                             currency: factory.unitCode.C62,

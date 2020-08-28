@@ -61,3 +61,31 @@ export function voidPayment(params: factory.task.voidPayment.IData) {
         }
     };
 }
+
+/**
+ * 返金
+ */
+export function refund(params: factory.task.refund.IData) {
+    return async (repos: {
+        action: ActionRepo;
+        // event: EventRepo;
+        project: ProjectRepo;
+        seller: SellerRepo;
+        // task: TaskRepo;
+    }) => {
+        const paymentServiceType = params.object[0]?.typeOf;
+
+        switch (paymentServiceType) {
+            case factory.service.paymentService.PaymentServiceType.CreditCard:
+                await CreditCardPaymentService.refundCreditCard(params)(repos);
+                break;
+
+            case factory.service.paymentService.PaymentServiceType.MovieTicket:
+                // await MovieTicketPaymentService.payMovieTicket(params)(repos);
+                break;
+
+            default:
+                throw new factory.errors.NotImplemented(`Payment service '${paymentServiceType}' not implemented`);
+        }
+    };
+}

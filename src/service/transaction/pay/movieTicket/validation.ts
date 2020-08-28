@@ -51,7 +51,7 @@ export function validateMovieTicket(
             throw new factory.errors.ArgumentNull('recipient.id');
         }
         const seller = await repos.seller.findById({ id: sellerId });
-        const movieTicketPaymentAccepted = <factory.seller.IPaymentAccepted<factory.paymentMethodType.MovieTicket>>
+        const movieTicketPaymentAccepted = <factory.seller.IMovieTicketPaymentAccepted>
             seller.paymentAccepted?.find((a) => a.paymentMethodType === paymentMethodType);
         if (movieTicketPaymentAccepted === undefined) {
             throw new factory.errors.Argument('recipient', 'Movie Ticket payment not accepted');
