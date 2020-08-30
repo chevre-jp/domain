@@ -72,7 +72,7 @@ export function authorize(
                 shopPass: shopPass,
                 orderId: orderId,
                 availableChannel: availableChannel,
-                object: <factory.transaction.pay.IPaymentMethod<any>>params.object.paymentMethod
+                object: <factory.transaction.pay.IPaymentMethod>params.object.paymentMethod
             });
         } catch (error) {
             throw handleAuthorizeError(error);
@@ -115,7 +115,7 @@ async function processAuthorizeCreditCard(params: {
     shopPass: string;
     orderId: string;
     availableChannel: factory.service.paymentService.IAvailableChannel;
-    object: factory.transaction.pay.IPaymentMethod<any>;
+    object: factory.transaction.pay.IPaymentMethod;
 }): Promise<IAuthorizeResult> {
     // GMOオーソリ取得
     let entryTranArgs: GMO.services.credit.IEntryTranArgs;
@@ -260,8 +260,9 @@ export function payCreditCard(params: factory.task.pay.IData) {
     return async (repos: {
         action: ActionRepo;
         project: ProjectRepo;
-    }): Promise<factory.action.trade.pay.IAction<factory.paymentMethodType.CreditCard>> => {
-        const payObject = <factory.action.trade.pay.ICreditCardPaymentMethod[]>params.object;
+        seller: SellerRepo;
+    }): Promise<factory.action.trade.pay.IAction> => {
+        const payObject = params.object;
 
         // CreditCard系統の決済方法タイプは動的
         const paymentMethodType = payObject[0].paymentMethod.typeOf;
@@ -274,6 +275,9 @@ export function payCreditCard(params: factory.task.pay.IData) {
             paymentMethodType: paymentMethodType
         })(repos);
 
+        const seller = await repos.seller.findById({ id: String(params.recipient?.id) });
+        const { shopId, shopPass } = getGMOInfoFromSeller({ seller: seller });
+
         // アクション開始
         const action = await repos.action.start(params);
         const alterTranResults: GMO.services.credit.IAlterTranResult[] = [];
@@ -282,13 +286,14 @@ export function payCreditCard(params: factory.task.pay.IData) {
             const creditCardService = new GMO.service.Credit({ endpoint: String(availableChannel.serviceUrl) });
 
             await Promise.all(payObject.map(async (paymentMethod) => {
-                const entryTranArgs = paymentMethod.entryTranArgs;
+                const orderId = paymentMethod.paymentMethod.paymentMethodId;
+                // const entryTranArgs = paymentMethod.entryTranArgs;
 
                 // 取引状態参照
                 const searchTradeResult = await creditCardService.searchTrade({
-                    shopId: entryTranArgs.shopId,
-                    shopPass: entryTranArgs.shopPass,
-                    orderId: entryTranArgs.orderId
+                    shopId: shopId,
+                    shopPass: shopPass,
+                    orderId: orderId
                 });
 
                 if (searchTradeResult.jobCd === GMO.utils.util.JobCd.Sales) {
@@ -305,12 +310,12 @@ export function payCreditCard(params: factory.task.pay.IData) {
                 } else {
                     debug('calling alterTran...');
                     alterTranResults.push(await creditCardService.alterTran({
-                        shopId: entryTranArgs.shopId,
-                        shopPass: entryTranArgs.shopPass,
+                        shopId: shopId,
+                        shopPass: shopPass,
                         accessId: searchTradeResult.accessId,
                         accessPass: searchTradeResult.accessPass,
                         jobCd: GMO.utils.util.JobCd.Sales,
-                        amount: paymentMethod.price
+                        amount: paymentMethod.paymentMethod.totalPaymentDue?.value
                     }));
 
                     // 失敗したら取引状態確認してどうこう、という処理も考えうるが、
@@ -331,11 +336,11 @@ export function payCreditCard(params: factory.task.pay.IData) {
         }
 
         // アクション完了
-        const actionResult: factory.action.trade.pay.IResult<factory.paymentMethodType.CreditCard> = {
+        const actionResult: factory.action.trade.pay.IResult = {
             creditCardSales: alterTranResults
         };
 
-        return <Promise<factory.action.trade.pay.IAction<factory.paymentMethodType.CreditCard>>>
+        return <Promise<factory.action.trade.pay.IAction>>
             repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
     };
 }

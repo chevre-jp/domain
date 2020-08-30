@@ -223,10 +223,10 @@ export function payMovieTicket(params: factory.task.pay.IData) {
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
-        const payObject = <factory.action.trade.pay.IMovieTicketPaymentMethod[]>params.object;
+        const payObject = params.object;
 
         // ムビチケ系統の決済方法タイプは動的
-        const paymentMethodType = payObject[0]?.movieTickets[0]?.typeOf;
+        const paymentMethodType = (Array.isArray(payObject[0]?.movieTickets)) ? payObject[0]?.movieTickets[0]?.typeOf : undefined;
         if (typeof paymentMethodType !== 'string') {
             throw new factory.errors.ArgumentNull('object.movieTickets.typeOf');
         }
@@ -242,7 +242,10 @@ export function payMovieTicket(params: factory.task.pay.IData) {
         try {
             // イベントがひとつに特定されているかどうか確認
             const eventIds = Array.from(new Set(payObject.reduce<string[]>(
-                (a, b) => [...a, ...b.movieTickets.map((ticket) => ticket.serviceOutput.reservationFor.id)],
+                (a, b) => [
+                    ...a,
+                    ...(Array.isArray(b.movieTickets)) ? b.movieTickets.map((ticket) => ticket.serviceOutput.reservationFor.id) : []
+                ],
                 []
             )));
             if (eventIds.length !== 1) {
@@ -257,7 +260,11 @@ export function payMovieTicket(params: factory.task.pay.IData) {
 
             // 全購入管理番号のムビチケをマージ
             const movieTickets = payObject.reduce<IMovieTicket[]>(
-                (a, b) => [...a, ...b.movieTickets], []
+                (a, b) => [
+                    ...a,
+                    ...(Array.isArray(b.movieTickets)) ? b.movieTickets : []
+                ],
+                []
             );
 
             const availableChannel = await getMvtkReserveEndpoint({
@@ -302,7 +309,7 @@ export function payMovieTicket(params: factory.task.pay.IData) {
         }
 
         // アクション完了
-        const actionResult: factory.action.trade.pay.IResult<factory.paymentMethodType.MovieTicket> = {
+        const actionResult: factory.action.trade.pay.IResult = {
             seatInfoSyncIn: seatInfoSyncIn,
             seatInfoSyncResult: seatInfoSyncResult
         };

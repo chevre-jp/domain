@@ -3,16 +3,16 @@ import * as factory from '../../../factory';
 function createPayActions(params: {
     transaction: factory.transaction.ITransaction<factory.transactionType.Pay>;
     potentialActions?: factory.transaction.pay.IPotentialActionsParams;
-}): factory.action.trade.pay.IAttributes<factory.paymentMethodType | string>[] {
+}): factory.action.trade.pay.IAttributes[] {
     const transaction = params.transaction;
-    const payActions: factory.action.trade.pay.IAttributes<any>[] = [];
+    const payActions: factory.action.trade.pay.IAttributes[] = [];
     const paymentMethod = transaction.object.paymentMethod;
     const paymentMethodType = String(paymentMethod?.typeOf);
     const additionalProperty = paymentMethod?.additionalProperty;
 
     switch (transaction.object.typeOf) {
         case factory.service.paymentService.PaymentServiceType.CreditCard:
-            const payObject: factory.action.trade.pay.ICreditCardPaymentMethod = {
+            const payObject: factory.action.trade.pay.IPaymentService = {
                 typeOf: transaction.object.typeOf,
                 paymentMethod: {
                     accountId: paymentMethod?.accountId,
@@ -25,11 +25,11 @@ function createPayActions(params: {
                         value: Number(paymentMethod?.amount)
                     },
                     typeOf: <any>paymentMethodType
-                },
-                price: Number(paymentMethod?.amount),
-                priceCurrency: factory.priceCurrency.JPY,
-                entryTranArgs: transaction.object.entryTranArgs,
-                execTranArgs: transaction.object.execTranArgs
+                }
+                // price: Number(paymentMethod?.amount),
+                // priceCurrency: factory.priceCurrency.JPY,
+                // entryTranArgs: transaction.object.entryTranArgs,
+                // execTranArgs: transaction.object.execTranArgs
             };
 
             payActions.push({

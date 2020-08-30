@@ -3,9 +3,9 @@ import * as factory from '../../../factory';
 function createReundActions(params: {
     transaction: factory.transaction.ITransaction<factory.transactionType.Refund>;
     potentialActions?: factory.transaction.refund.IPotentialActionsParams;
-}): factory.action.trade.refund.IAttributes<factory.paymentMethodType | string>[] {
+}): factory.action.trade.refund.IAttributes[] {
     const transaction = params.transaction;
-    const refundActions: factory.action.trade.refund.IAttributes<any>[] = [];
+    const refundActions: factory.action.trade.refund.IAttributes[] = [];
 
     refundActions.push({
         project: params.transaction.project,
