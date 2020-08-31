@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 返金取引を追加
 - USE_AGGREGATE_ON_PROJECT設定を追加
 - 中止を報告しないタスク設定を追加
+- アクションリポジトリに検索処理を追加
 
 ### Changed
 

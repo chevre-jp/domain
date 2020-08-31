@@ -317,6 +317,87 @@ export function payMovieTicket(params: factory.task.pay.IData) {
     };
 }
 
+/**
+ * ムビチケ着券取消
+ */
+export function refundMovieTicket(params: factory.task.refund.IData) {
+    return async (repos: {
+        action: ActionRepo;
+        project: ProjectRepo;
+        seller: SellerRepo;
+    }) => {
+        // ムビチケ系統の決済方法タイプは動的
+        const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
+        const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
+
+        // 本アクションに対応するPayActionを取り出す
+        const payActions = await repos.action.search<factory.actionType.PayAction>({
+            limit: 1,
+            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
+            project: { id: { $eq: params.project.id } },
+            typeOf: { $eq: factory.actionType.PayAction },
+            object: { paymentMethod: { paymentMethodId: { $eq: paymentMethodId } } }
+        });
+        const payAction = payActions.shift();
+        if (payAction === undefined) {
+            throw new factory.errors.NotFound('PayAction');
+        }
+
+        const availableChannel = await getMvtkReserveEndpoint({
+            project: params.project,
+            paymentMethodType: paymentMethodType
+        })(repos);
+
+        const mvtkReserveAuthClient = new mvtkapi.auth.ClientCredentials({
+            domain: String(availableChannel.credentials?.authorizeServerDomain),
+            clientId: String(availableChannel.credentials?.clientId),
+            clientSecret: String(availableChannel.credentials?.clientSecret),
+            scopes: [],
+            state: ''
+        });
+
+        const movieTicketSeatService = new mvtkapi.service.Seat({
+            endpoint: String(availableChannel.serviceUrl),
+            auth: mvtkReserveAuthClient
+        });
+
+        // アクション開始
+        const action = await repos.action.start(params);
+
+        let seatInfoSyncIn: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncIn;
+        let seatInfoSyncResult: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncResult;
+
+        try {
+            seatInfoSyncIn = {
+                ...payAction.result?.seatInfoSyncIn,
+                trkshFlg: mvtkapi.mvtk.services.seat.seatInfoSync.DeleteFlag.True // 取消フラグ
+            };
+            seatInfoSyncResult = await movieTicketSeatService.seatInfoSync(seatInfoSyncIn);
+        } catch (error) {
+            // actionにエラー結果を追加
+            try {
+                const actionError = { ...error, message: error.message, name: error.name };
+                await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
+            } catch (__) {
+                // 失敗したら仕方ない
+            }
+
+            error = handleMvtkReserveError(error);
+            throw error;
+        }
+
+        // アクション完了
+        const actionResult: factory.action.trade.refund.IResult = {
+            seatInfoSyncIn: seatInfoSyncIn,
+            seatInfoSyncResult: seatInfoSyncResult
+        };
+        await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+
+        // 潜在アクション
+        // await onRefund(params)({ project: repos.project, task: repos.task });
+    };
+}
+
 function getMvtkReserveEndpoint(params: {
     project: { id: string };
     paymentMethodType: string;

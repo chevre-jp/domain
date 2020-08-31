@@ -3,7 +3,6 @@
  */
 import * as moment from 'moment';
 
-import { handleMvtkReserveError } from '../../errorHandler';
 import * as factory from '../../factory';
 
 import { MongoRepository as ProjectRepo } from '../../repo/project';
@@ -80,7 +79,7 @@ export function start(
                 // no op
             }
 
-            error = handleMvtkReserveError(error);
+            // error = handleMvtkReserveError(error);
             throw error;
         }
 

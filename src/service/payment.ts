@@ -81,7 +81,7 @@ export function refund(params: factory.task.refund.IData) {
                 break;
 
             case factory.service.paymentService.PaymentServiceType.MovieTicket:
-                // await MovieTicketPaymentService.payMovieTicket(params)(repos);
+                await MovieTicketPaymentService.refundMovieTicket(params)(repos);
                 break;
 
             default:
