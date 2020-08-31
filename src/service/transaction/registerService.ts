@@ -329,29 +329,6 @@ export function cancel(params: {
 }
 
 /**
- * ひとつの取引のタスクをエクスポートする
- */
-// export function exportTasks(status: factory.transactionStatusType) {
-//     return async (repos: {
-//         task: TaskRepo;
-//         transaction: TransactionRepo;
-//     }) => {
-//         const transaction = await repos.transaction.startExportTasks({
-//             typeOf: factory.transactionType.RegisterService,
-//             status: status
-//         });
-//         if (transaction === null) {
-//             return;
-//         }
-
-//         // 失敗してもここでは戻さない(RUNNINGのまま待機)
-//         await exportTasksById(transaction)(repos);
-
-//         await repos.transaction.setTasksExportedById({ id: transaction.id });
-//     };
-// }
-
-/**
  * 取引タスク出力
  */
 export function exportTasksById(params: { id: string }): IExportTasksOperation<factory.task.ITask[]> {

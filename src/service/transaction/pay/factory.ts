@@ -23,12 +23,15 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
             // パラメータから必要なもののみ取り込む
             typeOf: params.paymentServiceType,
             paymentMethod: {
-                paymentMethodId: params.transactionNumber,
-                amount: params.amount,
-                typeOf: paymentMethodType,
                 additionalProperty: (Array.isArray(params.object.paymentMethod?.additionalProperty))
                     ? params.object.paymentMethod?.additionalProperty
                     : [],
+                name: (typeof params.object.paymentMethod?.name === 'string')
+                    ? params.object.paymentMethod.name
+                    : paymentMethodType,
+                amount: params.amount,
+                paymentMethodId: params.transactionNumber,
+                typeOf: paymentMethodType,
                 ...(typeof params.object.paymentMethod?.method === 'string')
                     ? { method: params.object.paymentMethod?.method }
                     : undefined,

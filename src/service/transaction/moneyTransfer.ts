@@ -415,26 +415,6 @@ export function cancel(params: {
     };
 }
 
-// export function exportTasks(status: factory.transactionStatusType) {
-//     return async (repos: {
-//         task: TaskRepo;
-//         transaction: TransactionRepo;
-//     }) => {
-//         const transaction = await repos.transaction.startExportTasks({
-//             typeOf: factory.transactionType.MoneyTransfer,
-//             status: status
-//         });
-//         if (transaction === null) {
-//             return;
-//         }
-
-//         // 失敗してもここでは戻さない(RUNNINGのまま待機)
-//         await exportTasksById(transaction)(repos);
-
-//         await repos.transaction.setTasksExportedById({ id: transaction.id });
-//     };
-// }
-
 /**
  * 取引のタスク出力
  */
