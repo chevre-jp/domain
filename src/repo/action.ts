@@ -4,6 +4,7 @@ import * as factory from '../factory';
 import ActionModel from './mongoose/model/action';
 
 export type IAction<T extends factory.actionType> = factory.action.IAction<factory.action.IAttributes<T, any, any>>;
+
 /**
  * アクションリポジトリ
  */
@@ -14,7 +15,7 @@ export class MongoRepository {
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
-    public static CREATE_MONGO_CONDITIONS(params: any) {
+    public static CREATE_MONGO_CONDITIONS(params: factory.action.ISearchConditions) {
         const andConditions: any[] = [];
 
         const projectIdEq = params.project?.id?.$eq;
@@ -65,9 +66,7 @@ export class MongoRepository {
     /**
      * アクション検索
      */
-    public async search<T extends factory.actionType>(
-        params: any
-    ): Promise<IAction<T>[]> {
+    public async search<T extends factory.actionType>(params: factory.action.ISearchConditions): Promise<IAction<T>[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.actionModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
