@@ -325,7 +325,6 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
-        // ムビチケ系統の決済方法タイプは動的
         const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
@@ -363,26 +362,37 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
         // アクション開始
         const action = await repos.action.start(params);
 
-        let seatInfoSyncIn: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncIn;
-        let seatInfoSyncResult: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncResult;
+        let seatInfoSyncIn: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncIn | undefined;
+        let seatInfoSyncResult: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncResult | undefined;
 
         try {
             seatInfoSyncIn = {
-                ...payAction.result?.seatInfoSyncIn,
+                ...(<mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncIn>payAction.result?.seatInfoSyncIn),
                 trkshFlg: mvtkapi.mvtk.services.seat.seatInfoSync.DeleteFlag.True // 取消フラグ
             };
             seatInfoSyncResult = await movieTicketSeatService.seatInfoSync(seatInfoSyncIn);
         } catch (error) {
-            // actionにエラー結果を追加
-            try {
-                const actionError = { ...error, message: error.message, name: error.name };
-                await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
-            } catch (__) {
-                // 失敗したら仕方ない
+            let throwsError = true;
+            // 「存在しない興行会社システム座席予約番号が入力されました」の場合、取消済なのでok
+            if (error.name === 'MovieticketReserveRequestError') {
+                // tslint:disable-next-line:no-magic-numbers
+                if (error.code === 400 && error.message === '存在しない興行会社システム座席予約番号が入力されました。') {
+                    seatInfoSyncResult = error;
+                    throwsError = false;
+                }
             }
 
-            error = handleMvtkReserveError(error);
-            throw error;
+            if (throwsError) {
+                try {
+                    const actionError = { ...error, message: error.message, name: error.name };
+                    await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
+                } catch (__) {
+                    // 失敗したら仕方ない
+                }
+
+                error = handleMvtkReserveError(error);
+                throw error;
+            }
         }
 
         // アクション完了
