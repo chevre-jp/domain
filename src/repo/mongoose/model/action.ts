@@ -125,11 +125,31 @@ schema.index(
 );
 
 schema.index(
+    { 'object.paymentMethod.accountId': 1, startDate: -1 },
+    {
+        name: 'searchByObjectPaymentMethodAccountId',
+        partialFilterExpression: {
+            'object.paymentMethod.accountId': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'object.paymentMethod.paymentMethodId': 1, startDate: -1 },
     {
         name: 'searchByObjectPaymentMethodPaymentMethodId',
         partialFilterExpression: {
             'object.paymentMethod.paymentMethodId': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'object.paymentMethod.typeOf': 1, startDate: -1 },
+    {
+        name: 'searchByObjectPaymentMethodTypeOf',
+        partialFilterExpression: {
+            'object.paymentMethod.typeOf': { $exists: true }
         }
     }
 );

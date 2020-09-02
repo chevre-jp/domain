@@ -30,6 +30,18 @@ export class MongoRepository {
             });
         }
 
+        const objectPaymentMethodAccountIdEq = params.object?.paymentMethod?.accountId?.$eq;
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof objectPaymentMethodAccountIdEq === 'string') {
+            andConditions.push({
+                'object.paymentMethod.accountId': {
+                    $exists: true,
+                    $eq: objectPaymentMethodAccountIdEq
+                }
+            });
+        }
+
         const objectPaymentMethodPaymentMethodIdEq = params.object?.paymentMethod?.paymentMethodId?.$eq;
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -38,6 +50,18 @@ export class MongoRepository {
                 'object.paymentMethod.paymentMethodId': {
                     $exists: true,
                     $eq: objectPaymentMethodPaymentMethodIdEq
+                }
+            });
+        }
+
+        const objectPaymentMethodTypeOfEq = params.object?.paymentMethod?.typeOf?.$eq;
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof objectPaymentMethodTypeOfEq === 'string') {
+            andConditions.push({
+                'object.paymentMethod.typeOf': {
+                    $exists: true,
+                    $eq: objectPaymentMethodTypeOfEq
                 }
             });
         }
