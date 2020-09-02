@@ -30,10 +30,6 @@ function createPayActions(params: {
                     },
                     typeOf: paymentMethodType
                 }
-                // price: Number(paymentMethod?.amount),
-                // priceCurrency: factory.priceCurrency.JPY,
-                // entryTranArgs: transaction.object.entryTranArgs,
-                // execTranArgs: transaction.object.execTranArgs
             };
 
             break;
