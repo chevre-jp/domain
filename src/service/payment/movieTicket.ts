@@ -223,47 +223,34 @@ export function payMovieTicket(params: factory.task.pay.IData) {
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
-        const payObject = params.object;
-
-        // ムビチケ系統の決済方法タイプは動的
-        const paymentMethodType = (Array.isArray(payObject[0]?.movieTickets)) ? payObject[0]?.movieTickets[0]?.typeOf : undefined;
-        if (typeof paymentMethodType !== 'string') {
-            throw new factory.errors.ArgumentNull('object.movieTickets.typeOf');
-        }
-
-        const paymentMethodId = payObject[0]?.paymentMethod.paymentMethodId;
+        const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
+        const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
         // アクション開始
         const action = await repos.action.start(params);
 
-        let seatInfoSyncIn: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncIn;
-        let seatInfoSyncResult: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncResult;
+        let seatInfoSyncIn: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncIn | undefined;
+        let seatInfoSyncResult: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncResult | undefined;
 
         try {
             // イベントがひとつに特定されているかどうか確認
-            const eventIds = Array.from(new Set(payObject.reduce<string[]>(
+            const eventIds = [...new Set(params.object.reduce<string[]>(
                 (a, b) => [
                     ...a,
                     ...(Array.isArray(b.movieTickets)) ? b.movieTickets.map((ticket) => ticket.serviceOutput.reservationFor.id) : []
                 ],
                 []
-            )));
+            ))];
             if (eventIds.length !== 1) {
                 throw new factory.errors.Argument('movieTickets', 'Number of events must be 1');
             }
-            const eventId = eventIds[0];
 
-            // イベント情報取得
-            const event = await repos.event.findById<factory.eventType.ScreeningEvent>({ id: eventId });
-
+            const event = await repos.event.findById<factory.eventType.ScreeningEvent>({ id: eventIds[0] });
             const seller = await repos.seller.findById({ id: String(params.recipient?.id) });
 
             // 全購入管理番号のムビチケをマージ
-            const movieTickets = payObject.reduce<IMovieTicket[]>(
-                (a, b) => [
-                    ...a,
-                    ...(Array.isArray(b.movieTickets)) ? b.movieTickets : []
-                ],
+            const movieTickets = params.object.reduce<IMovieTicket[]>(
+                (a, b) => [...a, ...(Array.isArray(b.movieTickets)) ? b.movieTickets : []],
                 []
             );
 
@@ -296,16 +283,28 @@ export function payMovieTicket(params: factory.task.pay.IData) {
 
             seatInfoSyncResult = await movieTicketSeatService.seatInfoSync(seatInfoSyncIn);
         } catch (error) {
-            // actionにエラー結果を追加
-            try {
-                const actionError = { ...error, message: error.message, name: error.name };
-                await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
-            } catch (__) {
-                // 失敗したら仕方ない
+            let throwsError = true;
+            // 「既に存在する興行システム座席予約番号が入力されました」の場合、着券済なのでok
+            if (error.name === 'MovieticketReserveRequestError') {
+                // tslint:disable-next-line:no-magic-numbers
+                if (error.code === 400 && error.message === '既に存在する興行システム座席予約番号が入力されました。') {
+                    seatInfoSyncResult = error;
+                    throwsError = false;
+                }
             }
 
-            error = handleMvtkReserveError(error);
-            throw error;
+            if (throwsError) {
+                // actionにエラー結果を追加
+                try {
+                    const actionError = { ...error, message: error.message, name: error.name };
+                    await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
+                } catch (__) {
+                    // 失敗したら仕方ない
+                }
+
+                error = handleMvtkReserveError(error);
+                throw error;
+            }
         }
 
         // アクション完了
