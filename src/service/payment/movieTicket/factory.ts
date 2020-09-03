@@ -14,8 +14,7 @@ export function createSeatInfoSyncIn(params: {
     const event = params.event;
 
     // ショップ情報取得
-    const movieTicketPaymentAccepted = <factory.seller.IMovieTicketPaymentAccepted | undefined>
-        params.seller.paymentAccepted?.find((a) => a.paymentMethodType === params.paymentMethodType);
+    const movieTicketPaymentAccepted = params.seller.paymentAccepted?.find((a) => a.paymentMethodType === params.paymentMethodType);
     if (movieTicketPaymentAccepted === undefined) {
         throw new factory.errors.Argument('transactionId', 'Movie Ticket payment not accepted');
     }
@@ -58,8 +57,17 @@ export function createSeatInfoSyncIn(params: {
         skhnCd = `${eventCOAInfo.titleCode}${`00${eventCOAInfo.titleBranchNum}`.slice(DIGITS)}`;
     }
 
+    const kgygishCd = movieTicketPaymentAccepted.movieTicketInfo?.kgygishCd;
+    const stCd = movieTicketPaymentAccepted.movieTicketInfo?.stCd;
+    if (typeof kgygishCd !== 'string') {
+        throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo.kgygishCd');
+    }
+    if (typeof stCd !== 'string') {
+        throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo.stCd');
+    }
+
     return {
-        kgygishCd: movieTicketPaymentAccepted.movieTicketInfo.kgygishCd,
+        kgygishCd: kgygishCd,
         yykDvcTyp: mvtkapi.mvtk.services.seat.seatInfoSync.ReserveDeviceType.EntertainerSitePC, // 予約デバイス区分
         trkshFlg: mvtkapi.mvtk.services.seat.seatInfoSync.DeleteFlag.False, // 取消フラグ
         kgygishSstmZskyykNo: params.paymentMethodId, // 興行会社システム座席予約番号
@@ -70,7 +78,7 @@ export function createSeatInfoSyncIn(params: {
         kijYmd: moment(event.startDate)
             .tz('Asia/Tokyo')
             .format('YYYY/MM/DD'), // 計上年月日
-        stCd: movieTicketPaymentAccepted.movieTicketInfo.stCd,
+        stCd: stCd,
         screnCd: event.location.branchCode, // スクリーンコード
         knyknrNoInfo: knyknrNoInfo,
         zskInfo: seatNumbers.map((seatNumber) => {

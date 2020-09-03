@@ -53,7 +53,7 @@ export function authorize(
 
         const seller = await repos.seller.findById({ id: sellerId });
 
-        const { shopId, shopPass } = getGMOInfoFromSeller({ seller: seller });
+        const { shopId, shopPass } = getGMOInfoFromSeller({ paymentMethodType, seller: seller });
 
         // GMOオーダーIDはカスタム指定可能
         const orderId = params.transactionNumber;
@@ -221,7 +221,7 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
 
         const seller = await repos.seller.findById({ id: sellerId });
 
-        const { shopId, shopPass } = getGMOInfoFromSeller({ seller: seller });
+        const { shopId, shopPass } = getGMOInfoFromSeller({ paymentMethodType, seller: seller });
 
         const creditCardService = new GMO.service.Credit({ endpoint: String(availableChannel.serviceUrl) });
 
@@ -276,7 +276,7 @@ export function payCreditCard(params: factory.task.pay.IData) {
         })(repos);
 
         const seller = await repos.seller.findById({ id: String(params.recipient?.id) });
-        const { shopId, shopPass } = getGMOInfoFromSeller({ seller: seller });
+        const { shopId, shopPass } = getGMOInfoFromSeller({ paymentMethodType, seller: seller });
 
         // アクション開始
         const action = await repos.action.start(params);
@@ -397,7 +397,7 @@ export function refundCreditCard(params: factory.task.refund.IData) {
 
         const seller = await repos.seller.findById({ id: String(params.agent.id) });
 
-        const { shopId, shopPass } = getGMOInfoFromSeller({ seller: seller });
+        const { shopId, shopPass } = getGMOInfoFromSeller({ paymentMethodType, seller: seller });
 
         const availableChannel = await getGMOEndpoint({
             project: params.project,
@@ -514,24 +514,22 @@ async function processChangeTransaction(params: {
 }
 
 function getGMOInfoFromSeller(params: {
+    paymentMethodType: string;
     seller: factory.seller.ISeller;
 }) {
-    let creditCardPaymentAccepted: factory.seller.ICreditCardPaymentAccepted;
+    let creditCardPaymentAccepted: factory.seller.IPaymentAccepted | undefined;
 
     if (!Array.isArray(params.seller.paymentAccepted)) {
         throw new factory.errors.Argument('transaction', 'Credit card payment not accepted');
     }
 
-    creditCardPaymentAccepted = <factory.seller.ICreditCardPaymentAccepted>
-        params.seller.paymentAccepted.find(
-            (a) => a.paymentMethodType === factory.paymentMethodType.CreditCard
-        );
+    creditCardPaymentAccepted = params.seller.paymentAccepted.find((a) => a.paymentMethodType === params.paymentMethodType);
     if (creditCardPaymentAccepted === undefined) {
         throw new factory.errors.Argument('transaction', 'Credit card payment not accepted');
     }
     // tslint:disable-next-line:no-single-line-block-comment
     /* istanbul ignore next */
-    if (creditCardPaymentAccepted.gmoInfo.shopPass === undefined) {
+    if (typeof creditCardPaymentAccepted.gmoInfo?.shopPass !== 'string') {
         throw new factory.errors.Argument('transaction', 'Credit card payment settings not enough');
     }
 
