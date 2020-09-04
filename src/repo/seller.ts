@@ -3,7 +3,7 @@ import { modelName } from './mongoose/model/seller';
 
 import * as factory from '../factory';
 
-export type ISeller = factory.seller.IOrganization<factory.seller.IAttributes<factory.organizationType>>;
+export type ISeller = factory.seller.ISeller;
 
 /**
  * 販売者リポジトリ
@@ -155,9 +155,9 @@ export class MongoRepository {
     /**
      * 販売者を保管する
      */
-    public async save<T extends factory.organizationType>(params: {
+    public async save(params: {
         id?: string;
-        attributes: factory.seller.IAttributes<T>;
+        attributes: factory.seller.ISeller;
     }): Promise<ISeller> {
         let organization: ISeller;
         if (params.id === undefined) {

@@ -4,25 +4,22 @@
 import * as factory from '../../../../factory';
 
 import { MongoRepository as EventRepo } from '../../../../repo/event';
-import { MvtkRepository as MovieTicketRepo } from '../../../../repo/paymentMethod/movieTicket';
 import { MongoRepository as ProjectRepo } from '../../../../repo/project';
+import { MongoRepository as SellerRepo } from '../../../../repo/seller';
+
+import { checkByIdentifier } from '../../../payment/movieTicket';
 
 export function validateMovieTicket(
     params: factory.transaction.pay.IStartParamsWithoutDetail
 ) {
     return async (repos: {
         event: EventRepo;
-        movieTicket?: MovieTicketRepo;
         project: ProjectRepo;
+        seller: SellerRepo;
     }) => {
         const movieTickets = params.object.paymentMethod?.movieTickets;
         if (!Array.isArray(movieTickets)) {
             throw new factory.errors.Argument('object.paymentMethod.movieTickets must be an array');
-        }
-
-        const movieTicketInfo = params.object.paymentMethod?.movieTicketInfo;
-        if (movieTicketInfo === undefined) {
-            throw new factory.errors.ArgumentNull('object.paymentMethod.movieTicketInfo');
         }
 
         // イベント1つのみ許可
@@ -48,15 +45,25 @@ export function validateMovieTicket(
             id: eventIds[0]
         });
 
-        if (repos.movieTicket === undefined) {
-            throw new factory.errors.ServiceUnavailable('repos.movieTicket undefined');
+        // 販売者からムビチケ決済情報取得
+        const sellerId = params.recipient?.id;
+        if (typeof sellerId !== 'string') {
+            throw new factory.errors.ArgumentNull('recipient.id');
+        }
+        const seller = await repos.seller.findById({ id: sellerId });
+        const movieTicketPaymentAccepted = seller.paymentAccepted?.find((a) => a.paymentMethodType === paymentMethodType);
+        if (movieTicketPaymentAccepted === undefined) {
+            throw new factory.errors.Argument('recipient', 'Movie Ticket payment not accepted');
+        }
+        if (movieTicketPaymentAccepted.movieTicketInfo === undefined) {
+            throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo');
         }
 
-        const checkResult = await repos.movieTicket.checkByIdentifier({
+        const checkResult = await checkByIdentifier({
             movieTickets: movieTickets,
-            movieTicketInfo: movieTicketInfo,
+            movieTicketInfo: movieTicketPaymentAccepted.movieTicketInfo,
             screeningEvent: screeningEvent
-        });
+        })(repos);
 
         // 要求に対して十分かどうか検証する
         const availableMovieTickets = checkResult.movieTickets.filter((t) => t.amount?.validThrough === undefined);

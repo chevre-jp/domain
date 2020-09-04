@@ -18,6 +18,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.19.0 - 2020-09-04
+
+### Added
+
+- 決済取引をCreditCardとMovieTicketに対応
+- 劇場インターフェースにhasEntranceGateを追加
+- 返金取引を追加
+- USE_AGGREGATE_ON_PROJECT設定を追加
+- 中止を報告しないタスク設定を追加
+- アクションリポジトリに検索処理を追加
+
+### Changed
+
+- 取引タイプごとのタスクエクスポート処理を共通化
+- 余分確保分座席が残席数に反映されるように集計処理を調整
+- 予約作成時にイベントに対する予約集計処理を追加
+- ttts対応として同時間帯のイベントについても同時に予約集計するように調整
+- 販売者インターフェースを最適化
+
 ## v15.18.0 - 2020-07-13
 
 ### Added

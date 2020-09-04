@@ -20,8 +20,8 @@ async function main() {
     const eventAvailabilityRepo = new domain.repository.itemAvailability.ScreeningEvent(client);
     const offerRateLimitRepo = new domain.repository.rateLimit.Offer(client);
 
-    await domain.service.aggregation.aggregateScreeningEvent({
-        id: '40599ypk4j9vheo'
+    await domain.service.aggregation.event.aggregateScreeningEvent({
+        id: '7kdgwg1kx'
     })({
         event: eventRepo,
         offer: offerRepo,

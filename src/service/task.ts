@@ -10,6 +10,10 @@ import { MongoRepository as TaskRepo } from '../repo/task';
 
 import * as NotificationService from './notification';
 
+const ABORTED_TASKS_WITHOUT_REPORT: string[] = (typeof process.env.ABORTED_TASKS_WITHOUT_REPORT === 'string')
+    ? process.env.ABORTED_TASKS_WITHOUT_REPORT.split(',')
+    : [];
+
 export interface IConnectionSettings {
     /**
      * MongoDBコネクション
@@ -116,6 +120,11 @@ export function abort(params: {
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore if */
         if (abortedTask === null) {
+            return;
+        }
+
+        // 中止を報告しないタスクであれば終了
+        if (ABORTED_TASKS_WITHOUT_REPORT.includes(abortedTask.name)) {
             return;
         }
 

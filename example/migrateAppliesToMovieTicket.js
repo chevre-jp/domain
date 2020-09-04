@@ -20,25 +20,24 @@ async function main() {
         i += 1;
         const offer = doc.toObject();
         const priceSpec = offer.priceSpecification;
-        const appliesToMovieTicketType = priceSpec.appliesToMovieTicketType;
-        let appliesToMovieTicket = priceSpec.appliesToMovieTicket;
+        const appliesToMovieTicket = priceSpec.appliesToMovieTicket;
 
-        if (typeof appliesToMovieTicketType === 'string' && appliesToMovieTicketType.length > 0) {
-            if (appliesToMovieTicket !== undefined && appliesToMovieTicket !== null && appliesToMovieTicket.serviceType === appliesToMovieTicketType) {
+        if (appliesToMovieTicket !== undefined && appliesToMovieTicket !== null) {
+            if (priceSpec.appliesToMovieTicketType === appliesToMovieTicket.serviceType) {
                 console.log('already exists', offer.id, i);
 
             } else {
-                appliesToMovieTicket = {
-                    typeOf: chevre.factory.paymentMethodType.MovieTicket,
-                    serviceType: appliesToMovieTicketType
-                };
+                // appliesToMovieTicket = {
+                //     typeOf: chevre.factory.paymentMethodType.MovieTicket,
+                //     serviceType: appliesToMovieTicketType
+                // };
 
                 updateCount += 1;
-                await offerRepo.offerModel.findOneAndUpdate(
-                    { _id: offer.id },
-                    { 'priceSpecification.appliesToMovieTicket': appliesToMovieTicket }
-                )
-                    .exec();
+                // await offerRepo.offerModel.findOneAndUpdate(
+                //     { _id: offer.id },
+                //     { 'priceSpecification.appliesToMovieTicket': appliesToMovieTicket }
+                // )
+                //     .exec();
                 console.log('updated', offer.id, i);
 
             }
@@ -68,25 +67,24 @@ async function main() {
     await cursor.eachAsync(async (doc) => {
         i += 1;
         const priceSpec = doc.toObject();
-        const appliesToMovieTicketType = priceSpec.appliesToMovieTicketType;
-        let appliesToMovieTicket = priceSpec.appliesToMovieTicket;
+        const appliesToMovieTicket = priceSpec.appliesToMovieTicket;
 
-        if (typeof appliesToMovieTicketType === 'string' && appliesToMovieTicketType.length > 0) {
-            if (appliesToMovieTicket !== undefined && appliesToMovieTicket !== null && appliesToMovieTicket.serviceType === appliesToMovieTicketType) {
+        if (appliesToMovieTicket !== undefined && appliesToMovieTicket !== null) {
+            if (priceSpec.appliesToMovieTicketType === appliesToMovieTicket.serviceType) {
                 console.log('already exists', priceSpec.id, i);
 
             } else {
-                appliesToMovieTicket = {
-                    typeOf: chevre.factory.paymentMethodType.MovieTicket,
-                    serviceType: appliesToMovieTicketType
-                };
+                // appliesToMovieTicket = {
+                //     typeOf: chevre.factory.paymentMethodType.MovieTicket,
+                //     serviceType: appliesToMovieTicketType
+                // };
 
                 updateCount += 1;
-                await priceSpecificationRepo.priceSpecificationModel.findOneAndUpdate(
-                    { _id: priceSpec.id },
-                    { appliesToMovieTicket: appliesToMovieTicket }
-                )
-                    .exec();
+                // await priceSpecificationRepo.priceSpecificationModel.findOneAndUpdate(
+                //     { _id: priceSpec.id },
+                //     { appliesToMovieTicket: appliesToMovieTicket }
+                // )
+                //     .exec();
                 console.log('updated', priceSpec.id, i);
 
             }

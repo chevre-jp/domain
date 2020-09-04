@@ -9,7 +9,6 @@ import { credentials } from '../../credentials';
 
 import * as OfferService from '../offer';
 
-import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as OfferRepo } from '../../repo/offer';
 import { MongoRepository as OfferCatalogRepo } from '../../repo/offerCatalog';
 import { MongoRepository as ProductRepo } from '../../repo/product';
@@ -18,7 +17,6 @@ import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
-// import * as MoneyTransferService from '../moneyTransfer';
 import { createPointAward, createServiceOutput, ProductType } from './registerService/factory';
 
 import { createPotentialActions } from './registerService/potentialActions';
@@ -41,18 +39,15 @@ export type IStartOperation<T> = (repos: {
 }) => Promise<T>;
 
 export type ICancelOperation<T> = (repos: {
-    action: ActionRepo;
-    serviceOutput: ServiceOutputRepo;
-    task: TaskRepo;
     transaction: TransactionRepo;
 }) => Promise<T>;
 
-export type ITaskAndTransactionOperation<T> = (repos: {
-    task: TaskRepo;
+export type IConfirmOperation<T> = (repos: {
     transaction: TransactionRepo;
 }) => Promise<T>;
 
-export type ITransactionOperation<T> = (repos: {
+export type IExportTasksOperation<T> = (repos: {
+    task: TaskRepo;
     transaction: TransactionRepo;
 }) => Promise<T>;
 
@@ -278,7 +273,7 @@ export function start(
 /**
  * 取引確定
  */
-export function confirm(params: factory.transaction.registerService.IConfirmParams): ITransactionOperation<void> {
+export function confirm(params: factory.transaction.registerService.IConfirmParams): IConfirmOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
@@ -323,9 +318,6 @@ export function cancel(params: {
     transactionNumber?: string;
 }): ICancelOperation<void> {
     return async (repos: {
-        action: ActionRepo;
-        serviceOutput: ServiceOutputRepo;
-        task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
         await repos.transaction.cancel({
@@ -337,32 +329,9 @@ export function cancel(params: {
 }
 
 /**
- * ひとつの取引のタスクをエクスポートする
- */
-export function exportTasks(status: factory.transactionStatusType) {
-    return async (repos: {
-        task: TaskRepo;
-        transaction: TransactionRepo;
-    }) => {
-        const transaction = await repos.transaction.startExportTasks({
-            typeOf: factory.transactionType.RegisterService,
-            status: status
-        });
-        if (transaction === null) {
-            return;
-        }
-
-        // 失敗してもここでは戻さない(RUNNINGのまま待機)
-        await exportTasksById(transaction)(repos);
-
-        await repos.transaction.setTasksExportedById({ id: transaction.id });
-    };
-}
-
-/**
  * 取引タスク出力
  */
-export function exportTasksById(params: { id: string }): ITaskAndTransactionOperation<factory.task.ITask[]> {
+export function exportTasksById(params: { id: string }): IExportTasksOperation<factory.task.ITask[]> {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         task: TaskRepo;

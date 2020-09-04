@@ -4,6 +4,7 @@ import * as factory from '../factory';
 import ActionModel from './mongoose/model/action';
 
 export type IAction<T extends factory.actionType> = factory.action.IAction<factory.action.IAttributes<T, any, any>>;
+
 /**
  * アクションリポジトリ
  */
@@ -11,6 +12,114 @@ export class MongoRepository {
     public readonly actionModel: typeof ActionModel;
     constructor(connection: Connection) {
         this.actionModel = connection.model(ActionModel.modelName);
+    }
+
+    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
+    public static CREATE_MONGO_CONDITIONS(params: factory.action.ISearchConditions) {
+        const andConditions: any[] = [];
+
+        const projectIdEq = params.project?.id?.$eq;
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof projectIdEq === 'string') {
+            andConditions.push({
+                'project.id': {
+                    $exists: true,
+                    $eq: projectIdEq
+                }
+            });
+        }
+
+        const objectPaymentMethodAccountIdEq = params.object?.paymentMethod?.accountId?.$eq;
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof objectPaymentMethodAccountIdEq === 'string') {
+            andConditions.push({
+                'object.paymentMethod.accountId': {
+                    $exists: true,
+                    $eq: objectPaymentMethodAccountIdEq
+                }
+            });
+        }
+
+        const objectPaymentMethodPaymentMethodIdEq = params.object?.paymentMethod?.paymentMethodId?.$eq;
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof objectPaymentMethodPaymentMethodIdEq === 'string') {
+            andConditions.push({
+                'object.paymentMethod.paymentMethodId': {
+                    $exists: true,
+                    $eq: objectPaymentMethodPaymentMethodIdEq
+                }
+            });
+        }
+
+        const objectPaymentMethodTypeOfEq = params.object?.paymentMethod?.typeOf?.$eq;
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof objectPaymentMethodTypeOfEq === 'string') {
+            andConditions.push({
+                'object.paymentMethod.typeOf': {
+                    $exists: true,
+                    $eq: objectPaymentMethodTypeOfEq
+                }
+            });
+        }
+
+        const typeOfEq = params.typeOf?.$eq;
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof typeOfEq === 'string') {
+            andConditions.push({
+                typeOf: { $eq: typeOfEq }
+            });
+        }
+
+        const actionStatusIn = params.actionStatus?.$in;
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (Array.isArray(actionStatusIn)) {
+            andConditions.push({
+                actionStatus: { $in: actionStatusIn }
+            });
+        }
+
+        return andConditions;
+    }
+
+    /**
+     * アクション検索
+     */
+    public async search<T extends factory.actionType>(params: factory.action.ISearchConditions): Promise<IAction<T>[]> {
+        const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
+        const query = this.actionModel.find(
+            (conditions.length > 0) ? { $and: conditions } : {},
+            {
+                __v: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        );
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.limit !== undefined && params.page !== undefined) {
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
+
+        // const explainResult = await (<any>query).explain();
+        // console.log(explainResult[0].executionStats.allPlansExecution.map((e: any) => e.executionStages.inputStage));
+
+        return query.setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
     }
 
     /**

@@ -1,24 +1,19 @@
 /**
- * 決済取引サービス
+ * 返金取引サービス
  */
 import * as moment from 'moment';
 
-import { handleMvtkReserveError } from '../../errorHandler';
 import * as factory from '../../factory';
 
-import { MongoRepository as EventRepo } from '../../repo/event';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
-import * as CreditCardPayment from '../payment/creditCard';
-import { createStartParams } from './pay/factory';
-import { validateMovieTicket } from './pay/movieTicket/validation';
-import { createPotentialActions } from './pay/potentialActions';
+import { createStartParams } from './refund/factory';
+import { createPotentialActions } from './refund/potentialActions';
 
 export type IStartOperation<T> = (repos: {
-    event: EventRepo;
     project: ProjectRepo;
     seller: SellerRepo;
     transaction: TransactionRepo;
@@ -41,22 +36,15 @@ export type IExportTasksOperation<T> = (repos: {
  * 取引開始
  */
 export function start(
-    params: factory.transaction.pay.IStartParamsWithoutDetail
-): IStartOperation<factory.transaction.pay.ITransaction> {
+    params: factory.transaction.refund.IStartParamsWithoutDetail
+): IStartOperation<factory.transaction.refund.ITransaction> {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
-        event: EventRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;
     }) => {
         const paymentServiceType = params.object?.typeOf;
-
-        // 金額をfix
-        const amount = params.object.paymentMethod?.amount;
-        if (typeof amount !== 'number') {
-            throw new factory.errors.ArgumentNull('object.paymentMethod.amount');
-        }
 
         const transactionNumber: string | undefined = params.transactionNumber;
         if (typeof transactionNumber !== 'string' || transactionNumber.length === 0) {
@@ -64,65 +52,21 @@ export function start(
         }
 
         // 取引開始
-        let transaction: factory.transaction.pay.ITransaction;
-        const startParams: factory.transaction.IStartParams<factory.transactionType.Pay> = createStartParams({
+        let transaction: factory.transaction.refund.ITransaction;
+        const startParams: factory.transaction.IStartParams<factory.transactionType.Refund> = createStartParams({
             ...params,
             transactionNumber,
-            paymentServiceType,
-            amount
+            paymentServiceType
         });
 
         try {
-            transaction = await repos.transaction.start<factory.transactionType.Pay>(startParams);
+            transaction = await repos.transaction.start<factory.transactionType.Refund>(startParams);
 
             switch (paymentServiceType) {
                 case factory.service.paymentService.PaymentServiceType.CreditCard:
-                    const authorizeResult = await CreditCardPayment.authorize(params)(repos);
-
-                    transaction = await repos.transaction.transactionModel.findByIdAndUpdate(
-                        { _id: transaction.id },
-                        {
-                            'object.paymentMethod.accountId': authorizeResult.accountId,
-                            'object.paymentMethod.paymentMethodId': authorizeResult.paymentMethodId,
-                            'object.entryTranArgs': authorizeResult.entryTranArgs,
-                            'object.entryTranResult': authorizeResult.entryTranResult,
-                            'object.execTranArgs': authorizeResult.execTranArgs,
-                            'object.execTranResult': authorizeResult.execTranResult
-                        },
-                        { new: true }
-                    )
-                        .exec()
-                        .then((doc) => {
-                            if (doc === null) {
-                                throw new factory.errors.ArgumentNull('Transaction');
-                            }
-
-                            return doc.toObject();
-                        });
-
                     break;
 
                 case factory.service.paymentService.PaymentServiceType.MovieTicket:
-                    // ムビチケ決済の場合、認証
-                    const checkResult = await validateMovieTicket(params)(repos);
-
-                    transaction = await repos.transaction.transactionModel.findByIdAndUpdate(
-                        { _id: transaction.id },
-                        {
-                            'object.paymentMethod.accountId': checkResult?.movieTickets[0].identifier,
-                            'object.checkResult': checkResult
-                        },
-                        { new: true }
-                    )
-                        .exec()
-                        .then((doc) => {
-                            if (doc === null) {
-                                throw new factory.errors.ArgumentNull('Transaction');
-                            }
-
-                            return doc.toObject();
-                        });
-
                     break;
 
                 default:
@@ -135,7 +79,7 @@ export function start(
                 // no op
             }
 
-            error = handleMvtkReserveError(error);
+            // error = handleMvtkReserveError(error);
             throw error;
         }
 
@@ -146,21 +90,21 @@ export function start(
 /**
  * 取引確定
  */
-export function confirm(params: factory.transaction.pay.IConfirmParams): IConfirmOperation<void> {
+export function confirm(params: factory.transaction.refund.IConfirmParams): IConfirmOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        let transaction: factory.transaction.ITransaction<factory.transactionType.Pay>;
+        let transaction: factory.transaction.ITransaction<factory.transactionType.Refund>;
 
         // 取引存在確認
         if (typeof params.id === 'string') {
             transaction = await repos.transaction.findById({
-                typeOf: factory.transactionType.Pay,
+                typeOf: factory.transactionType.Refund,
                 id: params.id
             });
         } else if (typeof params.transactionNumber === 'string') {
             transaction = await repos.transaction.findByTransactionNumber({
-                typeOf: factory.transactionType.Pay,
+                typeOf: factory.transactionType.Refund,
                 transactionNumber: params.transactionNumber
             });
         } else {
@@ -173,7 +117,7 @@ export function confirm(params: factory.transaction.pay.IConfirmParams): IConfir
         });
 
         await repos.transaction.confirm({
-            typeOf: factory.transactionType.Pay,
+            typeOf: factory.transactionType.Refund,
             id: transaction.id,
             result: {},
             potentialActions: potentialActions
@@ -192,7 +136,7 @@ export function cancel(params: {
         transaction: TransactionRepo;
     }) => {
         await repos.transaction.cancel({
-            typeOf: factory.transactionType.Pay,
+            typeOf: factory.transactionType.Refund,
             id: params.id,
             transactionNumber: params.transactionNumber
         });
@@ -214,7 +158,7 @@ export function exportTasksById(params: {
         transaction: TransactionRepo;
     }) => {
         const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.Pay,
+            typeOf: factory.transactionType.Refund,
             id: params.id
         });
         const potentialActions = transaction.potentialActions;
@@ -236,11 +180,11 @@ export function exportTasksById(params: {
                 if (potentialActions !== undefined) {
                     // tslint:disable-next-line:no-single-line-block-comment
                     /* istanbul ignore else */
-                    if (potentialActions.pay !== undefined) {
-                        const payTasks: factory.task.pay.IAttributes[] = potentialActions.pay.map((a) => {
+                    if (Array.isArray(potentialActions.refund)) {
+                        const refundTasks: factory.task.refund.IAttributes[] = potentialActions.refund.map((a) => {
                             return {
                                 project: transaction.project,
-                                name: <factory.taskName.Pay>factory.taskName.Pay,
+                                name: <factory.taskName.Refund>factory.taskName.Refund,
                                 status: factory.taskStatus.Ready,
                                 runsAt: taskRunsAt,
                                 remainingNumberOfTries: 10,
@@ -249,7 +193,7 @@ export function exportTasksById(params: {
                                 data: a
                             };
                         });
-                        taskAttributes.push(...payTasks);
+                        taskAttributes.push(...refundTasks);
                     }
                 }
 
@@ -257,18 +201,6 @@ export function exportTasksById(params: {
 
             case factory.transactionStatusType.Canceled:
             case factory.transactionStatusType.Expired:
-                const voidPaymentTasks: factory.task.voidPayment.IAttributes = {
-                    project: transaction.project,
-                    name: <factory.taskName.VoidPayment>factory.taskName.VoidPayment,
-                    status: factory.taskStatus.Ready,
-                    runsAt: taskRunsAt,
-                    remainingNumberOfTries: 10,
-                    numberOfTried: 0,
-                    executionResults: [],
-                    data: { object: transaction }
-                };
-                taskAttributes.push(voidPaymentTasks);
-
                 break;
 
             default:

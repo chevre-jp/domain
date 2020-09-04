@@ -19,6 +19,7 @@ const schema = new mongoose.Schema(
         branchCode: String,
         containedInPlace: mongoose.SchemaTypes.Mixed,
         containsPlace: [mongoose.SchemaTypes.Mixed],
+        hasEntranceGate: [mongoose.SchemaTypes.Mixed],
         hasPOS: [mongoose.SchemaTypes.Mixed],
         maximumAttendeeCapacity: Number,
         openingHoursSpecification: mongoose.SchemaTypes.Mixed,
