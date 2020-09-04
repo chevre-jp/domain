@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## v15.19.0 - 2020-09-04
+
+### Added
+
 - 決済取引をCreditCardとMovieTicketに対応
 - 劇場インターフェースにhasEntranceGateを追加
 - 返金取引を追加
@@ -22,14 +36,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 予約作成時にイベントに対する予約集計処理を追加
 - ttts対応として同時間帯のイベントについても同時に予約集計するように調整
 - 販売者インターフェースを最適化
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 
 ## v15.18.0 - 2020-07-13
 
