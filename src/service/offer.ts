@@ -240,7 +240,6 @@ export function searchEventSeatOffersWithPaging(params: {
 /**
  * イベントに対するオファーを検索する
  */
-// tslint:disable-next-line:max-func-body-length
 export function searchScreeningEventTicketOffers(params: {
     eventId: string;
 }): ISearchScreeningEventTicketOffersOperation<factory.event.screeningEvent.ITicketOffer[]> {
@@ -281,17 +280,22 @@ export function searchScreeningEventTicketOffers(params: {
             });
         }
 
-        // 万が一ムビチケチャージ仕様が存在しないオファーは除外する
+        // 適用ムビチケ条件がある場合、ムビチケ加算料金が存在しないオファーは除外する
         availableOffers = availableOffers.filter((o) => {
-            const paymentMethodType = o.priceSpecification?.appliesToMovieTicket?.typeOf;
+            const paymentMethodType = o.priceSpecification?.appliesToMovieTicket?.serviceOutput?.typeOf;
             const movieTicketType = o.priceSpecification?.appliesToMovieTicket?.serviceType;
 
-            return typeof paymentMethodType !== 'string'
-                || (typeof paymentMethodType === 'string'
-                    && movieTicketTypeChargeSpecs.some((s) => {
-                        return s.appliesToMovieTicket?.typeOf === paymentMethodType
-                            && s.appliesToMovieTicket?.serviceType === movieTicketType;
-                    }));
+            const movieTicketTypeChargeSpecRequired = typeof paymentMethodType === 'string';
+            let movieTicketTypeChargeSpecExists = false;
+
+            if (movieTicketTypeChargeSpecRequired) {
+                movieTicketTypeChargeSpecExists = movieTicketTypeChargeSpecs.some((s) => {
+                    return s.appliesToMovieTicket?.serviceOutput?.typeOf === paymentMethodType
+                        && s.appliesToMovieTicket?.serviceType === movieTicketType;
+                });
+            }
+
+            return !movieTicketTypeChargeSpecRequired || movieTicketTypeChargeSpecExists;
         });
 
         let offers4event: factory.event.screeningEvent.ITicketOffer[] = availableOffers.map((t) => {

@@ -20,13 +20,13 @@ export function createCompoundPriceSpec4event(params: {
         name: params.offer.name
     };
 
-    const movieTicketPaymentMethodType = unitPriceSpec.appliesToMovieTicket?.typeOf;
+    const movieTicketPaymentMethodType = unitPriceSpec.appliesToMovieTicket?.serviceOutput?.typeOf;
     const movieTicketType = unitPriceSpec.appliesToMovieTicket?.serviceType;
 
     // ムビチケオファーの場合
     if (typeof movieTicketPaymentMethodType === 'string') {
         const mvtkSpecs = params.movieTicketTypeChargeSpecs.filter((s) => {
-            return s.appliesToMovieTicket?.typeOf === movieTicketPaymentMethodType
+            return s.appliesToMovieTicket?.serviceOutput?.typeOf === movieTicketPaymentMethodType
                 && s.appliesToMovieTicket?.serviceType === movieTicketType;
         });
 
