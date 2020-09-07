@@ -634,15 +634,22 @@ export function createScreeningEventSeriesFromCOA(params: {
         dateMvtkBegin: params.filmFromCOA.dateMvtkBegin
     };
 
-    const acceptedPaymentMethod: factory.paymentMethodType[] = [
+    const acceptedPaymentMethod: string[] = [
         factory.paymentMethodType.Account,
         factory.paymentMethodType.Cash,
         factory.paymentMethodType.CreditCard,
         factory.paymentMethodType.EMoney
     ];
+    let unacceptedPaymentMethod: string[] | undefined;
 
     if (coaInfo.flgMvtkUse === '1') {
         acceptedPaymentMethod.push(factory.paymentMethodType.MovieTicket);
+    } else {
+        if (!Array.isArray(unacceptedPaymentMethod)) {
+            unacceptedPaymentMethod = [];
+        }
+
+        unacceptedPaymentMethod.push(factory.paymentMethodType.MovieTicket);
     }
 
     return {
@@ -691,7 +698,8 @@ export function createScreeningEventSeriesFromCOA(params: {
             project: { typeOf: params.project.typeOf, id: params.project.id },
             typeOf: factory.offerType.Offer,
             priceCurrency: factory.priceCurrency.JPY,
-            acceptedPaymentMethod: acceptedPaymentMethod
+            ...(Array.isArray(acceptedPaymentMethod)) ? { acceptedPaymentMethod: acceptedPaymentMethod } : undefined,
+            ...(Array.isArray(unacceptedPaymentMethod)) ? { unacceptedPaymentMethod: unacceptedPaymentMethod } : undefined
         },
         additionalProperty: [
             {

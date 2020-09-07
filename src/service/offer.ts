@@ -240,6 +240,7 @@ export function searchEventSeatOffersWithPaging(params: {
 /**
  * イベントに対するオファーを検索する
  */
+// tslint:disable-next-line:max-func-body-length
 export function searchScreeningEventTicketOffers(params: {
     eventId: string;
 }): ISearchScreeningEventTicketOffersOperation<factory.event.screeningEvent.ITicketOffer[]> {
@@ -261,9 +262,6 @@ export function searchScreeningEventTicketOffers(params: {
             });
         }
 
-        // (テスト確認したら削除)
-        // const sortedOfferIds = availableOffers.map((o) => o.id);
-
         const { soundFormatChargeSpecifications, videoFormatChargeSpecifications, movieTicketTypeChargeSpecs }
             = await searchPriceSpecs4event({ event })(repos);
 
@@ -272,13 +270,15 @@ export function searchScreeningEventTicketOffers(params: {
             ...<factory.event.screeningEvent.IOffer>event.offers
         };
 
-        // ムビチケが決済方法として許可されていなければ、ムビチケオファーを除外
-        const movieTicketPaymentAccepted = eventOffers.acceptedPaymentMethod === undefined
-            || eventOffers.acceptedPaymentMethod.indexOf(factory.paymentMethodType.MovieTicket) >= 0;
-        if (!movieTicketPaymentAccepted) {
-            availableOffers = availableOffers.filter(
-                (o) => o.priceSpecification?.appliesToMovieTicket?.typeOf !== factory.paymentMethodType.MovieTicket
-            );
+        // 不許可決済方法があれば、該当オファーを除外
+        const unacceptedPaymentMethod = eventOffers.unacceptedPaymentMethod;
+        if (Array.isArray(unacceptedPaymentMethod)) {
+            availableOffers = availableOffers.filter((o) => {
+                const appliesToMovieTicketPaymentMethodType = o.priceSpecification?.appliesToMovieTicket?.serviceOutput?.typeOf;
+
+                return typeof appliesToMovieTicketPaymentMethodType !== 'string'
+                    || !unacceptedPaymentMethod.includes(appliesToMovieTicketPaymentMethodType);
+            });
         }
 
         // 万が一ムビチケチャージ仕様が存在しないオファーは除外する
