@@ -261,9 +261,6 @@ export function searchScreeningEventTicketOffers(params: {
             });
         }
 
-        // (テスト確認したら削除)
-        // const sortedOfferIds = availableOffers.map((o) => o.id);
-
         const { soundFormatChargeSpecifications, videoFormatChargeSpecifications, movieTicketTypeChargeSpecs }
             = await searchPriceSpecs4event({ event })(repos);
 
@@ -272,26 +269,33 @@ export function searchScreeningEventTicketOffers(params: {
             ...<factory.event.screeningEvent.IOffer>event.offers
         };
 
-        // ムビチケが決済方法として許可されていなければ、ムビチケオファーを除外
-        const movieTicketPaymentAccepted = eventOffers.acceptedPaymentMethod === undefined
-            || eventOffers.acceptedPaymentMethod.indexOf(factory.paymentMethodType.MovieTicket) >= 0;
-        if (!movieTicketPaymentAccepted) {
-            availableOffers = availableOffers.filter(
-                (o) => o.priceSpecification?.appliesToMovieTicket?.typeOf !== factory.paymentMethodType.MovieTicket
-            );
+        // 不許可決済方法があれば、該当オファーを除外
+        const unacceptedPaymentMethod = eventOffers.unacceptedPaymentMethod;
+        if (Array.isArray(unacceptedPaymentMethod)) {
+            availableOffers = availableOffers.filter((o) => {
+                const appliesToMovieTicketPaymentMethodType = o.priceSpecification?.appliesToMovieTicket?.serviceOutput?.typeOf;
+
+                return typeof appliesToMovieTicketPaymentMethodType !== 'string'
+                    || !unacceptedPaymentMethod.includes(appliesToMovieTicketPaymentMethodType);
+            });
         }
 
-        // 万が一ムビチケチャージ仕様が存在しないオファーは除外する
+        // 適用ムビチケ条件がある場合、ムビチケ加算料金が存在しないオファーは除外する
         availableOffers = availableOffers.filter((o) => {
-            const paymentMethodType = o.priceSpecification?.appliesToMovieTicket?.typeOf;
+            const paymentMethodType = o.priceSpecification?.appliesToMovieTicket?.serviceOutput?.typeOf;
             const movieTicketType = o.priceSpecification?.appliesToMovieTicket?.serviceType;
 
-            return typeof paymentMethodType !== 'string'
-                || (typeof paymentMethodType === 'string'
-                    && movieTicketTypeChargeSpecs.some((s) => {
-                        return s.appliesToMovieTicket?.typeOf === paymentMethodType
-                            && s.appliesToMovieTicket?.serviceType === movieTicketType;
-                    }));
+            const movieTicketTypeChargeSpecRequired = typeof paymentMethodType === 'string';
+            let movieTicketTypeChargeSpecExists = false;
+
+            if (movieTicketTypeChargeSpecRequired) {
+                movieTicketTypeChargeSpecExists = movieTicketTypeChargeSpecs.some((s) => {
+                    return s.appliesToMovieTicket?.serviceOutput?.typeOf === paymentMethodType
+                        && s.appliesToMovieTicket?.serviceType === movieTicketType;
+                });
+            }
+
+            return !movieTicketTypeChargeSpecRequired || movieTicketTypeChargeSpecExists;
         });
 
         let offers4event: factory.event.screeningEvent.ITicketOffer[] = availableOffers.map((t) => {

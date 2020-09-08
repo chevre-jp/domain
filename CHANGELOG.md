@@ -18,6 +18,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.20.0 - 2020-09-08
+
+### Changed
+
+- イベントのacceptedPaymentMethodをunacceptedPaymentMethodとして再管理
+- オファーの適用ムビチケ条件の決済方法として、appliesToMovieTicket.serviceOutput.typeOfを参照するように変更
+
 ## v15.19.0 - 2020-09-04
 
 ### Added
