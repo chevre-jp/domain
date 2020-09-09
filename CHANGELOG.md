@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- 決済取引に決済方法認証処理を追加
+
 ### Changed
 
 ### Deprecated

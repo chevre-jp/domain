@@ -22,6 +22,134 @@ export interface ICheckResult {
     movieTickets: IMovieTicket[];
 }
 
+export type ICheckOperation<T> = (repos: {
+    action: ActionRepo;
+    event: EventRepo;
+    project: ProjectRepo;
+    seller: SellerRepo;
+    // movieTicket: MovieTicketRepo;
+    // paymentMethod: PaymentMethodRepo;
+}) => Promise<T>;
+
+/**
+ * ムビチケ認証
+ */
+export function checkMovieTicket(
+    params: factory.action.check.paymentMethod.movieTicket.IAttributes
+): ICheckOperation<factory.action.check.paymentMethod.movieTicket.IAction> {
+    // tslint:disable-next-line:max-func-body-length
+    return async (repos: {
+        action: ActionRepo;
+        event: EventRepo;
+        project: ProjectRepo;
+        seller: SellerRepo;
+        // movieTicket: MovieTicketRepo;
+        // paymentMethod: PaymentMethodRepo;
+    }) => {
+        // ムビチケ系統の決済方法タイプは動的
+        const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
+        if (typeof paymentMethodType !== 'string') {
+            throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
+        }
+
+        const movieTickets = params.object[0]?.movieTickets;
+        if (!Array.isArray(movieTickets)) {
+            throw new factory.errors.Argument('object.movieTickets must be an array');
+        }
+
+        const actionAttributes: factory.action.check.paymentMethod.movieTicket.IAttributes = {
+            project: params.project,
+            typeOf: factory.actionType.CheckAction,
+            agent: params.agent,
+            object: params.object
+        };
+        const action = await repos.action.start(actionAttributes);
+
+        let checkResult: ICheckResult;
+        try {
+            const eventIds = [...new Set(params.object.reduce<string[]>(
+                (a, b) => [
+                    ...a,
+                    ...(Array.isArray(b.movieTickets)) ? b.movieTickets.map((ticket) => ticket.serviceOutput.reservationFor.id) : []
+                ],
+                []
+            ))];
+            if (eventIds.length !== 1) {
+                throw new factory.errors.Argument('movieTickets', 'Number of events must be 1');
+            }
+
+            // イベント情報取得
+            let screeningEvent: factory.event.IEvent<factory.eventType.ScreeningEvent>;
+
+            screeningEvent = await repos.event.findById<factory.eventType.ScreeningEvent>({
+                id: eventIds[0]
+            });
+
+            // ショップ情報取得
+            const movieTheater = await repos.seller.findById({ id: params.object[0]?.seller.id });
+            if (movieTheater.paymentAccepted === undefined) {
+                throw new factory.errors.Argument('transactionId', 'Movie Ticket payment not accepted');
+            }
+            const movieTicketPaymentAccepted = movieTheater.paymentAccepted.find((a) => a.paymentMethodType === paymentMethodType);
+            if (movieTicketPaymentAccepted === undefined) {
+                throw new factory.errors.Argument('transactionId', 'Movie Ticket payment not accepted');
+            }
+            if (movieTicketPaymentAccepted.movieTicketInfo === undefined) {
+                throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo');
+            }
+
+            checkResult = await checkByIdentifier({
+                movieTickets: movieTickets,
+                movieTicketInfo: movieTicketPaymentAccepted.movieTicketInfo,
+                screeningEvent: screeningEvent
+            })(repos);
+
+            // 一度認証されたムビチケをDBに記録する(後で検索しやすいように)
+            await Promise.all(checkResult.movieTickets.map(async (__) => {
+                // const movieTicket: factory.paymentMethod.paymentCard.movieTicket.IMovieTicket = {
+                //     ...movieTicketResult,
+                //     serviceOutput: {
+                //         reservationFor: { typeOf: movieTicketResult.serviceOutput.reservationFor.typeOf, id: '' },
+                //         reservedTicket: {
+                //             ticketedSeat: {
+                //                 typeOf: factory.placeType.Seat,
+                //                 // seatingType: 'Default',
+                //                 seatNumber: '',
+                //                 seatRow: '',
+                //                 seatSection: ''
+                //             }
+                //         }
+                //     }
+                // };
+                // await repos.paymentMethod.paymentMethodModel.findOneAndUpdate(
+                //     {
+                //         typeOf: paymentMethodType,
+                //         identifier: movieTicket.identifier
+                //     },
+                //     movieTicket,
+                //     { upsert: true }
+                // )
+                //     .exec();
+            }));
+        } catch (error) {
+            // actionにエラー結果を追加
+            try {
+                const actionError = { ...error, message: error.message, name: error.name };
+                await repos.action.giveUp({ typeOf: actionAttributes.typeOf, id: action.id, error: actionError });
+            } catch (__) {
+                // 失敗したら仕方ない
+            }
+
+            error = handleMvtkReserveError(error);
+            throw error;
+        }
+
+        const result: factory.action.check.paymentMethod.movieTicket.IResult = checkResult;
+
+        return repos.action.complete({ typeOf: actionAttributes.typeOf, id: action.id, result: result });
+    };
+}
+
 /**
  * ムビチケ認証
  */
