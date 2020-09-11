@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- プロダクトタイプ管理を@chevre/factoryへ移行
+
 ### Deprecated
 
 ### Removed

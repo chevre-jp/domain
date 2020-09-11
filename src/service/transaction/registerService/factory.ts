@@ -4,13 +4,6 @@ import * as factory from '../../../factory';
 
 export type IUnitPriceSpecification = factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>;
 
-export enum ProductType {
-    Account = 'Account',
-    PaymentCard = 'PaymentCard',
-    PointCard = 'PointCard',
-    MembershipService = 'MembershipService'
-}
-
 /**
  * ポイント特典を作成する
  */
@@ -99,16 +92,15 @@ export function createServiceOutput(params: {
     }
 
     switch (product.typeOf) {
-        case ProductType.PaymentCard:
-        case ProductType.PointCard:
+        case factory.product.ProductType.PaymentCard:
             if (typeof accessCode !== 'string' || accessCode.length === 0) {
                 throw new factory.errors.ArgumentNull('object.itemOffered.serviceOutput.accessCode');
             }
 
             break;
 
-        case ProductType.MembershipService:
-        case ProductType.Account:
+        case factory.product.ProductType.MembershipService:
+        case factory.product.ProductType.Account:
             // identifier = params.transactionNumber;
 
             break;
