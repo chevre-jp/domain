@@ -6,6 +6,7 @@ import * as moment from 'moment';
 import { handleMvtkReserveError } from '../../errorHandler';
 import * as factory from '../../factory';
 
+import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as EventRepo } from '../../repo/event';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
@@ -13,6 +14,7 @@ import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
 import * as CreditCardPayment from '../payment/creditCard';
+import * as MovieTicketPayment from '../payment/movieTicket';
 import { createStartParams } from './pay/factory';
 import { validateMovieTicket } from './pay/movieTicket/validation';
 import { createPotentialActions } from './pay/potentialActions';
@@ -36,6 +38,53 @@ export type IExportTasksOperation<T> = (repos: {
     task: TaskRepo;
     transaction: TransactionRepo;
 }) => Promise<T>;
+
+export type ICheckOperation<T> = (repos: {
+    action: ActionRepo;
+    event: EventRepo;
+    project: ProjectRepo;
+    seller: SellerRepo;
+    // movieTicket: MovieTicketRepo;
+    // paymentMethod: PaymentMethodRepo;
+}) => Promise<T>;
+
+/**
+ * 決済方法認証
+ */
+export function check(
+    params: factory.action.check.paymentMethod.movieTicket.IAttributes
+): ICheckOperation<factory.action.check.paymentMethod.movieTicket.IAction> {
+    // tslint:disable-next-line:max-func-body-length
+    return async (repos: {
+        action: ActionRepo;
+        event: EventRepo;
+        project: ProjectRepo;
+        seller: SellerRepo;
+        // movieTicket: MovieTicketRepo;
+        // paymentMethod: PaymentMethodRepo;
+    }) => {
+        let action: factory.action.check.paymentMethod.movieTicket.IAction;
+
+        const paymentServiceType = params.object[0]?.typeOf;
+
+        try {
+            switch (paymentServiceType) {
+                // case factory.service.paymentService.PaymentServiceType.CreditCard:
+
+                case factory.service.paymentService.PaymentServiceType.MovieTicket:
+                    action = await MovieTicketPayment.checkMovieTicket(params)(repos);
+                    break;
+
+                default:
+                    throw new factory.errors.NotImplemented(`Payment service '${paymentServiceType}' not implemented`);
+            }
+        } catch (error) {
+            throw error;
+        }
+
+        return action;
+    };
+}
 
 /**
  * 取引開始

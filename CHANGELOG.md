@@ -18,6 +18,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.21.0 - 2020-09-11
+
+### Added
+
+- 決済取引に決済方法認証処理を追加
+
+### Changed
+
+- プロダクトタイプ管理を@chevre/factoryへ移行
+
 ## v15.20.0 - 2020-09-08
 
 ### Changed

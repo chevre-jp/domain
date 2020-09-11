@@ -17,7 +17,7 @@ import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
-import { createPointAward, createServiceOutput, ProductType } from './registerService/factory';
+import { createPointAward, createServiceOutput } from './registerService/factory';
 
 import { createPotentialActions } from './registerService/potentialActions';
 
@@ -181,8 +181,7 @@ export function start(
         const serviceOutputs = transactionObject.map((o) => o.itemOffered?.serviceOutput);
 
         switch (product.typeOf) {
-            case ProductType.PaymentCard:
-            case ProductType.PointCard:
+            case factory.product.ProductType.PaymentCard:
                 // Pecorinoで口座開設
                 await Promise.all(serviceOutputs.map(async (serviceOutput) => {
                     const initialBalance = serviceOutput?.amount?.value;
@@ -200,7 +199,7 @@ export function start(
 
                 break;
 
-            case ProductType.Account:
+            case factory.product.ProductType.Account:
                 // Pecorinoで口座開設
                 await Promise.all(serviceOutputs.map(async (serviceOutput) => {
                     const accountType = serviceOutput?.amount?.currency;
