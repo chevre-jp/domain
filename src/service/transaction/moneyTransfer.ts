@@ -220,9 +220,15 @@ function fixServiceOutput(params: factory.transaction.moneyTransfer.IStartParams
             throw new factory.errors.NotImplemented(`pendingTransaction.typeOf '${transactionType}'`);
     }
 
+    // 互換性維持対応として
+    if (serviceOutputType === 'Point') {
+        serviceOutputType = factory.paymentMethodType.Account;
+    }
+
     return serviceOutputType;
 }
 
+// tslint:disable-next-line:max-func-body-length
 function fixFromLocation(
     params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail,
     product: factory.product.IProduct
@@ -241,6 +247,7 @@ function fixFromLocation(
         });
 
         let fromLocation = params.object.fromLocation;
+        let accountType: string;
 
         const transactionType = params.object.pendingTransaction?.typeOf;
 
@@ -251,7 +258,12 @@ function fixFromLocation(
 
                 switch (product.typeOf) {
                     case factory.product.ProductType.Account:
-                        // no op
+                        if (typeof product.serviceOutput?.amount?.currency !== 'string') {
+                            throw new factory.errors.NotFound('product.serviceOutput.amount.currency');
+                        }
+
+                        accountType = product.serviceOutput?.amount?.currency;
+
                         break;
 
                     case factory.product.ProductType.PaymentCard:
@@ -284,6 +296,8 @@ function fixFromLocation(
                             }
                         }
 
+                        accountType = serviceOutput.typeOf;
+
                         break;
 
                     default:
@@ -294,7 +308,7 @@ function fixFromLocation(
                 const searchAccountsResult = await accountService.search({
                     limit: 1,
                     project: { id: { $eq: params.project.id } },
-                    accountType: fromLocationObject.typeOf,
+                    accountType: accountType,
                     accountNumbers: [fromLocationObject.identifier],
                     statuses: [pecorino.factory.accountStatusType.Opened]
                 });
@@ -319,6 +333,7 @@ function fixFromLocation(
     };
 }
 
+// tslint:disable-next-line:max-func-body-length
 function fixToLocation(
     params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail,
     product: factory.product.IProduct
@@ -339,16 +354,23 @@ function fixToLocation(
             auth: pecorinoAuthClient
         });
 
+        let accountType: string;
+
         const transactionType = params.object.pendingTransaction?.typeOf;
 
         switch (transactionType) {
             case pecorino.factory.transactionType.Deposit:
             case pecorino.factory.transactionType.Transfer:
-                const toLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>params.object.toLocation;
+                const toLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>toLocation;
 
                 switch (product.typeOf) {
                     case factory.product.ProductType.Account:
-                        // no op
+                        if (typeof product.serviceOutput?.amount?.currency !== 'string') {
+                            throw new factory.errors.NotFound('product.serviceOutput.amount.currency');
+                        }
+
+                        accountType = product.serviceOutput?.amount?.currency;
+
                         break;
 
                     case factory.product.ProductType.PaymentCard:
@@ -381,6 +403,8 @@ function fixToLocation(
                             }
                         }
 
+                        accountType = serviceOutput.typeOf;
+
                         break;
 
                     default:
@@ -391,7 +415,7 @@ function fixToLocation(
                 const searchAccountsResult = await accountService.search({
                     limit: 1,
                     project: { id: { $eq: params.project.id } },
-                    accountType: toLocationObject.typeOf,
+                    accountType: accountType,
                     accountNumbers: [toLocationObject.identifier],
                     statuses: [pecorino.factory.accountStatusType.Opened]
                 });
