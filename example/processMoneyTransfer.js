@@ -12,7 +12,8 @@ async function main() {
     });
     await mongoose.connect(process.env.MONGOLAB_URI, { autoIndex: true });
 
-    const moneyTransferTransactionNumberRepo = new domain.repository.MoneyTransferTransactionNumber(client);
+    const moneyTransferTransactionNumberRepo = new domain.repository.TransactionNumber(client);
+    const productRepo = new domain.repository.Product(mongoose.connection);
     const projectRepo = new domain.repository.Project(mongoose.connection);
     const serviceOutputRepo = new domain.repository.ServiceOutput(mongoose.connection);
     const taskRepo = new domain.repository.Task(mongoose.connection);
@@ -24,7 +25,6 @@ async function main() {
         agent: { typeOf: 'Person', name: 'テスト入金元名称' },
         recipient: { typeOf: 'Person', name: 'テスト入金先名称' },
         object: {
-            ignorePaymentCard: true,
             amount: {
                 value: 1,
             },
@@ -47,7 +47,8 @@ async function main() {
             }
         }
     })({
-        moneyTransferTransactionNumber: moneyTransferTransactionNumberRepo,
+        product: productRepo,
+        transactionNumber: moneyTransferTransactionNumberRepo,
         project: projectRepo,
         serviceOutput: serviceOutputRepo,
         transaction: transactionRepo
@@ -70,7 +71,10 @@ async function main() {
     // });
     // console.log('transaction canceled');
 
-    await domain.service.transaction.moneyTransfer.exportTasks(domain.factory.transactionStatusType.Confirmed)({
+    await domain.service.transaction.exportTasks({
+        status: domain.factory.transactionStatusType.Confirmed,
+        typeOf: { $in: [domain.factory.transactionType.MoneyTransfer] }
+    })({
         task: taskRepo,
         transaction: transactionRepo
     });
