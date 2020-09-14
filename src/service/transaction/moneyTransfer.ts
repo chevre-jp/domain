@@ -319,7 +319,7 @@ function fixFromLocation(
                 }
 
                 fromLocation = {
-                    typeOf: fromLocation.typeOf,
+                    typeOf: account.accountType,
                     identifier: account.accountNumber
                 };
 
@@ -426,7 +426,7 @@ function fixToLocation(
                 }
 
                 toLocation = {
-                    typeOf: toLocation.typeOf,
+                    typeOf: account.accountType,
                     identifier: account.accountNumber
                 };
 
