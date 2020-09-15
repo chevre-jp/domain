@@ -113,8 +113,9 @@ export function start(
                 amount: amount,
                 fromLocation: fromLocation,
                 toLocation: toLocation,
-                pendingTransaction: <any>{
+                pendingTransaction: {
                     typeOf: transationType,
+                    id: '',
                     transactionNumber: transactionNumber
                 },
                 ...(typeof params.object.description === 'string') ? { description: params.object.description } : {}
@@ -131,7 +132,13 @@ export function start(
 
             await repos.transaction.transactionModel.findByIdAndUpdate(
                 { _id: transaction.id },
-                { 'object.pendingTransaction': pendingTransaction }
+                {
+                    'object.pendingTransaction': {
+                        typeOf: pendingTransaction.typeOf,
+                        id: pendingTransaction.id,
+                        transactionNumber: pendingTransaction.transactionNumber
+                    }
+                }
             )
                 .exec();
         } catch (error) {

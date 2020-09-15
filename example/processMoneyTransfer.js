@@ -71,17 +71,17 @@ async function main() {
     // });
     // console.log('transaction canceled');
 
-    await domain.service.transaction.exportTasks({
-        status: domain.factory.transactionStatusType.Confirmed,
-        typeOf: { $in: [domain.factory.transactionType.MoneyTransfer] }
-    })({
-        task: taskRepo,
-        transaction: transactionRepo
-    });
+    // await domain.service.transaction.exportTasks({
+    //     status: domain.factory.transactionStatusType.Confirmed,
+    //     typeOf: { $in: [domain.factory.transactionType.MoneyTransfer] }
+    // })({
+    //     task: taskRepo,
+    //     transaction: transactionRepo
+    // });
 
-    await domain.service.task.executeByName({ name: domain.factory.taskName.MoneyTransfer })({
-        connection: mongoose.connection
-    });
+    // await domain.service.task.executeByName({ name: domain.factory.taskName.MoneyTransfer })({
+    //     connection: mongoose.connection
+    // });
 }
 
 main().then(console.log).catch(console.error);

@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - 転送取引開始時にプロダクトタイプによって処理を調整するように対応
+- MoneyTransfer取引のオブジェクトを定義
 
 ### Deprecated
 
