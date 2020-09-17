@@ -16,7 +16,6 @@ const schema = new mongoose.Schema(
         },
         identifier: String,
         name: mongoose.SchemaTypes.Mixed,
-        legalName: mongoose.SchemaTypes.Mixed,
         url: String,
         parentOrganization: mongoose.SchemaTypes.Mixed,
         telephone: String,
@@ -24,9 +23,7 @@ const schema = new mongoose.Schema(
         branchCode: String,
         paymentAccepted: [mongoose.SchemaTypes.Mixed],
         hasMerchantReturnPolicy: [mongoose.SchemaTypes.Mixed],
-        hasPOS: [mongoose.SchemaTypes.Mixed],
         areaServed: [mongoose.SchemaTypes.Mixed],
-        makesOffer: [mongoose.SchemaTypes.Mixed],
         additionalProperty: [mongoose.SchemaTypes.Mixed]
     },
     {
