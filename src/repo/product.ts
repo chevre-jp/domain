@@ -94,6 +94,15 @@ export class MongoRepository {
             });
         }
 
+        const serviceOutputTypeOfEq = params.serviceOutput?.typeOf?.$eq;
+        if (typeof serviceOutputTypeOfEq === 'string') {
+            andConditions.push({
+                'serviceOutput.typeOf': {
+                    $eq: serviceOutputTypeOfEq
+                }
+            });
+        }
+
         return andConditions;
     }
 

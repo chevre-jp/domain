@@ -19,7 +19,7 @@ function createMoneyTransferActions(params: {
         (transaction.object.toLocation !== undefined && transaction.object.toLocation !== null)
             ? {
                 ...transaction.object.toLocation,
-                name: transaction.recipient.name
+                ...(transaction.recipient?.name !== undefined) ? { name: transaction.recipient.name } : undefined
             }
             : /* istanbul ignore next */ {
                 typeOf: transaction.recipient.typeOf,

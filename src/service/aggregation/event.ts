@@ -385,32 +385,34 @@ function calculateCapacityByOffer(params: {
             const eligibleSeatingTypes = params.offer.eligibleSeatingType;
             if (Array.isArray(eligibleSeatingTypes)) {
                 // 適用座席タイプに絞る
-                const eligibleSeatOffers = params.screeningRoom.containsPlace.reduce<{
-                    seatSection: string;
-                    seatNumber: string;
-                }[]>(
-                    (a, b) => {
-                        return [
-                            ...a,
-                            ...b.containsPlace.filter((place) => {
-                                const seatingTypes = (Array.isArray(place.seatingType)) ? place.seatingType
-                                    : (typeof place.seatingType === 'string') ? [place.seatingType]
-                                        : [];
+                const eligibleSeatOffers = (Array.isArray(params.screeningRoom.containsPlace))
+                    ? params.screeningRoom.containsPlace.reduce<{
+                        seatSection: string;
+                        seatNumber: string;
+                    }[]>(
+                        (a, b) => {
+                            return [
+                                ...a,
+                                ...b.containsPlace.filter((place) => {
+                                    const seatingTypes = (Array.isArray(place.seatingType)) ? place.seatingType
+                                        : (typeof place.seatingType === 'string') ? [place.seatingType]
+                                            : [];
 
-                                return seatingTypes.some((seatingTypeCodeValue) => eligibleSeatingTypes.some(
-                                    (eligibleSeatingType) => eligibleSeatingType.codeValue === seatingTypeCodeValue)
-                                );
-                            })
-                                .map((place) => {
-                                    return {
-                                        seatSection: b.branchCode,
-                                        seatNumber: place.branchCode
-                                    };
+                                    return seatingTypes.some((seatingTypeCodeValue) => eligibleSeatingTypes.some(
+                                        (eligibleSeatingType) => eligibleSeatingType.codeValue === seatingTypeCodeValue)
+                                    );
                                 })
-                        ];
-                    },
-                    []
-                );
+                                    .map((place) => {
+                                        return {
+                                            seatSection: b.branchCode,
+                                            seatNumber: place.branchCode
+                                        };
+                                    })
+                            ];
+                        },
+                        []
+                    )
+                    : [];
 
                 maximumAttendeeCapacity = eligibleSeatOffers.length;
 
@@ -518,7 +520,9 @@ function aggregateReservationByEvent(params: {
             maximumAttendeeCapacity = eventLocationMaximumAttendeeCapacity;
         }
         if (reservedSeatsAvailable({ event: params.event })) {
-            const screeningRoomSeatCount = params.screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0);
+            const screeningRoomSeatCount = (Array.isArray(params.screeningRoom.containsPlace))
+                ? params.screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0)
+                : 0;
             maximumAttendeeCapacity = screeningRoomSeatCount;
 
             // イベントのキャパシティ設定がスクリーン座席数より小さければmaximumAttendeeCapacityを上書き
