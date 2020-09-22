@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- イベント予約集計時に、同location、かつ同時間帯、のイベントに関しても集計するように調整
+
 ### Deprecated
 
 ### Removed
