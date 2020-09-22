@@ -294,12 +294,7 @@ function aggregateOfferByEvent(params: {
         offerRateLimit: OfferRateLimitRepo;
         reservation: ReservationRepo;
     }): Promise<factory.event.screeningEvent.IAggregateOffer> => {
-        let availableOffers: factory.offer.IUnitPriceOffer[] = [];
-        if (typeof params.event.hasOfferCatalog?.id === 'string') {
-            // tslint:disable-next-line:no-suspicious-comment
-            // TODO カタログが見つからない場合に対応
-            availableOffers = await repos.offer.findOffersByOfferCatalogId({ offerCatalog: { id: params.event.hasOfferCatalog.id } });
-        }
+        const availableOffers: factory.offer.IUnitPriceOffer[] = await findOffers(params)(repos);
 
         // オファーごとの予約集計
         const offersWithAggregateReservation: factory.event.screeningEvent.IOfferWithAggregateReservation[] = [];
@@ -329,6 +324,39 @@ function aggregateOfferByEvent(params: {
             offerCount: availableOffers.length,
             offers: offersWithAggregateReservation
         };
+    };
+}
+
+/**
+ * イベントオファー検索
+ * NotFoundエラーをハンドリングする
+ */
+function findOffers(params: {
+    event: factory.event.screeningEvent.IEvent;
+}) {
+    return async (repos: {
+        offer: OfferRepo;
+    }): Promise<factory.offer.IUnitPriceOffer[]> => {
+        let availableOffers: factory.offer.IUnitPriceOffer[] = [];
+
+        try {
+            if (typeof params.event.hasOfferCatalog?.id === 'string') {
+                availableOffers = await repos.offer.findOffersByOfferCatalogId({ offerCatalog: { id: params.event.hasOfferCatalog.id } });
+            }
+        } catch (error) {
+            let throwsError = true;
+
+            // 万が一カタログが見つからない場合に対応
+            if (error instanceof factory.errors.NotFound) {
+                throwsError = false;
+            }
+
+            if (throwsError) {
+                throw error;
+            }
+        }
+
+        return availableOffers;
     };
 }
 

@@ -210,15 +210,15 @@ export class MongoRepository {
     }
 
     /**
-     * 券種グループの券種を検索する
-     * 券種グループに登録された券種の順序は保証される
+     * カタログに含まれるオファーを検索する
+     * カタログに登録されたオファーの順序は保証される
      */
     public async findOffersByOfferCatalogId(params: {
         offerCatalog: {
             id: string;
         };
     }): Promise<factory.offer.IUnitPriceOffer[]> {
-        const ticketTypeGroup = await this.offerCatalogModel.findById(
+        const offerCatalog = await this.offerCatalogModel.findById(
             params.offerCatalog.id,
             {
                 __v: 0,
@@ -235,8 +235,8 @@ export class MongoRepository {
                 return <factory.offerCatalog.IOfferCatalog>doc.toObject();
             });
 
-        const sortedOfferIds: string[] = (Array.isArray(ticketTypeGroup.itemListElement))
-            ? ticketTypeGroup.itemListElement.map((element) => element.id)
+        const sortedOfferIds: string[] = (Array.isArray(offerCatalog.itemListElement))
+            ? offerCatalog.itemListElement.map((element) => element.id)
             : [];
 
         let offers = await this.offerModel.find(

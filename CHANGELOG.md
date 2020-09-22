@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- イベントの予約集計処理において、オファーカタログが見つからない場合に対応
+
 ### Deprecated
 
 ### Removed
