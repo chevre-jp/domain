@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.23.0 - 2020-09-22
+
+### Changed
+
+- イベント予約集計時に、同location、かつ同時間帯、のイベントに関しても集計するように調整
+
 ## v15.22.0 - 2020-09-18
 
 ### Changed

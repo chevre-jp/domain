@@ -62,7 +62,7 @@ export function aggregateScreeningEvent(params: {
         // 集計対象イベント検索
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>(params);
 
-        // 同時間帯のイベントに関しても集計する(ttts暫定対応)
+        // 同location、かつ同時間帯、のイベントに関しても集計する(ttts暫定対応)
         const startFrom = moment(event.startDate)
             .startOf('hour')
             .toDate();
@@ -76,7 +76,8 @@ export function aggregateScreeningEvent(params: {
             typeOf: event.typeOf,
             eventStatuses: [factory.eventStatusType.EventScheduled],
             startFrom: startFrom,
-            startThrough: startThrough
+            startThrough: startThrough,
+            location: { branchCode: { $eq: event.location.branchCode } }
         });
         debug(aggregatingEvents.length, 'aggregatingEvents found', aggregatingEvents.map((e) => e.id));
 
@@ -105,13 +106,17 @@ export function aggregateByEvent(params: {
         let event = params.event;
 
         // 劇場取得
-        const movieTheater = await repos.place.findById({ id: event.superEvent.location.id });
+        const movieTheater = await findLocation(params)(repos);
+        // 万が一劇場が存在しなければ処理終了
+        if (movieTheater === undefined) {
+            return;
+        }
 
         const screeningRoom = <factory.place.screeningRoom.IPlace | undefined>
             movieTheater.containsPlace.find((p) => p.branchCode === event.location.branchCode);
         if (screeningRoom === undefined) {
             // 基本的にありえないはずだが、万が一スクリーンが見つからなければcapacityは0のまま
-            console.error(new Error('Screening room not found'));
+            console.error(new Error(`Screening room not found. branchCode: ${event.location.branchCode}`));
 
             return;
         }
@@ -169,6 +174,35 @@ export function aggregateByEvent(params: {
                 task: repos.task
             });
         }
+    };
+}
+
+/**
+ * イベントロケーション取得
+ * NotFoundエラーをハンドリングする
+ */
+function findLocation(params: {
+    event: factory.event.screeningEvent.IEvent;
+}) {
+    return async (repos: {
+        place: PlaceRepo;
+    }): Promise<factory.place.movieTheater.IPlace | undefined> => {
+        let movieTheater: factory.place.movieTheater.IPlace | undefined;
+        try {
+            movieTheater = await repos.place.findById({ id: params.event.superEvent.location.id });
+        } catch (error) {
+            let throwsError = true;
+
+            if (error instanceof factory.errors.NotFound) {
+                throwsError = false;
+            }
+
+            if (throwsError) {
+                throw error;
+            }
+        }
+
+        return movieTheater;
     };
 }
 
