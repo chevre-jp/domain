@@ -10,8 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- イベントの予約集計処理において、オファーカタログが見つからない場合に対応
-
 ### Deprecated
 
 ### Removed
@@ -19,6 +17,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.24.1 - 2020-09-23
+
+### Removed
+
+- 通貨転送取引において決済方法タイプ:PointをAccountへ自動変換する互換性維持対応を削除
+
+## v15.24.0 - 2020-09-22
+
+### Changed
+
+- イベントの予約集計処理において、オファーカタログが見つからない場合に対応
 
 ## v15.23.0 - 2020-09-22
 
