@@ -14,11 +14,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Removed
 
-- 通貨転送取引において決済方法タイプ:PointをAccountへ自動変換する互換性維持対応を削除
-
 ### Fixed
 
 ### Security
+
+## v15.24.1 - 2020-09-23
+
+### Removed
+
+- 通貨転送取引において決済方法タイプ:PointをAccountへ自動変換する互換性維持対応を削除
 
 ## v15.24.0 - 2020-09-22
 
