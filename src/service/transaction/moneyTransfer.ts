@@ -228,9 +228,9 @@ function fixServiceOutput(params: factory.transaction.moneyTransfer.IStartParams
     }
 
     // 互換性維持対応として
-    if (serviceOutputType === 'Point') {
-        serviceOutputType = factory.paymentMethodType.Account;
-    }
+    // if (serviceOutputType === 'Point') {
+    //     serviceOutputType = factory.paymentMethodType.Account;
+    // }
 
     return serviceOutputType;
 }
