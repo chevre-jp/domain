@@ -18,6 +18,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.25.0 - 2020-09-24
+
+### Changed
+
+- update @motionpicture/coa-service
+- update @pecorino/api-nodejs-client
+
 ## v15.24.1 - 2020-09-23
 
 ### Removed

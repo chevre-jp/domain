@@ -28,6 +28,13 @@ export type IAuthorizeOperation<T> = (repos: {
     transaction: TransactionRepo;
 }) => Promise<T>;
 
+export interface IObject {
+    amount: number;
+    description?: string;
+    fromAccount: { accountNumber: string };
+    toAccount: { accountNumber: string };
+}
+
 /**
  * 口座残高差し押さえ
  */
@@ -36,9 +43,9 @@ export function authorize(params: {
     transactionNumber?: string;
     project: factory.project.IProject;
     agent: factory.action.transfer.moneyTransfer.IAgent;
-    object: any;
+    object: IObject;
     recipient: factory.action.transfer.moneyTransfer.IRecipient;
-    purpose: any;
+    purpose: { typeOf: factory.transactionType; id: string };
 }): IAuthorizeOperation<factory.action.transfer.moneyTransfer.IPendingTransaction> {
     return async (repos: {
         project: ProjectRepo;
@@ -78,7 +85,7 @@ async function processAccountTransaction(params: {
     typeOf?: pecorinoapi.factory.transactionType;
     transactionNumber?: string;
     project: factory.project.IProject;
-    object: any;
+    object: IObject;
     agent: factory.action.transfer.moneyTransfer.IAgent;
     recipient: factory.action.transfer.moneyTransfer.IRecipient;
     transaction: factory.transaction.ITransaction<factory.transactionType>;
@@ -140,8 +147,6 @@ async function processAccountTransaction(params: {
                     amount: params.object.amount,
                     description: description,
                     toLocation: {
-                        typeOf: pecorinoapi.factory.account.TypeOf.Account,
-                        accountType: params.object.toAccount.accountType,
                         accountNumber: params.object.toAccount.accountNumber
                     }
                 }
@@ -164,13 +169,9 @@ async function processAccountTransaction(params: {
                     amount: params.object.amount,
                     description: description,
                     fromLocation: {
-                        typeOf: pecorinoapi.factory.account.TypeOf.Account,
-                        accountType: params.object.fromAccount.accountType,
                         accountNumber: params.object.fromAccount.accountNumber
                     },
                     toLocation: {
-                        typeOf: pecorinoapi.factory.account.TypeOf.Account,
-                        accountType: params.object.toAccount.accountType,
                         accountNumber: params.object.toAccount.accountNumber
                     }
                 }
@@ -194,8 +195,6 @@ async function processAccountTransaction(params: {
                     amount: params.object.amount,
                     description: description,
                     fromLocation: {
-                        typeOf: pecorinoapi.factory.account.TypeOf.Account,
-                        accountType: params.object.fromAccount.accountType,
                         accountNumber: params.object.fromAccount.accountNumber
                     }
                 }
@@ -340,9 +339,7 @@ export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
                                 description: description,
                                 fromLocation: params.fromLocation,
                                 toLocation: {
-                                    typeOf: pecorinoapi.factory.account.TypeOf.Account,
-                                    accountNumber: (<factory.action.transfer.moneyTransfer.IPaymentCard>params.toLocation).identifier,
-                                    accountType: params.amount.currency
+                                    accountNumber: (<factory.action.transfer.moneyTransfer.IPaymentCard>params.toLocation).identifier
                                 }
                             }
                         });

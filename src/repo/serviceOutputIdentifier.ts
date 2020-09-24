@@ -26,7 +26,6 @@ export class RedisRepository {
      * タイムスタンプから発行する
      */
     public async publishByTimestamp(params: {
-        project: { id: string };
         startDate: Date;
     }): Promise<string> {
         return new Promise<string>((resolve, reject) => {
