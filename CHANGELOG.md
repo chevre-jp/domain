@@ -10,9 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- update @motionpicture/coa-service
-- update @pecorino/factory
-
 ### Deprecated
 
 ### Removed
@@ -20,6 +17,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.25.0 - 2020-09-24
+
+### Changed
+
+- update @motionpicture/coa-service
+- update @pecorino/api-nodejs-client
 
 ## v15.24.1 - 2020-09-23
 
