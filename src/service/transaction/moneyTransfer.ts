@@ -166,9 +166,6 @@ function authorizeAccount(params: {
 
         let pendingTransaction: factory.action.transfer.moneyTransfer.IPendingTransaction;
 
-        const fromLocationType = transaction.object.fromLocation.typeOf;
-        const toLocationType = transaction.object.toLocation.typeOf;
-
         const fromLocation = transaction.object.fromLocation;
         const toLocation = transaction.object.toLocation;
 
@@ -178,18 +175,9 @@ function authorizeAccount(params: {
             project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
             agent: transaction.agent,
             object: {
-                amount: transaction.object.amount.value,
-                typeOf: factory.paymentMethodType.Account,
-                fromAccount: {
-                    typeOf: pecorino.factory.account.TypeOf.Account,
-                    accountType: fromLocationType,
-                    accountNumber: (<any>fromLocation).identifier
-                },
-                toAccount: {
-                    typeOf: pecorino.factory.account.TypeOf.Account,
-                    accountType: toLocationType,
-                    accountNumber: (<any>toLocation).identifier
-                },
+                amount: <number>transaction.object.amount.value,
+                fromAccount: { accountNumber: (<any>fromLocation).identifier },
+                toAccount: { accountNumber: (<any>toLocation).identifier },
                 ...(typeof transaction.object.description === 'string')
                     ? { description: transaction.object.description }
                     : undefined
@@ -254,7 +242,7 @@ function fixFromLocation(
         });
 
         let fromLocation = params.object.fromLocation;
-        let accountType: string;
+        // let accountType: string;
 
         const transactionType = params.object.pendingTransaction?.typeOf;
 
@@ -269,7 +257,7 @@ function fixFromLocation(
                             throw new factory.errors.NotFound('product.serviceOutput.amount.currency');
                         }
 
-                        accountType = product.serviceOutput?.amount?.currency;
+                        // accountType = product.serviceOutput?.amount?.currency;
 
                         break;
 
@@ -303,7 +291,7 @@ function fixFromLocation(
                             }
                         }
 
-                        accountType = serviceOutput.typeOf;
+                        // accountType = serviceOutput.typeOf;
 
                         break;
 
@@ -315,7 +303,6 @@ function fixFromLocation(
                 const searchAccountsResult = await accountService.search({
                     limit: 1,
                     project: { id: { $eq: params.project.id } },
-                    accountType: accountType,
                     accountNumbers: [fromLocationObject.identifier],
                     statuses: [pecorino.factory.accountStatusType.Opened]
                 });
@@ -361,7 +348,7 @@ function fixToLocation(
             auth: pecorinoAuthClient
         });
 
-        let accountType: string;
+        // let accountType: string;
 
         const transactionType = params.object.pendingTransaction?.typeOf;
 
@@ -376,7 +363,7 @@ function fixToLocation(
                             throw new factory.errors.NotFound('product.serviceOutput.amount.currency');
                         }
 
-                        accountType = product.serviceOutput?.amount?.currency;
+                        // accountType = product.serviceOutput?.amount?.currency;
 
                         break;
 
@@ -410,7 +397,7 @@ function fixToLocation(
                             }
                         }
 
-                        accountType = serviceOutput.typeOf;
+                        // accountType = serviceOutput.typeOf;
 
                         break;
 
@@ -422,7 +409,6 @@ function fixToLocation(
                 const searchAccountsResult = await accountService.search({
                     limit: 1,
                     project: { id: { $eq: params.project.id } },
-                    accountType: accountType,
                     accountNumbers: [toLocationObject.identifier],
                     statuses: [pecorino.factory.accountStatusType.Opened]
                 });

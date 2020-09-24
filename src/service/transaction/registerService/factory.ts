@@ -1,4 +1,3 @@
-import * as pecorino from '@pecorino/api-nodejs-client';
 import * as moment from 'moment';
 import * as factory from '../../../factory';
 
@@ -22,7 +21,7 @@ export function createPointAward(params: {
         pointAward = {
             amount: pointAwardAmount,
             toLocation: {
-                typeOf: pecorino.factory.account.TypeOf.Account,
+                typeOf: 'Account',
                 identifier: pointAwardToLocation?.identifier
             },
             typeOf: factory.actionType.MoneyTransfer,
