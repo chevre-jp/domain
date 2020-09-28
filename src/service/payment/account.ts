@@ -3,7 +3,6 @@
  */
 import * as pecorinoapi from '@pecorino/api-nodejs-client';
 import * as moment from 'moment-timezone';
-// import * as util from 'util';
 
 import { credentials } from '../../credentials';
 
@@ -47,19 +46,22 @@ export function authorize(
         // const seller = await repos.seller.findById({ id: sellerId });
 
         // 口座取引開始
-        // let pendingTransaction: factory.action.trade.pay.IPendingTransaction;
         let pendingTransaction: IPendingTransaction;
 
         try {
+            const expires = moment(params.expires)
+                .add(1, 'month')
+                .toDate();
+
             pendingTransaction = await processAccountTransaction({
                 transactionNumber: params.transactionNumber,
                 project: project,
                 paymentMethod: <factory.transaction.pay.IPaymentMethod>params.object.paymentMethod,
                 agent: params.agent,
-                recipient: <factory.transaction.pay.IRecipient>params.recipient
+                recipient: <factory.transaction.pay.IRecipient>params.recipient,
+                expires: expires
             });
         } catch (error) {
-            console.error(error);
             // PecorinoAPIのエラーをハンドリング
             throw handlePecorinoError(error);
         }
@@ -74,6 +76,7 @@ async function processAccountTransaction(params: {
     paymentMethod: factory.transaction.pay.IPaymentMethod;
     agent: factory.action.transfer.moneyTransfer.IAgent;
     recipient: factory.action.transfer.moneyTransfer.IRecipient;
+    expires: Date;
 }): Promise<IPendingTransaction> {
     let pendingTransaction: IPendingTransaction;
 
@@ -100,11 +103,6 @@ async function processAccountTransaction(params: {
         ? params.paymentMethod?.description :
         `${factory.transactionType.Pay} Transaction ${params.transactionNumber}`;
 
-    // 最大1ヵ月のオーソリ
-    const expires = moment()
-        .add(1, 'month')
-        .toDate();
-
     const accountNumber = params.paymentMethod?.accountId;
     if (typeof accountNumber !== 'string') {
         throw new factory.errors.ArgumentNull('object.paymentMethod.accountId');
@@ -120,7 +118,7 @@ async function processAccountTransaction(params: {
         project: { typeOf: params.project.typeOf, id: params.project.id },
         typeOf: pecorinoapi.factory.transactionType.Withdraw,
         agent: agent,
-        expires: expires,
+        expires: params.expires,
         recipient: recipient,
         object: {
             amount: params.paymentMethod?.amount,
@@ -134,67 +132,30 @@ async function processAccountTransaction(params: {
     return pendingTransaction;
 }
 
-// export function voidTransaction(params: factory.task.voidPayment.IData) {
-//     return async (repos: {
-//         project: ProjectRepo;
-//         seller: SellerRepo;
-//     }) => {
-//         const transaction = params.object;
+export function voidTransaction(params: factory.task.voidPayment.IData) {
+    return async (__: {
+        project: ProjectRepo;
+        seller: SellerRepo;
+    }) => {
+        const transaction = params.object;
 
-//         // CreditCard系統の決済方法タイプは動的
-//         const paymentMethodType = transaction.object.paymentMethod?.typeOf;
-//         if (typeof paymentMethodType !== 'string') {
-//             throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
-//         }
+        const paymentMethodId = transaction.object.paymentMethod?.paymentMethodId;
+        if (typeof paymentMethodId !== 'string') {
+            throw new factory.errors.ArgumentNull('object.paymentMethod.paymentMethodId');
+        }
 
-//         const paymentMethodId = transaction.object.paymentMethod?.paymentMethodId;
-//         if (typeof paymentMethodId !== 'string') {
-//             throw new factory.errors.ArgumentNull('object.paymentMethod.paymentMethodId');
-//         }
-
-//         const availableChannel = await getGMOEndpoint({
-//             project: transaction.project,
-//             paymentMethodType: paymentMethodType
-//         })(repos);
-
-//         const sellerId = transaction.recipient?.id;
-//         if (typeof sellerId !== 'string') {
-//             throw new factory.errors.ArgumentNull('object.recipient.id');
-//         }
-
-//         const seller = await repos.seller.findById({ id: sellerId });
-
-//         const { shopId, shopPass } = getGMOInfoFromSeller({ paymentMethodType, seller: seller });
-
-//         const creditCardService = new GMO.service.Credit({ endpoint: String(availableChannel.serviceUrl) });
-
-//         // オーソリ取消
-//         // 現時点では、ここで失敗したらオーソリ取消をあきらめる
-//         // GMO混雑エラーはここでも発生する(取消処理でも混雑エラーが発生することは確認済)
-//         try {
-//             const searchTradeResult = await creditCardService.searchTrade({
-//                 shopId: shopId,
-//                 shopPass: shopPass,
-//                 orderId: paymentMethodId
-//             });
-//             debug('searchTradeResult:', searchTradeResult);
-
-//             // 仮売上であれば取消
-//             if (searchTradeResult.status === GMO.utils.util.JobCd.Auth) {
-//                 const alterTranResult = await creditCardService.alterTran({
-//                     shopId: shopId,
-//                     shopPass: shopPass,
-//                     accessId: searchTradeResult.accessId,
-//                     accessPass: searchTradeResult.accessPass,
-//                     jobCd: GMO.utils.util.JobCd.Void
-//                 });
-//                 debug('alterTran processed', alterTranResult);
-//             }
-//         } catch (error) {
-//             // no op
-//         }
-//     };
-// }
+        try {
+            // アクションステータスに関係なく取消処理実行
+            const withdrawService = new pecorinoapi.service.transaction.Withdraw({
+                endpoint: credentials.pecorino.endpoint,
+                auth: pecorinoAuthClient
+            });
+            await withdrawService.cancel({ transactionNumber: paymentMethodId });
+        } catch (error) {
+            // no op
+        }
+    };
+}
 
 export function payAccount(params: factory.task.pay.IData) {
     return async (repos: {
@@ -204,24 +165,19 @@ export function payAccount(params: factory.task.pay.IData) {
     }): Promise<factory.action.trade.pay.IAction> => {
         const payObject = params.object;
 
-        // const paymentMethodType = payObject[0].paymentMethod.typeOf;
-        // if (typeof paymentMethodType !== 'string') {
-        //     throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
-        // }
-
         // const seller = await repos.seller.findById({ id: String(params.recipient?.id) });
 
         // アクション開始
         const action = await repos.action.start(params);
 
         try {
-            const pendingTransaction = payObject[0].pendingTransaction;
+            const transactionNumber = payObject[0].paymentMethod.paymentMethodId;
 
             const withdrawService = new pecorinoapi.service.transaction.Withdraw({
                 endpoint: credentials.pecorino.endpoint,
                 auth: pecorinoAuthClient
             });
-            await withdrawService.confirm({ transactionNumber: pendingTransaction?.transactionNumber });
+            await withdrawService.confirm({ transactionNumber: transactionNumber });
         } catch (error) {
             try {
                 // tslint:disable-next-line:max-line-length no-single-line-block-comment

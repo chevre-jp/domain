@@ -53,6 +53,10 @@ export function voidPayment(params: factory.task.voidPayment.IData) {
         const paymentServiceType = params.object.object.typeOf;
 
         switch (paymentServiceType) {
+            case factory.service.paymentService.PaymentServiceType.Account:
+                await AccountPaymentService.voidTransaction(params)(repos);
+                break;
+
             case factory.service.paymentService.PaymentServiceType.CreditCard:
                 await CreditCardPaymentService.voidTransaction(params)(repos);
                 break;
