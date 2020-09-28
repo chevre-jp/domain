@@ -16,6 +16,7 @@ import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 import * as AccountPayment from '../payment/account';
 import * as CreditCardPayment from '../payment/creditCard';
 import * as MovieTicketPayment from '../payment/movieTicket';
+import { validateAccount } from './pay/account/validation';
 import { createStartParams } from './pay/factory';
 import { validateMovieTicket } from './pay/movieTicket/validation';
 import { createPotentialActions } from './pay/potentialActions';
@@ -168,21 +169,26 @@ function processAuthorizeAccount(
         seller: SellerRepo;
         transaction: TransactionRepo;
     }): Promise<factory.transaction.pay.ITransaction> => {
+        await validateAccount(params)(repos);
+
         const authorizeResult = await AccountPayment.authorize(params)(repos);
+
+        const totalPaymentDue: factory.monetaryAmount.IMonetaryAmount = {
+            typeOf: 'MonetaryAmount',
+            currency: authorizeResult.object.fromLocation.accountType,
+            value: authorizeResult.object.amount
+        };
+        const pendingTransaction: factory.action.trade.pay.IPendingTransaction = {
+            typeOf: authorizeResult.typeOf,
+            id: authorizeResult.id,
+            transactionNumber: authorizeResult.transactionNumber
+        };
 
         return repos.transaction.transactionModel.findByIdAndUpdate(
             { _id: transaction.id },
             {
-                'object.paymentMethod.totalPaymentDue': {
-                    typeOf: 'MonetaryAmount',
-                    currency: authorizeResult.object.fromLocation.accountType,
-                    value: authorizeResult.object.amount
-                },
-                'object.pendingTransaction': {
-                    typeOf: authorizeResult.typeOf,
-                    id: authorizeResult.id,
-                    transactionNumber: authorizeResult.transactionNumber
-                }
+                'object.paymentMethod.totalPaymentDue': totalPaymentDue,
+                'object.pendingTransaction': pendingTransaction
             },
             { new: true }
         )

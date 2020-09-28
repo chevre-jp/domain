@@ -1,4 +1,5 @@
 const domain = require('../lib');
+const moment = require('moment');
 const mongoose = require('mongoose');
 const redis = require('redis');
 
@@ -38,6 +39,9 @@ async function main() {
         transactionNumber: transactionNumber,
         agent: { typeOf: 'Person', name: 'サンプル決済者名称' },
         recipient: { typeOf: seller.typeOf, name: seller.name, id: seller.id },
+        expires: moment()
+            .add(1, 'minute')
+            .toDate(),
         object: {
             typeOf: domain.factory.service.paymentService.PaymentServiceType.Account,
             paymentMethod: {

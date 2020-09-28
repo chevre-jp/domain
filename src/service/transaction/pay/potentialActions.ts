@@ -16,6 +16,14 @@ function createPayActions(params: {
 
     switch (transaction.object.typeOf) {
         case factory.service.paymentService.PaymentServiceType.Account:
+            const totalPaymentDue: factory.monetaryAmount.IMonetaryAmount = (typeof paymentMethod?.totalPaymentDue?.typeOf === 'string')
+                ? paymentMethod.totalPaymentDue
+                : {
+                    typeOf: 'MonetaryAmount',
+                    currency: factory.priceCurrency.JPY,
+                    value: Number(paymentMethod?.amount)
+                };
+
             payObject = {
                 typeOf: transaction.object.typeOf,
                 paymentMethod: {
@@ -23,7 +31,7 @@ function createPayActions(params: {
                     additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : [],
                     name: paymentMethodName,
                     paymentMethodId: paymentMethodId,
-                    totalPaymentDue: (<any>paymentMethod)?.totalPaymentDue,
+                    totalPaymentDue: totalPaymentDue,
                     typeOf: paymentMethodType
                 },
                 pendingTransaction: transaction.object.pendingTransaction

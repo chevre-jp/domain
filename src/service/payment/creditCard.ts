@@ -63,7 +63,7 @@ export function authorize(
 
         // GMOオーソリ取得
         let authorizeResult: IAuthorizeResult;
-        let searchTradeResult: GMO.services.credit.ISearchTradeResult | undefined;
+        let searchTradeResult: GMO.factory.credit.ISearchTradeResult | undefined;
 
         try {
             authorizeResult = await processAuthorizeCreditCard({
@@ -103,10 +103,10 @@ export function authorize(
 }
 
 export interface IAuthorizeResult {
-    entryTranArgs: GMO.services.credit.IEntryTranArgs;
-    entryTranResult: GMO.services.credit.IEntryTranResult;
-    execTranArgs: GMO.services.credit.IExecTranArgs;
-    execTranResult: GMO.services.credit.IExecTranResult;
+    entryTranArgs: GMO.factory.credit.IEntryTranArgs;
+    entryTranResult: GMO.factory.credit.IEntryTranResult;
+    execTranArgs: GMO.factory.credit.IExecTranArgs;
+    execTranResult: GMO.factory.credit.IExecTranResult;
 }
 
 async function processAuthorizeCreditCard(params: {
@@ -118,10 +118,10 @@ async function processAuthorizeCreditCard(params: {
     object: factory.transaction.pay.IPaymentMethod;
 }): Promise<IAuthorizeResult> {
     // GMOオーソリ取得
-    let entryTranArgs: GMO.services.credit.IEntryTranArgs;
-    let entryTranResult: GMO.services.credit.IEntryTranResult;
-    let execTranArgs: GMO.services.credit.IExecTranArgs;
-    let execTranResult: GMO.services.credit.IExecTranResult;
+    let entryTranArgs: GMO.factory.credit.IEntryTranArgs;
+    let entryTranResult: GMO.factory.credit.IEntryTranResult;
+    let execTranArgs: GMO.factory.credit.IExecTranArgs;
+    let execTranResult: GMO.factory.credit.IExecTranResult;
 
     const creditCardService = new GMO.service.Credit({ endpoint: String(params.availableChannel.serviceUrl) });
 
@@ -280,7 +280,7 @@ export function payCreditCard(params: factory.task.pay.IData) {
 
         // アクション開始
         const action = await repos.action.start(params);
-        const alterTranResults: GMO.services.credit.IAlterTranResult[] = [];
+        const alterTranResults: GMO.factory.credit.IAlterTranResult[] = [];
 
         try {
             const creditCardService = new GMO.service.Credit({ endpoint: String(availableChannel.serviceUrl) });
@@ -405,7 +405,7 @@ export function refundCreditCard(params: factory.task.refund.IData) {
         })(repos);
 
         const action = await repos.action.start(params);
-        let alterTranResult: GMO.services.credit.IAlterTranResult[] = [];
+        let alterTranResult: GMO.factory.credit.IAlterTranResult[] = [];
 
         try {
             alterTranResult = await processChangeTransaction({
@@ -441,8 +441,8 @@ async function processChangeTransaction(params: {
     shopId: string;
     shopPass: string;
     refundFee?: number;
-}): Promise<GMO.services.credit.IAlterTranResult[]> {
-    const alterTranResult: GMO.services.credit.IAlterTranResult[] = [];
+}): Promise<GMO.factory.credit.IAlterTranResult[]> {
+    const alterTranResult: GMO.factory.credit.IAlterTranResult[] = [];
 
     const creditCardService = new GMO.service.Credit({ endpoint: String(params.availableChannel.serviceUrl) });
 
@@ -455,7 +455,7 @@ async function processChangeTransaction(params: {
     debug('searchTradeResult is', searchTradeResult);
 
     // 冪等性の担保をいったん保留
-    let creditCardSalesBefore: GMO.services.credit.IAlterTranResult | undefined;
+    let creditCardSalesBefore: GMO.factory.credit.IAlterTranResult | undefined;
     if (Array.isArray(params.payAction?.result?.creditCardSales)) {
         creditCardSalesBefore = params.payAction?.result?.creditCardSales[0];
     }
