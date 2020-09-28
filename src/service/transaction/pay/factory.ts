@@ -32,6 +32,9 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
                 amount: params.amount,
                 paymentMethodId: params.transactionNumber,
                 typeOf: paymentMethodType,
+                ...(typeof params.object.paymentMethod?.accountId === 'string')
+                    ? { accountId: params.object.paymentMethod?.accountId }
+                    : undefined,
                 ...(typeof params.object.paymentMethod?.method === 'string')
                     ? { method: params.object.paymentMethod?.method }
                     : undefined,

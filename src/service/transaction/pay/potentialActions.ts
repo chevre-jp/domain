@@ -15,6 +15,22 @@ function createPayActions(params: {
     let payObject: factory.action.trade.pay.IPaymentService | undefined;
 
     switch (transaction.object.typeOf) {
+        case factory.service.paymentService.PaymentServiceType.Account:
+            payObject = {
+                typeOf: transaction.object.typeOf,
+                paymentMethod: {
+                    accountId: paymentMethod?.accountId,
+                    additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : [],
+                    name: paymentMethodName,
+                    paymentMethodId: paymentMethodId,
+                    totalPaymentDue: (<any>paymentMethod)?.totalPaymentDue,
+                    typeOf: paymentMethodType
+                },
+                pendingTransaction: transaction.object.pendingTransaction
+            };
+
+            break;
+
         case factory.service.paymentService.PaymentServiceType.CreditCard:
             payObject = {
                 typeOf: transaction.object.typeOf,

@@ -9,6 +9,7 @@ import { MongoRepository as TaskRepo } from '../repo/task';
 
 import * as factory from '../factory';
 
+import * as AccountPaymentService from './payment/account';
 import * as CreditCardPaymentService from './payment/creditCard';
 import * as MovieTicketPaymentService from './payment/movieTicket';
 
@@ -26,6 +27,10 @@ export function pay(params: factory.task.pay.IData) {
         const paymentServiceType = params.object[0]?.typeOf;
 
         switch (paymentServiceType) {
+            case factory.service.paymentService.PaymentServiceType.Account:
+                await AccountPaymentService.payAccount(params)(repos);
+                break;
+
             case factory.service.paymentService.PaymentServiceType.CreditCard:
                 await CreditCardPaymentService.payCreditCard(params)(repos);
                 break;
