@@ -6,6 +6,8 @@ import { MongoRepository as EventRepo } from '../repo/event';
 import { MongoRepository as ProjectRepo } from '../repo/project';
 import { MongoRepository as SellerRepo } from '../repo/seller';
 import { MongoRepository as TaskRepo } from '../repo/task';
+import { MongoRepository as TransactionRepo } from '../repo/transaction';
+import { RedisRepository as TransactionNumberRepo } from '../repo/transactionNumber';
 
 import * as factory from '../factory';
 
@@ -80,11 +82,16 @@ export function refund(params: factory.task.refund.IData) {
         // event: EventRepo;
         project: ProjectRepo;
         seller: SellerRepo;
-        // task: TaskRepo;
+        transaction: TransactionRepo;
+        transactionNumber: TransactionNumberRepo;
     }) => {
         const paymentServiceType = params.object[0]?.typeOf;
 
         switch (paymentServiceType) {
+            case factory.service.paymentService.PaymentServiceType.Account:
+                await AccountPaymentService.refundAccount(params)(repos);
+                break;
+
             case factory.service.paymentService.PaymentServiceType.CreditCard:
                 await CreditCardPaymentService.refundCreditCard(params)(repos);
                 break;

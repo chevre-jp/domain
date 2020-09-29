@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Added
 
 - 決済取引をPaymentServiceType:Accountに対応
+- 返金取引をPaymentServiceType:Accountに対応
 
 ### Changed
 

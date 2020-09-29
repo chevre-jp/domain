@@ -13,6 +13,8 @@ import * as factory from '../../factory';
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
+import { MongoRepository as TransactionRepo } from '../../repo/transaction';
+import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
 
 const pecorinoAuthClient = new pecorinoapi.auth.ClientCredentials({
     domain: credentials.pecorino.authorizeServerDomain,
@@ -198,65 +200,88 @@ export function payAccount(params: factory.task.pay.IData) {
     };
 }
 
-// export function refundAccount(params: factory.task.refund.IData) {
-//     return async (repos: {
-//         action: ActionRepo;
-//         project: ProjectRepo;
-//         seller: SellerRepo;
-//         // task: TaskRepo;
-//         // transaction: TransactionRepo;
-//     }) => {
-//         const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
-//         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
+export function refundAccount(params: factory.task.refund.IData) {
+    return async (repos: {
+        action: ActionRepo;
+        project: ProjectRepo;
+        seller: SellerRepo;
+        // task: TaskRepo;
+        transaction: TransactionRepo;
+        transactionNumber: TransactionNumberRepo;
+    }) => {
+        const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
-//         // 本アクションに対応するPayActionを取り出す(Cinerino側で決済していた時期に関してはpayActionが存在しないので注意)
-//         const payActions = <factory.action.trade.pay.IAction[]>await repos.action.search<factory.actionType.PayAction>({
-//             limit: 1,
-//             actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
-//             project: { id: { $eq: params.project.id } },
-//             typeOf: { $eq: factory.actionType.PayAction },
-//             object: { paymentMethod: { paymentMethodId: { $eq: paymentMethodId } } }
-//         });
-//         const payAction = payActions.shift();
-//         // if (payAction === undefined) {
-//         //     throw new factory.errors.NotFound('PayAction');
-//         // }
+        const payTransaction = await repos.transaction.findByTransactionNumber({
+            typeOf: factory.transactionType.Pay,
+            transactionNumber: paymentMethodId
+        });
 
-//         const seller = await repos.seller.findById({ id: String(params.agent.id) });
+        // const seller = await repos.seller.findById({ id: String(params.agent.id) });
 
-//         const { shopId, shopPass } = getGMOInfoFromSeller({ paymentMethodType, seller: seller });
+        const action = await repos.action.start(params);
 
-//         const availableChannel = await getGMOEndpoint({
-//             project: params.project,
-//             paymentMethodType: paymentMethodType
-//         })(repos);
+        try {
+            const transactionNumber = await repos.transactionNumber.publishByTimestamp({
+                project: params.project,
+                startDate: new Date()
+            });
 
-//         const action = await repos.action.start(params);
-//         let alterTranResult: GMO.services.credit.IAlterTranResult[] = [];
+            const expires = moment()
+                .add(1, 'minute')
+                .toDate();
 
-//         try {
-//             alterTranResult = await processChangeTransaction({
-//                 availableChannel,
-//                 payAction: payAction,
-//                 paymentMethodId: paymentMethodId,
-//                 shopId: shopId,
-//                 shopPass: shopPass,
-//                 refundFee: params.object[0]?.refundFee
-//             });
-//         } catch (error) {
-//             try {
-//                 const actionError = { ...error, message: error.message, name: error.name };
-//                 await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
-//             } catch (__) {
-//                 // no op
-//             }
+            const agent = {
+                typeOf: params.agent.typeOf,
+                id: params.agent.id,
+                name: (typeof params.agent.name === 'string')
+                    ? params.agent.name
+                    : `${params.agent.typeOf} ${params.agent.id}`
+            };
 
-//             throw error;
-//         }
+            const recipient = {
+                typeOf: String(params.recipient?.typeOf),
+                id: params.recipient?.id,
+                name: (typeof params.recipient?.name === 'string')
+                    ? params.recipient.name
+                    : (typeof params.recipient?.name?.ja === 'string')
+                        ? params.recipient.name.ja
+                        : `${params.recipient?.typeOf} ${params.recipient?.id}`
+            };
 
-//         await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: { alterTranResult } });
+            const depositService = new pecorinoapi.service.transaction.Deposit({
+                endpoint: credentials.pecorino.endpoint,
+                auth: pecorinoAuthClient
+            });
+            await depositService.start({
+                transactionNumber: transactionNumber,
+                project: { typeOf: params.project.typeOf, id: params.project.id },
+                typeOf: pecorinoapi.factory.transactionType.Deposit,
+                agent: agent,
+                expires: expires,
+                recipient: recipient,
+                object: {
+                    amount: Number(payTransaction.object?.paymentMethod?.totalPaymentDue?.value),
+                    description: `Refund [${payTransaction.object?.paymentMethod?.description}]`,
+                    toLocation: {
+                        accountNumber: String(payTransaction.object.paymentMethod?.accountId)
+                    }
+                }
+            });
+            await depositService.confirm({ transactionNumber: transactionNumber });
+        } catch (error) {
+            try {
+                const actionError = { ...error, message: error.message, name: error.name };
+                await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
+            } catch (__) {
+                // no op
+            }
 
-//         // 潜在アクション
-//         // await onRefund(refundActionAttributes, order)({ project: repos.project, task: repos.task });
-//     };
-// }
+            throw error;
+        }
+
+        await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: {} });
+
+        // 潜在アクション
+        // await onRefund(refundActionAttributes, order)({ project: repos.project, task: repos.task });
+    };
+}
