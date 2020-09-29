@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - update @motionpicture/gmo-service
 - 決済取引開始時に決済方法説明を指定できるように調整
+- 返金取引開始時に、決済サービス未指定であれば決済取引を自動検索するように調整
 
 ### Deprecated
 
