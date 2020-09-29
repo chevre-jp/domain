@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - update @motionpicture/gmo-service
+- 決済取引開始時に決済方法説明を指定できるように調整
 
 ### Deprecated
 

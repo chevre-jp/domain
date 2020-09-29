@@ -59,6 +59,9 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
                 amount: params.amount,
                 paymentMethodId: params.transactionNumber,
                 typeOf: paymentMethodType,
+                ...(typeof params.object.paymentMethod?.description === 'string')
+                    ? { description: params.object.paymentMethod?.description }
+                    : undefined,
                 ...(totalPaymentDue !== undefined)
                     ? { totalPaymentDue: totalPaymentDue }
                     : undefined,
@@ -75,8 +78,6 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
                     ? { movieTickets: params.object.paymentMethod?.movieTickets }
                     : undefined
             }
-            // pendingTransaction?: any;
-            // ...(typeof params.object.description === 'string') ? { description: params.object.description } : {}
         },
         expires: params.expires
     };
