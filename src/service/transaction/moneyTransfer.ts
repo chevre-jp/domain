@@ -215,11 +215,6 @@ function fixServiceOutput(params: factory.transaction.moneyTransfer.IStartParams
             throw new factory.errors.NotImplemented(`pendingTransaction.typeOf '${transactionType}'`);
     }
 
-    // 互換性維持対応として
-    // if (serviceOutputType === 'Point') {
-    //     serviceOutputType = factory.paymentMethodType.Account;
-    // }
-
     return serviceOutputType;
 }
 

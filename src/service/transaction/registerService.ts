@@ -222,42 +222,6 @@ export function start(
 
                 break;
 
-            // case 'MoneyTransfer':
-            //     // 入金取引開始
-            //     await Promise.all(serviceOutputs.map(async (serviceOutput) => {
-            //         const toLocation = (<any>serviceOutput).toLocation;
-
-            //         await MoneyTransferService.authorize({
-            //             typeOf: pecorino.factory.transactionType.Deposit,
-            //             transactionNumber: transaction.transactionNumber,
-            //             project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
-            //             agent: {
-            //                 typeOf: project.typeOf,
-            //                 name: project.name
-            //             },
-            //             object: {
-            //                 amount: (<any>serviceOutput).amount?.value,
-            //                 typeOf: factory.paymentMethodType.Account,
-            //                 toAccount: {
-            //                     typeOf: pecorino.factory.account.TypeOf.Account,
-            //                     accountType: toLocation?.typeOf,
-            //                     accountNumber: toLocation?.identifier
-            //                 },
-            //                 description: (<any>serviceOutput).description
-            //             },
-            //             recipient: transaction.agent,
-            //             purpose: { typeOf: transaction.typeOf, id: transaction.id }
-            //         })(repos);
-
-            //         // await repos.transaction.transactionModel.findByIdAndUpdate(
-            //         //     { _id: transaction.id },
-            //         //     { 'object.pendingTransaction': pendingTransaction }
-            //         // )
-            //         //     .exec();
-            //     }));
-
-            //     break;
-
             default:
             // no op
         }
