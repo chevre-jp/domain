@@ -18,6 +18,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.26.0 - 2020-09-30
+
+### Added
+
+- 決済取引をPaymentServiceType:Accountに対応
+- 返金取引をPaymentServiceType:Accountに対応
+
+### Changed
+
+- update @motionpicture/gmo-service
+- 決済取引開始時に決済方法説明を指定できるように調整
+- 返金取引開始時に、決済サービス未指定であれば決済取引を自動検索するように調整
+
 ## v15.25.0 - 2020-09-24
 
 ### Changed

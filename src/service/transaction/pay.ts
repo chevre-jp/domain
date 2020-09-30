@@ -13,8 +13,10 @@ import { MongoRepository as SellerRepo } from '../../repo/seller';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
+import * as AccountPayment from '../payment/account';
 import * as CreditCardPayment from '../payment/creditCard';
 import * as MovieTicketPayment from '../payment/movieTicket';
+import { validateAccount } from './pay/account/validation';
 import { createStartParams } from './pay/factory';
 import { validateMovieTicket } from './pay/movieTicket/validation';
 import { createPotentialActions } from './pay/potentialActions';
@@ -92,7 +94,6 @@ export function check(
 export function start(
     params: factory.transaction.pay.IStartParamsWithoutDetail
 ): IStartOperation<factory.transaction.pay.ITransaction> {
-    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         event: EventRepo;
         project: ProjectRepo;
@@ -125,52 +126,18 @@ export function start(
             transaction = await repos.transaction.start<factory.transactionType.Pay>(startParams);
 
             switch (paymentServiceType) {
+                case factory.service.paymentService.PaymentServiceType.Account:
+                    transaction = await processAuthorizeAccount(params, transaction)(repos);
+
+                    break;
+
                 case factory.service.paymentService.PaymentServiceType.CreditCard:
-                    const authorizeResult = await CreditCardPayment.authorize(params)(repos);
-
-                    transaction = await repos.transaction.transactionModel.findByIdAndUpdate(
-                        { _id: transaction.id },
-                        {
-                            'object.paymentMethod.accountId': authorizeResult.accountId,
-                            'object.paymentMethod.paymentMethodId': authorizeResult.paymentMethodId,
-                            'object.entryTranArgs': authorizeResult.entryTranArgs,
-                            'object.entryTranResult': authorizeResult.entryTranResult,
-                            'object.execTranArgs': authorizeResult.execTranArgs,
-                            'object.execTranResult': authorizeResult.execTranResult
-                        },
-                        { new: true }
-                    )
-                        .exec()
-                        .then((doc) => {
-                            if (doc === null) {
-                                throw new factory.errors.ArgumentNull('Transaction');
-                            }
-
-                            return doc.toObject();
-                        });
+                    transaction = await processAuthorizeCreditCard(params, transaction)(repos);
 
                     break;
 
                 case factory.service.paymentService.PaymentServiceType.MovieTicket:
-                    // ムビチケ決済の場合、認証
-                    const checkResult = await validateMovieTicket(params)(repos);
-
-                    transaction = await repos.transaction.transactionModel.findByIdAndUpdate(
-                        { _id: transaction.id },
-                        {
-                            'object.paymentMethod.accountId': checkResult?.movieTickets[0].identifier,
-                            'object.checkResult': checkResult
-                        },
-                        { new: true }
-                    )
-                        .exec()
-                        .then((doc) => {
-                            if (doc === null) {
-                                throw new factory.errors.ArgumentNull('Transaction');
-                            }
-
-                            return doc.toObject();
-                        });
+                    transaction = await processAuthorizeMovieTicket(params, transaction)(repos);
 
                     break;
 
@@ -189,6 +156,117 @@ export function start(
         }
 
         return transaction;
+    };
+}
+
+function processAuthorizeAccount(
+    params: factory.transaction.pay.IStartParamsWithoutDetail,
+    transaction: { id: string }
+) {
+    return async (repos: {
+        event: EventRepo;
+        project: ProjectRepo;
+        seller: SellerRepo;
+        transaction: TransactionRepo;
+    }): Promise<factory.transaction.pay.ITransaction> => {
+        await validateAccount(params)(repos);
+
+        const authorizeResult = await AccountPayment.authorize(params)(repos);
+
+        const totalPaymentDue: factory.monetaryAmount.IMonetaryAmount = {
+            typeOf: 'MonetaryAmount',
+            currency: authorizeResult.object.fromLocation.accountType,
+            value: authorizeResult.object.amount
+        };
+        const pendingTransaction: factory.action.trade.pay.IPendingTransaction = {
+            typeOf: authorizeResult.typeOf,
+            id: authorizeResult.id,
+            transactionNumber: authorizeResult.transactionNumber
+        };
+
+        return repos.transaction.transactionModel.findByIdAndUpdate(
+            { _id: transaction.id },
+            {
+                'object.paymentMethod.totalPaymentDue': totalPaymentDue,
+                'object.pendingTransaction': pendingTransaction
+            },
+            { new: true }
+        )
+            .exec()
+            .then((doc) => {
+                if (doc === null) {
+                    throw new factory.errors.ArgumentNull('Transaction');
+                }
+
+                return doc.toObject();
+            });
+    };
+}
+
+function processAuthorizeCreditCard(
+    params: factory.transaction.pay.IStartParamsWithoutDetail,
+    transaction: { id: string }
+) {
+    return async (repos: {
+        event: EventRepo;
+        project: ProjectRepo;
+        seller: SellerRepo;
+        transaction: TransactionRepo;
+    }): Promise<factory.transaction.pay.ITransaction> => {
+        const authorizeResult = await CreditCardPayment.authorize(params)(repos);
+
+        return repos.transaction.transactionModel.findByIdAndUpdate(
+            { _id: transaction.id },
+            {
+                'object.paymentMethod.accountId': authorizeResult.accountId,
+                'object.paymentMethod.paymentMethodId': authorizeResult.paymentMethodId,
+                'object.entryTranArgs': authorizeResult.entryTranArgs,
+                'object.entryTranResult': authorizeResult.entryTranResult,
+                'object.execTranArgs': authorizeResult.execTranArgs,
+                'object.execTranResult': authorizeResult.execTranResult
+            },
+            { new: true }
+        )
+            .exec()
+            .then((doc) => {
+                if (doc === null) {
+                    throw new factory.errors.ArgumentNull('Transaction');
+                }
+
+                return doc.toObject();
+            });
+    };
+}
+
+function processAuthorizeMovieTicket(
+    params: factory.transaction.pay.IStartParamsWithoutDetail,
+    transaction: { id: string }
+) {
+    return async (repos: {
+        event: EventRepo;
+        project: ProjectRepo;
+        seller: SellerRepo;
+        transaction: TransactionRepo;
+    }): Promise<factory.transaction.pay.ITransaction> => {
+        // ムビチケ決済の場合、認証
+        const checkResult = await validateMovieTicket(params)(repos);
+
+        return repos.transaction.transactionModel.findByIdAndUpdate(
+            { _id: transaction.id },
+            {
+                'object.paymentMethod.accountId': checkResult?.movieTickets[0].identifier,
+                'object.checkResult': checkResult
+            },
+            { new: true }
+        )
+            .exec()
+            .then((doc) => {
+                if (doc === null) {
+                    throw new factory.errors.ArgumentNull('Transaction');
+                }
+
+                return doc.toObject();
+            });
     };
 }
 

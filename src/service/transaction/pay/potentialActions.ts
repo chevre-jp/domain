@@ -15,6 +15,30 @@ function createPayActions(params: {
     let payObject: factory.action.trade.pay.IPaymentService | undefined;
 
     switch (transaction.object.typeOf) {
+        case factory.service.paymentService.PaymentServiceType.Account:
+            const totalPaymentDue: factory.monetaryAmount.IMonetaryAmount = (typeof paymentMethod?.totalPaymentDue?.typeOf === 'string')
+                ? paymentMethod.totalPaymentDue
+                : {
+                    typeOf: 'MonetaryAmount',
+                    currency: factory.priceCurrency.JPY,
+                    value: Number(paymentMethod?.amount)
+                };
+
+            payObject = {
+                typeOf: transaction.object.typeOf,
+                paymentMethod: {
+                    accountId: paymentMethod?.accountId,
+                    additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : [],
+                    name: paymentMethodName,
+                    paymentMethodId: paymentMethodId,
+                    totalPaymentDue: totalPaymentDue,
+                    typeOf: paymentMethodType
+                },
+                pendingTransaction: transaction.object.pendingTransaction
+            };
+
+            break;
+
         case factory.service.paymentService.PaymentServiceType.CreditCard:
             payObject = {
                 typeOf: transaction.object.typeOf,

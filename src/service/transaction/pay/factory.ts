@@ -13,6 +13,33 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
         throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
     }
 
+    let totalPaymentDue: factory.monetaryAmount.IMonetaryAmount | undefined;
+
+    switch (params.paymentServiceType) {
+        case factory.service.paymentService.PaymentServiceType.CreditCard:
+            totalPaymentDue = {
+                typeOf: 'MonetaryAmount',
+                currency: factory.priceCurrency.JPY,
+                value: Number(params.amount)
+            };
+
+            break;
+
+        case factory.service.paymentService.PaymentServiceType.MovieTicket:
+            totalPaymentDue = {
+                typeOf: 'MonetaryAmount',
+                currency: factory.unitCode.C62,
+                value: (Array.isArray(params.object.paymentMethod?.movieTickets))
+                    ? params.object.paymentMethod?.movieTickets.length
+                    : 0
+            };
+
+            break;
+
+        default:
+        // no op
+    }
+
     return {
         project: { typeOf: factory.organizationType.Project, id: params.project.id },
         transactionNumber: params.transactionNumber,
@@ -32,6 +59,15 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
                 amount: params.amount,
                 paymentMethodId: params.transactionNumber,
                 typeOf: paymentMethodType,
+                ...(typeof params.object.paymentMethod?.description === 'string')
+                    ? { description: params.object.paymentMethod?.description }
+                    : undefined,
+                ...(totalPaymentDue !== undefined)
+                    ? { totalPaymentDue: totalPaymentDue }
+                    : undefined,
+                ...(typeof params.object.paymentMethod?.accountId === 'string')
+                    ? { accountId: params.object.paymentMethod?.accountId }
+                    : undefined,
                 ...(typeof params.object.paymentMethod?.method === 'string')
                     ? { method: params.object.paymentMethod?.method }
                     : undefined,
@@ -42,8 +78,6 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
                     ? { movieTickets: params.object.paymentMethod?.movieTickets }
                     : undefined
             }
-            // pendingTransaction?: any;
-            // ...(typeof params.object.description === 'string') ? { description: params.object.description } : {}
         },
         expires: params.expires
     };

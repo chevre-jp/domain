@@ -38,13 +38,25 @@ export type IExportTasksOperation<T> = (repos: {
 export function start(
     params: factory.transaction.refund.IStartParamsWithoutDetail
 ): IStartOperation<factory.transaction.refund.ITransaction> {
-    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;
     }) => {
-        const paymentServiceType = params.object?.typeOf;
+        const paymentMethodId = params.object.paymentMethod?.paymentMethodId;
+        if (typeof paymentMethodId !== 'string') {
+            throw new factory.errors.ArgumentNull('object.paymentMethod.paymentMethodId');
+        }
+
+        let paymentServiceType = params.object?.typeOf;
+        // paymentServiceTypeの指定がなければ、決済取引を検索
+        if (typeof paymentServiceType !== 'string' || paymentServiceType.length === 0) {
+            const payTransaction = await repos.transaction.findByTransactionNumber({
+                typeOf: factory.transactionType.Pay,
+                transactionNumber: paymentMethodId
+            });
+            paymentServiceType = payTransaction.object.typeOf;
+        }
 
         const transactionNumber: string | undefined = params.transactionNumber;
         if (typeof transactionNumber !== 'string' || transactionNumber.length === 0) {
@@ -63,6 +75,9 @@ export function start(
             transaction = await repos.transaction.start<factory.transactionType.Refund>(startParams);
 
             switch (paymentServiceType) {
+                case factory.service.paymentService.PaymentServiceType.Account:
+                    break;
+
                 case factory.service.paymentService.PaymentServiceType.CreditCard:
                     break;
 
@@ -79,7 +94,6 @@ export function start(
                 // no op
             }
 
-            // error = handleMvtkReserveError(error);
             throw error;
         }
 

@@ -634,12 +634,10 @@ export function createScreeningEventSeriesFromCOA(params: {
         dateMvtkBegin: params.filmFromCOA.dateMvtkBegin
     };
 
-    // const acceptedPaymentMethod: string[] = [
-    // ];
     let unacceptedPaymentMethod: string[] | undefined;
 
     if (coaInfo.flgMvtkUse === '1') {
-        // acceptedPaymentMethod.push(factory.paymentMethodType.MovieTicket);
+        // no op
     } else {
         if (!Array.isArray(unacceptedPaymentMethod)) {
             unacceptedPaymentMethod = [];
