@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.26.1 - 2020-10-02
+
+### Changed
+
+- COAのflgMvtkUseをMGチケットにも適用するように調整
+
 ## v15.26.0 - 2020-09-30
 
 ### Added

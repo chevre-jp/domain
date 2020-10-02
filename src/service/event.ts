@@ -636,6 +636,7 @@ export function createScreeningEventSeriesFromCOA(params: {
 
     let unacceptedPaymentMethod: string[] | undefined;
 
+    // flgMvtkUseはムビチケ、MGチケットの両方に適用される
     if (coaInfo.flgMvtkUse === '1') {
         // no op
     } else {
@@ -643,7 +644,7 @@ export function createScreeningEventSeriesFromCOA(params: {
             unacceptedPaymentMethod = [];
         }
 
-        unacceptedPaymentMethod.push(factory.paymentMethodType.MovieTicket);
+        unacceptedPaymentMethod.push(factory.paymentMethodType.MGTicket, factory.paymentMethodType.MovieTicket);
     }
 
     return {
