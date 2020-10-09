@@ -13,13 +13,10 @@ export class MongoRepository {
         this.placeModel = connection.model(placeModel.modelName);
     }
 
+    // tslint:disable-next-line:max-func-body-length
     public static CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params: factory.place.movieTheater.ISearchConditions) {
         // MongoDB検索条件
-        const andConditions: any[] = [
-            {
-                typeOf: factory.placeType.MovieTheater
-            }
-        ];
+        const andConditions: any[] = [];
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -32,6 +29,26 @@ export class MongoRepository {
                     }
                 });
             }
+        }
+
+        const branchCodeEq = params.branchCode?.$eq;
+        if (typeof branchCodeEq === 'string') {
+            andConditions.push({
+                branchCode: {
+                    $exists: true,
+                    $eq: branchCodeEq
+                }
+            });
+        }
+
+        const branchCodeRegex = params.branchCode?.$regex;
+        if (typeof branchCodeRegex === 'string') {
+            andConditions.push({
+                branchCode: {
+                    $exists: true,
+                    $regex: new RegExp(branchCodeRegex)
+                }
+            });
         }
 
         // tslint:disable-next-line:no-single-line-block-comment
@@ -83,7 +100,7 @@ export class MongoRepository {
             });
         }
 
-        const parentOrganizationIdEq = (<any>params).parentOrganization?.id?.$eq;
+        const parentOrganizationIdEq = params.parentOrganization?.id?.$eq;
         if (typeof parentOrganizationIdEq === 'string') {
             andConditions.push({
                 'parentOrganization.id': {
@@ -123,9 +140,7 @@ export class MongoRepository {
     public async countMovieTheaters(params: factory.place.movieTheater.ISearchConditions): Promise<number> {
         const conditions = MongoRepository.CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params);
 
-        return this.placeModel.countDocuments(
-            { $and: conditions }
-        )
+        return this.placeModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
             .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
@@ -139,7 +154,7 @@ export class MongoRepository {
         const conditions = MongoRepository.CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params);
         // containsPlaceを含めるとデータサイズが大きくなるので、検索結果には含めない
         const query = this.placeModel.find(
-            { $and: conditions },
+            (conditions.length > 0) ? { $and: conditions } : {},
             {
                 __v: 0,
                 createdAt: 0,
