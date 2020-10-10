@@ -120,6 +120,45 @@ export class MongoRepository {
             }
         }
 
+        const additionalPropertyAll = params.additionalProperty?.$all;
+        if (Array.isArray(additionalPropertyAll)) {
+            andConditions.push({
+                additionalProperty: {
+                    $exists: true,
+                    $all: additionalPropertyAll
+                }
+            });
+        }
+
+        const additionalPropertyIn = params.additionalProperty?.$in;
+        if (Array.isArray(additionalPropertyIn)) {
+            andConditions.push({
+                additionalProperty: {
+                    $exists: true,
+                    $in: additionalPropertyIn
+                }
+            });
+        }
+
+        const additionalPropertyNin = params.additionalProperty?.$nin;
+        if (Array.isArray(additionalPropertyNin)) {
+            andConditions.push({
+                additionalProperty: {
+                    $nin: additionalPropertyNin
+                }
+            });
+        }
+
+        const additionalPropertyElemMatch = params.additionalProperty?.$elemMatch;
+        if (additionalPropertyElemMatch !== undefined && additionalPropertyElemMatch !== null) {
+            andConditions.push({
+                additionalProperty: {
+                    $exists: true,
+                    $elemMatch: additionalPropertyElemMatch
+                }
+            });
+        }
+
         return andConditions;
     }
 
