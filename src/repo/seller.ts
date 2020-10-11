@@ -18,11 +18,7 @@ export class MongoRepository {
     // tslint:disable-next-line:max-func-body-length
     public static CREATE_MONGO_CONDITIONS(params: factory.seller.ISearchConditions) {
         // MongoDB検索条件
-        const andConditions: any[] = [
-            {
-                paymentAccepted: { $exists: true }
-            }
-        ];
+        const andConditions: any[] = [];
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -48,28 +44,20 @@ export class MongoRepository {
             }
         }
 
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (Array.isArray(params.typeOfs)) {
-            andConditions.push({
-                typeOf: { $in: params.typeOfs }
-            });
-        }
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.name !== undefined) {
+        const nameRegex = params.name;
+        if (typeof nameRegex === 'string') {
             andConditions.push({
                 $or: [
                     {
                         'name.ja': {
                             $exists: true,
-                            $regex: new RegExp(params.name)
+                            $regex: new RegExp(nameRegex)
                         }
                     },
                     {
                         'name.en': {
                             $exists: true,
-                            $regex: new RegExp(params.name)
+                            $regex: new RegExp(nameRegex)
                         }
                     }
                 ]
@@ -80,42 +68,12 @@ export class MongoRepository {
         if (params.location !== undefined) {
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
-            if (params.location.typeOfs !== undefined) {
-                andConditions.push({
-                    'location.typeOf': {
-                        $exists: true,
-                        $in: params.location.typeOfs
-                    }
-                });
-            }
-            // tslint:disable-next-line:no-single-line-block-comment
-            /* istanbul ignore else */
             if (params.location.branchCodes !== undefined) {
                 andConditions.push({
                     'location.branchCode': {
                         $exists: true,
                         $in: params.location.branchCodes
                     }
-                });
-            }
-            // tslint:disable-next-line:no-single-line-block-comment
-            /* istanbul ignore else */
-            if (params.location.name !== undefined) {
-                andConditions.push({
-                    $or: [
-                        {
-                            'location.name.ja': {
-                                $exists: true,
-                                $regex: new RegExp(params.location.name)
-                            }
-                        },
-                        {
-                            'location.name.en': {
-                                $exists: true,
-                                $regex: new RegExp(params.location.name)
-                            }
-                        }
-                    ]
                 });
             }
         }
