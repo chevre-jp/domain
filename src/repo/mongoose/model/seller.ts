@@ -14,7 +14,6 @@ const schema = new mongoose.Schema(
             type: String,
             required: true
         },
-        identifier: String,
         name: mongoose.SchemaTypes.Mixed,
         url: String,
         parentOrganization: mongoose.SchemaTypes.Mixed,
@@ -59,6 +58,46 @@ schema.index(
 schema.index(
     { updatedAt: 1 },
     { name: 'searchByUpdatedAt' }
+);
+
+schema.index(
+    { branchCode: 1 },
+    { name: 'searchByBranchCode' }
+);
+
+schema.index(
+    { typeOf: 1, branchCode: 1 },
+    { name: 'searchByTypeOf' }
+);
+
+schema.index(
+    { 'project.id': 1, branchCode: 1 },
+    {
+        name: 'searchByProjectId',
+        partialFilterExpression: {
+            'project.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'name.ja': 1, branchCode: 1 },
+    {
+        name: 'searchByNameJa',
+        partialFilterExpression: {
+            'name.ja': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'name.en': 1, branchCode: 1 },
+    {
+        name: 'searchByNameEn',
+        partialFilterExpression: {
+            'name.en': { $exists: true }
+        }
+    }
 );
 
 mongoose.model(modelName, schema)
