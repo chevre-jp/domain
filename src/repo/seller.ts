@@ -63,19 +63,23 @@ export class MongoRepository {
                 ]
             });
         }
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.location !== undefined) {
-            // tslint:disable-next-line:no-single-line-block-comment
-            /* istanbul ignore else */
-            if (params.location.branchCodes !== undefined) {
-                andConditions.push({
-                    'location.branchCode': {
-                        $exists: true,
-                        $in: params.location.branchCodes
-                    }
-                });
-            }
+
+        const branchCodeEq = params.branchCode?.$eq;
+        if (typeof branchCodeEq === 'string') {
+            andConditions.push({
+                branchCode: {
+                    $eq: branchCodeEq
+                }
+            });
+        }
+
+        const branchCodeRegex = params.branchCode?.$regex;
+        if (typeof branchCodeRegex === 'string') {
+            andConditions.push({
+                branchCode: {
+                    $regex: new RegExp(branchCodeRegex)
+                }
+            });
         }
 
         const additionalPropertyAll = params.additionalProperty?.$all;

@@ -21,7 +21,7 @@ async function main() {
     const offerRateLimitRepo = new domain.repository.rateLimit.Offer(client);
 
     await domain.service.aggregation.event.aggregateScreeningEvent({
-        id: '7kdgwg1kx'
+        id: '201015001001010900'
     })({
         event: eventRepo,
         offer: offerRepo,

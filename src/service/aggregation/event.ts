@@ -446,64 +446,46 @@ function calculateCapacityByOffer(params: {
             // 座席タイプ制約のあるオファーの場合
             const eligibleSeatingTypes = params.offer.eligibleSeatingType;
             if (Array.isArray(eligibleSeatingTypes)) {
-                // 適用座席タイプに絞る
-                const eligibleSeatOffers = (Array.isArray(params.screeningRoom.containsPlace))
-                    ? params.screeningRoom.containsPlace.reduce<{
-                        seatSection: string;
-                        seatNumber: string;
-                    }[]>(
-                        (a, b) => {
-                            return [
-                                ...a,
-                                ...b.containsPlace.filter((place) => {
-                                    const seatingTypes = (Array.isArray(place.seatingType)) ? place.seatingType
-                                        : (typeof place.seatingType === 'string') ? [place.seatingType]
-                                            : [];
+                const filterByEligibleSeatingTypeResult = await filterByEligibleSeatingType({
+                    ...params,
+                    eligibleSeatingTypes: eligibleSeatingTypes.map((e) => e.codeValue)
+                })(repos);
+                maximumAttendeeCapacity = filterByEligibleSeatingTypeResult.maximumAttendeeCapacity;
+                remainingAttendeeCapacity = filterByEligibleSeatingTypeResult.remainingAttendeeCapacity;
+            }
 
-                                    return seatingTypes.some((seatingTypeCodeValue) => eligibleSeatingTypes.some(
-                                        (eligibleSeatingType) => eligibleSeatingType.codeValue === seatingTypeCodeValue)
-                                    );
-                                })
-                                    .map((place) => {
-                                        return {
-                                            seatSection: b.branchCode,
-                                            seatNumber: place.branchCode
-                                        };
-                                    })
-                            ];
-                        },
-                        []
-                    )
-                    : [];
+            // 適用サブ予約がある場合
+            const eligibleSubReservation = params.offer.eligibleSubReservation;
+            if (Array.isArray(eligibleSubReservation)) {
+                // 適用サブ予約の座席タイプごとにキャパシティ算出
+                const capacities = await Promise.all(eligibleSubReservation
+                    .filter((subReservation) => typeof subReservation.amountOfThisGood === 'number' && subReservation.amountOfThisGood > 0)
+                    .map(async (subReservation) => {
+                        const filterByEligibleSeatingTypeResult = await filterByEligibleSeatingType({
+                            ...params,
+                            eligibleSeatingTypes: [subReservation.typeOfGood.seatingType]
+                        })(repos);
 
-                maximumAttendeeCapacity = eligibleSeatOffers.length;
+                        return {
+                            maximumAttendeeCapacity: Math.floor(
+                                filterByEligibleSeatingTypeResult.maximumAttendeeCapacity / subReservation.amountOfThisGood
+                            ),
+                            remainingAttendeeCapacity: Math.floor(
+                                filterByEligibleSeatingTypeResult.remainingAttendeeCapacity / subReservation.amountOfThisGood
+                            )
+                        };
+                    })
+                );
 
-                if (maximumAttendeeCapacity > 0) {
-                    const availabilities = await repos.eventAvailability.searchAvailability({
-                        eventId: params.event.id,
-                        offers: eligibleSeatOffers
-                    });
-
-                    remainingAttendeeCapacity = availabilities.filter((a) => a.availability === factory.itemAvailability.InStock).length;
-                } else {
-                    remainingAttendeeCapacity = 0;
-                }
-
-                // 適用座席タイプに対する予約数から算出する場合はこちら↓
-                // const reseravtionCount4eligibleSeatingType = await repos.reservation.count({
-                //     typeOf: factory.reservationType.EventReservation,
-                //     reservationFor: { ids: [params.event.id] },
-                //     reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
-                //     reservedTicket: {
-                //         ticketedSeat: <any>{
-                //             ...{
-                //                 seatingType: { $in: eligibleSeatingTypes.map((eligibleSeatingType) => eligibleSeatingType.codeValue) }
-                //             }
-                //         }
-                //     }
-                // });
-
-                // remainingAttendeeCapacity = maximumAttendeeCapacity - reseravtionCount4eligibleSeatingType;
+                // 座席タイプごとのキャパシティの中から、最小数を選択する
+                maximumAttendeeCapacity = Math.min(
+                    ...(typeof maximumAttendeeCapacity === 'number') ? [maximumAttendeeCapacity] : [],
+                    ...capacities.map((c) => c.maximumAttendeeCapacity)
+                );
+                remainingAttendeeCapacity = Math.min(
+                    ...(typeof remainingAttendeeCapacity === 'number') ? [remainingAttendeeCapacity] : [],
+                    ...capacities.map((c) => c.remainingAttendeeCapacity)
+                );
             }
 
             // 単価スペックの単位が1より大きい場合
@@ -545,6 +527,81 @@ function calculateCapacityByOffer(params: {
                 remainingAttendeeCapacity = 0;
             }
         }
+
+        return { maximumAttendeeCapacity, remainingAttendeeCapacity };
+    };
+}
+
+function filterByEligibleSeatingType(params: {
+    event: factory.event.IEvent<factory.eventType.ScreeningEvent>;
+    screeningRoom: factory.place.screeningRoom.IPlace;
+    eligibleSeatingTypes: string[];
+}) {
+    return async (repos: {
+        eventAvailability: EventAvailabilityRepo;
+    }): Promise<{
+        maximumAttendeeCapacity: number;
+        remainingAttendeeCapacity: number;
+    }> => {
+        // 適用座席タイプに絞る
+        const eligibleSeatOffers = (Array.isArray(params.screeningRoom.containsPlace))
+            ? params.screeningRoom.containsPlace.reduce<{
+                seatSection: string;
+                seatNumber: string;
+            }[]>(
+                (a, b) => {
+                    return [
+                        ...a,
+                        ...b.containsPlace.filter((place) => {
+                            const seatingTypes = (Array.isArray(place.seatingType)) ? place.seatingType
+                                : (typeof place.seatingType === 'string') ? [place.seatingType]
+                                    : [];
+
+                            return seatingTypes.some((seatingTypeCodeValue) => params.eligibleSeatingTypes.some(
+                                (eligibleSeatingType) => eligibleSeatingType === seatingTypeCodeValue)
+                            );
+                        })
+                            .map((place) => {
+                                return {
+                                    seatSection: b.branchCode,
+                                    seatNumber: place.branchCode
+                                };
+                            })
+                    ];
+                },
+                []
+            )
+            : [];
+
+        const maximumAttendeeCapacity = eligibleSeatOffers.length;
+        let remainingAttendeeCapacity: number;
+
+        if (maximumAttendeeCapacity > 0) {
+            const availabilities = await repos.eventAvailability.searchAvailability({
+                eventId: params.event.id,
+                offers: eligibleSeatOffers
+            });
+
+            remainingAttendeeCapacity = availabilities.filter((a) => a.availability === factory.itemAvailability.InStock).length;
+        } else {
+            remainingAttendeeCapacity = 0;
+        }
+
+        // 適用座席タイプに対する予約数から算出する場合はこちら↓
+        // const reseravtionCount4eligibleSeatingType = await repos.reservation.count({
+        //     typeOf: factory.reservationType.EventReservation,
+        //     reservationFor: { ids: [params.event.id] },
+        //     reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
+        //     reservedTicket: {
+        //         ticketedSeat: <any>{
+        //             ...{
+        //                 seatingType: { $in: eligibleSeatingTypes.map((eligibleSeatingType) => eligibleSeatingType.codeValue) }
+        //             }
+        //         }
+        //     }
+        // });
+
+        // remainingAttendeeCapacity = maximumAttendeeCapacity - reseravtionCount4eligibleSeatingType;
 
         return { maximumAttendeeCapacity, remainingAttendeeCapacity };
     };
