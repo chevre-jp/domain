@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - 販売者コレクションのインデックスを最適化
+- イベントオファーごとのキャパシティ算出時に適用サブ予約条件を考慮するように調整
 
 ### Deprecated
 
