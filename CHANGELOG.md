@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.29.1 - 2020-10-18
+
+### Changed
+
+- categoryCodesに適切なインデックスを追加
+
 ## v15.29.0 - 2020-10-14
 
 ### Changed

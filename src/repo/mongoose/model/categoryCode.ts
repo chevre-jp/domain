@@ -50,6 +50,53 @@ schema.index(
     { name: 'searchByUpdatedAt' }
 );
 
+schema.index(
+    { codeValue: 1 },
+    {
+        name: 'searchByCodeValue'
+    }
+);
+
+schema.index(
+    { 'inCodeSet.identifier': 1, codeValue: 1 },
+    {
+        name: 'searchByInCodeSetIdentifier',
+        partialFilterExpression: {
+            'inCodeSet.identifier': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'name.ja': 1, codeValue: 1 },
+    {
+        name: 'searchByNameJa',
+        partialFilterExpression: {
+            'name.ja': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'name.en': 1, codeValue: 1 },
+    {
+        name: 'searchByNameEn',
+        partialFilterExpression: {
+            'name.en': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'project.id': 1, codeValue: 1 },
+    {
+        name: 'searchByProjectId',
+        partialFilterExpression: {
+            'project.id': { $exists: true }
+        }
+    }
+);
+
 mongoose.model(modelName, schema)
     .on(
         'index',
