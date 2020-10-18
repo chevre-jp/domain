@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- categoryCodesに適切なインデックスを追加
+
 ### Deprecated
 
 ### Removed
