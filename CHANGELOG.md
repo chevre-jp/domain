@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- 勘定科目コレクションのインデックス調整
+
 ### Deprecated
 
 ### Removed
