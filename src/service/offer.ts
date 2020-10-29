@@ -446,7 +446,7 @@ export function searchAddOns(params: {
 
         const productId = params.product?.id;
         if (typeof productId === 'string') {
-            const product = await repos.product.findById({ id: productId });
+            const product = <factory.product.IProduct>await repos.product.findById({ id: productId });
             const offerCatalogId = product.hasOfferCatalog?.id;
             if (typeof offerCatalogId === 'string') {
                 const offerCatalog = await repos.offerCatalog.findById({ id: offerCatalogId });
@@ -481,7 +481,7 @@ export function searchProductOffers(params: {
         product: ProductRepo;
     }): Promise<factory.event.screeningEvent.ITicketOffer[]> => {
         // プロダクト検索
-        const product = await repos.product.findById({ id: params.itemOffered.id });
+        const product = <factory.product.IProduct>await repos.product.findById({ id: params.itemOffered.id });
 
         const offerCatalogId = product.hasOfferCatalog?.id;
         if (typeof offerCatalogId !== 'string') {

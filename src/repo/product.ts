@@ -4,6 +4,8 @@ import { modelName } from './mongoose/model/product';
 
 import * as factory from '../factory';
 
+export type IProduct = factory.product.IProduct | factory.service.paymentService.IService;
+
 /**
  * プロダクトリポジトリ
  */
@@ -116,7 +118,7 @@ export class MongoRepository {
         return andConditions;
     }
 
-    public async findById(params: { id: string }): Promise<factory.product.IProduct> {
+    public async findById(params: { id: string }): Promise<IProduct> {
         const doc = await this.productModel.findOne(
             {
                 _id: params.id
@@ -135,7 +137,7 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    public async search(params: factory.product.ISearchConditions): Promise<factory.product.IProduct[]> {
+    public async search(params: factory.product.ISearchConditions): Promise<IProduct[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.productModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},

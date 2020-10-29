@@ -542,6 +542,8 @@ function getMvtkReserveEndpoint(params: {
     return async (repos: {
         project: ProjectRepo;
     }): Promise<factory.service.paymentService.IAvailableChannel> => {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO products参照へ変更
         const project = await repos.project.findById({ id: params.project.id });
         const paymentServiceSetting = project.settings?.paymentServices?.find((s) => {
             return s.typeOf === factory.service.paymentService.PaymentServiceType.MovieTicket

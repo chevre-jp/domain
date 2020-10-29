@@ -11,6 +11,7 @@ import * as createDebug from 'debug';
 import * as factory from '../../factory';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
+import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
 
@@ -30,6 +31,7 @@ export function authorize(
 ) {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
@@ -193,6 +195,7 @@ function handleAuthorizeError(error: any) {
  */
 export function voidTransaction(params: factory.task.voidPayment.IData) {
     return async (repos: {
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
@@ -259,6 +262,7 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
 export function payCreditCard(params: factory.task.pay.IData) {
     return async (repos: {
         action: ActionRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }): Promise<factory.action.trade.pay.IAction> => {
@@ -349,8 +353,21 @@ function getGMOEndpoint(params: {
     paymentMethodType: string;
 }) {
     return async (repos: {
+        product: ProductRepo;
         project: ProjectRepo;
     }): Promise<factory.service.paymentService.IAvailableChannel> => {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO products参照へ変更
+        // const paymentServices = await repos.product.search({
+        //     limit: 1,
+        //     project: { id: { $eq: params.project.id } },
+        //     typeOf: { $eq: factory.service.paymentService.PaymentServiceType.CreditCard },
+        //     serviceOutput: { typeOf: { $eq: params.paymentMethodType } }
+        // });
+        // const paymentServiceSetting = <factory.service.paymentService.IService | undefined>paymentServices.shift();
+        // if (paymentServiceSetting === undefined) {
+        //     throw new factory.errors.NotFound('PaymentService');
+        // }
         const project = await repos.project.findById({ id: params.project.id });
         const paymentServiceSetting = project.settings?.paymentServices?.find((s) => {
             return s.typeOf === factory.service.paymentService.PaymentServiceType.CreditCard
@@ -374,6 +391,7 @@ function getGMOEndpoint(params: {
 export function refundCreditCard(params: factory.task.refund.IData) {
     return async (repos: {
         action: ActionRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         // task: TaskRepo;

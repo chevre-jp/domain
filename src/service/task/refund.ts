@@ -4,6 +4,7 @@ import * as factory from '../../factory';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
 // import { MongoRepository as EventRepo } from '../../repo/event';
+import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
@@ -22,6 +23,7 @@ export function call(data: factory.task.refund.IData): IOperation<void> {
 
         const actionRepo = new ActionRepo(settings.connection);
         // const eventRepo = new EventRepo(settings.connection);
+        const productRepo = new ProductRepo(settings.connection);
         const projectRepo = new ProjectRepo(settings.connection);
         const sellerRepo = new SellerRepo(settings.connection);
         const transactionRepo = new TransactionRepo(settings.connection);
@@ -30,6 +32,7 @@ export function call(data: factory.task.refund.IData): IOperation<void> {
         await PaymentService.refund(data)({
             action: actionRepo,
             // event: eventRepo,
+            product: productRepo,
             project: projectRepo,
             seller: sellerRepo,
             transaction: transactionRepo,

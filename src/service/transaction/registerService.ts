@@ -105,7 +105,7 @@ export function start(
         }
 
         // プロダクト確認
-        const product = await repos.product.findById({
+        const product = <factory.product.IProduct>await repos.product.findById({
             id: productId
         });
 
