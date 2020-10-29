@@ -14,6 +14,7 @@ export class MongoRepository {
         this.productModel = connection.model(modelName);
     }
 
+    // tslint:disable-next-line:max-func-body-length
     public static CREATE_MONGO_CONDITIONS(params: factory.product.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [];
@@ -32,8 +33,16 @@ export class MongoRepository {
         if (typeof typeOfEq === 'string') {
             andConditions.push({
                 typeOf: {
-                    $exists: true,
                     $eq: typeOfEq
+                }
+            });
+        }
+
+        const typeOfIn = params.typeOf?.$in;
+        if (Array.isArray(typeOfIn)) {
+            andConditions.push({
+                typeOf: {
+                    $in: typeOfIn
                 }
             });
         }
@@ -98,6 +107,7 @@ export class MongoRepository {
         if (typeof serviceOutputTypeOfEq === 'string') {
             andConditions.push({
                 'serviceOutput.typeOf': {
+                    $exists: true,
                     $eq: serviceOutputTypeOfEq
                 }
             });
