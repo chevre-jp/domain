@@ -56,21 +56,32 @@ schema.index(
 );
 
 schema.index(
+    { codeValue: 1 },
+    { name: 'searchByCodeValue' }
+);
+
+schema.index(
+    { 'hasCategoryCode.codeValue': 1, codeValue: 1 },
     {
-        'project.id': 1
-    },
-    {
-        name: 'searchByProjectId',
+        name: 'searchByHasCategoryCodeCodeValue',
         partialFilterExpression: {
-            'project.id': { $exists: true }
+            'hasCategoryCode.codeValue': { $exists: true }
         }
     }
 );
+
 schema.index(
+    { 'hasCategoryCode.hasCategoryCode.codeValue': 1, codeValue: 1 },
     {
-        'project.id': 1,
-        codeValue: 1
-    },
+        name: 'searchByHasCategoryCodeHasCategoryCodeCodeValue',
+        partialFilterExpression: {
+            'hasCategoryCode.hasCategoryCode.codeValue': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'project.id': 1, codeValue: 1 },
     {
         name: 'uniqueCodeValue',
         unique: true,
@@ -81,10 +92,7 @@ schema.index(
     }
 );
 schema.index(
-    {
-        'project.id': 1,
-        'hasCategoryCode.codeValue': 1
-    },
+    { 'project.id': 1, 'hasCategoryCode.codeValue': 1 },
     {
         name: 'uniqueHasCategoryCodeCodeValue',
         unique: true,
@@ -94,20 +102,22 @@ schema.index(
         }
     }
 );
-schema.index(
-    {
-        'project.id': 1,
-        'hasCategoryCode.hasCategoryCode.codeValue': 1
-    },
-    {
-        name: 'uniqueHasCategoryCodeHasCategoryCodeCodeValue',
-        unique: true,
-        partialFilterExpression: {
-            'project.id': { $exists: true },
-            'hasCategoryCode.hasCategoryCode.codeValue': { $exists: true }
-        }
-    }
-);
+
+// 'hasCategoryCode.hasCategoryCode.codeValue': null のインデックスは作成されてうまくいかないので保留
+// schema.index(
+//     {
+//         'project.id': 1,
+//         'hasCategoryCode.hasCategoryCode.codeValue': 1
+//     },
+//     {
+//         name: 'uniqueHasCategoryCodeHasCategoryCodeCodeValue',
+//         unique: true,
+//         partialFilterExpression: {
+//             'project.id': { $exists: true },
+//             'hasCategoryCode.hasCategoryCode.codeValue': { $exists: true }
+//         }
+//     }
+// );
 
 export default mongoose.model('AccountTitle', schema)
     .on(
