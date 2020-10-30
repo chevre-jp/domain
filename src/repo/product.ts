@@ -170,4 +170,27 @@ export class MongoRepository {
         await this.productModel.findOneAndDelete({ _id: params.id })
             .exec();
     }
+
+    public async findAvailableChannel(params: {
+        project: { id: string };
+        serviceOuput: { typeOf: string };
+        typeOf: string;
+    }): Promise<factory.service.paymentService.IAvailableChannel> {
+        const paymentServices = await this.search({
+            limit: 1,
+            project: { id: { $eq: params.project.id } },
+            typeOf: { $eq: params.typeOf },
+            serviceOutput: { typeOf: { $eq: params.serviceOuput.typeOf } }
+        });
+        const paymentServiceSetting = <factory.service.paymentService.IService | undefined>paymentServices.shift();
+        if (paymentServiceSetting === undefined) {
+            throw new factory.errors.NotFound('PaymentService');
+        }
+        const availableChannel = paymentServiceSetting.availableChannel;
+        if (availableChannel === undefined) {
+            throw new factory.errors.NotFound('paymentService.availableChannel');
+        }
+
+        return availableChannel;
+    }
 }

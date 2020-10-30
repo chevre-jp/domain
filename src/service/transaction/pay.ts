@@ -46,6 +46,7 @@ export type IExportTasksOperation<T> = (repos: {
 export type ICheckOperation<T> = (repos: {
     action: ActionRepo;
     event: EventRepo;
+    product: ProductRepo;
     project: ProjectRepo;
     seller: SellerRepo;
     // movieTicket: MovieTicketRepo;
@@ -62,6 +63,7 @@ export function check(
     return async (repos: {
         action: ActionRepo;
         event: EventRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         // movieTicket: MovieTicketRepo;
@@ -248,6 +250,7 @@ function processAuthorizeMovieTicket(
 ) {
     return async (repos: {
         event: EventRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;

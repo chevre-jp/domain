@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - プロダクトインターフェースを決済サービスにも拡張
+- 外部決済サービス認証情報をproductsコレクションから取得するように調整
 
 ### Deprecated
 
