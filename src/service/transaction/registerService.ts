@@ -198,6 +198,7 @@ export function start(
                             accountType: accountType,
                             accountNumber: serviceOutput.identifier,
                             name: (typeof serviceOutput.name === 'string') ? serviceOutput.name : String(serviceOutput.typeOf),
+                            typeOf: (typeof serviceOutput.typeOf === 'string') ? serviceOutput.typeOf : undefined,
                             ...(typeof initialBalance === 'number') ? { initialBalance } : undefined
                         });
                     }
