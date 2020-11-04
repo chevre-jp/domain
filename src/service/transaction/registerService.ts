@@ -181,25 +181,8 @@ export function start(
         const serviceOutputs = transactionObject.map((o) => o.itemOffered?.serviceOutput);
 
         switch (product.typeOf) {
-            case factory.product.ProductType.PaymentCard:
-                // Pecorinoで口座開設
-                await Promise.all(serviceOutputs.map(async (serviceOutput) => {
-                    const initialBalance = serviceOutput?.amount?.value;
-
-                    if (typeof serviceOutput?.typeOf === 'string' && typeof serviceOutput.identifier === 'string') {
-                        await accountService.open({
-                            project: { typeOf: project.typeOf, id: project.id },
-                            accountType: serviceOutput.typeOf,
-                            accountNumber: serviceOutput.identifier,
-                            name: (typeof serviceOutput.name === 'string') ? serviceOutput.name : String(serviceOutput.typeOf),
-                            ...(typeof initialBalance === 'number') ? { initialBalance } : undefined
-                        });
-                    }
-                }));
-
-                break;
-
             case factory.product.ProductType.Account:
+            case factory.product.ProductType.PaymentCard:
                 // Pecorinoで口座開設
                 await Promise.all(serviceOutputs.map(async (serviceOutput) => {
                     const accountType = serviceOutput?.amount?.currency;
