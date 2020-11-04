@@ -4,6 +4,7 @@
 import * as factory from '../../../../factory';
 
 import { MongoRepository as EventRepo } from '../../../../repo/event';
+import { MongoRepository as ProductRepo } from '../../../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../../../repo/project';
 import { MongoRepository as SellerRepo } from '../../../../repo/seller';
 
@@ -14,6 +15,7 @@ export function validateMovieTicket(
 ) {
     return async (repos: {
         event: EventRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {

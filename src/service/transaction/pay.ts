@@ -8,6 +8,7 @@ import * as factory from '../../factory';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as EventRepo } from '../../repo/event';
+import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
 import { MongoRepository as TaskRepo } from '../../repo/task';
@@ -23,6 +24,7 @@ import { createPotentialActions } from './pay/potentialActions';
 
 export type IStartOperation<T> = (repos: {
     event: EventRepo;
+    product: ProductRepo;
     project: ProjectRepo;
     seller: SellerRepo;
     transaction: TransactionRepo;
@@ -44,6 +46,7 @@ export type IExportTasksOperation<T> = (repos: {
 export type ICheckOperation<T> = (repos: {
     action: ActionRepo;
     event: EventRepo;
+    product: ProductRepo;
     project: ProjectRepo;
     seller: SellerRepo;
     // movieTicket: MovieTicketRepo;
@@ -60,6 +63,7 @@ export function check(
     return async (repos: {
         action: ActionRepo;
         event: EventRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         // movieTicket: MovieTicketRepo;
@@ -96,6 +100,7 @@ export function start(
 ): IStartOperation<factory.transaction.pay.ITransaction> {
     return async (repos: {
         event: EventRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;
@@ -209,6 +214,7 @@ function processAuthorizeCreditCard(
 ) {
     return async (repos: {
         event: EventRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;
@@ -244,6 +250,7 @@ function processAuthorizeMovieTicket(
 ) {
     return async (repos: {
         event: EventRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;

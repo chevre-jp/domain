@@ -11,6 +11,7 @@ import * as createDebug from 'debug';
 import * as factory from '../../factory';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
+import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
 
@@ -30,6 +31,7 @@ export function authorize(
 ) {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
@@ -41,10 +43,11 @@ export function authorize(
             throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
         }
 
-        const availableChannel = await getGMOEndpoint({
+        const availableChannel = await repos.product.findAvailableChannel({
             project: params.project,
-            paymentMethodType: paymentMethodType
-        })(repos);
+            serviceOuput: { typeOf: paymentMethodType },
+            typeOf: factory.service.paymentService.PaymentServiceType.CreditCard
+        });
 
         const sellerId = params.recipient?.id;
         if (typeof sellerId !== 'string') {
@@ -193,6 +196,7 @@ function handleAuthorizeError(error: any) {
  */
 export function voidTransaction(params: factory.task.voidPayment.IData) {
     return async (repos: {
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
@@ -209,10 +213,11 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
             throw new factory.errors.ArgumentNull('object.paymentMethod.paymentMethodId');
         }
 
-        const availableChannel = await getGMOEndpoint({
+        const availableChannel = await repos.product.findAvailableChannel({
             project: transaction.project,
-            paymentMethodType: paymentMethodType
-        })(repos);
+            serviceOuput: { typeOf: paymentMethodType },
+            typeOf: factory.service.paymentService.PaymentServiceType.CreditCard
+        });
 
         const sellerId = transaction.recipient?.id;
         if (typeof sellerId !== 'string') {
@@ -259,6 +264,7 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
 export function payCreditCard(params: factory.task.pay.IData) {
     return async (repos: {
         action: ActionRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }): Promise<factory.action.trade.pay.IAction> => {
@@ -270,10 +276,11 @@ export function payCreditCard(params: factory.task.pay.IData) {
             throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
         }
 
-        const availableChannel = await getGMOEndpoint({
+        const availableChannel = await repos.product.findAvailableChannel({
             project: params.project,
-            paymentMethodType: paymentMethodType
-        })(repos);
+            serviceOuput: { typeOf: paymentMethodType },
+            typeOf: factory.service.paymentService.PaymentServiceType.CreditCard
+        });
 
         const seller = await repos.seller.findById({ id: String(params.recipient?.id) });
         const { shopId, shopPass } = getGMOInfoFromSeller({ paymentMethodType, seller: seller });
@@ -344,36 +351,13 @@ export function payCreditCard(params: factory.task.pay.IData) {
     };
 }
 
-function getGMOEndpoint(params: {
-    project: { id: string };
-    paymentMethodType: string;
-}) {
-    return async (repos: {
-        project: ProjectRepo;
-    }): Promise<factory.service.paymentService.IAvailableChannel> => {
-        const project = await repos.project.findById({ id: params.project.id });
-        const paymentServiceSetting = project.settings?.paymentServices?.find((s) => {
-            return s.typeOf === factory.service.paymentService.PaymentServiceType.CreditCard
-                && s.serviceOutput?.typeOf === params.paymentMethodType;
-        });
-        if (paymentServiceSetting === undefined) {
-            throw new factory.errors.NotFound('PaymentService');
-        }
-        const availableChannel = paymentServiceSetting.availableChannel;
-        if (availableChannel === undefined) {
-            throw new factory.errors.NotFound('paymentService.availableChannel');
-        }
-
-        return availableChannel;
-    };
-}
-
 /**
  * クレジットカード返金処理を実行する
  */
 export function refundCreditCard(params: factory.task.refund.IData) {
     return async (repos: {
         action: ActionRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         // task: TaskRepo;
@@ -399,10 +383,11 @@ export function refundCreditCard(params: factory.task.refund.IData) {
 
         const { shopId, shopPass } = getGMOInfoFromSeller({ paymentMethodType, seller: seller });
 
-        const availableChannel = await getGMOEndpoint({
+        const availableChannel = await repos.product.findAvailableChannel({
             project: params.project,
-            paymentMethodType: paymentMethodType
-        })(repos);
+            serviceOuput: { typeOf: paymentMethodType },
+            typeOf: factory.service.paymentService.PaymentServiceType.CreditCard
+        });
 
         const action = await repos.action.start(params);
         let alterTranResult: GMO.factory.credit.IAlterTranResult[] = [];

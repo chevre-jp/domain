@@ -4,6 +4,8 @@ import { modelName } from './mongoose/model/product';
 
 import * as factory from '../factory';
 
+export type IProduct = factory.product.IProduct | factory.service.paymentService.IService;
+
 /**
  * プロダクトリポジトリ
  */
@@ -116,7 +118,7 @@ export class MongoRepository {
         return andConditions;
     }
 
-    public async findById(params: { id: string }): Promise<factory.product.IProduct> {
+    public async findById(params: { id: string }): Promise<IProduct> {
         const doc = await this.productModel.findOne(
             {
                 _id: params.id
@@ -135,7 +137,7 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    public async search(params: factory.product.ISearchConditions): Promise<factory.product.IProduct[]> {
+    public async search(params: factory.product.ISearchConditions): Promise<IProduct[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.productModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
@@ -167,5 +169,28 @@ export class MongoRepository {
     public async deleteById(params: { id: string }) {
         await this.productModel.findOneAndDelete({ _id: params.id })
             .exec();
+    }
+
+    public async findAvailableChannel(params: {
+        project: { id: string };
+        serviceOuput: { typeOf: string };
+        typeOf: string;
+    }): Promise<factory.service.paymentService.IAvailableChannel> {
+        const paymentServices = await this.search({
+            limit: 1,
+            project: { id: { $eq: params.project.id } },
+            typeOf: { $eq: params.typeOf },
+            serviceOutput: { typeOf: { $eq: params.serviceOuput.typeOf } }
+        });
+        const paymentServiceSetting = <factory.service.paymentService.IService | undefined>paymentServices.shift();
+        if (paymentServiceSetting === undefined) {
+            throw new factory.errors.NotFound('PaymentService');
+        }
+        const availableChannel = paymentServiceSetting.availableChannel;
+        if (availableChannel === undefined) {
+            throw new factory.errors.NotFound('paymentService.availableChannel');
+        }
+
+        return availableChannel;
     }
 }

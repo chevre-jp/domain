@@ -18,6 +18,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.31.0 - 2020-11-04
+
+### Changed
+
+- プロダクトインターフェースを決済サービスにも拡張
+- 外部決済サービス認証情報をproductsコレクションから取得するように調整
+- ペイメントカードの通貨をPecorinoに反映するように調整
+- update @pecorino/api-nodejs-client
+
 ## v15.30.1 - 2020-10-29
 
 ### Changed

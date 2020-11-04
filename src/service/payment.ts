@@ -3,6 +3,7 @@
  */
 import { MongoRepository as ActionRepo } from '../repo/action';
 import { MongoRepository as EventRepo } from '../repo/event';
+import { MongoRepository as ProductRepo } from '../repo/product';
 import { MongoRepository as ProjectRepo } from '../repo/project';
 import { MongoRepository as SellerRepo } from '../repo/seller';
 import { MongoRepository as TaskRepo } from '../repo/task';
@@ -22,6 +23,7 @@ export function pay(params: factory.task.pay.IData) {
     return async (repos: {
         action: ActionRepo;
         event: EventRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         task: TaskRepo;
@@ -49,6 +51,7 @@ export function pay(params: factory.task.pay.IData) {
 
 export function voidPayment(params: factory.task.voidPayment.IData) {
     return async (repos: {
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
@@ -80,6 +83,7 @@ export function refund(params: factory.task.refund.IData) {
     return async (repos: {
         action: ActionRepo;
         // event: EventRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;

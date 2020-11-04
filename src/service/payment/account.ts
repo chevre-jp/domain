@@ -32,7 +32,7 @@ export function authorize(
     return async (repos: {
         project: ProjectRepo;
         seller: SellerRepo;
-    }) => {
+    }): Promise<IPendingTransaction> => {
         const project = await repos.project.findById({ id: params.project.id });
 
         // const paymentMethodType = params.object.paymentMethod?.typeOf;

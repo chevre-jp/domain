@@ -74,7 +74,7 @@ export function start(
         const serviceOutputType = fixServiceOutput(params);
 
         // プロダクトをfix
-        const products = await repos.product.search({
+        const products = <factory.product.IProduct[]>await repos.product.search({
             limit: 1,
             project: { id: { $eq: params.project.id } },
             serviceOutput: { typeOf: { $eq: serviceOutputType } }

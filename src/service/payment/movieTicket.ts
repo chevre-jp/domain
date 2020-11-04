@@ -6,6 +6,7 @@ import * as moment from 'moment-timezone';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as EventRepo } from '../../repo/event';
+import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
 
@@ -25,6 +26,7 @@ export interface ICheckResult {
 export type ICheckOperation<T> = (repos: {
     action: ActionRepo;
     event: EventRepo;
+    product: ProductRepo;
     project: ProjectRepo;
     seller: SellerRepo;
     // movieTicket: MovieTicketRepo;
@@ -41,6 +43,7 @@ export function checkMovieTicket(
     return async (repos: {
         action: ActionRepo;
         event: EventRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         // movieTicket: MovieTicketRepo;
@@ -160,6 +163,7 @@ export function checkByIdentifier(params: {
 }) {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
+        product: ProductRepo;
         project: ProjectRepo;
     }): Promise<ICheckResult> => {
 
@@ -173,10 +177,11 @@ export function checkByIdentifier(params: {
             throw new factory.errors.ArgumentNull('movieTickets.typeOf');
         }
 
-        const availableChannel = await getMvtkReserveEndpoint({
+        const availableChannel = await repos.product.findAvailableChannel({
             project: params.screeningEvent.project,
-            paymentMethodType: paymentMethodType
-        })(repos);
+            serviceOuput: { typeOf: paymentMethodType },
+            typeOf: factory.service.paymentService.PaymentServiceType.MovieTicket
+        });
 
         const movieTicketIdentifiers: string[] = [];
         const knyknrNoInfoIn: mvtkapi.mvtk.services.auth.purchaseNumberAuth.IKnyknrNoInfoIn[] = [];
@@ -344,10 +349,12 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
 /**
  * ムビチケ着券
  */
+// tslint:disable-next-line:max-func-body-length
 export function payMovieTicket(params: factory.task.pay.IData) {
     return async (repos: {
         action: ActionRepo;
         event: EventRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
@@ -382,10 +389,11 @@ export function payMovieTicket(params: factory.task.pay.IData) {
                 []
             );
 
-            const availableChannel = await getMvtkReserveEndpoint({
+            const availableChannel = await repos.product.findAvailableChannel({
                 project: params.project,
-                paymentMethodType: paymentMethodType
-            })(repos);
+                serviceOuput: { typeOf: paymentMethodType },
+                typeOf: factory.service.paymentService.PaymentServiceType.MovieTicket
+            });
 
             const mvtkReserveAuthClient = new mvtkapi.auth.ClientCredentials({
                 domain: String(availableChannel.credentials?.authorizeServerDomain),
@@ -450,6 +458,7 @@ export function payMovieTicket(params: factory.task.pay.IData) {
 export function refundMovieTicket(params: factory.task.refund.IData) {
     return async (repos: {
         action: ActionRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
@@ -469,10 +478,11 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
             throw new factory.errors.NotFound('PayAction');
         }
 
-        const availableChannel = await getMvtkReserveEndpoint({
+        const availableChannel = await repos.product.findAvailableChannel({
             project: params.project,
-            paymentMethodType: paymentMethodType
-        })(repos);
+            serviceOuput: { typeOf: paymentMethodType },
+            typeOf: factory.service.paymentService.PaymentServiceType.MovieTicket
+        });
 
         const mvtkReserveAuthClient = new mvtkapi.auth.ClientCredentials({
             domain: String(availableChannel.credentials?.authorizeServerDomain),
@@ -532,29 +542,5 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
 
         // 潜在アクション
         // await onRefund(params)({ project: repos.project, task: repos.task });
-    };
-}
-
-function getMvtkReserveEndpoint(params: {
-    project: { id: string };
-    paymentMethodType: string;
-}) {
-    return async (repos: {
-        project: ProjectRepo;
-    }): Promise<factory.service.paymentService.IAvailableChannel> => {
-        const project = await repos.project.findById({ id: params.project.id });
-        const paymentServiceSetting = project.settings?.paymentServices?.find((s) => {
-            return s.typeOf === factory.service.paymentService.PaymentServiceType.MovieTicket
-                && s.serviceOutput?.typeOf === params.paymentMethodType;
-        });
-        if (paymentServiceSetting === undefined) {
-            throw new factory.errors.NotFound('PaymentService');
-        }
-        const availableChannel = paymentServiceSetting.availableChannel;
-        if (availableChannel === undefined) {
-            throw new factory.errors.NotFound('paymentService.availableChannel');
-        }
-
-        return availableChannel;
     };
 }
