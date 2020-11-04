@@ -184,25 +184,34 @@ export function start(
             case factory.product.ProductType.Account:
             case factory.product.ProductType.PaymentCard:
                 // Pecorinoで口座開設
-                await Promise.all(serviceOutputs.map(async (serviceOutput) => {
+                const openAccountParams = serviceOutputs.map((serviceOutput) => {
+                    const serviceOutputIdentifier = serviceOutput?.identifier;
+                    const serviceOutputName = serviceOutput?.name;
+                    const serviceOutputTypeOf = serviceOutput?.typeOf;
                     const accountType = serviceOutput?.amount?.currency;
                     const initialBalance = serviceOutput?.amount?.value;
 
+                    if (typeof serviceOutputIdentifier !== 'string') {
+                        throw new factory.errors.ServiceUnavailable('serviceOutput identifier undefined');
+                    }
+                    if (typeof serviceOutputTypeOf !== 'string') {
+                        throw new factory.errors.ServiceUnavailable('Account typeOf undefined');
+                    }
                     if (typeof accountType !== 'string') {
                         throw new factory.errors.ServiceUnavailable('Account currency undefined');
                     }
 
-                    if (typeof serviceOutput?.typeOf === 'string' && typeof serviceOutput.identifier === 'string') {
-                        await accountService.open({
-                            project: { typeOf: project.typeOf, id: project.id },
-                            accountType: accountType,
-                            accountNumber: serviceOutput.identifier,
-                            name: (typeof serviceOutput.name === 'string') ? serviceOutput.name : String(serviceOutput.typeOf),
-                            typeOf: (typeof serviceOutput.typeOf === 'string') ? serviceOutput.typeOf : undefined,
-                            ...(typeof initialBalance === 'number') ? { initialBalance } : undefined
-                        });
-                    }
-                }));
+                    return {
+                        project: { typeOf: project.typeOf, id: project.id },
+                        accountType: accountType,
+                        accountNumber: serviceOutputIdentifier,
+                        name: (typeof serviceOutputName === 'string') ? serviceOutputName : serviceOutputTypeOf,
+                        typeOf: serviceOutputTypeOf,
+                        ...(typeof initialBalance === 'number') ? { initialBalance } : undefined
+                    };
+                });
+
+                await accountService.open(openAccountParams);
 
                 break;
 

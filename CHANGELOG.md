@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - プロダクトインターフェースを決済サービスにも拡張
 - 外部決済サービス認証情報をproductsコレクションから取得するように調整
 - ペイメントカードの通貨をPecorinoに反映するように調整
+- update @pecorino/api-nodejs-client
 
 ### Deprecated
 
