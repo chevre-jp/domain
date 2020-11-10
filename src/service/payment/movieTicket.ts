@@ -380,20 +380,35 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
     };
 }
 
+export type IPayAction = factory.action.IAction<factory.action.IAttributes<factory.actionType.PayAction, any, any>>;
+
 /**
  * ムビチケ着券
  */
-// tslint:disable-next-line:max-func-body-length
 export function payMovieTicket(params: factory.task.pay.IData) {
+    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         action: ActionRepo;
         event: EventRepo;
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
-    }): Promise<factory.action.IAction<factory.action.IAttributes<factory.actionType.PayAction, any, any>>> => {
+    }): Promise<IPayAction> => {
         const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
+
+        const payActions = await repos.action.search<factory.actionType.PayAction>({
+            limit: 1,
+            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
+            project: { id: { $eq: params.project.id } },
+            typeOf: { $eq: factory.actionType.PayAction },
+            object: { paymentMethod: { paymentMethodId: { $eq: paymentMethodId } } }
+        });
+        const payAction = payActions.shift();
+        // すでに決済済であれば、何もしない(決済開始時の着券など)
+        if (payAction !== undefined) {
+            return payAction;
+        }
 
         // アクション開始
         const action = await repos.action.start(params);
