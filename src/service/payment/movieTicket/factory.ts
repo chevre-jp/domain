@@ -71,7 +71,10 @@ export function createSeatInfoSyncIn(params: {
         yykDvcTyp: mvtkapi.mvtk.services.seat.seatInfoSync.ReserveDeviceType.EntertainerSitePC, // 予約デバイス区分
         trkshFlg: mvtkapi.mvtk.services.seat.seatInfoSync.DeleteFlag.False, // 取消フラグ
         kgygishSstmZskyykNo: params.paymentMethodId, // 興行会社システム座席予約番号
-        kgygishUsrZskyykNo: String(params.order?.confirmationNumber), // 興行会社ユーザー座席予約番号
+        // 興行会社ユーザー座席予約番号
+        kgygishUsrZskyykNo: (typeof params.order?.confirmationNumber === 'string')
+            ? String(params.order.confirmationNumber) // 注文の確認番号の場合
+            : String(params.order?.transactionNumber), // 決済取引番号の場合
         jeiDt: moment(event.startDate)
             .tz('Asia/Tokyo')
             .format('YYYY/MM/DD HH:mm:ss'), // 上映日時
