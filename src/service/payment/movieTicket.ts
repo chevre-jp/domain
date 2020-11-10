@@ -357,7 +357,7 @@ export function payMovieTicket(params: factory.task.pay.IData) {
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
-    }) => {
+    }): Promise<factory.action.IAction<factory.action.IAttributes<factory.actionType.PayAction, any, any>>> => {
         const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
@@ -448,7 +448,8 @@ export function payMovieTicket(params: factory.task.pay.IData) {
             seatInfoSyncIn: seatInfoSyncIn,
             seatInfoSyncResult: seatInfoSyncResult
         };
-        await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+
+        return repos.action.complete<factory.actionType.PayAction>({ typeOf: action.typeOf, id: action.id, result: actionResult });
     };
 }
 

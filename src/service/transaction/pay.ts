@@ -22,7 +22,10 @@ import { createStartParams } from './pay/factory';
 import { validateMovieTicket } from './pay/movieTicket/validation';
 import { createPotentialActions } from './pay/potentialActions';
 
+const USE_MOVIETICKET_AUTHORIZE = process.env.USE_MOVIETICKET_AUTHORIZE === '1';
+
 export type IStartOperation<T> = (repos: {
+    action: ActionRepo;
     event: EventRepo;
     product: ProductRepo;
     project: ProjectRepo;
@@ -99,6 +102,7 @@ export function start(
     params: factory.transaction.pay.IStartParamsWithoutDetail
 ): IStartOperation<factory.transaction.pay.ITransaction> {
     return async (repos: {
+        action: ActionRepo;
         event: EventRepo;
         product: ProductRepo;
         project: ProjectRepo;
@@ -246,9 +250,10 @@ function processAuthorizeCreditCard(
 
 function processAuthorizeMovieTicket(
     params: factory.transaction.pay.IStartParamsWithoutDetail,
-    transaction: { id: string }
+    transaction: factory.transaction.pay.ITransaction
 ) {
     return async (repos: {
+        action: ActionRepo;
         event: EventRepo;
         product: ProductRepo;
         project: ProjectRepo;
@@ -258,11 +263,54 @@ function processAuthorizeMovieTicket(
         // ムビチケ決済の場合、認証
         const checkResult = await validateMovieTicket(params)(repos);
 
+        let payAction: factory.action.IAction<factory.action.IAttributes<factory.actionType.PayAction, any, any>> | undefined;
+
+        if (USE_MOVIETICKET_AUTHORIZE) {
+            const paymentMethod = transaction.object.paymentMethod;
+            const paymentMethodType = String(paymentMethod?.typeOf);
+            const additionalProperty = paymentMethod?.additionalProperty;
+            const paymentMethodId: string = (typeof paymentMethod?.paymentMethodId === 'string')
+                ? paymentMethod?.paymentMethodId
+                : transaction.id;
+            const paymentMethodName: string = (typeof paymentMethod?.name === 'string') ? paymentMethod?.name : paymentMethodType;
+
+            const payObject: factory.action.trade.pay.IPaymentService = {
+                typeOf: factory.service.paymentService.PaymentServiceType.MovieTicket,
+                paymentMethod: {
+                    accountId: paymentMethod?.accountId,
+                    additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : [],
+                    name: paymentMethodName,
+                    paymentMethodId: paymentMethodId,
+                    totalPaymentDue: {
+                        typeOf: 'MonetaryAmount',
+                        currency: factory.unitCode.C62,
+                        value: paymentMethod?.movieTickets?.length
+                    },
+                    typeOf: paymentMethodType
+                },
+                movieTickets: paymentMethod?.movieTickets
+            };
+
+            const payActionAttributes: factory.action.trade.pay.IAttributes = {
+                project: transaction.project,
+                typeOf: <factory.actionType.PayAction>factory.actionType.PayAction,
+                object: [payObject],
+                agent: transaction.agent,
+                recipient: transaction.recipient,
+                ...((<any>params).purpose !== undefined)
+                    ? { purpose: (<any>params).purpose }
+                    : { purpose: { typeOf: transaction.typeOf, transactionNumber: transaction.transactionNumber, id: transaction.id } }
+            };
+
+            payAction = await MovieTicketPayment.payMovieTicket(payActionAttributes)(repos);
+        }
+
         return repos.transaction.transactionModel.findByIdAndUpdate(
             { _id: transaction.id },
             {
                 'object.paymentMethod.accountId': checkResult?.movieTickets[0].identifier,
-                'object.checkResult': checkResult
+                'object.checkResult': checkResult,
+                ...(payAction !== undefined) ? { payAction } : undefined
             },
             { new: true }
         )

@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- USE_MOVIETICKET_AUTHORIZE設定を追加
+
 ### Changed
 
 ### Deprecated
