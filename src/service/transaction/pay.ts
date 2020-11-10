@@ -310,7 +310,7 @@ function processAuthorizeMovieTicket(
             {
                 'object.paymentMethod.accountId': checkResult?.movieTickets[0].identifier,
                 'object.checkResult': checkResult,
-                ...(payAction !== undefined) ? { payAction } : undefined
+                ...(payAction !== undefined) ? { 'object.payAction': payAction } : undefined
             },
             { new: true }
         )

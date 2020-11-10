@@ -322,7 +322,9 @@ export function checkByIdentifier(params: {
 }
 
 export function voidTransaction(params: factory.task.voidPayment.IData) {
-    return async (_: {
+    return async (repos: {
+        action: ActionRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
@@ -338,10 +340,42 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
             throw new factory.errors.ArgumentNull('object.paymentMethod.paymentMethodId');
         }
 
-        try {
-            // とりあえず、何もしない
-        } catch (error) {
-            // no op
+        // 決済開始時に着券していれば、取消
+        // const payAction = (<any>transaction.object).payAction;
+        const payActions = await repos.action.search<factory.actionType.PayAction>({
+            limit: 1,
+            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
+            project: { id: { $eq: transaction.project.id } },
+            typeOf: { $eq: factory.actionType.PayAction },
+            object: { paymentMethod: { paymentMethodId: { $eq: paymentMethodId } } }
+        });
+        const payAction = payActions.shift();
+        if (payAction !== undefined) {
+            let refundAction: factory.action.trade.refund.IAttributes;
+
+            refundAction = {
+                project: transaction.project,
+                typeOf: <factory.actionType.RefundAction>factory.actionType.RefundAction,
+                object: [{
+                    typeOf: transaction.object.typeOf,
+                    paymentMethod: {
+                        paymentMethodId: paymentMethodId,
+                        typeOf: paymentMethodType,
+                        name: (typeof transaction.object.paymentMethod?.name === 'string')
+                            ? transaction.object.paymentMethod.name
+                            : paymentMethodType,
+                        additionalProperty: []
+                        // additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : []
+                    }
+                }],
+                agent: transaction.agent,
+                recipient: transaction.recipient,
+                ...(payAction?.purpose !== undefined)
+                    ? { purpose: payAction.purpose }
+                    : { purpose: { typeOf: transaction.typeOf, transactionNumber: transaction.transactionNumber, id: transaction.id } }
+            };
+
+            await refundMovieTicket(refundAction)(repos);
         }
     };
 }
