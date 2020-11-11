@@ -77,7 +77,8 @@ async function main() {
                     }
                 ]
             }
-        }
+        },
+        purpose: { confirmationNumber: '12345', typeOf: 'Order' }
     })({
         action: actionRepo,
         product: productRepo,

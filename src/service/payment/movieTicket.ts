@@ -342,14 +342,7 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
 
         // 決済開始時に着券していれば、取消
         // const payAction = (<any>transaction.object).payAction;
-        const payActions = await repos.action.search<factory.actionType.PayAction>({
-            limit: 1,
-            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
-            project: { id: { $eq: transaction.project.id } },
-            typeOf: { $eq: factory.actionType.PayAction },
-            object: { paymentMethod: { paymentMethodId: { $eq: paymentMethodId } } }
-        });
-        const payAction = payActions.shift();
+        const payAction = await findPayAction({ project: { id: transaction.project.id }, paymentMethodId })(repos);
         if (payAction !== undefined) {
             let refundAction: factory.action.trade.refund.IAttributes;
 
@@ -397,14 +390,7 @@ export function payMovieTicket(params: factory.task.pay.IData) {
         const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
-        const payActions = await repos.action.search<factory.actionType.PayAction>({
-            limit: 1,
-            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
-            project: { id: { $eq: params.project.id } },
-            typeOf: { $eq: factory.actionType.PayAction },
-            object: { paymentMethod: { paymentMethodId: { $eq: paymentMethodId } } }
-        });
-        const payAction = payActions.shift();
+        const payAction = await findPayAction({ project: { id: params.project.id }, paymentMethodId })(repos);
         // すでに決済済であれば、何もしない(決済開始時の着券など)
         if (payAction !== undefined) {
             return payAction;
@@ -462,7 +448,7 @@ export function payMovieTicket(params: factory.task.pay.IData) {
                 paymentMethodId: paymentMethodId,
                 movieTickets: movieTickets,
                 event: event,
-                order: params.purpose,
+                purpose: params.purpose,
                 seller: seller
             });
 
@@ -516,14 +502,7 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
         // 本アクションに対応するPayActionを取り出す
-        const payActions = await repos.action.search<factory.actionType.PayAction>({
-            limit: 1,
-            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
-            project: { id: { $eq: params.project.id } },
-            typeOf: { $eq: factory.actionType.PayAction },
-            object: { paymentMethod: { paymentMethodId: { $eq: paymentMethodId } } }
-        });
-        const payAction = payActions.shift();
+        const payAction = await findPayAction({ project: { id: params.project.id }, paymentMethodId })(repos);
         if (payAction === undefined) {
             throw new factory.errors.NotFound('PayAction');
         }
@@ -592,5 +571,21 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
 
         // 潜在アクション
         // await onRefund(params)({ project: repos.project, task: repos.task });
+    };
+}
+
+function findPayAction(params: { project: { id: string }; paymentMethodId: string }) {
+    return async (repos: {
+        action: ActionRepo;
+    }): Promise<IPayAction | undefined> => {
+        const payActions = await repos.action.search<factory.actionType.PayAction>({
+            limit: 1,
+            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
+            project: { id: { $eq: params.project.id } },
+            typeOf: { $eq: factory.actionType.PayAction },
+            object: { paymentMethod: { paymentMethodId: { $eq: params.paymentMethodId } } }
+        });
+
+        return payActions.shift();
     };
 }

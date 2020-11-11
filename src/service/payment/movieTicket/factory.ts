@@ -8,7 +8,7 @@ export function createSeatInfoSyncIn(params: {
     paymentMethodId: string;
     movieTickets: factory.paymentMethod.paymentCard.movieTicket.IMovieTicket[];
     event: factory.event.screeningEvent.IEvent;
-    order: any;
+    purpose: factory.action.trade.pay.IPurpose;
     seller: factory.seller.ISeller;
 }): mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncIn {
     const event = params.event;
@@ -72,9 +72,9 @@ export function createSeatInfoSyncIn(params: {
         trkshFlg: mvtkapi.mvtk.services.seat.seatInfoSync.DeleteFlag.False, // 取消フラグ
         kgygishSstmZskyykNo: params.paymentMethodId, // 興行会社システム座席予約番号
         // 興行会社ユーザー座席予約番号
-        kgygishUsrZskyykNo: (typeof params.order?.confirmationNumber === 'string')
-            ? String(params.order.confirmationNumber) // 注文の確認番号の場合
-            : String(params.order?.transactionNumber), // 決済取引番号の場合
+        kgygishUsrZskyykNo: (typeof (<factory.action.trade.pay.IOrderAsPayPurpose>params.purpose)?.confirmationNumber === 'string')
+            ? String((<factory.action.trade.pay.IOrderAsPayPurpose>params.purpose).confirmationNumber) // 注文の確認番号の場合
+            : String((<factory.action.trade.pay.ITransactionAsPayPurpose>params.purpose)?.transactionNumber), // 決済取引番号の場合
         jeiDt: moment(event.startDate)
             .tz('Asia/Tokyo')
             .format('YYYY/MM/DD HH:mm:ss'), // 上映日時

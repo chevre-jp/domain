@@ -297,8 +297,8 @@ function processAuthorizeMovieTicket(
                 object: [payObject],
                 agent: transaction.agent,
                 recipient: transaction.recipient,
-                ...((<any>params).purpose !== undefined)
-                    ? { purpose: (<any>params).purpose }
+                ...(params.purpose !== undefined)
+                    ? { purpose: params.purpose }
                     : { purpose: { typeOf: transaction.typeOf, transactionNumber: transaction.transactionNumber, id: transaction.id } }
             };
 
