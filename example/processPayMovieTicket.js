@@ -14,6 +14,8 @@ async function main() {
     });
     await mongoose.connect(process.env.MONGOLAB_URI, { autoIndex: false });
 
+    const actionRepo = new domain.repository.Action(mongoose.connection);
+    const productRepo = new domain.repository.Product(mongoose.connection);
     const projectRepo = new domain.repository.Project(mongoose.connection);
     const eventRepo = new domain.repository.Event(mongoose.connection);
     const sellerRepo = new domain.repository.Seller(mongoose.connection);
@@ -75,8 +77,11 @@ async function main() {
                     }
                 ]
             }
-        }
+        },
+        purpose: { confirmationNumber: '12345', typeOf: 'Order' }
     })({
+        action: actionRepo,
+        product: productRepo,
         event: eventRepo,
         project: projectRepo,
         seller: sellerRepo,
@@ -84,6 +89,14 @@ async function main() {
         transactionNumber: transactionNumberRepo
     });
     console.log('transaction started', transaction);
+
+    await domain.service.transaction.pay.cancel({
+        transactionNumber: transaction.transactionNumber,
+    })({
+        transaction: transactionRepo
+    });
+
+    return;
 
     await domain.service.transaction.pay.confirm({
         transactionNumber: transaction.transactionNumber,

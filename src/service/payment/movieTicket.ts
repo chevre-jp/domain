@@ -322,7 +322,9 @@ export function checkByIdentifier(params: {
 }
 
 export function voidTransaction(params: factory.task.voidPayment.IData) {
-    return async (_: {
+    return async (repos: {
+        action: ActionRepo;
+        product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
@@ -338,28 +340,61 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
             throw new factory.errors.ArgumentNull('object.paymentMethod.paymentMethodId');
         }
 
-        try {
-            // とりあえず、何もしない
-        } catch (error) {
-            // no op
+        // 決済開始時に着券していれば、取消
+        // const payAction = (<any>transaction.object).payAction;
+        const payAction = await findPayAction({ project: { id: transaction.project.id }, paymentMethodId })(repos);
+        if (payAction !== undefined) {
+            let refundAction: factory.action.trade.refund.IAttributes;
+
+            refundAction = {
+                project: transaction.project,
+                typeOf: <factory.actionType.RefundAction>factory.actionType.RefundAction,
+                object: [{
+                    typeOf: transaction.object.typeOf,
+                    paymentMethod: {
+                        paymentMethodId: paymentMethodId,
+                        typeOf: paymentMethodType,
+                        name: (typeof transaction.object.paymentMethod?.name === 'string')
+                            ? transaction.object.paymentMethod.name
+                            : paymentMethodType,
+                        additionalProperty: []
+                        // additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : []
+                    }
+                }],
+                agent: transaction.agent,
+                recipient: transaction.recipient,
+                ...(payAction?.purpose !== undefined)
+                    ? { purpose: payAction.purpose }
+                    : { purpose: { typeOf: transaction.typeOf, transactionNumber: transaction.transactionNumber, id: transaction.id } }
+            };
+
+            await refundMovieTicket(refundAction)(repos);
         }
     };
 }
 
+export type IPayAction = factory.action.IAction<factory.action.IAttributes<factory.actionType.PayAction, any, any>>;
+
 /**
  * ムビチケ着券
  */
-// tslint:disable-next-line:max-func-body-length
 export function payMovieTicket(params: factory.task.pay.IData) {
+    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         action: ActionRepo;
         event: EventRepo;
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
-    }) => {
+    }): Promise<IPayAction> => {
         const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
+
+        const payAction = await findPayAction({ project: { id: params.project.id }, paymentMethodId })(repos);
+        // すでに決済済であれば、何もしない(決済開始時の着券など)
+        if (payAction !== undefined) {
+            return payAction;
+        }
 
         // アクション開始
         const action = await repos.action.start(params);
@@ -413,7 +448,7 @@ export function payMovieTicket(params: factory.task.pay.IData) {
                 paymentMethodId: paymentMethodId,
                 movieTickets: movieTickets,
                 event: event,
-                order: params.purpose,
+                purpose: params.purpose,
                 seller: seller
             });
 
@@ -448,7 +483,8 @@ export function payMovieTicket(params: factory.task.pay.IData) {
             seatInfoSyncIn: seatInfoSyncIn,
             seatInfoSyncResult: seatInfoSyncResult
         };
-        await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+
+        return repos.action.complete<factory.actionType.PayAction>({ typeOf: action.typeOf, id: action.id, result: actionResult });
     };
 }
 
@@ -466,14 +502,7 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
         // 本アクションに対応するPayActionを取り出す
-        const payActions = await repos.action.search<factory.actionType.PayAction>({
-            limit: 1,
-            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
-            project: { id: { $eq: params.project.id } },
-            typeOf: { $eq: factory.actionType.PayAction },
-            object: { paymentMethod: { paymentMethodId: { $eq: paymentMethodId } } }
-        });
-        const payAction = payActions.shift();
+        const payAction = await findPayAction({ project: { id: params.project.id }, paymentMethodId })(repos);
         if (payAction === undefined) {
             throw new factory.errors.NotFound('PayAction');
         }
@@ -542,5 +571,21 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
 
         // 潜在アクション
         // await onRefund(params)({ project: repos.project, task: repos.task });
+    };
+}
+
+function findPayAction(params: { project: { id: string }; paymentMethodId: string }) {
+    return async (repos: {
+        action: ActionRepo;
+    }): Promise<IPayAction | undefined> => {
+        const payActions = await repos.action.search<factory.actionType.PayAction>({
+            limit: 1,
+            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
+            project: { id: { $eq: params.project.id } },
+            typeOf: { $eq: factory.actionType.PayAction },
+            object: { paymentMethod: { paymentMethodId: { $eq: params.paymentMethodId } } }
+        });
+
+        return payActions.shift();
     };
 }

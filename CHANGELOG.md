@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.32.0 - 2020-11-11
+
+### Added
+
+- USE_MOVIETICKET_AUTHORIZE設定を追加
+
 ## v15.31.0 - 2020-11-04
 
 ### Changed

@@ -51,6 +51,7 @@ export function pay(params: factory.task.pay.IData) {
 
 export function voidPayment(params: factory.task.voidPayment.IData) {
     return async (repos: {
+        action: ActionRepo;
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
