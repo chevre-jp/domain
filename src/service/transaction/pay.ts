@@ -136,6 +136,7 @@ export function start(
 
             switch (paymentServiceType) {
                 case factory.service.paymentService.PaymentServiceType.Account:
+                case factory.service.paymentService.PaymentServiceType.PaymentCard:
                     transaction = await processAuthorizeAccount(params, transaction)(repos);
 
                     break;
@@ -147,11 +148,6 @@ export function start(
 
                 case factory.service.paymentService.PaymentServiceType.MovieTicket:
                     transaction = await processAuthorizeMovieTicket(params, transaction)(repos);
-
-                    break;
-
-                case factory.service.paymentService.PaymentServiceType.PaymentCard:
-                    transaction = await processAuthorizeAccount(params, transaction)(repos);
 
                     break;
 
