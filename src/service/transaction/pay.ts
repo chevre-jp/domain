@@ -150,6 +150,11 @@ export function start(
 
                     break;
 
+                case factory.service.paymentService.PaymentServiceType.PaymentCard:
+                    transaction = await processAuthorizeAccount(params, transaction)(repos);
+
+                    break;
+
                 default:
                     throw new factory.errors.NotImplemented(`Payment service '${paymentServiceType}' not implemented`);
             }
