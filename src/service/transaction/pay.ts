@@ -3,7 +3,6 @@
  */
 import * as moment from 'moment';
 
-import { handleMvtkReserveError } from '../../errorHandler';
 import * as factory from '../../factory';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
@@ -19,10 +18,7 @@ import * as CreditCardPayment from '../payment/creditCard';
 import * as MovieTicketPayment from '../payment/movieTicket';
 import { validateAccount } from './pay/account/validation';
 import { createStartParams } from './pay/factory';
-import { validateMovieTicket } from './pay/movieTicket/validation';
 import { createPotentialActions } from './pay/potentialActions';
-
-const USE_MOVIETICKET_AUTHORIZE = process.env.USE_MOVIETICKET_AUTHORIZE === '1';
 
 export type IStartOperation<T> = (repos: {
     action: ActionRepo;
@@ -52,8 +48,6 @@ export type ICheckOperation<T> = (repos: {
     product: ProductRepo;
     project: ProjectRepo;
     seller: SellerRepo;
-    // movieTicket: MovieTicketRepo;
-    // paymentMethod: PaymentMethodRepo;
 }) => Promise<T>;
 
 /**
@@ -62,7 +56,6 @@ export type ICheckOperation<T> = (repos: {
 export function check(
     params: factory.action.check.paymentMethod.movieTicket.IAttributes
 ): ICheckOperation<factory.action.check.paymentMethod.movieTicket.IAction> {
-    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         action: ActionRepo;
         event: EventRepo;
@@ -98,9 +91,7 @@ export function check(
 /**
  * 取引開始
  */
-export function start(
-    params: factory.transaction.pay.IStartParamsWithoutDetail
-): IStartOperation<factory.transaction.pay.ITransaction> {
+export function start(params: factory.transaction.pay.IStartParamsWithoutDetail): IStartOperation<factory.transaction.pay.ITransaction> {
     return async (repos: {
         action: ActionRepo;
         event: EventRepo;
@@ -117,9 +108,9 @@ export function start(
             throw new factory.errors.ArgumentNull('object.paymentMethod.amount');
         }
 
-        const transactionNumber: string | undefined = params.transactionNumber;
+        const transactionNumber = params.transactionNumber;
         if (typeof transactionNumber !== 'string' || transactionNumber.length === 0) {
-            throw new factory.errors.ArgumentNull('object.transactionNumber');
+            throw new factory.errors.ArgumentNull('transactionNumber');
         }
 
         // 取引開始
@@ -131,37 +122,27 @@ export function start(
             amount
         });
 
-        try {
-            transaction = await repos.transaction.start<factory.transactionType.Pay>(startParams);
+        transaction = await repos.transaction.start<factory.transactionType.Pay>(startParams);
 
-            switch (paymentServiceType) {
-                case factory.service.paymentService.PaymentServiceType.Account:
-                    transaction = await processAuthorizeAccount(params, transaction)(repos);
+        switch (paymentServiceType) {
+            case factory.service.paymentService.PaymentServiceType.Account:
+            case factory.service.paymentService.PaymentServiceType.PaymentCard:
+                transaction = await processAuthorizeAccount(params, transaction)(repos);
 
-                    break;
+                break;
 
-                case factory.service.paymentService.PaymentServiceType.CreditCard:
-                    transaction = await processAuthorizeCreditCard(params, transaction)(repos);
+            case factory.service.paymentService.PaymentServiceType.CreditCard:
+                transaction = await processAuthorizeCreditCard(params, transaction)(repos);
 
-                    break;
+                break;
 
-                case factory.service.paymentService.PaymentServiceType.MovieTicket:
-                    transaction = await processAuthorizeMovieTicket(params, transaction)(repos);
+            case factory.service.paymentService.PaymentServiceType.MovieTicket:
+                transaction = await processAuthorizeMovieTicket(params, transaction)(repos);
 
-                    break;
+                break;
 
-                default:
-                    throw new factory.errors.NotImplemented(`Payment service '${paymentServiceType}' not implemented`);
-            }
-        } catch (error) {
-            // tslint:disable-next-line:no-single-line-block-comment
-            /* istanbul ignore next */
-            if (error.name === 'MongoError') {
-                // no op
-            }
-
-            error = handleMvtkReserveError(error);
-            throw error;
+            default:
+                throw new factory.errors.NotImplemented(`Payment service '${paymentServiceType}' not implemented`);
         }
 
         return transaction;
@@ -193,22 +174,13 @@ function processAuthorizeAccount(
             transactionNumber: authorizeResult.transactionNumber
         };
 
-        return repos.transaction.transactionModel.findByIdAndUpdate(
-            { _id: transaction.id },
-            {
+        return saveAuthorizeResult({
+            id: transaction.id,
+            update: {
                 'object.paymentMethod.totalPaymentDue': totalPaymentDue,
                 'object.pendingTransaction': pendingTransaction
-            },
-            { new: true }
-        )
-            .exec()
-            .then((doc) => {
-                if (doc === null) {
-                    throw new factory.errors.ArgumentNull('Transaction');
-                }
-
-                return doc.toObject();
-            });
+            }
+        })(repos);
     };
 }
 
@@ -225,26 +197,17 @@ function processAuthorizeCreditCard(
     }): Promise<factory.transaction.pay.ITransaction> => {
         const authorizeResult = await CreditCardPayment.authorize(params)(repos);
 
-        return repos.transaction.transactionModel.findByIdAndUpdate(
-            { _id: transaction.id },
-            {
+        return saveAuthorizeResult({
+            id: transaction.id,
+            update: {
                 'object.paymentMethod.accountId': authorizeResult.accountId,
                 'object.paymentMethod.paymentMethodId': authorizeResult.paymentMethodId,
                 'object.entryTranArgs': authorizeResult.entryTranArgs,
                 'object.entryTranResult': authorizeResult.entryTranResult,
                 'object.execTranArgs': authorizeResult.execTranArgs,
                 'object.execTranResult': authorizeResult.execTranResult
-            },
-            { new: true }
-        )
-            .exec()
-            .then((doc) => {
-                if (doc === null) {
-                    throw new factory.errors.ArgumentNull('Transaction');
-                }
-
-                return doc.toObject();
-            });
+            }
+        })(repos);
     };
 }
 
@@ -260,64 +223,35 @@ function processAuthorizeMovieTicket(
         seller: SellerRepo;
         transaction: TransactionRepo;
     }): Promise<factory.transaction.pay.ITransaction> => {
-        // ムビチケ決済の場合、認証
-        const checkResult = await validateMovieTicket(params)(repos);
+        const authorizeResult = await MovieTicketPayment.authorize(params, transaction)(repos);
 
-        let payAction: factory.action.IAction<factory.action.IAttributes<factory.actionType.PayAction, any, any>> | undefined;
+        return saveAuthorizeResult({
+            id: transaction.id,
+            update: {
+                'object.paymentMethod.accountId': authorizeResult.checkResult?.movieTickets[0].identifier,
+                'object.checkResult': authorizeResult.checkResult,
+                ...(authorizeResult.payAction !== undefined) ? { 'object.payAction': authorizeResult.payAction } : undefined
+            }
+        })(repos);
+    };
+}
 
-        if (USE_MOVIETICKET_AUTHORIZE) {
-            const paymentMethod = transaction.object.paymentMethod;
-            const paymentMethodType = String(paymentMethod?.typeOf);
-            const additionalProperty = paymentMethod?.additionalProperty;
-            const paymentMethodId: string = (typeof paymentMethod?.paymentMethodId === 'string')
-                ? paymentMethod?.paymentMethodId
-                : transaction.id;
-            const paymentMethodName: string = (typeof paymentMethod?.name === 'string') ? paymentMethod?.name : paymentMethodType;
-
-            const payObject: factory.action.trade.pay.IPaymentService = {
-                typeOf: factory.service.paymentService.PaymentServiceType.MovieTicket,
-                paymentMethod: {
-                    accountId: paymentMethod?.accountId,
-                    additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : [],
-                    name: paymentMethodName,
-                    paymentMethodId: paymentMethodId,
-                    totalPaymentDue: {
-                        typeOf: 'MonetaryAmount',
-                        currency: factory.unitCode.C62,
-                        value: paymentMethod?.movieTickets?.length
-                    },
-                    typeOf: paymentMethodType
-                },
-                movieTickets: paymentMethod?.movieTickets
-            };
-
-            const payActionAttributes: factory.action.trade.pay.IAttributes = {
-                project: transaction.project,
-                typeOf: <factory.actionType.PayAction>factory.actionType.PayAction,
-                object: [payObject],
-                agent: transaction.agent,
-                recipient: transaction.recipient,
-                ...(params.purpose !== undefined)
-                    ? { purpose: params.purpose }
-                    : { purpose: { typeOf: transaction.typeOf, transactionNumber: transaction.transactionNumber, id: transaction.id } }
-            };
-
-            payAction = await MovieTicketPayment.payMovieTicket(payActionAttributes)(repos);
-        }
-
+function saveAuthorizeResult(params: {
+    id: string;
+    update: any;
+}) {
+    return async (repos: {
+        transaction: TransactionRepo;
+    }): Promise<factory.transaction.pay.ITransaction> => {
         return repos.transaction.transactionModel.findByIdAndUpdate(
-            { _id: transaction.id },
-            {
-                'object.paymentMethod.accountId': checkResult?.movieTickets[0].identifier,
-                'object.checkResult': checkResult,
-                ...(payAction !== undefined) ? { 'object.payAction': payAction } : undefined
-            },
+            { _id: params.id },
+            params.update,
             { new: true }
         )
             .exec()
             .then((doc) => {
                 if (doc === null) {
-                    throw new factory.errors.ArgumentNull('Transaction');
+                    throw new factory.errors.ArgumentNull(repos.transaction.transactionModel.modelName);
                 }
 
                 return doc.toObject();

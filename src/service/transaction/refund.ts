@@ -76,6 +76,7 @@ export function start(
 
             switch (paymentServiceType) {
                 case factory.service.paymentService.PaymentServiceType.Account:
+                case factory.service.paymentService.PaymentServiceType.PaymentCard:
                     break;
 
                 case factory.service.paymentService.PaymentServiceType.CreditCard:
