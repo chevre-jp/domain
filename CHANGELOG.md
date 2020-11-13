@@ -10,8 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- 決済取引をPaymentCardサービスに対応
-
 ### Deprecated
 
 ### Removed
@@ -19,6 +17,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.33.0 - 2020-11-13
+
+### Changed
+
+- 決済取引をPaymentCardサービスに対応
 
 ## v15.32.0 - 2020-11-11
 
