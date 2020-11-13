@@ -52,17 +52,14 @@ export function validateAccount(params: factory.transaction.pay.IStartParamsWith
             limit: 1,
             project: { id: { $eq: params.project.id } },
             accountNumbers: [accountNumber],
-            statuses: [pecorinoapi.factory.accountStatusType.Opened]
+            statuses: [pecorinoapi.factory.accountStatusType.Opened],
+            // 決済方法タイプが口座種別と一致しているか
+            typeOf: { $eq: paymentMethodType }
         });
 
         const account = searchAccountsResult.data.shift();
         if (account === undefined) {
             throw new factory.errors.NotFound('Account', `Account '${accountNumber}' not found`);
-        }
-
-        // 決済方法タイプが口座種別と一致しているか
-        if (account.typeOf !== paymentMethodType) {
-            throw new factory.errors.NotFound('Account', `Account '${paymentMethodType} ${accountNumber}' not found`);
         }
     };
 }

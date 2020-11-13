@@ -26,26 +26,17 @@ const pecorinoAuthClient = new pecorinoapi.auth.ClientCredentials({
 
 export type IPendingTransaction = pecorinoapi.factory.transaction.withdraw.ITransaction;
 
-export function authorize(
-    params: factory.transaction.pay.IStartParamsWithoutDetail
-) {
+export function authorize(params: factory.transaction.pay.IStartParamsWithoutDetail) {
     return async (repos: {
         project: ProjectRepo;
         seller: SellerRepo;
     }): Promise<IPendingTransaction> => {
         const project = await repos.project.findById({ id: params.project.id });
 
-        // const paymentMethodType = params.object.paymentMethod?.typeOf;
-        // if (typeof paymentMethodType !== 'string') {
-        //     throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
-        // }
-
-        // const sellerId = params.recipient?.id;
-        // if (typeof sellerId !== 'string') {
-        //     throw new factory.errors.ArgumentNull('recipient.id');
-        // }
-
-        // const seller = await repos.seller.findById({ id: sellerId });
+        const transactionNumber = params.transactionNumber;
+        if (typeof transactionNumber !== 'string') {
+            throw new factory.errors.ArgumentNull('transactionNumber');
+        }
 
         // 口座取引開始
         let pendingTransaction: IPendingTransaction;
@@ -56,7 +47,7 @@ export function authorize(
                 .toDate();
 
             pendingTransaction = await processAccountTransaction({
-                transactionNumber: params.transactionNumber,
+                transactionNumber,
                 project: project,
                 paymentMethod: <factory.transaction.pay.IPaymentMethod>params.object.paymentMethod,
                 agent: params.agent,
@@ -73,21 +64,21 @@ export function authorize(
 }
 
 async function processAccountTransaction(params: {
-    transactionNumber?: string;
+    transactionNumber: string;
     project: factory.project.IProject;
     paymentMethod: factory.transaction.pay.IPaymentMethod;
-    agent: factory.action.transfer.moneyTransfer.IAgent;
-    recipient: factory.action.transfer.moneyTransfer.IRecipient;
+    agent: factory.transaction.pay.IAgent;
+    recipient: factory.transaction.pay.IRecipient;
     expires: Date;
 }): Promise<IPendingTransaction> {
     let pendingTransaction: IPendingTransaction;
 
+    const defaultName = `${factory.transactionType.Pay} Transaction ${params.transactionNumber}`;
+
     const agent = {
         typeOf: params.agent.typeOf,
         id: params.agent.id,
-        name: (typeof params.agent.name === 'string')
-            ? params.agent.name
-            : `${factory.transactionType.Pay} Transaction ${params.transactionNumber}`
+        name: (typeof params.agent.name === 'string') ? params.agent.name : defaultName
     };
 
     const recipient = {
@@ -95,15 +86,11 @@ async function processAccountTransaction(params: {
         id: params.recipient.id,
         name: (typeof params.recipient.name === 'string')
             ? params.recipient.name
-            : (typeof params.recipient.name?.ja === 'string')
-                ? params.recipient.name.ja
-                : `${factory.transactionType.Pay} Transaction ${params.transactionNumber}`,
+            : (typeof params.recipient.name?.ja === 'string') ? params.recipient.name.ja : defaultName,
         ...(typeof params.recipient.url === 'string') ? { url: params.recipient.url } : undefined
     };
 
-    const description = (typeof params.paymentMethod?.description === 'string')
-        ? params.paymentMethod?.description :
-        `${factory.transactionType.Pay} Transaction ${params.transactionNumber}`;
+    const description = (typeof params.paymentMethod?.description === 'string') ? params.paymentMethod?.description : '';
 
     const accountNumber = params.paymentMethod?.accountId;
     if (typeof accountNumber !== 'string') {
@@ -182,7 +169,6 @@ export function payAccount(params: factory.task.pay.IData) {
             await withdrawService.confirm({ transactionNumber: transactionNumber });
         } catch (error) {
             try {
-                // tslint:disable-next-line:max-line-length no-single-line-block-comment
                 const actionError = { ...error, message: error.message, name: error.name };
                 await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
             } catch (__) {

@@ -14,7 +14,11 @@ import * as factory from '../../factory';
 
 import { createSeatInfoSyncIn } from './movieTicket/factory';
 
+import { validateMovieTicket } from '../transaction/pay/movieTicket/validation';
+
 import { handleMvtkReserveError } from '../../errorHandler';
+
+const USE_MOVIETICKET_AUTHORIZE = process.env.USE_MOVIETICKET_AUTHORIZE === '1';
 
 export type IMovieTicket = factory.paymentMethod.paymentCard.movieTicket.IMovieTicket;
 export interface ICheckResult {
@@ -318,6 +322,80 @@ export function checkByIdentifier(params: {
         }
 
         return { purchaseNumberAuthIn, purchaseNumberAuthResult, movieTickets };
+    };
+}
+
+export interface IAuthorizeResult {
+    checkResult: ICheckResult;
+    payAction?: factory.action.IAction<factory.action.IAttributes<factory.actionType.PayAction, any, any>>;
+}
+
+export function authorize(
+    params: factory.transaction.pay.IStartParamsWithoutDetail,
+    transaction: factory.transaction.pay.ITransaction
+) {
+    return async (repos: {
+        action: ActionRepo;
+        event: EventRepo;
+        product: ProductRepo;
+        project: ProjectRepo;
+        seller: SellerRepo;
+    }): Promise<IAuthorizeResult> => {
+        let checkResult: ICheckResult;
+        let payAction: factory.action.IAction<factory.action.IAttributes<factory.actionType.PayAction, any, any>> | undefined;
+
+        try {
+            // ムビチケ決済の場合、認証
+            checkResult = await validateMovieTicket(params)(repos);
+
+            if (USE_MOVIETICKET_AUTHORIZE) {
+                const paymentMethod = transaction.object.paymentMethod;
+                const paymentMethodType = String(paymentMethod?.typeOf);
+                const additionalProperty = paymentMethod?.additionalProperty;
+                const paymentMethodId: string = (typeof paymentMethod?.paymentMethodId === 'string')
+                    ? paymentMethod?.paymentMethodId
+                    : transaction.id;
+                const paymentMethodName: string = (typeof paymentMethod?.name === 'string') ? paymentMethod?.name : paymentMethodType;
+
+                const payObject: factory.action.trade.pay.IPaymentService = {
+                    typeOf: factory.service.paymentService.PaymentServiceType.MovieTicket,
+                    paymentMethod: {
+                        accountId: paymentMethod?.accountId,
+                        additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : [],
+                        name: paymentMethodName,
+                        paymentMethodId: paymentMethodId,
+                        totalPaymentDue: {
+                            typeOf: 'MonetaryAmount',
+                            currency: factory.unitCode.C62,
+                            value: paymentMethod?.movieTickets?.length
+                        },
+                        typeOf: paymentMethodType
+                    },
+                    movieTickets: paymentMethod?.movieTickets
+                };
+
+                const payActionAttributes: factory.action.trade.pay.IAttributes = {
+                    project: transaction.project,
+                    typeOf: <factory.actionType.PayAction>factory.actionType.PayAction,
+                    object: [payObject],
+                    agent: transaction.agent,
+                    recipient: transaction.recipient,
+                    ...(params.purpose !== undefined)
+                        ? { purpose: params.purpose }
+                        : { purpose: { typeOf: transaction.typeOf, transactionNumber: transaction.transactionNumber, id: transaction.id } }
+                };
+
+                payAction = await payMovieTicket(payActionAttributes)(repos);
+            }
+
+        } catch (error) {
+            throw handleMvtkReserveError(error);
+        }
+
+        return {
+            checkResult,
+            ...(payAction !== undefined) ? { payAction } : undefined
+        };
     };
 }
 
