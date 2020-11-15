@@ -223,7 +223,7 @@ function fixFromLocation(
     params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail,
     product: factory.product.IProduct
 ) {
-    return async (repos: {
+    return async (__: {
         serviceOutput: ServiceOutputRepo;
     }): Promise<factory.transaction.moneyTransfer.IFromLocation> => {
         const amount = params.object.amount;
@@ -248,45 +248,41 @@ function fixFromLocation(
 
                 switch (product.typeOf) {
                     case factory.product.ProductType.Account:
+                    case factory.product.ProductType.PaymentCard:
                         if (typeof product.serviceOutput?.amount?.currency !== 'string') {
                             throw new factory.errors.NotFound('product.serviceOutput.amount.currency');
                         }
 
                         // accountType = product.serviceOutput?.amount?.currency;
 
-                        break;
-
-                    case factory.product.ProductType.PaymentCard:
                         // サービスアウトプット存在確認
-                        const serviceOutputs = await repos.serviceOutput.search(
-                            {
-                                limit: 1,
-                                typeOf: { $eq: fromLocationObject.typeOf },
-                                project: { id: { $eq: params.project.id } },
-                                identifier: { $eq: fromLocationObject.identifier }
-                                // アクセスコードチェックはChevre使用側で実行
-                                // accessCode: { $exists: true, $eq: fromLocationObject.accessCode }
-                            }
-                        );
-                        const serviceOutput = serviceOutputs.shift();
-                        if (serviceOutput === undefined) {
-                            throw new factory.errors.NotFound('fromLocation');
-                        }
+                        // const serviceOutputs = await repos.serviceOutput.search(
+                        //     {
+                        //         limit: 1,
+                        //         typeOf: { $eq: fromLocationObject.typeOf },
+                        //         project: { id: { $eq: params.project.id } },
+                        //         identifier: { $eq: fromLocationObject.identifier }
+                        //         // アクセスコードチェックはChevre使用側で実行
+                        //         // accessCode: { $exists: true, $eq: fromLocationObject.accessCode }
+                        //     }
+                        // );
+                        // const serviceOutput = serviceOutputs.shift();
+                        // if (serviceOutput === undefined) {
+                        //     throw new factory.errors.NotFound('fromLocation');
+                        // }
 
-                        // 出金金額設定を確認
-                        const paymentAmount = serviceOutput.paymentAmount;
-                        if (typeof paymentAmount?.minValue === 'number') {
-                            if (amount.value < paymentAmount.minValue) {
-                                throw new factory.errors.Argument('fromLocation', `mininum payment amount requirement not satisfied`);
-                            }
-                        }
-                        if (typeof paymentAmount?.maxValue === 'number') {
-                            if (amount.value > paymentAmount.maxValue) {
-                                throw new factory.errors.Argument('fromLocation', `maximum payment amount requirement not satisfied`);
-                            }
-                        }
-
-                        // accountType = serviceOutput.typeOf;
+                        // // 出金金額設定を確認
+                        // const paymentAmount = serviceOutput.paymentAmount;
+                        // if (typeof paymentAmount?.minValue === 'number') {
+                        //     if (amount.value < paymentAmount.minValue) {
+                        //         throw new factory.errors.Argument('fromLocation', `mininum payment amount requirement not satisfied`);
+                        //     }
+                        // }
+                        // if (typeof paymentAmount?.maxValue === 'number') {
+                        //     if (amount.value > paymentAmount.maxValue) {
+                        //         throw new factory.errors.Argument('fromLocation', `maximum payment amount requirement not satisfied`);
+                        //     }
+                        // }
 
                         break;
 
@@ -327,7 +323,7 @@ function fixToLocation(
     params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail,
     product: factory.product.IProduct
 ) {
-    return async (repos: {
+    return async (__: {
         product: ProductRepo;
         serviceOutput: ServiceOutputRepo;
     }): Promise<factory.transaction.moneyTransfer.IToLocation> => {
@@ -354,45 +350,41 @@ function fixToLocation(
 
                 switch (product.typeOf) {
                     case factory.product.ProductType.Account:
+                    case factory.product.ProductType.PaymentCard:
                         if (typeof product.serviceOutput?.amount?.currency !== 'string') {
                             throw new factory.errors.NotFound('product.serviceOutput.amount.currency');
                         }
 
                         // accountType = product.serviceOutput?.amount?.currency;
 
-                        break;
-
-                    case factory.product.ProductType.PaymentCard:
                         // サービスアウトプット存在確認
-                        const serviceOutputs = await repos.serviceOutput.search(
-                            {
-                                limit: 1,
-                                typeOf: { $eq: toLocationObject.typeOf },
-                                project: { id: { $eq: params.project.id } },
-                                identifier: { $eq: toLocationObject.identifier }
-                                // アクセスコードチェックはChevre使用側で実行
-                                // accessCode: { $exists: true, $eq: fromLocationObject.accessCode }
-                            }
-                        );
-                        const serviceOutput = serviceOutputs.shift();
-                        if (serviceOutput === undefined) {
-                            throw new factory.errors.NotFound('toLocation');
-                        }
+                        // const serviceOutputs = await repos.serviceOutput.search(
+                        //     {
+                        //         limit: 1,
+                        //         typeOf: { $eq: toLocationObject.typeOf },
+                        //         project: { id: { $eq: params.project.id } },
+                        //         identifier: { $eq: toLocationObject.identifier }
+                        //         // アクセスコードチェックはChevre使用側で実行
+                        //         // accessCode: { $exists: true, $eq: fromLocationObject.accessCode }
+                        //     }
+                        // );
+                        // const serviceOutput = serviceOutputs.shift();
+                        // if (serviceOutput === undefined) {
+                        //     throw new factory.errors.NotFound('toLocation');
+                        // }
 
-                        // 入金金額設定を確認
-                        const depositAmount = serviceOutput.depositAmount;
-                        if (typeof depositAmount?.minValue === 'number') {
-                            if (amount.value < depositAmount.minValue) {
-                                throw new factory.errors.Argument('toLocation', `mininum deposit amount requirement not satisfied`);
-                            }
-                        }
-                        if (typeof depositAmount?.maxValue === 'number') {
-                            if (amount.value > depositAmount.maxValue) {
-                                throw new factory.errors.Argument('toLocation', `maximum deposit amount requirement not satisfied`);
-                            }
-                        }
-
-                        // accountType = serviceOutput.typeOf;
+                        // // 入金金額設定を確認
+                        // const depositAmount = serviceOutput.depositAmount;
+                        // if (typeof depositAmount?.minValue === 'number') {
+                        //     if (amount.value < depositAmount.minValue) {
+                        //         throw new factory.errors.Argument('toLocation', `mininum deposit amount requirement not satisfied`);
+                        //     }
+                        // }
+                        // if (typeof depositAmount?.maxValue === 'number') {
+                        //     if (amount.value > depositAmount.maxValue) {
+                        //         throw new factory.errors.Argument('toLocation', `maximum deposit amount requirement not satisfied`);
+                        //     }
+                        // }
 
                         break;
 
