@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.34.0 - 2020-11-15
+
+### Changed
+
+- AccountプロダクトとPaymentCardプロダクトの挙動を統一
+
 ## v15.33.0 - 2020-11-13
 
 ### Changed
