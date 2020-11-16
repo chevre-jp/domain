@@ -15,7 +15,6 @@ function createPayActions(params: {
     let payObject: factory.action.trade.pay.IPaymentService | undefined;
 
     switch (transaction.object.typeOf) {
-        case factory.service.paymentService.PaymentServiceType.Account:
         case factory.service.paymentService.PaymentServiceType.PaymentCard:
             const totalPaymentDue: factory.monetaryAmount.IMonetaryAmount = (typeof paymentMethod?.totalPaymentDue?.typeOf === 'string')
                 ? paymentMethod.totalPaymentDue

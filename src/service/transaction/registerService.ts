@@ -181,7 +181,6 @@ export function start(
         const serviceOutputs = transactionObject.map((o) => o.itemOffered?.serviceOutput);
 
         switch (product.typeOf) {
-            case factory.product.ProductType.Account:
             case factory.product.ProductType.PaymentCard:
                 // Pecorinoで口座開設
                 const openAccountParams = serviceOutputs.map((serviceOutput) => {
