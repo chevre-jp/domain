@@ -13,15 +13,20 @@ export function createPointAward(params: {
     let pointAward: factory.product.IPointAward | undefined;
     const pointAwardAmount = params.offer.itemOffered?.pointAward?.amount;
     const pointAwardDescription = params.offer.itemOffered?.pointAward?.description;
+    const pointAwardTypeOf = params.offer.itemOffered?.pointAward?.typeOf;
+
     const pointAwardToLocation = params.acceptedOffer.itemOffered?.pointAward?.toLocation;
     const pointAwardRecipient = (<any>params.acceptedOffer).itemOffered?.pointAward?.recipient;
+
+    // オファーのpointAward設定が適切にされていれば、指定されたtoLocationを反映する
     if (typeof pointAwardAmount?.value === 'number'
         && typeof pointAwardAmount?.currency === 'string'
+        && typeof pointAwardTypeOf === 'string'
         && typeof pointAwardToLocation?.identifier === 'string') {
         pointAward = {
             amount: pointAwardAmount,
             toLocation: {
-                typeOf: 'Account',
+                typeOf: pointAwardTypeOf,
                 identifier: pointAwardToLocation?.identifier
             },
             typeOf: factory.actionType.MoneyTransfer,

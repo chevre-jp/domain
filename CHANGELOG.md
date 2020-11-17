@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.35.1 - 2020-11-17
+
+### Changed
+
+- サービス登録時に、オファーのポイント特典のtypeOf設定を反映するように調整
+
 ## v15.35.0 - 2020-11-17
 
 ### Changed
