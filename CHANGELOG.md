@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- サービス登録時に、オファーのポイント特典のtypeOf設定を反映するように調整
+
 ### Deprecated
 
 ### Removed
