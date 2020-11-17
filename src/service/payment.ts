@@ -31,7 +31,6 @@ export function pay(params: factory.task.pay.IData) {
         const paymentServiceType = params.object[0]?.typeOf;
 
         switch (paymentServiceType) {
-            case factory.service.paymentService.PaymentServiceType.Account:
             case factory.service.paymentService.PaymentServiceType.PaymentCard:
                 await AccountPaymentService.payAccount(params)(repos);
                 break;
@@ -60,7 +59,6 @@ export function voidPayment(params: factory.task.voidPayment.IData) {
         const paymentServiceType = params.object.object.typeOf;
 
         switch (paymentServiceType) {
-            case factory.service.paymentService.PaymentServiceType.Account:
             case factory.service.paymentService.PaymentServiceType.PaymentCard:
                 await AccountPaymentService.voidTransaction(params)(repos);
                 break;
@@ -95,7 +93,6 @@ export function refund(params: factory.task.refund.IData) {
         const paymentServiceType = params.object[0]?.typeOf;
 
         switch (paymentServiceType) {
-            case factory.service.paymentService.PaymentServiceType.Account:
             case factory.service.paymentService.PaymentServiceType.PaymentCard:
                 await AccountPaymentService.refundAccount(params)(repos);
                 break;

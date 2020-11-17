@@ -91,11 +91,10 @@ export function createServiceOutput(params: {
     }
 
     switch (product.typeOf) {
-        case factory.product.ProductType.Account:
         case factory.product.ProductType.PaymentCard:
-            // if (typeof accessCode !== 'string' || accessCode.length === 0) {
-            //     throw new factory.errors.ArgumentNull('object.itemOffered.serviceOutput.accessCode');
-            // }
+            if (typeof accessCode !== 'string' || accessCode.length === 0) {
+                throw new factory.errors.ArgumentNull('object.itemOffered.serviceOutput.accessCode');
+            }
 
             break;
 

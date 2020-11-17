@@ -247,7 +247,6 @@ function fixFromLocation(
                 const fromLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>fromLocation;
 
                 switch (product.typeOf) {
-                    case factory.product.ProductType.Account:
                     case factory.product.ProductType.PaymentCard:
                         if (typeof product.serviceOutput?.amount?.currency !== 'string') {
                             throw new factory.errors.NotFound('product.serviceOutput.amount.currency');
@@ -300,7 +299,7 @@ function fixFromLocation(
 
                 const account = searchAccountsResult.data.shift();
                 if (account === undefined) {
-                    throw new factory.errors.NotFound('Account', 'To Location Not Found');
+                    throw new factory.errors.NotFound('Account', 'From Location Not Found');
                 }
 
                 fromLocation = {
@@ -349,7 +348,6 @@ function fixToLocation(
                 const toLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>toLocation;
 
                 switch (product.typeOf) {
-                    case factory.product.ProductType.Account:
                     case factory.product.ProductType.PaymentCard:
                         if (typeof product.serviceOutput?.amount?.currency !== 'string') {
                             throw new factory.errors.NotFound('product.serviceOutput.amount.currency');
