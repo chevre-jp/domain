@@ -204,7 +204,7 @@ export class MongoRepository {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    public async searchSeats(params: any): Promise<factory.place.seat.IPlace[]> {
+    public async searchSeats(params: factory.place.seat.ISearchConditions): Promise<factory.place.seat.IPlace[]> {
         const matchStages: any[] = [];
         if (params.project !== undefined) {
             if (params.project.id !== undefined) {
@@ -303,6 +303,18 @@ export class MongoRepository {
                             }
                         }
                     ]
+                }
+            });
+        }
+
+        const seatingTypeEq = params.seatingType?.$eq;
+        if (typeof seatingTypeEq === 'string') {
+            matchStages.push({
+                $match: {
+                    'containsPlace.containsPlace.containsPlace.seatingType': {
+                        $exists: true,
+                        $eq: seatingTypeEq
+                    }
                 }
             });
         }

@@ -121,6 +121,26 @@ schema.index(
     }
 );
 
+schema.index(
+    { contentRating: 1, identifier: 1 },
+    {
+        name: 'searchByContentRating',
+        partialFilterExpression: {
+            contentRating: { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'distributor.codeValue': 1, identifier: 1 },
+    {
+        name: 'searchByDistributorCodeValue',
+        partialFilterExpression: {
+            'distributor.codeValue': { $exists: true }
+        }
+    }
+);
+
 export default mongoose.model('CreativeWork', schema)
     .on(
         'index',
