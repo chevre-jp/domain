@@ -258,6 +258,26 @@ schema.index(
     }
 );
 
+schema.index(
+    { 'videoFormat.typeOf': 1, startDate: 1 },
+    {
+        name: 'searchByVideoFormatTypeOf',
+        partialFilterExpression: {
+            'videoFormat.typeOf': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'soundFormat.typeOf': 1, startDate: 1 },
+    {
+        name: 'searchBySoundFormatTypeOf',
+        partialFilterExpression: {
+            'soundFormat.typeOf': { $exists: true }
+        }
+    }
+);
+
 export default mongoose.model('Event', schema)
     .on(
         'index',
