@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- カテゴリーコード検索条件拡張
+- イベントシリーズ検索条件拡張
+
 ### Deprecated
 
 ### Removed

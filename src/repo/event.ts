@@ -307,6 +307,46 @@ export class MongoRepository {
                     }
                 }
 
+                const videoFormatTypeOfEq = params.videoFormat?.typeOf?.$eq;
+                if (typeof videoFormatTypeOfEq === 'string') {
+                    andConditions.push({
+                        'videoFormat.typeOf': {
+                            $exists: true,
+                            $eq: videoFormatTypeOfEq
+                        }
+                    });
+                }
+
+                const videoFormatTypeOfIn = params.videoFormat?.typeOf?.$in;
+                if (Array.isArray(videoFormatTypeOfIn)) {
+                    andConditions.push({
+                        'videoFormat.typeOf': {
+                            $exists: true,
+                            $in: videoFormatTypeOfIn
+                        }
+                    });
+                }
+
+                const soundFormatTypeOfEq = params.soundFormat?.typeOf?.$eq;
+                if (typeof soundFormatTypeOfEq === 'string') {
+                    andConditions.push({
+                        'soundFormat.typeOf': {
+                            $exists: true,
+                            $eq: soundFormatTypeOfEq
+                        }
+                    });
+                }
+
+                const soundFormatTypeOfIn = params.soundFormat?.typeOf?.$in;
+                if (Array.isArray(soundFormatTypeOfIn)) {
+                    andConditions.push({
+                        'soundFormat.typeOf': {
+                            $exists: true,
+                            $in: soundFormatTypeOfIn
+                        }
+                    });
+                }
+
                 break;
 
             default:

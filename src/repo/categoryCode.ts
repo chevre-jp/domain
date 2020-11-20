@@ -97,6 +97,16 @@ export class MongoRepository {
             }
         }
 
+        const inCodeSetIdentifierIn = params.inCodeSet?.identifier?.$in;
+        if (Array.isArray(inCodeSetIdentifierIn)) {
+            andConditions.push({
+                'inCodeSet.identifier': {
+                    $exists: true,
+                    $in: inCodeSetIdentifierIn
+                }
+            });
+        }
+
         return andConditions;
     }
 
