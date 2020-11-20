@@ -82,6 +82,16 @@ schema.index(
     }
 );
 
+schema.index(
+    { 'itemOffered.serviceType.codeValue': 1, identifier: 1 },
+    {
+        name: 'searchByItemOfferedServiceTypeCodeValue',
+        partialFilterExpression: {
+            'itemOffered.serviceType.codeValue': { $exists: true }
+        }
+    }
+);
+
 export default mongoose.model('OfferCatalog', schema)
     .on(
         'index',

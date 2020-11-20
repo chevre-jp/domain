@@ -17,6 +17,8 @@ export class MongoRepository implements Repository {
     constructor(connection: Connection) {
         this.creativeWorkModel = connection.model(creativeWorkModel.modelName);
     }
+
+    // tslint:disable-next-line:max-func-body-length
     public static CREATE_MONGO_CONDITIONS(params: factory.creativeWork.movie.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [
@@ -34,6 +36,26 @@ export class MongoRepository implements Repository {
                     }
                 });
             }
+        }
+
+        const contentRatingEq = params.contentRating?.$eq;
+        if (typeof contentRatingEq === 'string') {
+            andConditions.push({
+                contentRating: {
+                    $exists: true,
+                    $eq: contentRatingEq
+                }
+            });
+        }
+
+        const distributorCodeValueEq = params.distributor?.codeValue?.$eq;
+        if (typeof distributorCodeValueEq === 'string') {
+            andConditions.push({
+                'distributor.codeValue': {
+                    $exists: true,
+                    $eq: distributorCodeValueEq
+                }
+            });
         }
 
         if (typeof params.identifier === 'string') {

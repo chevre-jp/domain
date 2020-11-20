@@ -80,6 +80,16 @@ export class MongoRepository {
             });
         }
 
+        const itemOfferedServiceTypeCodeValueEq = params.itemOffered?.serviceType?.codeValue?.$eq;
+        if (typeof itemOfferedServiceTypeCodeValueEq === 'string') {
+            andConditions.push({
+                'itemOffered.serviceType.codeValue': {
+                    $exists: true,
+                    $eq: itemOfferedServiceTypeCodeValueEq
+                }
+            });
+        }
+
         // 互換性対応
         const ticketTypes = (<any>params).ticketTypes;
         if (Array.isArray(ticketTypes)) {
