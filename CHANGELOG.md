@@ -10,10 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- 作品検索条件拡張
-- 座席検索条件拡張
-- オファーカタログ検索条件拡張
-
 ### Deprecated
 
 ### Removed
@@ -21,6 +17,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.36.0 - 2020-11-20
+
+### Changed
+
+- 作品検索条件拡張
+- 座席検索条件拡張
+- オファーカタログ検索条件拡張
 
 ## v15.35.2 - 2020-11-19
 
