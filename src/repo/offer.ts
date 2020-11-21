@@ -18,7 +18,7 @@ export class MongoRepository {
         this.offerCatalogModel = connection.model(OfferCatalogModel.modelName);
     }
 
-    // tslint:disable-next-line:max-func-body-length
+    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     public static CREATE_OFFER_MONGO_CONDITIONS(params: factory.offer.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [];
@@ -130,6 +130,36 @@ export class MongoRepository {
                 'category.codeValue': {
                     $exists: true,
                     $in: categoryCodeValueIn
+                }
+            });
+        }
+
+        const eligibleSeatingTypeCodeValueEq = params.eligibleSeatingType?.codeValue?.$eq;
+        if (typeof eligibleSeatingTypeCodeValueEq === 'string') {
+            andConditions.push({
+                'eligibleSeatingType.codeValue': {
+                    $exists: true,
+                    $eq: eligibleSeatingTypeCodeValueEq
+                }
+            });
+        }
+
+        const appliesToMovieTicketServiceTypeEq = params.priceSpecification?.appliesToMovieTicket?.serviceType?.$eq;
+        if (typeof appliesToMovieTicketServiceTypeEq === 'string') {
+            andConditions.push({
+                'priceSpecification.appliesToMovieTicket.serviceType': {
+                    $exists: true,
+                    $eq: appliesToMovieTicketServiceTypeEq
+                }
+            });
+        }
+
+        const appliesToMovieTicketServiceOutputTypeOfEq = params.priceSpecification?.appliesToMovieTicket?.serviceOutput?.typeOf?.$eq;
+        if (typeof appliesToMovieTicketServiceOutputTypeOfEq === 'string') {
+            andConditions.push({
+                'priceSpecification.appliesToMovieTicket.serviceOutput.typeOf': {
+                    $exists: true,
+                    $eq: appliesToMovieTicketServiceOutputTypeOfEq
                 }
             });
         }
