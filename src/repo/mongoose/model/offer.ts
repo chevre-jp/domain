@@ -32,7 +32,7 @@ const schema = new mongoose.Schema(
         eligibleDuration: mongoose.SchemaTypes.Mixed,
         eligibleQuantity: mongoose.SchemaTypes.Mixed,
         eligibleRegion: mongoose.SchemaTypes.Mixed,
-        eligibleMovieTicketType: String,
+        // eligibleMovieTicketType: String,
         validFrom: Date,
         validThrough: Date,
         accounting: mongoose.SchemaTypes.Mixed
@@ -122,6 +122,26 @@ schema.index(
 );
 
 schema.index(
+    { 'priceSpecification.appliesToMovieTicket.serviceType': 1, 'priceSpecification.price': 1 },
+    {
+        name: 'searchByPriceSpecificationAppliesToMovieTicketServiceType',
+        partialFilterExpression: {
+            'priceSpecification.appliesToMovieTicket.serviceType': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'priceSpecification.appliesToMovieTicket.serviceOutput.typeOf': 1, 'priceSpecification.price': 1 },
+    {
+        name: 'searchByPriceSpecificationAppliesToMovieTicketServiceOutputTypeOf',
+        partialFilterExpression: {
+            'priceSpecification.appliesToMovieTicket.serviceOutput.typeOf': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'name.ja': 1, 'priceSpecification.price': 1 },
     {
         name: 'searchByNameJa',
@@ -187,6 +207,16 @@ schema.index(
         name: 'searchByAvailableAtOrFromId',
         partialFilterExpression: {
             'availableAtOrFrom.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'eligibleSeatingType.codeValue': 1, 'priceSpecification.price': 1 },
+    {
+        name: 'searchByEligibleSeatingTypeCodeValue',
+        partialFilterExpression: {
+            'eligibleSeatingType.codeValue': { $exists: true }
         }
     }
 );
