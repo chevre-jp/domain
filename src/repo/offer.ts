@@ -205,6 +205,26 @@ export class MongoRepository {
                 });
             }
 
+            const accountingCodeValueEq = params.priceSpecification.accounting?.operatingRevenue?.codeValue?.$eq;
+            if (typeof accountingCodeValueEq === 'string') {
+                andConditions.push({
+                    'priceSpecification.accounting.operatingRevenue.codeValue': {
+                        $exists: true,
+                        $eq: accountingCodeValueEq
+                    }
+                });
+            }
+
+            const accountingCodeValueIn = params.priceSpecification.accounting?.operatingRevenue?.codeValue?.$in;
+            if (Array.isArray(accountingCodeValueIn)) {
+                andConditions.push({
+                    'priceSpecification.accounting.operatingRevenue.codeValue': {
+                        $exists: true,
+                        $in: accountingCodeValueIn
+                    }
+                });
+            }
+
             const referenceQuantityValueEq = params.priceSpecification.referenceQuantity?.value?.$eq;
             if (typeof referenceQuantityValueEq === 'number') {
                 andConditions.push({

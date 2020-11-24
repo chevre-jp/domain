@@ -18,6 +18,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.40.0 - 2020-11-24
+
+### Changed
+
+- ルームに検索条件を定義
+- ルームセクションに検索条件を定義
+- 座席に名称を追加
+- オファー検索条件拡張
+
 ## v15.39.0 - 2020-11-24
 
 ### Changed
