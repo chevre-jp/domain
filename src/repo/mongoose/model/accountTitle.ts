@@ -81,6 +81,16 @@ schema.index(
 );
 
 schema.index(
+    { 'hasCategoryCode.hasCategoryCode.name': 1, codeValue: 1 },
+    {
+        name: 'searchByHasCategoryCodeHasCategoryCodeName',
+        partialFilterExpression: {
+            'hasCategoryCode.hasCategoryCode.name': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'project.id': 1, codeValue: 1 },
     {
         name: 'uniqueCodeValue',

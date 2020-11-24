@@ -14,7 +14,7 @@ export class MongoRepository {
         this.categoryCodeModel = connection.model(modelName);
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
+    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     public static CREATE_MONGO_CONDITIONS(params: factory.categoryCode.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [];
@@ -69,17 +69,24 @@ export class MongoRepository {
             }
         }
 
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.codeValue !== undefined && params.codeValue !== null) {
-            if (typeof params.codeValue.$eq === 'string') {
-                andConditions.push({
-                    codeValue: {
-                        $exists: true,
-                        $eq: params.codeValue.$eq
-                    }
-                });
-            }
+        const codeValueEq = params.codeValue?.$eq;
+        if (typeof codeValueEq === 'string') {
+            andConditions.push({
+                codeValue: {
+                    $exists: true,
+                    $eq: codeValueEq
+                }
+            });
+        }
+
+        const codeValueIn = params.codeValue?.$in;
+        if (Array.isArray(codeValueIn)) {
+            andConditions.push({
+                codeValue: {
+                    $exists: true,
+                    $in: codeValueIn
+                }
+            });
         }
 
         // tslint:disable-next-line:no-single-line-block-comment
@@ -103,6 +110,26 @@ export class MongoRepository {
                 'inCodeSet.identifier': {
                     $exists: true,
                     $in: inCodeSetIdentifierIn
+                }
+            });
+        }
+
+        const paymentMethodTypeOfEq = params.paymentMethod?.typeOf?.$eq;
+        if (typeof paymentMethodTypeOfEq === 'string') {
+            andConditions.push({
+                'paymentMethod.typeOf': {
+                    $exists: true,
+                    $eq: paymentMethodTypeOfEq
+                }
+            });
+        }
+
+        const paymentMethodTypeOfIn = params.paymentMethod?.typeOf?.$in;
+        if (Array.isArray(paymentMethodTypeOfIn)) {
+            andConditions.push({
+                'paymentMethod.typeOf': {
+                    $exists: true,
+                    $in: paymentMethodTypeOfIn
                 }
             });
         }
