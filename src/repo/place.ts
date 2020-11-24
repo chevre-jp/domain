@@ -301,6 +301,12 @@ export class MongoRepository {
                                 $exists: true,
                                 $regex: new RegExp(nameCodeRegex)
                             }
+                        },
+                        {
+                            'containsPlace.containsPlace.containsPlace.name.en': {
+                                $exists: true,
+                                $regex: new RegExp(nameCodeRegex)
+                            }
                         }
                     ]
                 }

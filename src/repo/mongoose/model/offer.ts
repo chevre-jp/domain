@@ -34,8 +34,8 @@ const schema = new mongoose.Schema(
         eligibleRegion: mongoose.SchemaTypes.Mixed,
         // eligibleMovieTicketType: String,
         validFrom: Date,
-        validThrough: Date,
-        accounting: mongoose.SchemaTypes.Mixed
+        validThrough: Date
+        // accounting: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'offers',
@@ -117,6 +117,16 @@ schema.index(
         name: 'searchByPriceSpecificationAccountingAccountsReceivable',
         partialFilterExpression: {
             'priceSpecification.accounting.accountsReceivable': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'priceSpecification.accounting.operatingRevenue.codeValue': 1, 'priceSpecification.price': 1 },
+    {
+        name: 'searchByPriceSpecificationAccountingOperatingRevenueCodeValue',
+        partialFilterExpression: {
+            'priceSpecification.accounting.operatingRevenue.codeValue': { $exists: true }
         }
     }
 );
