@@ -10,9 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- カテゴリーコード検索条件拡張
-- 勘定科目コレクションにインデックス追加
-
 ### Deprecated
 
 ### Removed
@@ -20,6 +17,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.39.0 - 2020-11-24
+
+### Changed
+
+- カテゴリーコード検索条件拡張
+- 勘定科目コレクションにインデックス追加
 
 ## v15.38.0 - 2020-11-21
 
