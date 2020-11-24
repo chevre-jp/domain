@@ -13,7 +13,7 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "4.66.0",
+    "@chevre/factory": "4.67.0",
     "@motionpicture/coa-service": "^9.0.0",
     "@motionpicture/gmo-service": "^5.0.0",
     "@movieticket/reserve-api-nodejs-client": "^1.0.1",
