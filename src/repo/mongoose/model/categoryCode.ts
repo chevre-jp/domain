@@ -88,6 +88,16 @@ schema.index(
 );
 
 schema.index(
+    { 'paymentMethod.typeOf': 1, codeValue: 1 },
+    {
+        name: 'searchByPaymentMethodTypeOf',
+        partialFilterExpression: {
+            'paymentMethod.typeOf': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'project.id': 1, codeValue: 1 },
     {
         name: 'searchByProjectId',

@@ -18,6 +18,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.39.0 - 2020-11-24
+
+### Changed
+
+- カテゴリーコード検索条件拡張
+- 勘定科目コレクションにインデックス追加
+
 ## v15.38.0 - 2020-11-21
 
 ### Changed
