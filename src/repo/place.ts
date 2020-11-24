@@ -335,6 +335,7 @@ export class MongoRepository {
                     _id: 0,
                     typeOf: '$containsPlace.containsPlace.containsPlace.typeOf',
                     branchCode: '$containsPlace.containsPlace.containsPlace.branchCode',
+                    name: '$containsPlace.containsPlace.containsPlace.name',
                     seatingType: '$containsPlace.containsPlace.containsPlace.seatingType',
                     containedInPlace: {
                         typeOf: '$containsPlace.containsPlace.typeOf',
