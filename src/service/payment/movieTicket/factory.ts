@@ -10,6 +10,10 @@ export function createSeatInfoSyncIn(params: {
     event: factory.event.screeningEvent.IEvent;
     purpose: factory.action.trade.pay.IPurpose;
     seller: factory.seller.ISeller;
+    credentials: {
+        kgygishCd: string;
+        stCd: string;
+    };
 }): mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncIn {
     const event = params.event;
 
@@ -57,14 +61,16 @@ export function createSeatInfoSyncIn(params: {
         skhnCd = `${eventCOAInfo.titleCode}${`00${eventCOAInfo.titleBranchNum}`.slice(DIGITS)}`;
     }
 
-    const kgygishCd = movieTicketPaymentAccepted.movieTicketInfo?.kgygishCd;
-    const stCd = movieTicketPaymentAccepted.movieTicketInfo?.stCd;
-    if (typeof kgygishCd !== 'string') {
-        throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo.kgygishCd');
-    }
-    if (typeof stCd !== 'string') {
-        throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo.stCd');
-    }
+    const kgygishCd = params.credentials.kgygishCd;
+    const stCd = params.credentials.stCd;
+    // const kgygishCd = movieTicketPaymentAccepted.movieTicketInfo?.kgygishCd;
+    // const stCd = movieTicketPaymentAccepted.movieTicketInfo?.stCd;
+    // if (typeof kgygishCd !== 'string') {
+    //     throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo.kgygishCd');
+    // }
+    // if (typeof stCd !== 'string') {
+    //     throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo.stCd');
+    // }
 
     return {
         kgygishCd: kgygishCd,

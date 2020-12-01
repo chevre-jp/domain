@@ -57,13 +57,14 @@ export function validateMovieTicket(
         if (movieTicketPaymentAccepted === undefined) {
             throw new factory.errors.Argument('recipient', 'Movie Ticket payment not accepted');
         }
-        if (movieTicketPaymentAccepted.movieTicketInfo === undefined) {
-            throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo');
-        }
+        // if (movieTicketPaymentAccepted.movieTicketInfo === undefined) {
+        //     throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo');
+        // }
 
         const checkResult = await checkByIdentifier({
             movieTickets: movieTickets,
-            movieTicketInfo: movieTicketPaymentAccepted.movieTicketInfo,
+            seller: seller,
+            // movieTicketInfo: movieTicketPaymentAccepted.movieTicketInfo,
             screeningEvent: screeningEvent
         })(repos);
 
