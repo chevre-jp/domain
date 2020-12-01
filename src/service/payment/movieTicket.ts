@@ -94,12 +94,10 @@ export function checkMovieTicket(
 
             // ショップ情報取得
             const seller = await repos.seller.findById({ id: params.object[0]?.seller.id });
-            if (seller.paymentAccepted === undefined) {
-                throw new factory.errors.Argument('transactionId', 'Movie Ticket payment not accepted');
-            }
-            const movieTicketPaymentAccepted = seller.paymentAccepted.find((a) => a.paymentMethodType === paymentMethodType);
-            if (movieTicketPaymentAccepted === undefined) {
-                throw new factory.errors.Argument('transactionId', 'Movie Ticket payment not accepted');
+
+            const paymentAccepted = seller.paymentAccepted?.some((a) => a.paymentMethodType === paymentMethodType);
+            if (paymentAccepted !== true) {
+                throw new factory.errors.Argument('transactionId', 'payment not accepted');
             }
             // if (movieTicketPaymentAccepted.movieTicketInfo === undefined) {
             //     throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo');

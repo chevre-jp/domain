@@ -505,15 +505,9 @@ function getGMOInfoFromSeller(params: {
     return async (repos: {
         product: ProductRepo;
     }) => {
-        let creditCardPaymentAccepted: factory.seller.IPaymentAccepted | undefined;
-
-        if (!Array.isArray(params.seller.paymentAccepted)) {
-            throw new factory.errors.Argument('transaction', 'Credit card payment not accepted');
-        }
-
-        creditCardPaymentAccepted = params.seller.paymentAccepted.find((a) => a.paymentMethodType === params.paymentMethodType);
-        if (creditCardPaymentAccepted === undefined) {
-            throw new factory.errors.Argument('transaction', 'Credit card payment not accepted');
+        const paymentAccepted = params.seller.paymentAccepted?.some((a) => a.paymentMethodType === params.paymentMethodType);
+        if (paymentAccepted !== true) {
+            throw new factory.errors.Argument('transaction', 'payment not accepted');
         }
 
         // 決済サービスからcredentialsを取得する

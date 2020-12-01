@@ -53,9 +53,10 @@ export function validateMovieTicket(
             throw new factory.errors.ArgumentNull('recipient.id');
         }
         const seller = await repos.seller.findById({ id: sellerId });
-        const movieTicketPaymentAccepted = seller.paymentAccepted?.find((a) => a.paymentMethodType === paymentMethodType);
-        if (movieTicketPaymentAccepted === undefined) {
-            throw new factory.errors.Argument('recipient', 'Movie Ticket payment not accepted');
+
+        const paymentAccepted = seller.paymentAccepted?.some((a) => a.paymentMethodType === paymentMethodType);
+        if (paymentAccepted !== true) {
+            throw new factory.errors.Argument('recipient', 'payment not accepted');
         }
         // if (movieTicketPaymentAccepted.movieTicketInfo === undefined) {
         //     throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo');

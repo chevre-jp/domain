@@ -17,10 +17,9 @@ export function createSeatInfoSyncIn(params: {
 }): mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncIn {
     const event = params.event;
 
-    // ショップ情報取得
-    const movieTicketPaymentAccepted = params.seller.paymentAccepted?.find((a) => a.paymentMethodType === params.paymentMethodType);
-    if (movieTicketPaymentAccepted === undefined) {
-        throw new factory.errors.Argument('transactionId', 'Movie Ticket payment not accepted');
+    const paymentAccepted = params.seller.paymentAccepted?.some((a) => a.paymentMethodType === params.paymentMethodType);
+    if (paymentAccepted !== true) {
+        throw new factory.errors.Argument('transactionId', 'payment not accepted');
     }
 
     const knyknrNoInfo: mvtkapi.mvtk.services.seat.seatInfoSync.IKnyknrNoInfo[] = [];
