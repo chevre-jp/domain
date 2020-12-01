@@ -134,10 +134,7 @@ export class MongoRepository {
         projection?: any
     ): Promise<ISeller> {
         const doc = await this.organizationModel.findOne(
-            {
-                paymentAccepted: { $exists: true },
-                _id: conditions.id
-            },
+            { _id: conditions.id },
             {
                 __v: 0,
                 createdAt: 0,
@@ -166,10 +163,7 @@ export class MongoRepository {
             organization = doc.toObject();
         } else {
             const doc = await this.organizationModel.findOneAndUpdate(
-                {
-                    paymentAccepted: { $exists: true },
-                    _id: params.id
-                },
+                { _id: params.id },
                 params.attributes,
                 { upsert: false, new: true }
             )
@@ -235,10 +229,7 @@ export class MongoRepository {
         id: string;
     }): Promise<void> {
         await this.organizationModel.findOneAndRemove(
-            {
-                paymentAccepted: { $exists: true },
-                _id: params.id
-            }
+            { _id: params.id }
         )
             .exec();
     }

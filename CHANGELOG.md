@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - 外部決済サービス認証情報を販売者から決済サービスへ移行
+- 販売者検索の条件からpaymentAcceptedを除外
 
 ### Deprecated
 
