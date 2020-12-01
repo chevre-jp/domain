@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- 決済取引において、GMO認証情報を決済サービスから取得するように変更
+
 ### Deprecated
 
 ### Removed
