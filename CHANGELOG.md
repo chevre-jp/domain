@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 外部決済サービス認証情報を販売者から決済サービスへ移行
 - 販売者検索の条件からpaymentAcceptedを除外
+- プロダクト検索時にprojectionを指定できるように調整
 
 ### Deprecated
 
