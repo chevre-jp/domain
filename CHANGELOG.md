@@ -18,6 +18,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.41.0 - 2020-12-04
+
+### Changed
+
+- 外部決済サービス認証情報を販売者から決済サービスへ移行
+- 販売者検索の条件からpaymentAcceptedを除外
+- プロダクト検索時にprojectionを指定できるように調整
+
 ## v15.40.1 - 2020-11-24
 
 ### Changed

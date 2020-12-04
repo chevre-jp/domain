@@ -93,21 +93,19 @@ export function checkMovieTicket(
             });
 
             // ショップ情報取得
-            const movieTheater = await repos.seller.findById({ id: params.object[0]?.seller.id });
-            if (movieTheater.paymentAccepted === undefined) {
-                throw new factory.errors.Argument('transactionId', 'Movie Ticket payment not accepted');
+            const seller = await repos.seller.findById({ id: params.object[0]?.seller.id });
+
+            const paymentAccepted = seller.paymentAccepted?.some((a) => a.paymentMethodType === paymentMethodType);
+            if (paymentAccepted !== true) {
+                throw new factory.errors.Argument('transactionId', 'payment not accepted');
             }
-            const movieTicketPaymentAccepted = movieTheater.paymentAccepted.find((a) => a.paymentMethodType === paymentMethodType);
-            if (movieTicketPaymentAccepted === undefined) {
-                throw new factory.errors.Argument('transactionId', 'Movie Ticket payment not accepted');
-            }
-            if (movieTicketPaymentAccepted.movieTicketInfo === undefined) {
-                throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo');
-            }
+            // if (movieTicketPaymentAccepted.movieTicketInfo === undefined) {
+            //     throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo');
+            // }
 
             checkResult = await checkByIdentifier({
                 movieTickets: movieTickets,
-                movieTicketInfo: movieTicketPaymentAccepted.movieTicketInfo,
+                seller: seller,
                 screeningEvent: screeningEvent
             })(repos);
 
@@ -162,7 +160,7 @@ export function checkMovieTicket(
  */
 export function checkByIdentifier(params: {
     movieTickets: IMovieTicket[];
-    movieTicketInfo: factory.seller.IMovieTicketInfo;
+    seller: factory.seller.ISeller;
     screeningEvent: factory.event.IEvent<factory.eventType.ScreeningEvent>;
 }) {
     // tslint:disable-next-line:max-func-body-length
@@ -218,12 +216,14 @@ export function checkByIdentifier(params: {
             skhnCd = `${eventCOAInfo.titleCode}${`00${eventCOAInfo.titleBranchNum}`.slice(DIGITS)}`;
         }
 
+        const credentials = await getCredentials({ paymentMethodType, seller: params.seller })(repos);
+
         purchaseNumberAuthIn = {
-            kgygishCd: params.movieTicketInfo.kgygishCd,
+            kgygishCd: credentials.kgygishCd,
             jhshbtsCd: mvtkapi.mvtk.services.auth.purchaseNumberAuth.InformationTypeCode.All,
             knyknrNoInfoIn: knyknrNoInfoIn,
             skhnCd: skhnCd,
-            stCd: params.movieTicketInfo.stCd,
+            stCd: credentials.stCd,
             jeiYmd: moment(params.screeningEvent.startDate)
                 .tz('Asia/Tokyo')
                 .format('YYYY/MM/DD')
@@ -521,13 +521,16 @@ export function payMovieTicket(params: factory.task.pay.IData) {
                 auth: mvtkReserveAuthClient
             });
 
+            const credentials = await getCredentials({ paymentMethodType, seller })(repos);
+
             seatInfoSyncIn = createSeatInfoSyncIn({
                 paymentMethodType: paymentMethodType,
                 paymentMethodId: paymentMethodId,
                 movieTickets: movieTickets,
                 event: event,
                 purpose: params.purpose,
-                seller: seller
+                seller: seller,
+                credentials
             });
 
             seatInfoSyncResult = await movieTicketSeatService.seatInfoSync(seatInfoSyncIn);
@@ -665,5 +668,42 @@ function findPayAction(params: { project: { id: string }; paymentMethodId: strin
         });
 
         return payActions.shift();
+    };
+}
+
+function getCredentials(params: {
+    paymentMethodType: string;
+    seller: factory.seller.ISeller;
+}) {
+    return async (repos: {
+        product: ProductRepo;
+    }) => {
+        // 決済サービスからcredentialsを取得する
+        const paymentServices = <factory.service.paymentService.IService[]>await repos.product.search({
+            limit: 1,
+            project: { id: { $eq: params.seller.project.id } },
+            typeOf: { $eq: factory.service.paymentService.PaymentServiceType.MovieTicket },
+            serviceOutput: { typeOf: { $eq: params.paymentMethodType } }
+        });
+        const paymentService = paymentServices.shift();
+        if (paymentService === undefined) {
+            throw new factory.errors.NotFound('PaymentService');
+        }
+
+        const provider = paymentService.provider?.find((p) => p.id === params.seller.id);
+        if (provider === undefined) {
+            throw new factory.errors.NotFound('PaymentService provider');
+        }
+
+        const kgygishCd = provider.credentials?.kgygishCd;
+        const stCd = provider.credentials?.stCd;
+        if (typeof kgygishCd !== 'string' || typeof stCd !== 'string') {
+            throw new factory.errors.Argument('transaction', 'Provider credentials not enough');
+        }
+
+        return {
+            kgygishCd,
+            stCd
+        };
     };
 }

@@ -56,7 +56,7 @@ export function authorize(
 
         const seller = await repos.seller.findById({ id: sellerId });
 
-        const { shopId, shopPass } = getGMOInfoFromSeller({ paymentMethodType, seller: seller });
+        const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: seller })(repos);
 
         // GMOオーダーIDはカスタム指定可能
         const orderId = params.transactionNumber;
@@ -226,7 +226,7 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
 
         const seller = await repos.seller.findById({ id: sellerId });
 
-        const { shopId, shopPass } = getGMOInfoFromSeller({ paymentMethodType, seller: seller });
+        const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: seller })(repos);
 
         const creditCardService = new GMO.service.Credit({ endpoint: String(availableChannel.serviceUrl) });
 
@@ -283,7 +283,7 @@ export function payCreditCard(params: factory.task.pay.IData) {
         });
 
         const seller = await repos.seller.findById({ id: String(params.recipient?.id) });
-        const { shopId, shopPass } = getGMOInfoFromSeller({ paymentMethodType, seller: seller });
+        const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: seller })(repos);
 
         // アクション開始
         const action = await repos.action.start(params);
@@ -381,7 +381,7 @@ export function refundCreditCard(params: factory.task.refund.IData) {
 
         const seller = await repos.seller.findById({ id: String(params.agent.id) });
 
-        const { shopId, shopPass } = getGMOInfoFromSeller({ paymentMethodType, seller: seller });
+        const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: seller })(repos);
 
         const availableChannel = await repos.product.findAvailableChannel({
             project: params.project,
@@ -502,24 +502,49 @@ function getGMOInfoFromSeller(params: {
     paymentMethodType: string;
     seller: factory.seller.ISeller;
 }) {
-    let creditCardPaymentAccepted: factory.seller.IPaymentAccepted | undefined;
+    return async (repos: {
+        product: ProductRepo;
+    }) => {
+        const paymentAccepted = params.seller.paymentAccepted?.some((a) => a.paymentMethodType === params.paymentMethodType);
+        if (paymentAccepted !== true) {
+            throw new factory.errors.Argument('transaction', 'payment not accepted');
+        }
 
-    if (!Array.isArray(params.seller.paymentAccepted)) {
-        throw new factory.errors.Argument('transaction', 'Credit card payment not accepted');
-    }
+        // 決済サービスからcredentialsを取得する
+        const paymentServices = <factory.service.paymentService.IService[]>await repos.product.search({
+            limit: 1,
+            project: { id: { $eq: params.seller.project.id } },
+            typeOf: { $eq: factory.service.paymentService.PaymentServiceType.CreditCard },
+            serviceOutput: { typeOf: { $eq: params.paymentMethodType } }
+        });
+        const paymentService = paymentServices.shift();
+        if (paymentService === undefined) {
+            throw new factory.errors.NotFound('PaymentService');
+        }
 
-    creditCardPaymentAccepted = params.seller.paymentAccepted.find((a) => a.paymentMethodType === params.paymentMethodType);
-    if (creditCardPaymentAccepted === undefined) {
-        throw new factory.errors.Argument('transaction', 'Credit card payment not accepted');
-    }
-    // tslint:disable-next-line:no-single-line-block-comment
-    /* istanbul ignore next */
-    if (typeof creditCardPaymentAccepted.gmoInfo?.shopPass !== 'string') {
-        throw new factory.errors.Argument('transaction', 'Credit card payment settings not enough');
-    }
+        const provider = paymentService.provider?.find((p) => p.id === params.seller.id);
+        if (provider === undefined) {
+            throw new factory.errors.NotFound('PaymentService provider');
+        }
 
-    return {
-        shopId: creditCardPaymentAccepted.gmoInfo.shopId,
-        shopPass: creditCardPaymentAccepted.gmoInfo.shopPass
+        const shopId = provider.credentials?.shopId;
+        const shopPass = provider.credentials?.shopPass;
+        if (typeof shopId !== 'string' || typeof shopPass !== 'string') {
+            throw new factory.errors.Argument('transaction', 'Provider credentials not enough');
+        }
+
+        return {
+            shopId,
+            shopPass
+        };
+
+        // if (typeof creditCardPaymentAccepted.gmoInfo?.shopPass !== 'string') {
+        //     throw new factory.errors.Argument('transaction', 'Credit card payment settings not enough');
+        // }
+
+        // return {
+        //     shopId: creditCardPaymentAccepted.gmoInfo.shopId,
+        //     shopPass: creditCardPaymentAccepted.gmoInfo.shopPass
+        // };
     };
 }

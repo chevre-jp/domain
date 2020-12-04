@@ -39,9 +39,10 @@ export function validateAccount(params: factory.transaction.pay.IStartParamsWith
             throw new factory.errors.ArgumentNull('recipient.id');
         }
         const seller = await repos.seller.findById({ id: sellerId });
-        const paymentAccepted = seller.paymentAccepted?.find((a) => a.paymentMethodType === paymentMethodType);
-        if (paymentAccepted === undefined) {
-            throw new factory.errors.Argument('recipient', `${paymentMethodType} payment not accepted`);
+
+        const paymentAccepted = seller.paymentAccepted?.some((a) => a.paymentMethodType === paymentMethodType);
+        if (paymentAccepted !== true) {
+            throw new factory.errors.Argument('recipient', `payment not accepted`);
         }
 
         const accountService = new pecorinoapi.service.Account({

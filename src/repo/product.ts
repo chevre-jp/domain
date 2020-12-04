@@ -118,15 +118,17 @@ export class MongoRepository {
         return andConditions;
     }
 
-    public async findById(params: { id: string }): Promise<IProduct> {
+    public async findById(
+        conditions: { id: string },
+        projection?: any
+    ): Promise<IProduct> {
         const doc = await this.productModel.findOne(
-            {
-                _id: params.id
-            },
+            { _id: conditions.id },
             {
                 __v: 0,
                 createdAt: 0,
-                updatedAt: 0
+                updatedAt: 0,
+                ...projection
             }
         )
             .exec();
@@ -137,28 +139,33 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    public async search(params: factory.product.ISearchConditions): Promise<IProduct[]> {
-        const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
+    public async search(
+        conditions: factory.product.ISearchConditions,
+        projection?: any
+    ): Promise<IProduct[]> {
+        const andConditions = MongoRepository.CREATE_MONGO_CONDITIONS(conditions);
+
         const query = this.productModel.find(
-            (conditions.length > 0) ? { $and: conditions } : {},
+            (andConditions.length > 0) ? { $and: andConditions } : {},
             {
                 __v: 0,
                 createdAt: 0,
-                updatedAt: 0
+                updatedAt: 0,
+                ...projection
             }
         );
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit)
-                .skip(params.limit * (params.page - 1));
+        if (conditions.limit !== undefined && conditions.page !== undefined) {
+            query.limit(conditions.limit)
+                .skip(conditions.limit * (conditions.page - 1));
         }
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.sort !== undefined) {
-            query.sort(params.sort);
+        if (conditions.sort !== undefined) {
+            query.sort(conditions.sort);
         }
 
         return query.setOptions({ maxTimeMS: 10000 })

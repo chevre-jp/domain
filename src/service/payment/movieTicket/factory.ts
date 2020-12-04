@@ -10,13 +10,16 @@ export function createSeatInfoSyncIn(params: {
     event: factory.event.screeningEvent.IEvent;
     purpose: factory.action.trade.pay.IPurpose;
     seller: factory.seller.ISeller;
+    credentials: {
+        kgygishCd: string;
+        stCd: string;
+    };
 }): mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncIn {
     const event = params.event;
 
-    // ショップ情報取得
-    const movieTicketPaymentAccepted = params.seller.paymentAccepted?.find((a) => a.paymentMethodType === params.paymentMethodType);
-    if (movieTicketPaymentAccepted === undefined) {
-        throw new factory.errors.Argument('transactionId', 'Movie Ticket payment not accepted');
+    const paymentAccepted = params.seller.paymentAccepted?.some((a) => a.paymentMethodType === params.paymentMethodType);
+    if (paymentAccepted !== true) {
+        throw new factory.errors.Argument('transactionId', 'payment not accepted');
     }
 
     const knyknrNoInfo: mvtkapi.mvtk.services.seat.seatInfoSync.IKnyknrNoInfo[] = [];
@@ -57,14 +60,16 @@ export function createSeatInfoSyncIn(params: {
         skhnCd = `${eventCOAInfo.titleCode}${`00${eventCOAInfo.titleBranchNum}`.slice(DIGITS)}`;
     }
 
-    const kgygishCd = movieTicketPaymentAccepted.movieTicketInfo?.kgygishCd;
-    const stCd = movieTicketPaymentAccepted.movieTicketInfo?.stCd;
-    if (typeof kgygishCd !== 'string') {
-        throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo.kgygishCd');
-    }
-    if (typeof stCd !== 'string') {
-        throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo.stCd');
-    }
+    const kgygishCd = params.credentials.kgygishCd;
+    const stCd = params.credentials.stCd;
+    // const kgygishCd = movieTicketPaymentAccepted.movieTicketInfo?.kgygishCd;
+    // const stCd = movieTicketPaymentAccepted.movieTicketInfo?.stCd;
+    // if (typeof kgygishCd !== 'string') {
+    //     throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo.kgygishCd');
+    // }
+    // if (typeof stCd !== 'string') {
+    //     throw new factory.errors.NotFound('paymentAccepted.movieTicketInfo.stCd');
+    // }
 
     return {
         kgygishCd: kgygishCd,
