@@ -10,9 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- Pecorino取引に対して識別子を指定できるように調整
-- ポイント特典インターフェースを拡張
-
 ### Deprecated
 
 ### Removed
@@ -20,6 +17,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.42.0 - 2020-12-08
+
+### Changed
+
+- Pecorino取引に対して識別子を指定できるように調整
+- ポイント特典インターフェースを拡張
 
 ## v15.41.0 - 2020-12-04
 
