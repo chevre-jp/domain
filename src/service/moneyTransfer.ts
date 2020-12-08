@@ -40,6 +40,7 @@ export interface IObject {
  */
 export function authorize(params: {
     typeOf?: pecorinoapi.factory.transactionType;
+    identifier?: string;
     transactionNumber?: string;
     project: factory.project.IProject;
     agent: factory.action.transfer.moneyTransfer.IAgent;
@@ -63,6 +64,7 @@ export function authorize(params: {
         try {
             pendingTransaction = await processAccountTransaction({
                 typeOf: params.typeOf,
+                identifier: params.identifier,
                 transactionNumber: params.transactionNumber,
                 project: project,
                 object: params.object,
@@ -83,6 +85,7 @@ export function authorize(params: {
 // tslint:disable-next-line:max-func-body-length
 async function processAccountTransaction(params: {
     typeOf?: pecorinoapi.factory.transactionType;
+    identifier?: string;
     transactionNumber?: string;
     project: factory.project.IProject;
     object: IObject;
@@ -151,7 +154,7 @@ async function processAccountTransaction(params: {
                         accountNumber: params.object.toAccount.accountNumber
                     }
                 },
-                ...(typeof (<any>params).identifier === 'string') ? { identifier: (<any>params).identifier } : undefined
+                ...(typeof params.identifier === 'string') ? { identifier: params.identifier } : undefined
             });
             break;
 
@@ -177,7 +180,7 @@ async function processAccountTransaction(params: {
                         accountNumber: params.object.toAccount.accountNumber
                     }
                 },
-                ...(typeof (<any>params).identifier === 'string') ? { identifier: (<any>params).identifier } : undefined
+                ...(typeof params.identifier === 'string') ? { identifier: params.identifier } : undefined
             });
             break;
 
@@ -201,7 +204,7 @@ async function processAccountTransaction(params: {
                         accountNumber: params.object.fromAccount.accountNumber
                     }
                 },
-                ...(typeof (<any>params).identifier === 'string') ? { identifier: (<any>params).identifier } : undefined
+                ...(typeof params.identifier === 'string') ? { identifier: params.identifier } : undefined
             });
             break;
 

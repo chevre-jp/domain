@@ -52,6 +52,7 @@ export type ICancelOperation<T> = (repos: {
  * 取引開始
  * Pecorinoサービスを利用して口座取引を開始する
  */
+// tslint:disable-next-line:max-func-body-length
 export function start(
     params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail
 ): IStartOperation<factory.transaction.moneyTransfer.ITransaction> {
@@ -116,7 +117,8 @@ export function start(
                 pendingTransaction: {
                     typeOf: transationType,
                     id: '',
-                    transactionNumber: transactionNumber
+                    transactionNumber: transactionNumber,
+                    ...(typeof (<any>params).identifier === 'string') ? { identifier: (<any>params).identifier } : undefined
                 },
                 ...(typeof params.object.description === 'string') ? { description: params.object.description } : {}
             },
@@ -171,6 +173,7 @@ function authorizeAccount(params: {
 
         pendingTransaction = await MoneyTransferService.authorize({
             typeOf: transaction.object.pendingTransaction?.typeOf,
+            identifier: (<any>transaction.object).pendingTransaction?.identifier,
             transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
             project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
             agent: transaction.agent,
