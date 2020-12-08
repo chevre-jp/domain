@@ -136,6 +136,7 @@ async function processAccountTransaction(params: {
                 endpoint: credentials.pecorino.endpoint,
                 auth: pecorinoAuthClient
             });
+
             pendingTransaction = await depositService.start({
                 transactionNumber: params.transactionNumber,
                 project: { typeOf: params.project.typeOf, id: params.project.id },
@@ -149,7 +150,8 @@ async function processAccountTransaction(params: {
                     toLocation: {
                         accountNumber: params.object.toAccount.accountNumber
                     }
-                }
+                },
+                ...(typeof (<any>params).identifier === 'string') ? { identifier: (<any>params).identifier } : undefined
             });
             break;
 
@@ -174,7 +176,8 @@ async function processAccountTransaction(params: {
                     toLocation: {
                         accountNumber: params.object.toAccount.accountNumber
                     }
-                }
+                },
+                ...(typeof (<any>params).identifier === 'string') ? { identifier: (<any>params).identifier } : undefined
             });
             break;
 
@@ -197,7 +200,8 @@ async function processAccountTransaction(params: {
                     fromLocation: {
                         accountNumber: params.object.fromAccount.accountNumber
                     }
-                }
+                },
+                ...(typeof (<any>params).identifier === 'string') ? { identifier: (<any>params).identifier } : undefined
             });
             break;
 
