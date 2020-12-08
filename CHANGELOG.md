@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - Pecorino取引に対して識別子を指定できるように調整
+- ポイント特典インターフェースを拡張
 
 ### Deprecated
 

@@ -118,7 +118,7 @@ export function start(
                     typeOf: transationType,
                     id: '',
                     transactionNumber: transactionNumber,
-                    ...(typeof (<any>params).identifier === 'string') ? { identifier: (<any>params).identifier } : undefined
+                    ...(typeof params.identifier === 'string') ? { identifier: params.identifier } : undefined
                 },
                 ...(typeof params.object.description === 'string') ? { description: params.object.description } : {}
             },
@@ -138,7 +138,8 @@ export function start(
                     'object.pendingTransaction': {
                         typeOf: pendingTransaction.typeOf,
                         id: pendingTransaction.id,
-                        transactionNumber: pendingTransaction.transactionNumber
+                        transactionNumber: pendingTransaction.transactionNumber,
+                        ...(typeof pendingTransaction.identifier === 'string') ? { identifier: pendingTransaction.identifier } : undefined
                     }
                 }
             )
@@ -173,14 +174,18 @@ function authorizeAccount(params: {
 
         pendingTransaction = await MoneyTransferService.authorize({
             typeOf: transaction.object.pendingTransaction?.typeOf,
-            identifier: (<any>transaction.object).pendingTransaction?.identifier,
+            identifier: transaction.object.pendingTransaction?.identifier,
             transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
             project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
             agent: transaction.agent,
             object: {
                 amount: <number>transaction.object.amount.value,
-                fromAccount: { accountNumber: (<any>fromLocation).identifier },
-                toAccount: { accountNumber: (<any>toLocation).identifier },
+                fromAccount: {
+                    ...(typeof fromLocation.identifier === 'string') ? { accountNumber: fromLocation.identifier } : undefined
+                },
+                toAccount: {
+                    ...(typeof toLocation.identifier === 'string') ? { accountNumber: toLocation.identifier } : undefined
+                },
                 ...(typeof transaction.object.description === 'string')
                     ? { description: transaction.object.description }
                     : undefined

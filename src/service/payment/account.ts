@@ -253,7 +253,7 @@ export function refundAccount(params: factory.task.refund.IData) {
                     }
                 },
                 // 返金のユニークネスを保証するため識別子を指定する
-                ...{ identifier: `${params.project.id}:refund:${paymentMethodId}` }
+                identifier: `${params.project.id}:refund:${paymentMethodId}`
             });
             await depositService.confirm({ transactionNumber: transactionNumber });
         } catch (error) {

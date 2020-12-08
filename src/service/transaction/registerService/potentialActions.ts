@@ -79,7 +79,9 @@ function createRegisterServiceActions(params: {
                     },
                     purpose: {
                         typeOf: params.transaction.typeOf,
-                        id: params.transaction.id
+                        id: params.transaction.id,
+                        // 入金取引に識別子を指定する
+                        ...(typeof pointAward.purpose?.identifier === 'string') ? { identifier: pointAward.purpose.identifier } : undefined
                     },
                     amount: {
                         typeOf: 'MonetaryAmount',
@@ -88,8 +90,8 @@ function createRegisterServiceActions(params: {
                     },
                     fromLocation: fromLocation,
                     toLocation: pointAward.toLocation,
-                    ...(typeof (<any>pointAward).description === 'string') ? { description: (<any>pointAward).description } : undefined,
-                    ...((<any>pointAward).recipient !== undefined) ? { recipient: (<any>pointAward).recipient } : undefined
+                    ...(typeof pointAward.description === 'string') ? { description: pointAward.description } : undefined,
+                    ...(pointAward.recipient !== undefined) ? { recipient: pointAward.recipient } : undefined
                 });
             }
         }
