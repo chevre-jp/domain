@@ -251,7 +251,9 @@ export function refundAccount(params: factory.task.refund.IData) {
                     toLocation: {
                         accountNumber: String(payTransaction.object.paymentMethod?.accountId)
                     }
-                }
+                },
+                // 返金のユニークネスを保証するため識別子を指定する
+                identifier: `${params.project.id}:refund:${paymentMethodId}`
             });
             await depositService.confirm({ transactionNumber: transactionNumber });
         } catch (error) {

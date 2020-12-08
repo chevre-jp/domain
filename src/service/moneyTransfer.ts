@@ -31,8 +31,8 @@ export type IAuthorizeOperation<T> = (repos: {
 export interface IObject {
     amount: number;
     description?: string;
-    fromAccount: { accountNumber: string };
-    toAccount: { accountNumber: string };
+    fromAccount: { accountNumber?: string };
+    toAccount: { accountNumber?: string };
 }
 
 /**
@@ -40,6 +40,7 @@ export interface IObject {
  */
 export function authorize(params: {
     typeOf?: pecorinoapi.factory.transactionType;
+    identifier?: string;
     transactionNumber?: string;
     project: factory.project.IProject;
     agent: factory.action.transfer.moneyTransfer.IAgent;
@@ -63,6 +64,7 @@ export function authorize(params: {
         try {
             pendingTransaction = await processAccountTransaction({
                 typeOf: params.typeOf,
+                identifier: params.identifier,
                 transactionNumber: params.transactionNumber,
                 project: project,
                 object: params.object,
@@ -83,6 +85,7 @@ export function authorize(params: {
 // tslint:disable-next-line:max-func-body-length
 async function processAccountTransaction(params: {
     typeOf?: pecorinoapi.factory.transactionType;
+    identifier?: string;
     transactionNumber?: string;
     project: factory.project.IProject;
     object: IObject;
@@ -113,12 +116,10 @@ async function processAccountTransaction(params: {
     const recipient = {
         typeOf: params.recipient.typeOf,
         id: params.recipient.id,
-        name: (typeof (<any>params.recipient).name === 'string')
-            ? (<any>params.recipient).name
-            : ((<any>params.recipient).name !== undefined
-                && (<any>params.recipient).name !== null
-                && typeof (<any>params.recipient).name.ja === 'string')
-                ? (<any>params.recipient).name.ja
+        name: (typeof params.recipient.name === 'string')
+            ? params.recipient.name
+            : (typeof params.recipient.name?.ja === 'string')
+                ? params.recipient.name.ja
                 : `${transaction.typeOf} Transaction ${transaction.id}`,
         ...(typeof params.recipient.url === 'string') ? { url: params.recipient.url } : undefined
     };
@@ -136,6 +137,11 @@ async function processAccountTransaction(params: {
                 endpoint: credentials.pecorino.endpoint,
                 auth: pecorinoAuthClient
             });
+
+            if (typeof params.object.toAccount.accountNumber !== 'string') {
+                throw new factory.errors.ArgumentNull('object.toAccount.accountNumber');
+            }
+
             pendingTransaction = await depositService.start({
                 transactionNumber: params.transactionNumber,
                 project: { typeOf: params.project.typeOf, id: params.project.id },
@@ -149,7 +155,8 @@ async function processAccountTransaction(params: {
                     toLocation: {
                         accountNumber: params.object.toAccount.accountNumber
                     }
-                }
+                },
+                ...(typeof params.identifier === 'string') ? { identifier: params.identifier } : undefined
             });
             break;
 
@@ -158,6 +165,14 @@ async function processAccountTransaction(params: {
                 endpoint: credentials.pecorino.endpoint,
                 auth: pecorinoAuthClient
             });
+
+            if (typeof params.object.fromAccount.accountNumber !== 'string') {
+                throw new factory.errors.ArgumentNull('object.fromAccount.accountNumber');
+            }
+            if (typeof params.object.toAccount.accountNumber !== 'string') {
+                throw new factory.errors.ArgumentNull('object.fromAccount.accountNumber');
+            }
+
             pendingTransaction = await transferService.start({
                 transactionNumber: params.transactionNumber,
                 project: { typeOf: params.project.typeOf, id: params.project.id },
@@ -174,7 +189,8 @@ async function processAccountTransaction(params: {
                     toLocation: {
                         accountNumber: params.object.toAccount.accountNumber
                     }
-                }
+                },
+                ...(typeof params.identifier === 'string') ? { identifier: params.identifier } : undefined
             });
             break;
 
@@ -184,6 +200,11 @@ async function processAccountTransaction(params: {
                 endpoint: credentials.pecorino.endpoint,
                 auth: pecorinoAuthClient
             });
+
+            if (typeof params.object.fromAccount.accountNumber !== 'string') {
+                throw new factory.errors.ArgumentNull('object.fromAccount.accountNumber');
+            }
+
             pendingTransaction = await withdrawService.start({
                 transactionNumber: params.transactionNumber,
                 project: { typeOf: params.project.typeOf, id: params.project.id },
@@ -197,7 +218,8 @@ async function processAccountTransaction(params: {
                     fromLocation: {
                         accountNumber: params.object.fromAccount.accountNumber
                     }
-                }
+                },
+                ...(typeof params.identifier === 'string') ? { identifier: params.identifier } : undefined
             });
             break;
 
@@ -260,7 +282,7 @@ export function cancelMoneyTransfer(params: {
                 /* istanbul ignore next */
                 default:
                     throw new factory.errors.NotImplemented(
-                        `transaction type '${(<any>pendingTransaction).typeOf}' not implemented.`
+                        `transaction type '${pendingTransaction.typeOf}' not implemented.`
                     );
             }
         }
@@ -341,11 +363,15 @@ export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
                                 toLocation: {
                                     accountNumber: (<factory.action.transfer.moneyTransfer.IPaymentCard>params.toLocation).identifier
                                 }
-                            }
+                            },
+                            // 入金取引に識別子を指定する
+                            ...(typeof params.purpose.identifier === 'string') ? { identifier: params.purpose.identifier } : undefined
                         });
-                    }
 
-                    await depositService.confirm({ transactionNumber: transactionNumber });
+                        await depositService.confirm({ transactionNumber: transactionNumber });
+                    } else {
+                        await depositService.confirm({ transactionNumber: transactionNumber });
+                    }
 
                     break;
 

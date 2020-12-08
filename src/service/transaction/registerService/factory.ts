@@ -16,7 +16,7 @@ export function createPointAward(params: {
     const pointAwardTypeOf = params.offer.itemOffered?.pointAward?.typeOf;
 
     const pointAwardToLocation = params.acceptedOffer.itemOffered?.pointAward?.toLocation;
-    const pointAwardRecipient = (<any>params.acceptedOffer).itemOffered?.pointAward?.recipient;
+    const pointAwardRecipient = params.acceptedOffer.itemOffered?.pointAward?.recipient;
 
     // オファーのpointAward設定が適切にされていれば、指定されたtoLocationを反映する
     if (typeof pointAwardAmount?.value === 'number'
@@ -48,7 +48,7 @@ export function createServiceOutput(params: {
     acceptedOffer: factory.transaction.registerService.IAcceptedOffer;
     offer: factory.event.screeningEvent.ITicketOffer;
     transactionNumber: string;
-}): any {
+}): factory.service.IServiceOutput {
     const product = params.product;
     const acceptedOffer = params.acceptedOffer;
 
@@ -150,11 +150,14 @@ export function createServiceOutput(params: {
         project: { typeOf: product.project.typeOf, id: product.project.id },
         identifier: identifier,
         issuedThrough: {
+            project: { typeOf: product.project.typeOf, id: product.project.id },
             typeOf: product.typeOf,
             id: product.id
         },
         typeOf: serviceOutputType,
-        dateIssued: params.dateIssued,
+        ...{
+            dateIssued: params.dateIssued
+        },
         ...(typeof accessCode === 'string') ? { accessCode } : undefined,
         ...(Array.isArray(additionalProperty)) ? { additionalProperty } : undefined,
         ...(typeof validFor === 'string') ? { validFor } : undefined,

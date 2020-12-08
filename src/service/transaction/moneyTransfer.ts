@@ -52,6 +52,7 @@ export type ICancelOperation<T> = (repos: {
  * 取引開始
  * Pecorinoサービスを利用して口座取引を開始する
  */
+// tslint:disable-next-line:max-func-body-length
 export function start(
     params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail
 ): IStartOperation<factory.transaction.moneyTransfer.ITransaction> {
@@ -116,7 +117,8 @@ export function start(
                 pendingTransaction: {
                     typeOf: transationType,
                     id: '',
-                    transactionNumber: transactionNumber
+                    transactionNumber: transactionNumber,
+                    ...(typeof params.identifier === 'string') ? { identifier: params.identifier } : undefined
                 },
                 ...(typeof params.object.description === 'string') ? { description: params.object.description } : {}
             },
@@ -136,7 +138,8 @@ export function start(
                     'object.pendingTransaction': {
                         typeOf: pendingTransaction.typeOf,
                         id: pendingTransaction.id,
-                        transactionNumber: pendingTransaction.transactionNumber
+                        transactionNumber: pendingTransaction.transactionNumber,
+                        ...(typeof pendingTransaction.identifier === 'string') ? { identifier: pendingTransaction.identifier } : undefined
                     }
                 }
             )
@@ -171,13 +174,18 @@ function authorizeAccount(params: {
 
         pendingTransaction = await MoneyTransferService.authorize({
             typeOf: transaction.object.pendingTransaction?.typeOf,
+            identifier: transaction.object.pendingTransaction?.identifier,
             transactionNumber: transaction.object.pendingTransaction?.transactionNumber,
             project: { typeOf: transaction.project.typeOf, id: transaction.project.id },
             agent: transaction.agent,
             object: {
                 amount: <number>transaction.object.amount.value,
-                fromAccount: { accountNumber: (<any>fromLocation).identifier },
-                toAccount: { accountNumber: (<any>toLocation).identifier },
+                fromAccount: {
+                    ...(typeof fromLocation.identifier === 'string') ? { accountNumber: fromLocation.identifier } : undefined
+                },
+                toAccount: {
+                    ...(typeof toLocation.identifier === 'string') ? { accountNumber: toLocation.identifier } : undefined
+                },
                 ...(typeof transaction.object.description === 'string')
                     ? { description: transaction.object.description }
                     : undefined
