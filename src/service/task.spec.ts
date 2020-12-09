@@ -104,7 +104,7 @@ describe('abort()', () => {
     it('repositoryの状態が正常であれば、エラーにならないはず', async () => {
         const INTERVAL = 10;
         const task = {
-            project: { id: '' },
+            project: project,
             id: 'id',
             executionResults: [{ error: 'error' }]
         };
@@ -134,6 +134,7 @@ describe('execute()', () => {
 
     it('存在するタスク名であれば、完了ステータスへ変更されるはず', async () => {
         const task = {
+            project: project,
             id: 'id',
             name: domain.factory.taskName.TriggerWebhook,
             data: { datakey: 'dataValue' },
@@ -161,6 +162,7 @@ describe('execute()', () => {
 
     it('存在しないタスク名であれば、ステータスは変更されないはず', async () => {
         const task = {
+            project: project,
             id: 'id',
             name: 'invalidTaskName',
             data: { datakey: 'dataValue' },
