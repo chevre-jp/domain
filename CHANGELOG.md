@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.42.1 - 2020-12-09
+
+### Changed
+
+- ポイント特典インターフェースを拡張
+
 ## v15.42.0 - 2020-12-08
 
 ### Changed
