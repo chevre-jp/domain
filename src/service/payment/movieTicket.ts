@@ -356,11 +356,11 @@ export function authorize(
                     ? paymentMethod?.paymentMethodId
                     : transaction.id;
                 const paymentMethodName: string = (typeof paymentMethod?.name === 'string') ? paymentMethod?.name : paymentMethodType;
+                const accountId = (Array.isArray(paymentMethod?.movieTickets)) ? paymentMethod?.movieTickets[0]?.identifier : undefined;
 
                 const payObject: factory.action.trade.pay.IPaymentService = {
                     typeOf: factory.service.paymentService.PaymentServiceType.MovieTicket,
                     paymentMethod: {
-                        accountId: paymentMethod?.accountId,
                         additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : [],
                         name: paymentMethodName,
                         paymentMethodId: paymentMethodId,
@@ -369,7 +369,8 @@ export function authorize(
                             currency: factory.unitCode.C62,
                             value: paymentMethod?.movieTickets?.length
                         },
-                        typeOf: paymentMethodType
+                        typeOf: paymentMethodType,
+                        ...(typeof accountId === 'string') ? { accountId } : undefined
                     },
                     movieTickets: paymentMethod?.movieTickets
                 };
@@ -451,7 +452,8 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
     };
 }
 
-export type IPayAction = factory.action.IAction<factory.action.IAttributes<factory.actionType.PayAction, any, any>>;
+export type IPayAction = factory.action.trade.pay.IAction;
+// export type IPayAction = factory.action.IAction<factory.action.IAttributes<factory.actionType.PayAction, any, any>>;
 
 /**
  * ムビチケ着券
@@ -475,7 +477,7 @@ export function payMovieTicket(params: factory.task.pay.IData) {
         }
 
         // アクション開始
-        const action = await repos.action.start(params);
+        let action = await repos.action.start(params);
 
         let seatInfoSyncIn: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncIn | undefined;
         let seatInfoSyncResult: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncResult | undefined;
@@ -565,7 +567,9 @@ export function payMovieTicket(params: factory.task.pay.IData) {
             seatInfoSyncResult: seatInfoSyncResult
         };
 
-        return repos.action.complete<factory.actionType.PayAction>({ typeOf: action.typeOf, id: action.id, result: actionResult });
+        action = await repos.action.complete<factory.actionType.PayAction>({ typeOf: action.typeOf, id: action.id, result: actionResult });
+
+        return <IPayAction>action;
     };
 }
 
@@ -632,7 +636,14 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
 
             if (throwsError) {
                 try {
-                    const actionError = { ...error, message: error.message, name: error.name };
+                    // エラー通知先で情報を読み取りやすくするために、messageに情報付加
+                    let message = String(error.message);
+                    message += payAction.object.map((payment) => {
+                        return ` 決済ID:${payment.paymentMethod.paymentMethodId} 購入管理番号:${payment.paymentMethod.accountId}`;
+                    })
+                        .join('');
+
+                    const actionError = { ...error, message: message, name: error.name };
                     await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
                 } catch (__) {
                     // 失敗したら仕方ない
@@ -659,7 +670,7 @@ function findPayAction(params: { project: { id: string }; paymentMethodId: strin
     return async (repos: {
         action: ActionRepo;
     }): Promise<IPayAction | undefined> => {
-        const payActions = await repos.action.search<factory.actionType.PayAction>({
+        const payActions = <IPayAction[]>await repos.action.search<factory.actionType.PayAction>({
             limit: 1,
             actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
             project: { id: { $eq: params.project.id } },

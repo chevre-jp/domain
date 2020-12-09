@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- ムビチケ返金失敗時のエラーメッセージに情報追加
+
 ### Deprecated
 
 ### Removed
