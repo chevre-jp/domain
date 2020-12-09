@@ -635,21 +635,22 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
             }
 
             if (throwsError) {
-                try {
-                    // エラー通知先で情報を読み取りやすくするために、messageに情報付加
-                    let message = String(error.message);
-                    message += payAction.object.map((payment) => {
-                        return ` 決済ID:${payment.paymentMethod.paymentMethodId} 購入管理番号:${payment.paymentMethod.accountId}`;
-                    })
-                        .join('');
+                let message = String(error.message);
 
+                // エラー通知先で情報を読み取りやすくするために、messageに情報付加
+                message += ` [${payAction.object.map((payment) => {
+                    return `決済ID:${payment.paymentMethod.paymentMethodId} 購入管理番号:${payment.paymentMethod.accountId}`;
+                })
+                    .join(' ')}]`;
+
+                try {
                     const actionError = { ...error, message: message, name: error.name };
                     await repos.action.giveUp({ typeOf: action.typeOf, id: action.id, error: actionError });
                 } catch (__) {
                     // 失敗したら仕方ない
                 }
 
-                error = handleMvtkReserveError(error);
+                error = handleMvtkReserveError({ ...error, message: message });
                 throw error;
             }
         }
