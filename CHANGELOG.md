@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.42.2 - 2020-12-09
+
+### Changed
+
+- ムビチケ返金失敗時のエラーメッセージに情報追加
+
 ## v15.42.1 - 2020-12-09
 
 ### Changed
