@@ -17,6 +17,7 @@ export function createPointAward(params: {
 
     const pointAwardToLocation = params.acceptedOffer.itemOffered?.pointAward?.toLocation;
     const pointAwardRecipient = params.acceptedOffer.itemOffered?.pointAward?.recipient;
+    const pointAwardPurposeIdentifier = params.acceptedOffer.itemOffered?.pointAward?.purpose?.identifier;
 
     // オファーのpointAward設定が適切にされていれば、指定されたtoLocationを反映する
     if (typeof pointAwardAmount?.value === 'number'
@@ -31,7 +32,8 @@ export function createPointAward(params: {
             },
             typeOf: factory.actionType.MoneyTransfer,
             ...(typeof pointAwardDescription === 'string') ? { description: pointAwardDescription } : undefined,
-            ...(pointAwardRecipient !== undefined) ? { recipient: pointAwardRecipient } : undefined
+            ...(pointAwardRecipient !== undefined) ? { recipient: pointAwardRecipient } : undefined,
+            ...(typeof pointAwardPurposeIdentifier === 'string') ? { purpose: { identifier: pointAwardPurposeIdentifier } } : undefined
         };
     }
 
