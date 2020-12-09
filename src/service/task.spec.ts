@@ -104,6 +104,7 @@ describe('abort()', () => {
     it('repositoryの状態が正常であれば、エラーにならないはず', async () => {
         const INTERVAL = 10;
         const task = {
+            project: { id: '' },
             id: 'id',
             executionResults: [{ error: 'error' }]
         };
