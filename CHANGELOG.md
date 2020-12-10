@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- ポイント特典入金前に既に入金済かどうかを確認するように調整
+
 ### Deprecated
 
 ### Removed

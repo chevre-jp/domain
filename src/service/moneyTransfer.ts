@@ -327,6 +327,24 @@ export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
 
                     // 入金取引の場合、承認済でないケースがある(ポイント付与など)
                     if (pendingTransaction === undefined) {
+                        // すでに入金済かどうか確認
+                        if (typeof params.purpose.identifier === 'string') {
+                            const actionService = new pecorinoapi.service.Action({
+                                endpoint: credentials.pecorino.endpoint,
+                                auth: pecorinoAuthClient
+                            });
+                            const searchActionsResult = await actionService.searchMoneyTransferActions({
+                                limit: 1,
+                                project: { id: { $eq: params.project.id } },
+                                actionStatus: { $in: [pecorinoapi.factory.actionStatusType.CompletedActionStatus] },
+                                purpose: { identifier: { $eq: params.purpose.identifier } }
+                            });
+                            if (searchActionsResult.data.length > 0) {
+                                // 入金済であれば何もしない
+                                break;
+                            }
+                        }
+
                         const agent = {
                             typeOf: params.agent.typeOf,
                             name: (typeof params.agent.name === 'string')

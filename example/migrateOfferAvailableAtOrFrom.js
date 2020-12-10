@@ -14,10 +14,10 @@ async function main() {
 
     const cursor = await offerRepo.offerModel.find(
         {
-            'project.id': {
-                $exists: true,
-                $eq: project.id
-            },
+            // 'project.id': {
+            //     $exists: true,
+            //     $eq: project.id
+            // },
         },
         {
         }
