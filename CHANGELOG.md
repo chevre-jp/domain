@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.42.4 - 2020-12-10
+
+### Changed
+
+- ポイント特典入金前に既に入金済かどうかを確認するように調整
+
 ## v15.42.3 - 2020-12-09
 
 ### Changed
