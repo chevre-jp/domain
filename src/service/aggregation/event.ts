@@ -315,7 +315,9 @@ function aggregateOfferByEvent(params: {
                 remainingAttendeeCapacity,
                 ...{
                     name: o.name
-                }
+                },
+                // category情報を追加
+                ...(typeof o.category?.codeValue === 'string') ? { category: o.category } : undefined
             });
         }
 
