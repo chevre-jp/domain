@@ -1,6 +1,7 @@
 /**
  * 予約レポートサービス
  */
+import * as createDebug from 'debug';
 import * as json2csv from 'json2csv';
 // @ts-ignore
 import * as JSONStream from 'JSONStream';
@@ -9,7 +10,13 @@ import { Stream } from 'stream';
 
 import * as factory from '../../factory';
 
+import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
+import { MongoRepository as TaskRepo } from '../../repo/task';
+
+import { uploadFileFromStream } from '../util';
+
+const debug = createDebug('chevre-domain:service');
 
 /**
  * 予約レポートインターフェース
@@ -50,6 +57,265 @@ export interface IReservationReport {
     };
     checkedIn: Boolean;
     attended: Boolean;
+}
+
+export interface IReport {
+    project: factory.project.IProject;
+    typeOf: 'Report';
+    about?: string;
+    reportNumber?: string;
+    mentions?: {
+        typeOf: 'SearchAction';
+        query?: any;
+        object: {
+            typeOf: 'Order';
+        };
+    };
+    dateCreated?: Date;
+    dateModified?: Date;
+    datePublished?: Date;
+    encodingFormat?: string;
+    expires?: Date;
+    text?: string;
+    url?: string;
+}
+
+export interface ICreateReportActionAttributes extends factory.action.IAttributes<any, IReport, any> {
+    typeOf: 'CreateAction';
+    // object: IReport;
+    // format?: factory.encodingFormat.Application | factory.encodingFormat.Text;
+    potentialActions?: {
+        sendEmailMessage?: factory.action.transfer.send.message.email.IAttributes[];
+    };
+}
+
+export interface ICreateReportParams {
+    project: factory.project.IProject;
+    object: IReport;
+    // conditions: factory.order.ISearchConditions;
+    // format?: factory.encodingFormat.Application | factory.encodingFormat.Text;
+    potentialActions?: {
+        sendEmailMessage?: {
+            object?: factory.creativeWork.message.email.ICustomization;
+        }[];
+    };
+}
+
+export function createReport(params: ICreateReportActionAttributes) {
+    // tslint:disable-next-line:max-func-body-length
+    return async (repos: {
+        action: ActionRepo;
+        reservation: ReservationRepo;
+        task: TaskRepo;
+    }): Promise<void> => {
+        // const orderDateFrom = params.object.mentions?.query?.orderDateFrom;
+        // const orderDateThrough = params.object.mentions?.query?.orderDateThrough;
+        const eventStartFrom = params.object.mentions?.query?.acceptedOffers?.itemOffered?.reservationFor?.startFrom;
+        const eventStartThrough = params.object.mentions?.query?.acceptedOffers?.itemOffered?.reservationFor?.startThrough;
+
+        const conditions: factory.reservation.ISearchConditions<factory.reservationType.EventReservation> = {
+            project: { ids: [params.project.id] },
+            typeOf: factory.reservationType.EventReservation,
+            // orderDate: {
+            //     $gte: (typeof orderDateFrom === 'string')
+            //         ? moment(orderDateFrom)
+            //             .toDate()
+            //         : undefined,
+            //     $lte: (typeof orderDateThrough === 'string')
+            //         ? moment(orderDateThrough)
+            //             .toDate()
+            //         : undefined
+            // },
+            reservationFor: {
+                startFrom: (typeof eventStartFrom === 'string')
+                    ? moment(eventStartFrom)
+                        .toDate()
+                    : undefined,
+                startThrough: (typeof eventStartThrough === 'string')
+                    ? moment(eventStartThrough)
+                        .toDate()
+                    : undefined
+            }
+        };
+
+        const format = params.object.encodingFormat;
+        if (typeof format !== 'string') {
+            throw new factory.errors.ArgumentNull('object.encodingFormat');
+        }
+
+        // アクション開始
+        const createReportActionAttributes = params;
+        const report: IReport = {
+            ...createReportActionAttributes.object
+        };
+        const action = await repos.action.start<any>({
+            ...createReportActionAttributes,
+            object: report
+        });
+        let downloadUrl: string;
+
+        try {
+            let extension: string;
+
+            switch (params.object.encodingFormat) {
+                case factory.encodingFormat.Application.json:
+                    extension = 'json';
+                    break;
+                case factory.encodingFormat.Text.csv:
+                    extension = 'csv';
+                    break;
+
+                default:
+                    throw new factory.errors.Argument('object.encodingFormat', `${params.object.encodingFormat} not implemented`);
+            }
+
+            const reportStream = await stream({
+                conditions,
+                format: <any>format
+            })(repos);
+
+            // const bufs: Buffer[] = [];
+            // const buffer = await new Promise<Buffer>((resolve, reject) => {
+            //     reportStream.on('data', (chunk) => {
+            //         try {
+            //             if (Buffer.isBuffer(chunk)) {
+            //                 bufs.push(chunk);
+            //             } else {
+            //                 // tslint:disable-next-line:no-console
+            //                 console.info(`Received ${chunk.length} bytes of data. ${typeof chunk}`);
+            //                 bufs.push(Buffer.from(chunk));
+            //             }
+            //         } catch (error) {
+            //             reject(error);
+            //         }
+            //     })
+            //         .on('error', (err) => {
+            //             // tslint:disable-next-line:no-console
+            //             console.error('createReport stream error:', err);
+            //             reject(err);
+            //         })
+            //         .on('end', () => {
+            //             resolve(Buffer.concat(bufs));
+            //         })
+            //         .on('finish', async () => {
+            //             // tslint:disable-next-line:no-console
+            //             console.info('createReport stream finished.');
+            //         });
+            // });
+
+            // ブロブストレージへアップロード
+            const fileName: string = (typeof createReportActionAttributes.object.about === 'string')
+                ? `${createReportActionAttributes.object.about}[${params.project.id}][${moment()
+                    .format('YYYYMMDDHHmmss')}].${extension}`
+                : `OrderReport[${params.project.id}][${moment()
+                    .format('YYYYMMDDHHmmss')}].${extension}`;
+            // downloadUrl = await uploadFile({
+            //     fileName: fileName,
+            //     text: buffer,
+            //     expiryDate: (createReportActionAttributes.object.expires !== undefined)
+            //         ? moment(createReportActionAttributes.object.expires)
+            //             .toDate()
+            //         : undefined
+            // })();
+            downloadUrl = await uploadFileFromStream({
+                fileName: fileName,
+                text: reportStream,
+                expiryDate: (createReportActionAttributes.object.expires !== undefined)
+                    ? moment(createReportActionAttributes.object.expires)
+                        .toDate()
+                    : undefined
+            })();
+            debug('downloadUrl:', downloadUrl);
+        } catch (error) {
+            // actionにエラー結果を追加
+            try {
+                const actionError = { ...error, message: error.message, name: error.name };
+                await repos.action.giveUp<any>({ typeOf: createReportActionAttributes.typeOf, id: action.id, error: actionError });
+            } catch (__) {
+                // 失敗したら仕方ない
+            }
+
+            throw error;
+        }
+
+        report.url = downloadUrl;
+        await repos.action.complete<any>({
+            typeOf: createReportActionAttributes.typeOf,
+            id: action.id,
+            result: report
+        });
+
+        const sendEmailMessageParams = params.potentialActions?.sendEmailMessage;
+        if (Array.isArray(sendEmailMessageParams)) {
+            (<any>createReportActionAttributes.potentialActions).sendEmailMessage = sendEmailMessageParams.map((a) => {
+                const emailText = `
+レポートが使用可能です。
+
+名称: ${report.about}
+フォーマット: ${report.encodingFormat}
+期限: ${report.expires}
+
+${downloadUrl}
+`;
+
+                return {
+                    project: params.project,
+                    typeOf: factory.actionType.SendAction,
+                    object: {
+                        ...a.object,
+                        text: emailText
+                    },
+                    // agent: createReportActionAttributes.agent,
+                    recipient: createReportActionAttributes.agent,
+                    potentialActions: {},
+                    purpose: report
+                };
+            });
+        }
+
+        await onDownloaded(createReportActionAttributes)(repos);
+    };
+}
+
+function onDownloaded(
+    actionAttributes: ICreateReportActionAttributes
+    // url: string
+) {
+    // tslint:disable-next-line:max-func-body-length
+    return async (repos: { task: TaskRepo }) => {
+        const potentialActions = actionAttributes.potentialActions;
+        const now = new Date();
+        const taskAttributes: factory.task.IAttributes[] = [];
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (potentialActions !== undefined) {
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (Array.isArray(potentialActions.sendEmailMessage)) {
+                potentialActions.sendEmailMessage.forEach((s) => {
+                    const sendEmailMessageTask: factory.task.sendEmailMessage.IAttributes = {
+                        project: s.project,
+                        name: factory.taskName.SendEmailMessage,
+                        status: factory.taskStatus.Ready,
+                        runsAt: now, // なるはやで実行
+                        remainingNumberOfTries: 3,
+                        numberOfTried: 0,
+                        executionResults: [],
+                        data: {
+                            actionAttributes: s
+                        }
+                    };
+                    taskAttributes.push(sendEmailMessageTask);
+                });
+            }
+
+            // タスク保管
+            await Promise.all(taskAttributes.map(async (taskAttribute) => {
+                return repos.task.save(taskAttribute);
+            }));
+        }
+    };
 }
 
 /**
