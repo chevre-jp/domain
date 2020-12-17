@@ -34,7 +34,7 @@ export function handleCOAReserveTemporarilyError(error: any) {
 
 /**
  * Pecorinoサービスエラーをハンドリングする
- * 可能であればCinerinoエラーへ変換します
+ * 可能であればChevreエラーへ変換します
  */
 export function handlePecorinoError(error: any) {
     let handledError: Error = error;
@@ -69,7 +69,7 @@ export function handlePecorinoError(error: any) {
 
 /**
  * ムビチケ着券サービスエラーをハンドリングする
- * 可能であればCinerinoエラーへ変換します
+ * 可能であればChevreエラーへ変換します
  */
 export function handleMvtkReserveError(error: any) {
     let handledError: Error = error;

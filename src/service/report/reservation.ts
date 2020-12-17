@@ -68,7 +68,7 @@ export interface IReport {
         typeOf: 'SearchAction';
         query?: any;
         object: {
-            typeOf: 'Order';
+            typeOf: 'Reservation';
         };
     };
     dateCreated?: Date;
@@ -92,7 +92,7 @@ export interface ICreateReportActionAttributes extends factory.action.IAttribute
 export interface ICreateReportParams {
     project: factory.project.IProject;
     object: IReport;
-    // conditions: factory.order.ISearchConditions;
+    // conditions: factory.reservation.ISearchConditions;
     // format?: factory.encodingFormat.Application | factory.encodingFormat.Text;
     potentialActions?: {
         sendEmailMessage?: {
@@ -108,24 +108,22 @@ export function createReport(params: ICreateReportActionAttributes) {
         reservation: ReservationRepo;
         task: TaskRepo;
     }): Promise<void> => {
-        // const orderDateFrom = params.object.mentions?.query?.orderDateFrom;
-        // const orderDateThrough = params.object.mentions?.query?.orderDateThrough;
-        const eventStartFrom = params.object.mentions?.query?.acceptedOffers?.itemOffered?.reservationFor?.startFrom;
-        const eventStartThrough = params.object.mentions?.query?.acceptedOffers?.itemOffered?.reservationFor?.startThrough;
+        const bookingFrom = params.object.mentions?.query?.bookingFrom;
+        const bookingThrough = params.object.mentions?.query?.bookingThrough;
+        const eventStartFrom = params.object.mentions?.query?.reservationFor?.startFrom;
+        const eventStartThrough = params.object.mentions?.query?.reservationFor?.startThrough;
 
         const conditions: factory.reservation.ISearchConditions<factory.reservationType.EventReservation> = {
             project: { ids: [params.project.id] },
             typeOf: factory.reservationType.EventReservation,
-            // orderDate: {
-            //     $gte: (typeof orderDateFrom === 'string')
-            //         ? moment(orderDateFrom)
-            //             .toDate()
-            //         : undefined,
-            //     $lte: (typeof orderDateThrough === 'string')
-            //         ? moment(orderDateThrough)
-            //             .toDate()
-            //         : undefined
-            // },
+            bookingFrom: (typeof bookingFrom === 'string' && bookingFrom.length > 0)
+                ? moment(bookingFrom)
+                    .toDate()
+                : undefined,
+            bookingThrough: (typeof bookingThrough === 'string' && bookingThrough.length > 0)
+                ? moment(bookingThrough)
+                    .toDate()
+                : undefined,
             reservationFor: {
                 startFrom: (typeof eventStartFrom === 'string')
                     ? moment(eventStartFrom)
@@ -207,7 +205,7 @@ export function createReport(params: ICreateReportActionAttributes) {
             const fileName: string = (typeof createReportActionAttributes.object.about === 'string')
                 ? `${createReportActionAttributes.object.about}[${params.project.id}][${moment()
                     .format('YYYYMMDDHHmmss')}].${extension}`
-                : `OrderReport[${params.project.id}][${moment()
+                : `ReservationReport[${params.project.id}][${moment()
                     .format('YYYYMMDDHHmmss')}].${extension}`;
             // downloadUrl = await uploadFile({
             //     fileName: fileName,
