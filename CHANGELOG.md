@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - CreateReservationReportタスクを追加
 - SendEmailMessageタスクを追加
+- プロジェクトサービスを追加
 
 ### Changed
 
