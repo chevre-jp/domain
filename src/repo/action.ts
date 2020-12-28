@@ -30,6 +30,30 @@ export class MongoRepository {
             });
         }
 
+        const locationIdentifierEq = params.location?.identifier?.$eq;
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof locationIdentifierEq === 'string') {
+            andConditions.push({
+                'location.identifier': {
+                    $exists: true,
+                    $eq: locationIdentifierEq
+                }
+            });
+        }
+
+        const objectReservationForIdEq = params.object?.reservationFor?.id?.$eq;
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof objectReservationForIdEq === 'string') {
+            andConditions.push({
+                'object.reservationFor.id': {
+                    $exists: true,
+                    $eq: objectReservationForIdEq
+                }
+            });
+        }
+
         const objectPaymentMethodAccountIdEq = params.object?.paymentMethod?.accountId?.$eq;
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -62,6 +86,18 @@ export class MongoRepository {
                 'object.paymentMethod.typeOf': {
                     $exists: true,
                     $eq: objectPaymentMethodTypeOfEq
+                }
+            });
+        }
+
+        const objectTypeOfEq = params.object?.typeOf?.$eq;
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof objectTypeOfEq === 'string') {
+            andConditions.push({
+                'object.typeOf': {
+                    $exists: true,
+                    $eq: objectTypeOfEq
                 }
             });
         }

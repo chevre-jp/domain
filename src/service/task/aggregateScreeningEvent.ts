@@ -1,5 +1,6 @@
 import * as factory from '../../factory';
 
+import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as EventRepo } from '../../repo/event';
 import { RedisRepository as EventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
 import { MongoRepository as OfferRepo } from '../../repo/offer';
@@ -25,6 +26,7 @@ export function call(data: factory.task.aggregateScreeningEvent.IData): IOperati
         }
 
         await AggregationService.event.aggregateScreeningEvent(data)({
+            action: new ActionRepo(settings.connection),
             event: new EventRepo(settings.connection),
             eventAvailability: new EventAvailabilityRepo(settings.redisClient),
             offer: new OfferRepo(settings.connection),

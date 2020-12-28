@@ -95,6 +95,16 @@ schema.index(
 );
 
 schema.index(
+    { 'location.identifier': 1, startDate: -1 },
+    {
+        name: 'searchByLocationIdentifier',
+        partialFilterExpression: {
+            'location.identifier': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'purpose.typeOf': 1, startDate: -1 },
     {
         name: 'searchByPurposeTypeOf-v2',
@@ -150,6 +160,16 @@ schema.index(
         name: 'searchByObjectPaymentMethodTypeOf',
         partialFilterExpression: {
             'object.paymentMethod.typeOf': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'object.reservationFor.id': 1, startDate: -1 },
+    {
+        name: 'searchByObjectReservationForId',
+        partialFilterExpression: {
+            'object.reservationFor.id': { $exists: true }
         }
     }
 );

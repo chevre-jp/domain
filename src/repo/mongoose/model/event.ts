@@ -39,6 +39,7 @@ const schema = new mongoose.Schema(
         remainingAttendeeCapacity: { type: Number },
         checkInCount: { type: Number, default: 0 },
         attendeeCount: { type: Number, default: 0 },
+        aggregateEntranceGate: mongoose.SchemaTypes.Mixed,
         aggregateReservation: mongoose.SchemaTypes.Mixed,
         aggregateOffer: mongoose.SchemaTypes.Mixed,
         coaInfo: mongoose.SchemaTypes.Mixed
