@@ -73,7 +73,7 @@ export function aggregateScreeningEvent(params: {
             .add(1, 'hour')
             .add(-1, 'second')
             .toDate();
-        const aggregatingEvents = await repos.event.search({
+        let aggregatingEvents = await repos.event.search({
             limit: 100,
             project: { ids: [event.project.id] },
             typeOf: event.typeOf,
@@ -82,6 +82,10 @@ export function aggregateScreeningEvent(params: {
             startThrough: startThrough,
             location: { branchCode: { $eq: event.location.branchCode } }
         });
+
+        // ID指定されたイベントについてはEventScheduledでなくても集計したいので、集計対象を調整
+        aggregatingEvents = aggregatingEvents.filter((e) => e.id !== event.id);
+        aggregatingEvents = [event, ...aggregatingEvents];
         debug(aggregatingEvents.length, 'aggregatingEvents found', aggregatingEvents.map((e) => e.id));
 
         for (const aggregatingEvent of aggregatingEvents) {

@@ -1,3 +1,4 @@
+const moment = require('moment');
 const mongoose = require('mongoose');
 const domain = require('../lib/index');
 
@@ -17,6 +18,9 @@ async function main() {
         typeOf: domain.factory.eventType.ScreeningEvent,
         project: { ids: [project.id] },
         startFrom: now
+        // startFrom: moment().add(-1, 'day').toDate(),
+        // startThrough: moment().add(1, 'day').toDate(),
+        // startThrough: now
     });
 
     // console.log(events);
