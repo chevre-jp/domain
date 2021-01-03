@@ -102,6 +102,18 @@ export class MongoRepository {
             });
         }
 
+        const objectIdEq = (<any>params).object?.id?.$eq;
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof objectIdEq === 'string') {
+            andConditions.push({
+                'object.id': {
+                    $exists: true,
+                    $eq: objectIdEq
+                }
+            });
+        }
+
         const typeOfEq = params.typeOf?.$eq;
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */

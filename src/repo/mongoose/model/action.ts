@@ -135,6 +135,16 @@ schema.index(
 );
 
 schema.index(
+    { 'object.id': 1, startDate: -1 },
+    {
+        name: 'searchByObjectId',
+        partialFilterExpression: {
+            'object.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'object.paymentMethod.accountId': 1, startDate: -1 },
     {
         name: 'searchByObjectPaymentMethodAccountId',

@@ -942,6 +942,7 @@ export class MongoRepository {
             params.id,
             {
                 attended: true,
+                useActionExists: true,
                 modifiedTime: new Date()
             },
             { new: true }
