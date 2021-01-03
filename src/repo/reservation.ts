@@ -739,7 +739,26 @@ export class MongoRepository {
             }
         }
 
+        // useActionExists条件を追加
+        if ((<any>params).useActionExists !== undefined) {
+            andConditions.push({ useActionExists: (<any>params).useActionExists });
+        }
+
         return andConditions;
+    }
+
+    public async distinct<T extends factory.reservationType>(
+        field: string,
+        params: factory.reservation.ISearchConditions<T>
+    ): Promise<any[]> {
+        const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
+
+        return this.reservationModel.distinct(
+            field,
+            (conditions.length > 0) ? { $and: conditions } : {}
+        )
+            .setOptions({ maxTimeMS: 10000 })
+            .exec();
     }
 
     /**

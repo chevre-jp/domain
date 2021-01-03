@@ -40,7 +40,11 @@ const schema = new mongoose.Schema(
         underName: mongoose.SchemaTypes.Mixed,
         checkedIn: { type: Boolean, default: false },
         attended: { type: Boolean, default: false },
-        additionalProperty: mongoose.SchemaTypes.Mixed
+        additionalProperty: mongoose.SchemaTypes.Mixed,
+        /**
+         * @deprecated tttsで不要になれば削除
+         */
+        useActionExists: { type: Boolean, default: false }
     },
     {
         collection: 'reservations',
@@ -115,6 +119,16 @@ schema.index(
 schema.index(
     { attended: 1, bookingTime: -1 },
     { name: 'searchByAttended-v3' }
+);
+
+schema.index(
+    { useActionExists: 1, bookingTime: -1 },
+    {
+        name: 'searchByUseActionExists',
+        partialFilterExpression: {
+            useActionExists: { $exists: true }
+        }
+    }
 );
 
 schema.index(
