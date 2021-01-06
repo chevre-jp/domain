@@ -775,19 +775,22 @@ export class MongoRepository {
     }
 
     /**
-     * 汎用予約検索
+     * 予約検索
      */
     public async search<T extends factory.reservationType>(
-        params: factory.reservation.ISearchConditions<T>
+        params: factory.reservation.ISearchConditions<T>,
+        projection?: any
     ): Promise<factory.reservation.IReservation<factory.reservationType.EventReservation>[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.reservationModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
-            {
-                __v: 0,
-                createdAt: 0,
-                updatedAt: 0
-            }
+            (projection !== undefined && projection !== null)
+                ? projection
+                : {
+                    __v: 0,
+                    createdAt: 0,
+                    updatedAt: 0
+                }
         );
 
         // tslint:disable-next-line:no-single-line-block-comment
