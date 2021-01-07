@@ -946,6 +946,7 @@ export class MongoRepository {
             {
                 attended: true,
                 useActionExists: true,
+                'reservedTicket.dateUsed': new Date(),
                 modifiedTime: new Date()
             },
             { new: true }
