@@ -178,6 +178,19 @@ export class MongoRepository {
                         }
                     });
                 }
+
+                const additionalTicketTextRegex = params.additionalTicketText?.$regex;
+                if (typeof additionalTicketTextRegex === 'string') {
+                    const additionalTicketTextOptions = params.additionalTicketText?.$options;
+
+                    andConditions.push({
+                        additionalTicketText: {
+                            $exists: true,
+                            $regex: new RegExp(additionalTicketTextRegex),
+                            ...(typeof additionalTicketTextOptions === 'string') ? { $options: additionalTicketTextOptions } : undefined
+                        }
+                    });
+                }
             }
         }
 
@@ -576,24 +589,50 @@ export class MongoRepository {
 
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
-            if (params.underName.email !== undefined) {
+            if (typeof params.underName.email === 'string') {
                 andConditions.push({
                     'underName.email': {
                         $exists: true,
                         $regex: new RegExp(params.underName.email)
                     }
                 });
+            } else {
+                const emailRegex = params.underName.email?.$regex;
+                if (typeof emailRegex === 'string') {
+                    const emailOptions = params.underName.email?.$options;
+
+                    andConditions.push({
+                        'underName.email': {
+                            $exists: true,
+                            $regex: new RegExp(emailRegex),
+                            ...(typeof emailOptions === 'string') ? { $options: emailOptions } : undefined
+                        }
+                    });
+                }
             }
 
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
-            if (params.underName.name !== undefined) {
+            if (typeof params.underName.name === 'string') {
                 andConditions.push({
                     'underName.name': {
                         $exists: true,
                         $regex: new RegExp(params.underName.name)
                     }
                 });
+            } else {
+                const underNameNameRegex = params.underName.name?.$regex;
+                if (typeof underNameNameRegex === 'string') {
+                    const underNameNameOptions = params.underName.name?.$options;
+
+                    andConditions.push({
+                        'underName.name': {
+                            $exists: true,
+                            $regex: new RegExp(underNameNameRegex),
+                            ...(typeof underNameNameOptions === 'string') ? { $options: underNameNameOptions } : undefined
+                        }
+                    });
+                }
             }
 
             // tslint:disable-next-line:no-single-line-block-comment
@@ -609,24 +648,50 @@ export class MongoRepository {
 
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
-            if (params.underName.givenName !== undefined) {
+            if (typeof params.underName.givenName === 'string') {
                 andConditions.push({
                     'underName.givenName': {
                         $exists: true,
                         $regex: new RegExp(params.underName.givenName)
                     }
                 });
+            } else {
+                const givenNameRegex = params.underName.givenName?.$regex;
+                if (typeof givenNameRegex === 'string') {
+                    const givenNameOptions = params.underName.givenName?.$options;
+
+                    andConditions.push({
+                        'underName.givenName': {
+                            $exists: true,
+                            $regex: new RegExp(givenNameRegex),
+                            ...(typeof givenNameOptions === 'string') ? { $options: givenNameOptions } : undefined
+                        }
+                    });
+                }
             }
 
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore else */
-            if (params.underName.familyName !== undefined) {
+            if (typeof params.underName.familyName === 'string') {
                 andConditions.push({
                     'underName.familyName': {
                         $exists: true,
                         $regex: new RegExp(params.underName.familyName)
                     }
                 });
+            } else {
+                const familyNameRegex = params.underName.familyName?.$regex;
+                if (typeof familyNameRegex === 'string') {
+                    const familyNameOptions = params.underName.familyName?.$options;
+
+                    andConditions.push({
+                        'underName.familyName': {
+                            $exists: true,
+                            $regex: new RegExp(familyNameRegex),
+                            ...(typeof familyNameOptions === 'string') ? { $options: familyNameOptions } : undefined
+                        }
+                    });
+                }
             }
 
             // tslint:disable-next-line:no-single-line-block-comment
