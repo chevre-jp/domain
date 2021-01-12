@@ -546,18 +546,16 @@ export class MongoRepository {
 
                 // tslint:disable-next-line:no-single-line-block-comment
                 /* istanbul ignore else */
-                if ((<any>params.reservedTicket.ticketedSeat).seatingType !== undefined
-                    && (<any>params.reservedTicket.ticketedSeat).seatingType !== null) {
-                    if (Array.isArray((<any>params.reservedTicket.ticketedSeat).seatingType.$in)) {
-                        andConditions.push(
-                            {
-                                'reservedTicket.ticketedSeat.seatingType': {
-                                    $exists: true,
-                                    $in: (<any>params.reservedTicket.ticketedSeat).seatingType.$in
-                                }
+                const ticketedSeatSeatingTypeIn = params.reservedTicket.ticketedSeat?.seatingType?.$in;
+                if (Array.isArray(ticketedSeatSeatingTypeIn)) {
+                    andConditions.push(
+                        {
+                            'reservedTicket.ticketedSeat.seatingType': {
+                                $exists: true,
+                                $in: ticketedSeatSeatingTypeIn
                             }
-                        );
-                    }
+                        }
+                    );
                 }
             }
         }
@@ -737,11 +735,6 @@ export class MongoRepository {
                     }
                 });
             }
-        }
-
-        // useActionExists条件を追加
-        if ((<any>params).useActionExists !== undefined) {
-            andConditions.push({ useActionExists: (<any>params).useActionExists });
         }
 
         return andConditions;
@@ -945,8 +938,6 @@ export class MongoRepository {
             params.id,
             {
                 attended: true,
-                useActionExists: true,
-                'reservedTicket.dateUsed': new Date(),
                 modifiedTime: new Date()
             },
             { new: true }

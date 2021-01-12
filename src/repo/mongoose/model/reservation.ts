@@ -40,11 +40,7 @@ const schema = new mongoose.Schema(
         underName: mongoose.SchemaTypes.Mixed,
         checkedIn: { type: Boolean, default: false },
         attended: { type: Boolean, default: false },
-        additionalProperty: mongoose.SchemaTypes.Mixed,
-        /**
-         * @deprecated tttsで不要になれば削除
-         */
-        useActionExists: { type: Boolean, default: false }
+        additionalProperty: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'reservations',
