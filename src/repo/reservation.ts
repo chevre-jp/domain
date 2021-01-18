@@ -917,13 +917,23 @@ export class MongoRepository {
             previousReservationStatus?: factory.reservationStatusType;
         }
     ): Promise<factory.reservation.IReservation<T>> {
+        const update = {
+            ...params,
+            reservationStatus: factory.reservationStatusType.ReservationConfirmed,
+            modifiedTime: new Date()
+        };
+
+        // 以下値は更新しない(他処理で更新される可能性あり)
+        if (typeof update.checkedIn === 'boolean') {
+            delete update.checkedIn;
+        }
+        if (typeof update.attended === 'boolean') {
+            delete update.attended;
+        }
+
         const doc = await this.reservationModel.findByIdAndUpdate(
             String(params.id),
-            {
-                ...<any>params,
-                reservationStatus: factory.reservationStatusType.ReservationConfirmed,
-                modifiedTime: new Date()
-            },
+            <any>update,
             {
                 new: true
             }
