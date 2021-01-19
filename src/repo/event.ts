@@ -34,6 +34,13 @@ export class MongoRepository {
             }
         }
 
+        const idIn = (<any>conditions).id?.$in;
+        if (Array.isArray(idIn)) {
+            andConditions.push({
+                _id: { $in: idIn }
+            });
+        }
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (Array.isArray(conditions.eventStatuses)) {
