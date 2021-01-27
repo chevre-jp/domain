@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## v15.43.0 - 2021-01-27
+
+### Added
+
 - CreateReservationReportタスクを追加
 - SendEmailMessageタスクを追加
 - プロジェクトサービスを追加
@@ -21,14 +35,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 予約検索に$projectionを指定できるように調整
 - update packages
 - update typescript
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 
 ## v15.42.5 - 2020-12-13
 
