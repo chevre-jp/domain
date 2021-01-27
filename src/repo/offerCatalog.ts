@@ -101,7 +101,7 @@ export class MongoRepository {
         }
 
         // 互換性対応
-        const projectIds = (<any>params).project?.ids;
+        const projectIds = params.project?.ids;
         if (Array.isArray(projectIds)) {
             andConditions.push({
                 'project.id': {

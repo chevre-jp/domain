@@ -118,6 +118,16 @@ schema.index(
 );
 
 schema.index(
+    { useActionExists: 1, bookingTime: -1 },
+    {
+        name: 'searchByUseActionExists',
+        partialFilterExpression: {
+            useActionExists: { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { additionalTicketText: 1, bookingTime: -1 },
     {
         name: 'searchByAdditionalTicketText-v3',

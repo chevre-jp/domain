@@ -7,7 +7,7 @@ import * as factory from '../factory';
  * 作品抽象リポジトリ
  */
 export abstract class Repository {
-    public abstract async saveMovie(movie: factory.creativeWork.movie.ICreativeWork): Promise<void>;
+    public abstract saveMovie(movie: factory.creativeWork.movie.ICreativeWork): Promise<void>;
 }
 /**
  * 作品リポジトリ

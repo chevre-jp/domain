@@ -5,6 +5,7 @@ import * as COA from '@motionpicture/coa-service';
 import * as createDebug from 'debug';
 import * as moment from 'moment-timezone';
 
+import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as EventRepo } from '../../repo/event';
 import { RedisRepository as EventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
 import { MongoRepository as OfferRepo } from '../../repo/offer';
@@ -33,6 +34,7 @@ const coaAuthClient = new COA.auth.RefreshToken({
 });
 
 export type IAggregateScreeningEventOperation<T> = (repos: {
+    action: ActionRepo;
     event: EventRepo;
     eventAvailability: EventAvailabilityRepo;
     offer: OfferRepo;
@@ -50,6 +52,7 @@ export function aggregateScreeningEvent(params: {
     id: string;
 }): IAggregateScreeningEventOperation<void> {
     return async (repos: {
+        action: ActionRepo;
         event: EventRepo;
         eventAvailability: EventAvailabilityRepo;
         offer: OfferRepo;
@@ -70,7 +73,7 @@ export function aggregateScreeningEvent(params: {
             .add(1, 'hour')
             .add(-1, 'second')
             .toDate();
-        const aggregatingEvents = await repos.event.search({
+        let aggregatingEvents = await repos.event.search({
             limit: 100,
             project: { ids: [event.project.id] },
             typeOf: event.typeOf,
@@ -79,6 +82,10 @@ export function aggregateScreeningEvent(params: {
             startThrough: startThrough,
             location: { branchCode: { $eq: event.location.branchCode } }
         });
+
+        // ID指定されたイベントについてはEventScheduledでなくても集計したいので、集計対象を調整
+        aggregatingEvents = aggregatingEvents.filter((e) => e.id !== event.id);
+        aggregatingEvents = [event, ...aggregatingEvents];
         debug(aggregatingEvents.length, 'aggregatingEvents found', aggregatingEvents.map((e) => e.id));
 
         for (const aggregatingEvent of aggregatingEvents) {
@@ -91,6 +98,7 @@ export function aggregateByEvent(params: {
     event: factory.event.screeningEvent.IEvent;
 }): IAggregateScreeningEventOperation<void> {
     return async (repos: {
+        action: ActionRepo;
         event: EventRepo;
         eventAvailability: EventAvailabilityRepo;
         offer: OfferRepo;
@@ -140,12 +148,21 @@ export function aggregateByEvent(params: {
         })(repos);
         debug('offers aggregated', aggregateOffer);
 
+        // 入場ゲートごとの集計
+        const aggregateEntranceGate = await aggregateEntranceGateByEvent({
+            aggregateDate: now,
+            event,
+            entranceGates: movieTheater.hasEntranceGate
+        })(repos);
+        debug('entrances aggregated', aggregateEntranceGate);
+
         // 値がundefinedの場合に更新しないように注意
         const update: any = {
             $set: {
                 updatedAt: new Date(), // $setオブジェクトが空だとMongoエラーになるので
-                aggregateReservation: aggregateReservation,
-                aggregateOffer: aggregateOffer,
+                aggregateEntranceGate,
+                aggregateReservation,
+                aggregateOffer,
                 ...(maximumAttendeeCapacity !== undefined) ? { maximumAttendeeCapacity: maximumAttendeeCapacity } : undefined,
                 ...(remainingAttendeeCapacity !== undefined) ? { remainingAttendeeCapacity: remainingAttendeeCapacity } : undefined,
                 ...(aggregateReservation.checkInCount !== undefined) ? { checkInCount: aggregateReservation.checkInCount } : undefined,
@@ -688,6 +705,84 @@ function aggregateReservationByEvent(params: {
             }
         };
 
+    };
+}
+
+/**
+ * 入場ゲートごとに集計する
+ */
+function aggregateEntranceGateByEvent(params: {
+    aggregateDate: Date;
+    event: factory.event.IEvent<factory.eventType.ScreeningEvent>;
+    entranceGates?: factory.place.movieTheater.IEntranceGate[];
+}) {
+    return async (repos: {
+        action: ActionRepo;
+        offer: OfferRepo;
+    }): Promise<factory.event.screeningEvent.IAggregateEntranceGate> => {
+        // 入場ゲートの予約使用アクション集計
+        const places: factory.event.screeningEvent.IPlaceWithAggregateOffer[] = [];
+        if (Array.isArray(params.entranceGates) && params.entranceGates.length > 0) {
+            const availableOffers: factory.offer.IUnitPriceOffer[] = await findOffers(params)(repos);
+
+            // 念のため、identifierの存在する入場ゲートに絞る
+            const entranceGates = params.entranceGates.filter((e) => {
+                return typeof e.identifier === 'string' && e.identifier.length > 0;
+            });
+            for (const entranceGate of entranceGates) {
+                // アクション検索
+                let useReservationActions = await repos.action.search({
+                    actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
+                    typeOf: { $eq: factory.actionType.UseAction },
+                    object: {
+                        // 予約タイプ
+                        typeOf: { $eq: factory.reservationType.EventReservation },
+                        // イベントID
+                        reservationFor: { id: { $eq: params.event.id } }
+                    },
+                    location: {
+                        // 入場ゲートで
+                        identifier: { $eq: <string>entranceGate.identifier }
+                    }
+                });
+
+                // 予約IDに対する重複を除外
+                const reservationIds = useReservationActions.map((a) => a.object[0]?.id);
+                useReservationActions = useReservationActions
+                    .filter((a, pos) => reservationIds.indexOf(a.object[0]?.id) === pos);
+
+                places.push({
+                    typeOf: entranceGate.typeOf,
+                    identifier: <string>entranceGate.identifier,
+                    aggregateOffer: {
+                        typeOf: factory.offerType.AggregateOffer,
+                        offers: availableOffers.map((offer) => {
+                            // このオファーでの予約使用アクション数
+                            const useActionCount: number = useReservationActions.filter((action) => {
+                                return action.object[0]?.reservedTicket?.ticketType?.id === offer.id;
+                            }).length;
+
+                            return {
+                                typeOf: <factory.offerType.Offer>offer.typeOf,
+                                id: offer.id,
+                                identifer: offer.identifier,
+                                ...(typeof offer.category?.codeValue === 'string') ? { category: offer.category } : undefined,
+                                aggregateReservation: {
+                                    typeOf: 'AggregateReservation',
+                                    aggregateDate: params.aggregateDate,
+                                    useActionCount
+                                }
+                            };
+                        })
+                    }
+                });
+            }
+        }
+
+        return {
+            typeOf: factory.placeType.AggregatePlace,
+            places: places
+        };
     };
 }
 

@@ -11,6 +11,7 @@ async function main() {
         password: process.env.REDIS_KEY
     });
 
+    const actionRepo = new domain.repository.Action(mongoose.connection);
     const eventRepo = new domain.repository.Event(mongoose.connection);
     const offerRepo = new domain.repository.Offer(mongoose.connection);
     const placeRepo = new domain.repository.Place(mongoose.connection);
@@ -21,8 +22,9 @@ async function main() {
     const offerRateLimitRepo = new domain.repository.rateLimit.Offer(client);
 
     await domain.service.aggregation.event.aggregateScreeningEvent({
-        id: '201015001001010900'
+        id: '201228001001011545'
     })({
+        action: actionRepo,
         event: eventRepo,
         offer: offerRepo,
         place: placeRepo,

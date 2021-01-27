@@ -18,6 +18,24 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.43.0 - 2021-01-27
+
+### Added
+
+- CreateReservationReportタスクを追加
+- SendEmailMessageタスクを追加
+- プロジェクトサービスを追加
+
+### Changed
+
+- アクション検索条件拡張
+- イベントに入場ゲート集計属性を追加
+- ID指定されたイベントについてはEventScheduledでなくても予約集計するように調整
+- 予約にreservedTicket.dateUsed属性を実験的に追加
+- 予約検索に$projectionを指定できるように調整
+- update packages
+- update typescript
+
 ## v15.42.5 - 2020-12-13
 
 ### Changed
