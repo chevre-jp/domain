@@ -56,7 +56,7 @@ export class RedisRepository {
     public async lockIfNotLimitExceeded(lockKey: ILockKey, maximum: number): Promise<void> {
         const key = `${RedisRepository.KEY_PREFIX}:${lockKey.eventId}`;
 
-        await new Promise(async (resolve, reject) => {
+        await new Promise<void>(async (resolve, reject) => {
             this.redisClient.watch(key, (watchError) => {
                 if (watchError !== null) {
                     reject(watchError);

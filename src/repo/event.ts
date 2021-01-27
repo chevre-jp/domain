@@ -34,7 +34,7 @@ export class MongoRepository {
             }
         }
 
-        const idIn = (<any>conditions).id?.$in;
+        const idIn = conditions.id?.$in;
         if (Array.isArray(idIn)) {
             andConditions.push({
                 _id: { $in: idIn }

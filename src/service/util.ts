@@ -14,7 +14,7 @@ function createContainerIfNotExists() {
         const blobService = azureStorage.createBlobService();
 
         // コンテナ作成
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             blobService.createContainerIfNotExists(
                 CONTAINER,
                 {
@@ -47,7 +47,7 @@ export function uploadFile(params: {
         await createContainerIfNotExists()();
 
         // ブロブ作成
-        await new Promise<string>((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             // save to blob
             const blobService = azureStorage.createBlobService();
 
@@ -82,7 +82,7 @@ export function uploadFileFromStream(params: {
         await createContainerIfNotExists()();
 
         // ブロブ作成
-        await new Promise(async (resolve, reject) => {
+        await new Promise<void>(async (resolve, reject) => {
             const blobService = azureStorage.createBlobService();
 
             const writeStream = blobService.createWriteStreamToBlockBlob(CONTAINER, params.fileName)

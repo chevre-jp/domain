@@ -23,7 +23,7 @@ const TRIGGER_WEBHOOK_TIMEOUT = (process.env.TRIGGER_WEBHOOK_TIMEOUT !== undefin
 
 /**
  * Eメールメッセージを送信する
- * @see https://sendgrid.com/docs/API_Reference/Web_API_v3/Mail/errors.html
+ * https://sendgrid.com/docs/API_Reference/Web_API_v3/Mail/errors.html
  */
 export function sendEmailMessage(params: factory.action.transfer.send.message.email.IAttributes) {
     return async (repos: {
@@ -99,7 +99,7 @@ export function sendEmailMessage(params: factory.action.transfer.send.message.em
 
 /**
  * 開発者に報告する
- * @see https://notify-bot.line.me/doc/ja/
+ * https://notify-bot.line.me/doc/ja/
  */
 export function report2developers(subject: string, content: string, imageThumbnail?: string, imageFullsize?: string): Operation<void> {
     return async () => {
