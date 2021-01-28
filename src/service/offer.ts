@@ -538,11 +538,18 @@ export function importFromCOA(params: {
         try {
             const ticketResults = await masterService.ticket({ theaterCode: params.theaterCode });
 
-            await Promise.all(ticketResults.map(async (ticketResult) => {
+            // await Promise.all(ticketResults.map(async (ticketResult) => {
+            //     const offer = coaTicket2offer({ project: params.project, theaterCode: params.theaterCode, ticketResult: ticketResult });
+
+            //     await repos.offer.saveByIdentifier(offer);
+            // }));
+            const saveParams = ticketResults.map((ticketResult) => {
                 const offer = coaTicket2offer({ project: params.project, theaterCode: params.theaterCode, ticketResult: ticketResult });
 
-                await repos.offer.saveByIdentifier(offer);
-            }));
+                return { attributes: offer, upsert: true };
+
+            });
+            await repos.offer.saveManyByIdentifier(saveParams);
         } catch (error) {
             let throwsError = true;
 
