@@ -1,4 +1,5 @@
 import * as factory from '../../../factory';
+import { settings } from '../../../settings';
 
 /**
  * 取引開始パラメータ作成
@@ -13,6 +14,11 @@ export function createStartParams(
 ): factory.transaction.IStartParams<factory.transactionType.CancelReservation> {
 
     const informReservationParams: factory.transaction.cancelReservation.IInformReservationParams[] = [];
+
+    const informReservationParamsByGlobalSettings = settings.onReservationStatusChanged?.informReservation;
+    if (Array.isArray(informReservationParamsByGlobalSettings)) {
+        informReservationParams.push(...informReservationParamsByGlobalSettings);
+    }
 
     const informReservationParamsFromProject = params.project.settings?.onReservationStatusChanged?.informReservation;
     if (Array.isArray(informReservationParamsFromProject)) {
