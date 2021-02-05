@@ -421,6 +421,47 @@ export class MongoRepository {
         return doc.toObject();
     }
 
+    public async saveManyByIdentifier(params: {
+        attributes: factory.offer.IUnitPriceOffer;
+        upsert?: boolean;
+    }[]): Promise<void> {
+        const bulkWriteOps: any[] = [];
+
+        if (Array.isArray(params)) {
+            params.forEach((p) => {
+                const id = uniqid();
+                const $set = { ...p.attributes };
+                if (typeof $set.id === 'string') {
+                    delete $set.id;
+                }
+
+                bulkWriteOps.push({
+                    updateOne: {
+                        filter: {
+                            'project.id': {
+                                $exists: true,
+                                $eq: p.attributes.project.id
+                            },
+                            identifier: {
+                                $exists: true,
+                                $eq: p.attributes.identifier
+                            }
+                        },
+                        update: {
+                            $set: $set,
+                            $setOnInsert: { _id: id }
+                        },
+                        upsert: (p.upsert !== undefined) ? p.upsert : false
+                    }
+                });
+            });
+        }
+
+        if (bulkWriteOps.length > 0) {
+            await this.offerModel.bulkWrite(bulkWriteOps, { ordered: false });
+        }
+    }
+
     public async deleteById(params: {
         id: string;
     }) {

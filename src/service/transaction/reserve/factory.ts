@@ -4,6 +4,7 @@
 import * as moment from 'moment';
 
 import * as factory from '../../../factory';
+import { settings } from '../../../settings';
 
 export function createStartParams(params: factory.transaction.reserve.IStartParamsWithoutDetail & {
     reservationNumber: string;
@@ -12,6 +13,11 @@ export function createStartParams(params: factory.transaction.reserve.IStartPara
     const reservationNumber = params.reservationNumber;
 
     const informReservationParams: factory.transaction.reserve.IInformReservationParams[] = [];
+
+    const informReservationParamsByGlobalSettings = settings.onReservationStatusChanged?.informReservation;
+    if (Array.isArray(informReservationParamsByGlobalSettings)) {
+        informReservationParams.push(...informReservationParamsByGlobalSettings);
+    }
 
     const informReservationSettings = params.projectSettings?.onReservationStatusChanged?.informReservation;
     if (Array.isArray(informReservationSettings)) {

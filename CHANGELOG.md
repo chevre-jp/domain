@@ -18,6 +18,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.44.0 - 2021-02-05
+
+### Added
+
+- 予約通知先のグローバル設定を追加
+
+### Changed
+
+- COAオファーインポート処理にbulkWriteを使用するように調整
+
 ## v15.43.0 - 2021-01-27
 
 ### Added
