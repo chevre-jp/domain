@@ -3,10 +3,6 @@
  */
 import * as GMO from '@motionpicture/gmo-service';
 import * as createDebug from 'debug';
-// import * as moment from 'moment-timezone';
-// import * as util from 'util';
-
-// import { credentials } from '../../credentials';
 
 import * as factory from '../../factory';
 
@@ -88,7 +84,9 @@ export function authorize(
             searchTradeResult = await creditCardService.searchTrade({
                 shopId: shopId,
                 shopPass: shopPass,
-                orderId: orderId
+                orderId: orderId,
+                siteId: availableChannel.credentials?.siteId,
+                sitePass: availableChannel.credentials?.sitePass
             });
         } catch (error) {
             // no op
@@ -121,7 +119,7 @@ async function processAuthorizeCreditCard(params: {
     object: factory.transaction.pay.IPaymentMethod;
 }): Promise<IAuthorizeResult> {
     // GMOオーソリ取得
-    let entryTranArgs: GMO.factory.credit.IEntryTranArgs;
+    let entryTranArgs: GMO.factory.credit.IEntryTranArgs & GMO.factory.credit.IOptionalSiteArgs;
     let entryTranResult: GMO.factory.credit.IEntryTranResult;
     let execTranArgs: GMO.factory.credit.IExecTranArgs;
     let execTranResult: GMO.factory.credit.IExecTranResult;
@@ -133,7 +131,9 @@ async function processAuthorizeCreditCard(params: {
         shopPass: params.shopPass,
         orderId: params.orderId,
         jobCd: GMO.utils.util.JobCd.Auth,
-        amount: params.object.amount
+        amount: params.object.amount,
+        siteId: params.availableChannel.credentials?.siteId,
+        sitePass: params.availableChannel.credentials?.sitePass
     };
 
     entryTranResult = await creditCardService.entryTran(entryTranArgs);
@@ -237,7 +237,9 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
             const searchTradeResult = await creditCardService.searchTrade({
                 shopId: shopId,
                 shopPass: shopPass,
-                orderId: paymentMethodId
+                orderId: paymentMethodId,
+                siteId: availableChannel.credentials?.siteId,
+                sitePass: availableChannel.credentials?.sitePass
             });
             debug('searchTradeResult:', searchTradeResult);
 
@@ -248,7 +250,9 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
                     shopPass: shopPass,
                     accessId: searchTradeResult.accessId,
                     accessPass: searchTradeResult.accessPass,
-                    jobCd: GMO.utils.util.JobCd.Void
+                    jobCd: GMO.utils.util.JobCd.Void,
+                    siteId: availableChannel.credentials?.siteId,
+                    sitePass: availableChannel.credentials?.sitePass
                 });
                 debug('alterTran processed', alterTranResult);
             }
@@ -299,7 +303,9 @@ export function payCreditCard(params: factory.task.pay.IData) {
                 const searchTradeResult = await creditCardService.searchTrade({
                     shopId: shopId,
                     shopPass: shopPass,
-                    orderId: orderId
+                    orderId: orderId,
+                    siteId: availableChannel.credentials?.siteId,
+                    sitePass: availableChannel.credentials?.sitePass
                 });
 
                 if (searchTradeResult.jobCd === GMO.utils.util.JobCd.Sales) {
@@ -321,7 +327,9 @@ export function payCreditCard(params: factory.task.pay.IData) {
                         accessId: searchTradeResult.accessId,
                         accessPass: searchTradeResult.accessPass,
                         jobCd: GMO.utils.util.JobCd.Sales,
-                        amount: paymentMethod.paymentMethod.totalPaymentDue?.value
+                        amount: paymentMethod.paymentMethod.totalPaymentDue?.value,
+                        siteId: availableChannel.credentials?.siteId,
+                        sitePass: availableChannel.credentials?.sitePass
                     }));
 
                     // 失敗したら取引状態確認してどうこう、という処理も考えうるが、
@@ -435,7 +443,9 @@ async function processChangeTransaction(params: {
     const searchTradeResult = await creditCardService.searchTrade({
         shopId: params.shopId,
         shopPass: params.shopPass,
-        orderId: params.paymentMethodId
+        orderId: params.paymentMethodId,
+        siteId: params.availableChannel.credentials?.siteId,
+        sitePass: params.availableChannel.credentials?.sitePass
     });
     debug('searchTradeResult is', searchTradeResult);
 
@@ -477,7 +487,9 @@ async function processChangeTransaction(params: {
                 accessId: searchTradeResult.accessId,
                 accessPass: searchTradeResult.accessPass,
                 jobCd: GMO.utils.util.JobCd.Capture,
-                amount: params.refundFee
+                amount: params.refundFee,
+                siteId: params.availableChannel.credentials?.siteId,
+                sitePass: params.availableChannel.credentials?.sitePass
             });
             debug('changeTran processed.');
             alterTranResult.push(changeTranResult);
@@ -488,7 +500,9 @@ async function processChangeTransaction(params: {
                 shopPass: params.shopPass,
                 accessId: searchTradeResult.accessId,
                 accessPass: searchTradeResult.accessPass,
-                jobCd: GMO.utils.util.JobCd.Void
+                jobCd: GMO.utils.util.JobCd.Void,
+                siteId: params.availableChannel.credentials?.siteId,
+                sitePass: params.availableChannel.credentials?.sitePass
             }));
             debug('alterTran processed.');
             debug('GMO alterTranResult is', alterTranResult);

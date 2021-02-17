@@ -15,7 +15,7 @@
   "dependencies": {
     "@chevre/factory": "4.77.0",
     "@motionpicture/coa-service": "9.0.0",
-    "@motionpicture/gmo-service": "5.0.0",
+    "@motionpicture/gmo-service": "5.1.0-alpha.1",
     "@movieticket/reserve-api-nodejs-client": "1.0.1",
     "@pecorino/api-nodejs-client": "5.5.2",
     "@sendgrid/mail": "6.4.0",
