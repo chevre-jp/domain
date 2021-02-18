@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.45.0 - 2021-02-18
+
+### Changed
+
+- クレジットカード決済サービスの全パラメータにサイト情報をオプションとして追加
+
 ## v15.44.0 - 2021-02-05
 
 ### Added
