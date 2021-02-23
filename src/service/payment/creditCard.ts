@@ -312,8 +312,24 @@ export function payCreditCard(params: factory.task.pay.IData) {
                     sitePass: availableChannel.credentials?.sitePass
                 });
 
+                const amount = paymentMethod.paymentMethod.totalPaymentDue?.value;
+                if (typeof amount !== 'number') {
+                    throw new factory.errors.ArgumentNull('object.paymentMethod.totalPaymentDue?.value');
+                }
+
                 // 返品手数料決済の場合を追加(状態が取消であれば即時売上)
-                if (searchTradeResult.jobCd === GMO.utils.util.JobCd.Void) {
+                if (searchTradeResult.jobCd === GMO.utils.util.JobCd.Capture) {
+                    debug('already in SALES');
+                    // すでに即時売上済み
+                    alterTranResults.push({
+                        accessId: searchTradeResult.accessId,
+                        accessPass: searchTradeResult.accessPass,
+                        forward: searchTradeResult.forward,
+                        approve: searchTradeResult.approve,
+                        tranId: searchTradeResult.tranId,
+                        tranDate: ''
+                    });
+                } else if (searchTradeResult.jobCd === GMO.utils.util.JobCd.Void) {
                     debug('calling alterTran...');
                     alterTranResults.push(await creditCardService.alterTran({
                         shopId: shopId,
@@ -321,9 +337,10 @@ export function payCreditCard(params: factory.task.pay.IData) {
                         accessId: searchTradeResult.accessId,
                         accessPass: searchTradeResult.accessPass,
                         jobCd: GMO.utils.util.JobCd.Capture,
-                        amount: paymentMethod.paymentMethod.totalPaymentDue?.value,
+                        amount: amount, // 手数料を指定
                         siteId: availableChannel.credentials?.siteId,
-                        sitePass: availableChannel.credentials?.sitePass
+                        sitePass: availableChannel.credentials?.sitePass,
+                        method: GMO.utils.util.Method.Lump // 再オーソリの場合、支払方法指定は必須
                     }));
                     debug('alterTran processed.');
                 } else {
@@ -346,7 +363,7 @@ export function payCreditCard(params: factory.task.pay.IData) {
                             accessId: searchTradeResult.accessId,
                             accessPass: searchTradeResult.accessPass,
                             jobCd: GMO.utils.util.JobCd.Sales,
-                            amount: paymentMethod.paymentMethod.totalPaymentDue?.value,
+                            amount: amount,
                             siteId: availableChannel.credentials?.siteId,
                             sitePass: availableChannel.credentials?.sitePass
                         }));
