@@ -314,30 +314,18 @@ export function payCreditCard(params: factory.task.pay.IData) {
 
                 // 返品手数料決済の場合を追加(状態が取消であれば即時売上)
                 if (searchTradeResult.jobCd === GMO.utils.util.JobCd.Void) {
-                    // debug('calling alterTran...');
-                    // alterTranResults.push(await creditCardService.alterTran({
-                    //     shopId: shopId,
-                    //     shopPass: shopPass,
-                    //     accessId: searchTradeResult.accessId,
-                    //     accessPass: searchTradeResult.accessPass,
-                    //     jobCd: GMO.utils.util.JobCd.Capture,
-                    //     amount: paymentMethod.paymentMethod.totalPaymentDue?.value,
-                    //     siteId: availableChannel.credentials?.siteId,
-                    //     sitePass: availableChannel.credentials?.sitePass
-                    // }));
-                    debug('changeTran processing...');
-                    const changeTranResult = await creditCardService.changeTran({
+                    debug('calling alterTran...');
+                    alterTranResults.push(await creditCardService.alterTran({
                         shopId: shopId,
                         shopPass: shopPass,
                         accessId: searchTradeResult.accessId,
                         accessPass: searchTradeResult.accessPass,
                         jobCd: GMO.utils.util.JobCd.Capture,
-                        amount: <number>paymentMethod.paymentMethod.totalPaymentDue?.value,
+                        amount: paymentMethod.paymentMethod.totalPaymentDue?.value,
                         siteId: availableChannel.credentials?.siteId,
                         sitePass: availableChannel.credentials?.sitePass
-                    });
-                    debug('changeTran processed.');
-                    alterTranResults.push(changeTranResult);
+                    }));
+                    debug('alterTran processed.');
                 } else {
                     if (searchTradeResult.jobCd === GMO.utils.util.JobCd.Sales) {
                         debug('already in SALES');
