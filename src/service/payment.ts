@@ -87,6 +87,7 @@ export function refund(params: factory.task.refund.IData) {
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
+        task: TaskRepo;
         transaction: TransactionRepo;
         transactionNumber: TransactionNumberRepo;
     }) => {

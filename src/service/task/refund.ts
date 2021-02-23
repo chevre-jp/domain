@@ -7,6 +7,7 @@ import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
+import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
 
@@ -26,6 +27,7 @@ export function call(data: factory.task.refund.IData): IOperation<void> {
         const productRepo = new ProductRepo(settings.connection);
         const projectRepo = new ProjectRepo(settings.connection);
         const sellerRepo = new SellerRepo(settings.connection);
+        const taskRepo = new TaskRepo(settings.connection);
         const transactionRepo = new TransactionRepo(settings.connection);
         const transactionNumberRepo = new TransactionNumberRepo(settings.redisClient);
 
@@ -35,6 +37,7 @@ export function call(data: factory.task.refund.IData): IOperation<void> {
             product: productRepo,
             project: projectRepo,
             seller: sellerRepo,
+            task: taskRepo,
             transaction: transactionRepo,
             transactionNumber: transactionNumberRepo
         });

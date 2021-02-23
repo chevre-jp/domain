@@ -10,10 +10,13 @@ import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
+import { MongoRepository as TaskRepo } from '../../repo/task';
 
-// import { findPayActionByOrderNumber, onRefund } from './any';
+import { onRefund } from './any';
 
 const debug = createDebug('chevre-domain:service');
+
+const USE_GMO_CHANGE_TRAN = process.env.USE_GMO_CHANGE_TRAN === '1';
 
 export import IUncheckedCardRaw = factory.paymentMethod.paymentCard.creditCard.IUncheckedCardRaw;
 export import IUncheckedCardTokenized = factory.paymentMethod.paymentCard.creditCard.IUncheckedCardTokenized;
@@ -266,6 +269,7 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
  * クレジットカード売上確定
  */
 export function payCreditCard(params: factory.task.pay.IData) {
+    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         action: ActionRepo;
         product: ProductRepo;
@@ -308,33 +312,61 @@ export function payCreditCard(params: factory.task.pay.IData) {
                     sitePass: availableChannel.credentials?.sitePass
                 });
 
-                if (searchTradeResult.jobCd === GMO.utils.util.JobCd.Sales) {
-                    debug('already in SALES');
-                    // すでに実売上済み
-                    alterTranResults.push({
-                        accessId: searchTradeResult.accessId,
-                        accessPass: searchTradeResult.accessPass,
-                        forward: searchTradeResult.forward,
-                        approve: searchTradeResult.approve,
-                        tranId: searchTradeResult.tranId,
-                        tranDate: ''
-                    });
-                } else {
-                    debug('calling alterTran...');
-                    alterTranResults.push(await creditCardService.alterTran({
+                // 返品手数料決済の場合を追加(状態が取消であれば即時売上)
+                if (searchTradeResult.jobCd === GMO.utils.util.JobCd.Void) {
+                    // debug('calling alterTran...');
+                    // alterTranResults.push(await creditCardService.alterTran({
+                    //     shopId: shopId,
+                    //     shopPass: shopPass,
+                    //     accessId: searchTradeResult.accessId,
+                    //     accessPass: searchTradeResult.accessPass,
+                    //     jobCd: GMO.utils.util.JobCd.Capture,
+                    //     amount: paymentMethod.paymentMethod.totalPaymentDue?.value,
+                    //     siteId: availableChannel.credentials?.siteId,
+                    //     sitePass: availableChannel.credentials?.sitePass
+                    // }));
+                    debug('changeTran processing...');
+                    const changeTranResult = await creditCardService.changeTran({
                         shopId: shopId,
                         shopPass: shopPass,
                         accessId: searchTradeResult.accessId,
                         accessPass: searchTradeResult.accessPass,
-                        jobCd: GMO.utils.util.JobCd.Sales,
-                        amount: paymentMethod.paymentMethod.totalPaymentDue?.value,
+                        jobCd: GMO.utils.util.JobCd.Capture,
+                        amount: <number>paymentMethod.paymentMethod.totalPaymentDue?.value,
                         siteId: availableChannel.credentials?.siteId,
                         sitePass: availableChannel.credentials?.sitePass
-                    }));
+                    });
+                    debug('changeTran processed.');
+                    alterTranResults.push(changeTranResult);
+                } else {
+                    if (searchTradeResult.jobCd === GMO.utils.util.JobCd.Sales) {
+                        debug('already in SALES');
+                        // すでに実売上済み
+                        alterTranResults.push({
+                            accessId: searchTradeResult.accessId,
+                            accessPass: searchTradeResult.accessPass,
+                            forward: searchTradeResult.forward,
+                            approve: searchTradeResult.approve,
+                            tranId: searchTradeResult.tranId,
+                            tranDate: ''
+                        });
+                    } else {
+                        debug('calling alterTran...');
+                        alterTranResults.push(await creditCardService.alterTran({
+                            shopId: shopId,
+                            shopPass: shopPass,
+                            accessId: searchTradeResult.accessId,
+                            accessPass: searchTradeResult.accessPass,
+                            jobCd: GMO.utils.util.JobCd.Sales,
+                            amount: paymentMethod.paymentMethod.totalPaymentDue?.value,
+                            siteId: availableChannel.credentials?.siteId,
+                            sitePass: availableChannel.credentials?.sitePass
+                        }));
 
-                    // 失敗したら取引状態確認してどうこう、という処理も考えうるが、
-                    // GMOはapiのコール制限が厳しく、下手にコールするとすぐにクライアントサイドにも影響をあたえてしまう
-                    // リトライはタスクの仕組みに含まれているので失敗してもここでは何もしない
+                        // 失敗したら取引状態確認してどうこう、という処理も考えうるが、
+                        // GMOはapiのコール制限が厳しく、下手にコールするとすぐにクライアントサイドにも影響をあたえてしまう
+                        // リトライはタスクの仕組みに含まれているので失敗してもここでは何もしない
+                    }
                 }
             }));
         } catch (error) {
@@ -368,7 +400,7 @@ export function refundCreditCard(params: factory.task.refund.IData) {
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
-        // task: TaskRepo;
+        task: TaskRepo;
         // transaction: TransactionRepo;
     }) => {
         const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
@@ -421,6 +453,10 @@ export function refundCreditCard(params: factory.task.refund.IData) {
         }
 
         await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: { alterTranResult } });
+
+        if (!USE_GMO_CHANGE_TRAN) {
+            await onRefund(params)({ project: repos.project, task: repos.task });
+        }
 
         // 潜在アクション
         // await onRefund(refundActionAttributes, order)({ project: repos.project, task: repos.task });
@@ -478,22 +514,38 @@ async function processChangeTransaction(params: {
             tranDate: ''
         });
     } else {
-        // 手数料0円であれば、決済取り消し(返品)処理
-        if (typeof params.refundFee === 'number' && params.refundFee > 0) {
-            debug('changeTran processing...');
-            const changeTranResult = await creditCardService.changeTran({
-                shopId: params.shopId,
-                shopPass: params.shopPass,
-                accessId: searchTradeResult.accessId,
-                accessPass: searchTradeResult.accessPass,
-                jobCd: GMO.utils.util.JobCd.Capture,
-                amount: params.refundFee,
-                siteId: params.availableChannel.credentials?.siteId,
-                sitePass: params.availableChannel.credentials?.sitePass
-            });
-            debug('changeTran processed.');
-            alterTranResult.push(changeTranResult);
+        if (USE_GMO_CHANGE_TRAN) {
+            // 手数料0円であれば、決済取り消し(返品)処理
+            if (typeof params.refundFee === 'number' && params.refundFee > 0) {
+                debug('changeTran processing...');
+                const changeTranResult = await creditCardService.changeTran({
+                    shopId: params.shopId,
+                    shopPass: params.shopPass,
+                    accessId: searchTradeResult.accessId,
+                    accessPass: searchTradeResult.accessPass,
+                    jobCd: GMO.utils.util.JobCd.Capture,
+                    amount: params.refundFee,
+                    siteId: params.availableChannel.credentials?.siteId,
+                    sitePass: params.availableChannel.credentials?.sitePass
+                });
+                debug('changeTran processed.');
+                alterTranResult.push(changeTranResult);
+            } else {
+                debug('alterTran processing...');
+                alterTranResult.push(await creditCardService.alterTran({
+                    shopId: params.shopId,
+                    shopPass: params.shopPass,
+                    accessId: searchTradeResult.accessId,
+                    accessPass: searchTradeResult.accessPass,
+                    jobCd: GMO.utils.util.JobCd.Void,
+                    siteId: params.availableChannel.credentials?.siteId,
+                    sitePass: params.availableChannel.credentials?.sitePass
+                }));
+                debug('alterTran processed.');
+                debug('GMO alterTranResult is', alterTranResult);
+            }
         } else {
+            // USE_GMO_CHANGE_TRANでなければ、手数料決済については、取消→即時売上の流れ
             debug('alterTran processing...');
             alterTranResult.push(await creditCardService.alterTran({
                 shopId: params.shopId,
