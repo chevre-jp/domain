@@ -317,34 +317,22 @@ export function payCreditCard(params: factory.task.pay.IData) {
                     throw new factory.errors.ArgumentNull('object.paymentMethod.totalPaymentDue?.value');
                 }
 
-                // 返品手数料決済の場合を追加(状態が取消であれば即時売上)
-                if (searchTradeResult.jobCd === GMO.utils.util.JobCd.Capture) {
-                    debug('already in SALES');
-                    // すでに即時売上済み
-                    alterTranResults.push({
-                        accessId: searchTradeResult.accessId,
-                        accessPass: searchTradeResult.accessPass,
-                        forward: searchTradeResult.forward,
-                        approve: searchTradeResult.approve,
-                        tranId: searchTradeResult.tranId,
-                        tranDate: ''
-                    });
-                } else if (searchTradeResult.jobCd === GMO.utils.util.JobCd.Void) {
-                    debug('calling alterTran...');
-                    alterTranResults.push(await creditCardService.alterTran({
-                        shopId: shopId,
-                        shopPass: shopPass,
-                        accessId: searchTradeResult.accessId,
-                        accessPass: searchTradeResult.accessPass,
-                        jobCd: GMO.utils.util.JobCd.Capture,
-                        amount: amount, // 手数料を指定
-                        siteId: availableChannel.credentials?.siteId,
-                        sitePass: availableChannel.credentials?.sitePass,
-                        method: GMO.utils.util.Method.Lump // 再オーソリの場合、支払方法指定は必須
-                    }));
-                    debug('alterTran processed.');
-                } else {
-                    if (searchTradeResult.jobCd === GMO.utils.util.JobCd.Sales) {
+                switch (searchTradeResult.jobCd) {
+                    case GMO.utils.util.JobCd.Capture:
+                        debug('already in SALES');
+                        // すでに即時売上済み
+                        alterTranResults.push({
+                            accessId: searchTradeResult.accessId,
+                            accessPass: searchTradeResult.accessPass,
+                            forward: searchTradeResult.forward,
+                            approve: searchTradeResult.approve,
+                            tranId: searchTradeResult.tranId,
+                            tranDate: ''
+                        });
+
+                        break;
+
+                    case GMO.utils.util.JobCd.Sales:
                         debug('already in SALES');
                         // すでに実売上済み
                         alterTranResults.push({
@@ -355,7 +343,28 @@ export function payCreditCard(params: factory.task.pay.IData) {
                             tranId: searchTradeResult.tranId,
                             tranDate: ''
                         });
-                    } else {
+
+                        break;
+
+                    case GMO.utils.util.JobCd.Void:
+                        // 返品手数料決済の場合を追加(状態が取消であれば即時売上)
+                        debug('calling alterTran...');
+                        alterTranResults.push(await creditCardService.alterTran({
+                            shopId: shopId,
+                            shopPass: shopPass,
+                            accessId: searchTradeResult.accessId,
+                            accessPass: searchTradeResult.accessPass,
+                            jobCd: GMO.utils.util.JobCd.Capture,
+                            amount: amount, // 手数料を指定
+                            siteId: availableChannel.credentials?.siteId,
+                            sitePass: availableChannel.credentials?.sitePass,
+                            method: GMO.utils.util.Method.Lump // 再オーソリの場合、支払方法指定は必須
+                        }));
+                        debug('alterTran processed.');
+
+                        break;
+
+                    case GMO.utils.util.JobCd.Auth:
                         debug('calling alterTran...');
                         alterTranResults.push(await creditCardService.alterTran({
                             shopId: shopId,
@@ -371,7 +380,11 @@ export function payCreditCard(params: factory.task.pay.IData) {
                         // 失敗したら取引状態確認してどうこう、という処理も考えうるが、
                         // GMOはapiのコール制限が厳しく、下手にコールするとすぐにクライアントサイドにも影響をあたえてしまう
                         // リトライはタスクの仕組みに含まれているので失敗してもここでは何もしない
-                    }
+
+                        break;
+
+                    default:
+                        throw new factory.errors.NotImplemented(`jobCd '${searchTradeResult.jobCd}' not implemented`);
                 }
             }));
         } catch (error) {
