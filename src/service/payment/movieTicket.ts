@@ -12,6 +12,7 @@ import { MongoRepository as SellerRepo } from '../../repo/seller';
 
 import * as factory from '../../factory';
 
+import { findPayAction } from './any';
 import { createSeatInfoSyncIn } from './movieTicket/factory';
 
 import { validateMovieTicket } from '../transaction/pay/movieTicket/validation';
@@ -420,7 +421,6 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
         }
 
         // 決済開始時に着券していれば、取消
-        // const payAction = (<any>transaction.object).payAction;
         const payAction = await findPayAction({ project: { id: transaction.project.id }, paymentMethodId })(repos);
         if (payAction !== undefined) {
             let refundAction: factory.action.trade.refund.IAttributes;
@@ -664,22 +664,6 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
 
         // 潜在アクション
         // await onRefund(params)({ project: repos.project, task: repos.task });
-    };
-}
-
-function findPayAction(params: { project: { id: string }; paymentMethodId: string }) {
-    return async (repos: {
-        action: ActionRepo;
-    }): Promise<IPayAction | undefined> => {
-        const payActions = <IPayAction[]>await repos.action.search<factory.actionType.PayAction>({
-            limit: 1,
-            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
-            project: { id: { $eq: params.project.id } },
-            typeOf: { $eq: factory.actionType.PayAction },
-            object: { paymentMethod: { paymentMethodId: { $eq: params.paymentMethodId } } }
-        });
-
-        return payActions.shift();
     };
 }
 

@@ -8,10 +8,31 @@ import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
+export type IPayAction = factory.action.trade.pay.IAction;
+
 export type IAuthorizeOperation<T> = (repos: {
     action: ActionRepo;
     transaction: TransactionRepo;
 }) => Promise<T>;
+
+export function findPayAction(params: {
+    project: { id: string };
+    paymentMethodId: string;
+}) {
+    return async (repos: {
+        action: ActionRepo;
+    }): Promise<IPayAction | undefined> => {
+        const payActions = <IPayAction[]>await repos.action.search<factory.actionType.PayAction>({
+            limit: 1,
+            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
+            project: { id: { $eq: params.project.id } },
+            typeOf: { $eq: factory.actionType.PayAction },
+            object: { paymentMethod: { paymentMethodId: { $eq: params.paymentMethodId } } }
+        });
+
+        return payActions.shift();
+    };
+}
 
 /**
  * 返金後のアクション

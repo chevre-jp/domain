@@ -12,7 +12,7 @@ import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 
-import { onRefund } from './any';
+import { findPayAction, onRefund } from './any';
 
 const debug = createDebug('chevre-domain:service');
 
@@ -425,14 +425,7 @@ export function refundCreditCard(params: factory.task.refund.IData) {
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
         // 本アクションに対応するPayActionを取り出す(Cinerino側で決済していた時期に関してはpayActionが存在しないので注意)
-        const payActions = <factory.action.trade.pay.IAction[]>await repos.action.search<factory.actionType.PayAction>({
-            limit: 1,
-            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
-            project: { id: { $eq: params.project.id } },
-            typeOf: { $eq: factory.actionType.PayAction },
-            object: { paymentMethod: { paymentMethodId: { $eq: paymentMethodId } } }
-        });
-        const payAction = payActions.shift();
+        const payAction = await findPayAction({ project: { id: params.project.id }, paymentMethodId })(repos);
         // if (payAction === undefined) {
         //     throw new factory.errors.NotFound('PayAction');
         // }
