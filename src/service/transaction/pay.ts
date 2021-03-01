@@ -125,6 +125,11 @@ export function start(params: factory.transaction.pay.IStartParamsWithoutDetail)
         transaction = await repos.transaction.start<factory.transactionType.Pay>(startParams);
 
         switch (paymentServiceType) {
+            case factory.service.paymentService.PaymentServiceType.FaceToFace:
+                // 対面決済は特に何もしない
+
+                break;
+
             case factory.service.paymentService.PaymentServiceType.PaymentCard:
                 transaction = await processAuthorizeAccount(params, transaction)(repos);
 

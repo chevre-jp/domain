@@ -90,6 +90,9 @@ export function start(
             transaction = await repos.transaction.start<factory.transactionType.Refund>(startParams);
 
             switch (paymentServiceType) {
+                case factory.service.paymentService.PaymentServiceType.FaceToFace:
+                    break;
+
                 case factory.service.paymentService.PaymentServiceType.PaymentCard:
                     break;
 

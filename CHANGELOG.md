@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- 決済サービスタイプにFaceToFaceを追加
+
 ### Changed
 
 - 返品手数料決済処理をGMO取引の取消→即時売上で実装するように調整

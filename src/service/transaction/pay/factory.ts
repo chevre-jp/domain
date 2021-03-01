@@ -16,6 +16,16 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
     let totalPaymentDue: factory.monetaryAmount.IMonetaryAmount | undefined;
 
     switch (params.paymentServiceType) {
+        case factory.service.paymentService.PaymentServiceType.FaceToFace:
+            // 対面決済ではとりあえず問答無用にJPY
+            totalPaymentDue = {
+                typeOf: 'MonetaryAmount',
+                currency: factory.priceCurrency.JPY,
+                value: Number(params.amount)
+            };
+
+            break;
+
         case factory.service.paymentService.PaymentServiceType.CreditCard:
             totalPaymentDue = {
                 typeOf: 'MonetaryAmount',

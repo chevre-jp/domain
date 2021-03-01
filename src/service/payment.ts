@@ -14,6 +14,7 @@ import * as factory from '../factory';
 
 import * as AccountPaymentService from './payment/account';
 import * as CreditCardPaymentService from './payment/creditCard';
+import * as FaceToFacePaymentService from './payment/faceToFace';
 import * as MovieTicketPaymentService from './payment/movieTicket';
 
 /**
@@ -31,6 +32,10 @@ export function pay(params: factory.task.pay.IData) {
         const paymentServiceType = params.object[0]?.typeOf;
 
         switch (paymentServiceType) {
+            case factory.service.paymentService.PaymentServiceType.FaceToFace:
+                await FaceToFacePaymentService.payFaceToFace(params)(repos);
+                break;
+
             case factory.service.paymentService.PaymentServiceType.PaymentCard:
                 await AccountPaymentService.payAccount(params)(repos);
                 break;
@@ -59,6 +64,10 @@ export function voidPayment(params: factory.task.voidPayment.IData) {
         const paymentServiceType = params.object.object.typeOf;
 
         switch (paymentServiceType) {
+            case factory.service.paymentService.PaymentServiceType.FaceToFace:
+                await FaceToFacePaymentService.voidTransaction(params)(repos);
+                break;
+
             case factory.service.paymentService.PaymentServiceType.PaymentCard:
                 await AccountPaymentService.voidTransaction(params)(repos);
                 break;
@@ -94,6 +103,10 @@ export function refund(params: factory.task.refund.IData) {
         const paymentServiceType = params.object[0]?.typeOf;
 
         switch (paymentServiceType) {
+            case factory.service.paymentService.PaymentServiceType.FaceToFace:
+                await FaceToFacePaymentService.refundFaceToFace(params)(repos);
+                break;
+
             case factory.service.paymentService.PaymentServiceType.PaymentCard:
                 await AccountPaymentService.refundAccount(params)(repos);
                 break;

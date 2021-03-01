@@ -1,5 +1,6 @@
 import * as factory from '../../../factory';
 
+// tslint:disable-next-line:max-func-body-length
 function createPayActions(params: {
     transaction: factory.transaction.ITransaction<factory.transactionType.Pay>;
     potentialActions?: factory.transaction.pay.IPotentialActionsParams;
@@ -15,6 +16,26 @@ function createPayActions(params: {
     let payObject: factory.action.trade.pay.IPaymentService | undefined;
 
     switch (transaction.object.typeOf) {
+        case factory.service.paymentService.PaymentServiceType.FaceToFace:
+            // 対面決済ではとりあえず問答無用にJPY
+            payObject = {
+                typeOf: transaction.object.typeOf,
+                paymentMethod: {
+                    additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : [],
+                    name: paymentMethodName,
+                    paymentMethodId: paymentMethodId,
+                    totalPaymentDue: {
+                        typeOf: 'MonetaryAmount',
+                        currency: factory.priceCurrency.JPY,
+                        value: Number(paymentMethod?.amount)
+                    },
+                    typeOf: paymentMethodType,
+                    ...(typeof paymentMethod?.accountId === 'string') ? { accountId: paymentMethod.accountId } : undefined
+                }
+            };
+
+            break;
+
         case factory.service.paymentService.PaymentServiceType.PaymentCard:
             const totalPaymentDue: factory.monetaryAmount.IMonetaryAmount = (typeof paymentMethod?.totalPaymentDue?.typeOf === 'string')
                 ? paymentMethod.totalPaymentDue
@@ -43,7 +64,6 @@ function createPayActions(params: {
             payObject = {
                 typeOf: transaction.object.typeOf,
                 paymentMethod: {
-                    accountId: paymentMethod?.accountId,
                     additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : [],
                     name: paymentMethodName,
                     paymentMethodId: paymentMethodId,
@@ -52,7 +72,8 @@ function createPayActions(params: {
                         currency: factory.priceCurrency.JPY,
                         value: Number(paymentMethod?.amount)
                     },
-                    typeOf: paymentMethodType
+                    typeOf: paymentMethodType,
+                    ...(typeof paymentMethod?.accountId === 'string') ? { accountId: paymentMethod.accountId } : undefined
                 }
             };
 
