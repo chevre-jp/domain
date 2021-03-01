@@ -113,6 +113,8 @@ export function start(params: factory.transaction.pay.IStartParamsWithoutDetail)
             throw new factory.errors.ArgumentNull('transactionNumber');
         }
 
+        await validateSeller(params)(repos);
+
         // 取引開始
         let transaction: factory.transaction.pay.ITransaction;
         const startParams: factory.transaction.IStartParams<factory.transactionType.Pay> = createStartParams({
@@ -150,6 +152,30 @@ export function start(params: factory.transaction.pay.IStartParamsWithoutDetail)
         }
 
         return transaction;
+    };
+}
+
+function validateSeller(params: factory.transaction.pay.IStartParamsWithoutDetail) {
+    return async (repos: {
+        seller: SellerRepo;
+    }): Promise<void> => {
+        const sellerId = params.recipient?.id;
+        if (typeof sellerId !== 'string') {
+            throw new factory.errors.ArgumentNull('recipient.id');
+        }
+
+        const seller = await repos.seller.findById({ id: sellerId });
+
+        const paymentMethodType = params.object.paymentMethod?.typeOf;
+        if (typeof paymentMethodType !== 'string') {
+            throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
+        }
+
+        // 販売者の対応決済方法かどうか確認
+        const paymentAccepted = seller.paymentAccepted?.some((a) => a.paymentMethodType === paymentMethodType);
+        if (paymentAccepted !== true) {
+            throw new factory.errors.Argument('object.paymentMethod.typeOf', `payment not accepted`);
+        }
     };
 }
 
