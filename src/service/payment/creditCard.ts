@@ -16,19 +16,16 @@ import { onPaid, onRefund } from './any';
 
 const debug = createDebug('chevre-domain:service');
 
-const USE_GMO_CHANGE_TRAN = process.env.USE_GMO_CHANGE_TRAN === '1';
-
 export import IUncheckedCardRaw = factory.paymentMethod.paymentCard.creditCard.IUncheckedCardRaw;
 export import IUncheckedCardTokenized = factory.paymentMethod.paymentCard.creditCard.IUncheckedCardTokenized;
 export import IUnauthorizedCardOfMember = factory.paymentMethod.paymentCard.creditCard.IUnauthorizedCardOfMember;
 
 /**
- * クレジットカードオーソリ取得
+ * クレジットカード決済承認
  */
 export function authorize(
     params: factory.transaction.pay.IStartParamsWithoutDetail
 ) {
-    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         product: ProductRepo;
         project: ProjectRepo;
@@ -49,13 +46,9 @@ export function authorize(
         });
 
         const sellerId = params.recipient?.id;
-        if (typeof sellerId !== 'string') {
-            throw new factory.errors.ArgumentNull('recipient.id');
-        }
+        if (typeof sellerId !== 'string') { throw new factory.errors.ArgumentNull('recipient.id'); }
 
-        const seller = await repos.seller.findById({ id: sellerId });
-
-        const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: seller })(repos);
+        const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: { id: sellerId } })(repos);
 
         // GMOオーダーIDはカスタム指定可能
         const orderId = params.transactionNumber;
@@ -195,7 +188,7 @@ function handleAuthorizeError(error: any) {
 }
 
 /**
- * 決済取引についてクレジットカード決済を中止する
+ * クレジットカード決済中止
  */
 export function voidTransaction(params: factory.task.voidPayment.IData) {
     return async (repos: {
@@ -223,13 +216,9 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
         });
 
         const sellerId = transaction.recipient?.id;
-        if (typeof sellerId !== 'string') {
-            throw new factory.errors.ArgumentNull('object.recipient.id');
-        }
+        if (typeof sellerId !== 'string') { throw new factory.errors.ArgumentNull('object.recipient.id'); }
 
-        const seller = await repos.seller.findById({ id: sellerId });
-
-        const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: seller })(repos);
+        const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: { id: sellerId } })(repos);
 
         const creditCardService = new GMO.service.Credit({ endpoint: String(availableChannel.serviceUrl) });
 
@@ -266,7 +255,7 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
 }
 
 /**
- * クレジットカード売上確定
+ * クレジットカード決済
  */
 export function payCreditCard(params: factory.task.pay.IData) {
     // tslint:disable-next-line:max-func-body-length
@@ -291,8 +280,10 @@ export function payCreditCard(params: factory.task.pay.IData) {
             typeOf: factory.service.paymentService.PaymentServiceType.CreditCard
         });
 
-        const seller = await repos.seller.findById({ id: String(params.recipient?.id) });
-        const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: seller })(repos);
+        const sellerId = params.recipient?.id;
+        if (typeof sellerId !== 'string') { throw new factory.errors.ArgumentNull('recipient.id'); }
+
+        const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: { id: sellerId } })(repos);
 
         // アクション開始
         let action = <factory.action.trade.pay.IAction>await repos.action.start(params);
@@ -320,22 +311,9 @@ export function payCreditCard(params: factory.task.pay.IData) {
 
                 switch (searchTradeResult.jobCd) {
                     case GMO.utils.util.JobCd.Capture:
-                        debug('already in SALES');
-                        // すでに即時売上済み
-                        alterTranResults.push({
-                            accessId: searchTradeResult.accessId,
-                            accessPass: searchTradeResult.accessPass,
-                            forward: searchTradeResult.forward,
-                            approve: searchTradeResult.approve,
-                            tranId: searchTradeResult.tranId,
-                            tranDate: ''
-                        });
-
-                        break;
-
                     case GMO.utils.util.JobCd.Sales:
                         debug('already in SALES');
-                        // すでに実売上済み
+                        // すでに即時売上済み
                         alterTranResults.push({
                             accessId: searchTradeResult.accessId,
                             accessPass: searchTradeResult.accessPass,
@@ -415,7 +393,7 @@ export function payCreditCard(params: factory.task.pay.IData) {
 }
 
 /**
- * クレジットカード返金処理を実行する
+ * クレジットカード返金
  */
 export function refundCreditCard(params: factory.task.refund.IData) {
     return async (repos: {
@@ -424,20 +402,20 @@ export function refundCreditCard(params: factory.task.refund.IData) {
         project: ProjectRepo;
         seller: SellerRepo;
         task: TaskRepo;
-        // transaction: TransactionRepo;
     }): Promise<factory.action.trade.refund.IAction> => {
         const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
         // 本アクションに対応するPayActionを取り出す(Cinerino側で決済していた時期に関してはpayActionが存在しないので注意)
         const payAction = await repos.action.findPayAction({ project: { id: params.project.id }, paymentMethodId });
-        // if (payAction === undefined) {
-        //     throw new factory.errors.NotFound('PayAction');
-        // }
+        if (payAction === undefined) {
+            throw new factory.errors.NotFound('PayAction');
+        }
 
-        const seller = await repos.seller.findById({ id: String(params.agent.id) });
+        const sellerId = params.agent?.id;
+        if (typeof sellerId !== 'string') { throw new factory.errors.ArgumentNull('agent.id'); }
 
-        const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: seller })(repos);
+        const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: { id: sellerId } })(repos);
 
         const availableChannel = await repos.product.findAvailableChannel({
             project: params.project,
@@ -471,12 +449,7 @@ export function refundCreditCard(params: factory.task.refund.IData) {
         action = <factory.action.trade.refund.IAction>
             await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: { alterTranResult } });
 
-        if (!USE_GMO_CHANGE_TRAN) {
-            await onRefund(action)(repos);
-        }
-
-        // 潜在アクション
-        // await onRefund(refundActionAttributes, order)({ project: repos.project, task: repos.task });
+        await onRefund(action)(repos);
 
         return action;
     };
@@ -509,9 +482,6 @@ async function processChangeTransaction(params: {
     if (Array.isArray(params.payAction?.result?.creditCardSales)) {
         creditCardSalesBefore = params.payAction?.result?.creditCardSales[0];
     }
-    // if (creditCardSalesBefore === undefined) {
-    //     throw new Error('Credit Card Sales not found');
-    // }
 
     let alreadyRefunded = false;
 
@@ -533,64 +503,72 @@ async function processChangeTransaction(params: {
             tranDate: ''
         });
     } else {
-        if (USE_GMO_CHANGE_TRAN) {
-            // 手数料0円であれば、決済取り消し(返品)処理
-            if (typeof params.refundFee === 'number' && params.refundFee > 0) {
-                debug('changeTran processing...');
-                const changeTranResult = await creditCardService.changeTran({
-                    shopId: params.shopId,
-                    shopPass: params.shopPass,
-                    accessId: searchTradeResult.accessId,
-                    accessPass: searchTradeResult.accessPass,
-                    jobCd: GMO.utils.util.JobCd.Capture,
-                    amount: params.refundFee,
-                    siteId: params.availableChannel.credentials?.siteId,
-                    sitePass: params.availableChannel.credentials?.sitePass
-                });
-                debug('changeTran processed.');
-                alterTranResult.push(changeTranResult);
-            } else {
-                debug('alterTran processing...');
-                alterTranResult.push(await creditCardService.alterTran({
-                    shopId: params.shopId,
-                    shopPass: params.shopPass,
-                    accessId: searchTradeResult.accessId,
-                    accessPass: searchTradeResult.accessPass,
-                    jobCd: GMO.utils.util.JobCd.Void,
-                    siteId: params.availableChannel.credentials?.siteId,
-                    sitePass: params.availableChannel.credentials?.sitePass
-                }));
-                debug('alterTran processed.');
-                debug('GMO alterTranResult is', alterTranResult);
-            }
-        } else {
-            // USE_GMO_CHANGE_TRANでなければ、手数料決済については、取消→即時売上の流れ
-            debug('alterTran processing...');
-            alterTranResult.push(await creditCardService.alterTran({
-                shopId: params.shopId,
-                shopPass: params.shopPass,
-                accessId: searchTradeResult.accessId,
-                accessPass: searchTradeResult.accessPass,
-                jobCd: GMO.utils.util.JobCd.Void,
-                siteId: params.availableChannel.credentials?.siteId,
-                sitePass: params.availableChannel.credentials?.sitePass
-            }));
-            debug('alterTran processed.');
-            debug('GMO alterTranResult is', alterTranResult);
-        }
+        // if (USE_GMO_CHANGE_TRAN) {
+        //     // 手数料0円であれば、決済取り消し(返品)処理
+        //     if (typeof params.refundFee === 'number' && params.refundFee > 0) {
+        //         debug('changeTran processing...');
+        //         const changeTranResult = await creditCardService.changeTran({
+        //             shopId: params.shopId,
+        //             shopPass: params.shopPass,
+        //             accessId: searchTradeResult.accessId,
+        //             accessPass: searchTradeResult.accessPass,
+        //             jobCd: GMO.utils.util.JobCd.Capture,
+        //             amount: params.refundFee,
+        //             siteId: params.availableChannel.credentials?.siteId,
+        //             sitePass: params.availableChannel.credentials?.sitePass
+        //         });
+        //         debug('changeTran processed.');
+        //         alterTranResult.push(changeTranResult);
+        //     } else {
+        //         debug('alterTran processing...');
+        //         alterTranResult.push(await creditCardService.alterTran({
+        //             shopId: params.shopId,
+        //             shopPass: params.shopPass,
+        //             accessId: searchTradeResult.accessId,
+        //             accessPass: searchTradeResult.accessPass,
+        //             jobCd: GMO.utils.util.JobCd.Void,
+        //             siteId: params.availableChannel.credentials?.siteId,
+        //             sitePass: params.availableChannel.credentials?.sitePass
+        //         }));
+        //         debug('alterTran processed.');
+        //         debug('GMO alterTranResult is', alterTranResult);
+        //     }
+        // } else {
+        // }
+        // 手数料決済については、取消→即時売上の流れ
+        debug('alterTran processing...');
+        alterTranResult.push(await creditCardService.alterTran({
+            shopId: params.shopId,
+            shopPass: params.shopPass,
+            accessId: searchTradeResult.accessId,
+            accessPass: searchTradeResult.accessPass,
+            jobCd: GMO.utils.util.JobCd.Void,
+            siteId: params.availableChannel.credentials?.siteId,
+            sitePass: params.availableChannel.credentials?.sitePass
+        }));
+        debug('alterTran processed.');
+        debug('GMO alterTranResult is', alterTranResult);
     }
 
     return alterTranResult;
 }
 
+export interface IGMOInfo {
+    shopId: string;
+    shopPass: string;
+}
+
 function getGMOInfoFromSeller(params: {
     paymentMethodType: string;
-    seller: factory.seller.ISeller;
+    seller: { id: string };
 }) {
     return async (repos: {
+        seller: SellerRepo;
         product: ProductRepo;
-    }) => {
-        const paymentAccepted = params.seller.paymentAccepted?.some((a) => a.paymentMethodType === params.paymentMethodType);
+    }): Promise<IGMOInfo> => {
+        const seller = await repos.seller.findById({ id: String(params.seller.id) });
+
+        const paymentAccepted = seller.paymentAccepted?.some((a) => a.paymentMethodType === params.paymentMethodType);
         if (paymentAccepted !== true) {
             throw new factory.errors.Argument('transaction', 'payment not accepted');
         }
@@ -598,7 +576,7 @@ function getGMOInfoFromSeller(params: {
         // 決済サービスからcredentialsを取得する
         const paymentServices = <factory.service.paymentService.IService[]>await repos.product.search({
             limit: 1,
-            project: { id: { $eq: params.seller.project.id } },
+            project: { id: { $eq: seller.project.id } },
             typeOf: { $eq: factory.service.paymentService.PaymentServiceType.CreditCard },
             serviceOutput: { typeOf: { $eq: params.paymentMethodType } }
         });

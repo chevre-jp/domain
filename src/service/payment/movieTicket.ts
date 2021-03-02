@@ -457,7 +457,6 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
 }
 
 export type IPayAction = factory.action.trade.pay.IAction;
-// export type IPayAction = factory.action.IAction<factory.action.IAttributes<factory.actionType.PayAction, any, any>>;
 
 /**
  * ムビチケ着券
