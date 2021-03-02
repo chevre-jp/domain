@@ -12,8 +12,11 @@ import * as factory from '../../factory';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
+import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
+
+import { onPaid, onRefund } from './any';
 
 const pecorinoAuthClient = new pecorinoapi.auth.ClientCredentials({
     domain: credentials.pecorino.authorizeServerDomain,
@@ -145,11 +148,13 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
 export function payAccount(params: factory.task.pay.IData) {
     return async (repos: {
         action: ActionRepo;
+        project: ProjectRepo;
+        task: TaskRepo;
     }): Promise<factory.action.trade.pay.IAction> => {
         const payObject = params.object;
 
         // アクション開始
-        const action = await repos.action.start(params);
+        let action = <factory.action.trade.pay.IAction>await repos.action.start(params);
 
         try {
             const transactionNumber = payObject[0].paymentMethod.paymentMethodId;
@@ -173,17 +178,23 @@ export function payAccount(params: factory.task.pay.IData) {
         // アクション完了
         const actionResult: factory.action.trade.pay.IResult = {};
 
-        return <Promise<factory.action.trade.pay.IAction>>
-            repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+        action = <factory.action.trade.pay.IAction>
+            await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+
+        await onPaid(action)(repos);
+
+        return action;
     };
 }
 
 export function refundAccount(params: factory.task.refund.IData) {
     return async (repos: {
         action: ActionRepo;
+        project: ProjectRepo;
+        task: TaskRepo;
         transaction: TransactionRepo;
         transactionNumber: TransactionNumberRepo;
-    }) => {
+    }): Promise<factory.action.trade.refund.IAction> => {
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
         const payTransaction = await repos.transaction.findByTransactionNumber({
@@ -191,7 +202,7 @@ export function refundAccount(params: factory.task.refund.IData) {
             transactionNumber: paymentMethodId
         });
 
-        const action = await repos.action.start(params);
+        let action = <factory.action.trade.refund.IAction>await repos.action.start(params);
 
         try {
             const transactionNumber = await repos.transactionNumber.publishByTimestamp({
@@ -254,9 +265,11 @@ export function refundAccount(params: factory.task.refund.IData) {
             throw error;
         }
 
-        await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: {} });
+        action = <factory.action.trade.refund.IAction>
+            await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: {} });
 
-        // 潜在アクション
-        // await onRefund(refundActionAttributes, order)({ project: repos.project, task: repos.task });
+        await onRefund(action)(repos);
+
+        return action;
     };
 }

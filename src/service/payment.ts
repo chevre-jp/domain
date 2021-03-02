@@ -60,6 +60,7 @@ export function voidPayment(params: factory.task.voidPayment.IData) {
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
+        task: TaskRepo;
     }) => {
         const paymentServiceType = params.object.object.typeOf;
 

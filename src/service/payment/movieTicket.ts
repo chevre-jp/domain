@@ -9,15 +9,17 @@ import { MongoRepository as EventRepo } from '../../repo/event';
 import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
+import { MongoRepository as TaskRepo } from '../../repo/task';
 
 import * as factory from '../../factory';
 
-import { findPayAction } from './any';
 import { createSeatInfoSyncIn } from './movieTicket/factory';
 
 import { validateMovieTicket } from '../transaction/pay/movieTicket/validation';
 
 import { handleMvtkReserveError } from '../../errorHandler';
+
+import { onPaid, onRefund } from './any';
 
 const USE_MOVIETICKET_AUTHORIZE = process.env.USE_MOVIETICKET_AUTHORIZE === '1';
 
@@ -341,6 +343,7 @@ export function authorize(
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
+        task: TaskRepo;
     }): Promise<IAuthorizeResult> => {
         let checkResult: ICheckResult;
         let payAction: factory.action.IAction<factory.action.IAttributes<factory.actionType.PayAction, any, any>> | undefined;
@@ -407,6 +410,7 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
+        task: TaskRepo;
     }) => {
         const transaction = params.object;
 
@@ -421,7 +425,7 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
         }
 
         // 決済開始時に着券していれば、取消
-        const payAction = await findPayAction({ project: { id: transaction.project.id }, paymentMethodId })(repos);
+        const payAction = await repos.action.findPayAction({ project: { id: transaction.project.id }, paymentMethodId });
         if (payAction !== undefined) {
             let refundAction: factory.action.trade.refund.IAttributes;
 
@@ -466,18 +470,19 @@ export function payMovieTicket(params: factory.task.pay.IData) {
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
+        task: TaskRepo;
     }): Promise<IPayAction> => {
         const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
-        const payAction = await findPayAction({ project: { id: params.project.id }, paymentMethodId })(repos);
+        const payAction = await repos.action.findPayAction({ project: { id: params.project.id }, paymentMethodId });
         // すでに決済済であれば、何もしない(決済開始時の着券など)
         if (payAction !== undefined) {
             return payAction;
         }
 
         // アクション開始
-        let action = await repos.action.start(params);
+        let action = <factory.action.trade.pay.IAction>await repos.action.start(params);
 
         let seatInfoSyncIn: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncIn | undefined;
         let seatInfoSyncResult: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncResult | undefined;
@@ -567,9 +572,12 @@ export function payMovieTicket(params: factory.task.pay.IData) {
             seatInfoSyncResult: seatInfoSyncResult
         };
 
-        action = await repos.action.complete<factory.actionType.PayAction>({ typeOf: action.typeOf, id: action.id, result: actionResult });
+        action = <factory.action.trade.pay.IAction>
+            await repos.action.complete<factory.actionType.PayAction>({ typeOf: action.typeOf, id: action.id, result: actionResult });
 
-        return <IPayAction>action;
+        await onPaid(action)(repos);
+
+        return action;
     };
 }
 
@@ -582,12 +590,13 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
-    }) => {
+        task: TaskRepo;
+    }): Promise<factory.action.trade.refund.IAction> => {
         const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
         // 本アクションに対応するPayActionを取り出す
-        const payAction = await findPayAction({ project: { id: params.project.id }, paymentMethodId })(repos);
+        const payAction = await repos.action.findPayAction({ project: { id: params.project.id }, paymentMethodId });
         if (payAction === undefined) {
             throw new factory.errors.NotFound('PayAction');
         }
@@ -612,7 +621,7 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
         });
 
         // アクション開始
-        const action = await repos.action.start(params);
+        let action = <factory.action.trade.refund.IAction>await repos.action.start(params);
 
         let seatInfoSyncIn: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncIn | undefined;
         let seatInfoSyncResult: mvtkapi.mvtk.services.seat.seatInfoSync.ISeatInfoSyncResult | undefined;
@@ -660,10 +669,12 @@ export function refundMovieTicket(params: factory.task.refund.IData) {
             seatInfoSyncIn: seatInfoSyncIn,
             seatInfoSyncResult: seatInfoSyncResult
         };
-        await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+        action = <factory.action.trade.refund.IAction>
+            await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
 
-        // 潜在アクション
-        // await onRefund(params)({ project: repos.project, task: repos.task });
+        await onRefund(action)(repos);
+
+        return action;
     };
 }
 

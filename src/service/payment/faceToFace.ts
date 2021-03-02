@@ -9,6 +9,8 @@ import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 
+import { onPaid, onRefund } from './any';
+
 export function voidTransaction(__: factory.task.voidPayment.IData) {
     return async (___: {
         product: ProductRepo;
@@ -25,9 +27,10 @@ export function payFaceToFace(params: factory.task.pay.IData) {
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
+        task: TaskRepo;
     }): Promise<factory.action.trade.pay.IAction> => {
         // アクション開始
-        const action = await repos.action.start(params);
+        let action = <factory.action.trade.pay.IAction>await repos.action.start(params);
 
         try {
             // no op
@@ -46,8 +49,12 @@ export function payFaceToFace(params: factory.task.pay.IData) {
         // アクション完了
         const actionResult: factory.action.trade.pay.IResult = {};
 
-        return <Promise<factory.action.trade.pay.IAction>>
-            repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+        action = <factory.action.trade.pay.IAction>
+            await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+
+        await onPaid(action)(repos);
+
+        return action;
     };
 }
 
@@ -58,8 +65,8 @@ export function refundFaceToFace(params: factory.task.refund.IData) {
         project: ProjectRepo;
         seller: SellerRepo;
         task: TaskRepo;
-    }) => {
-        const action = await repos.action.start(params);
+    }): Promise<factory.action.trade.refund.IAction> => {
+        let action = <factory.action.trade.refund.IAction>await repos.action.start(params);
 
         try {
             // no op
@@ -74,9 +81,10 @@ export function refundFaceToFace(params: factory.task.refund.IData) {
             throw error;
         }
 
-        await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: {} });
+        action = <factory.action.trade.refund.IAction>await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: {} });
 
-        // 潜在アクション
-        // await onRefund(refundActionAttributes, order)({ project: repos.project, task: repos.task });
+        await onRefund(action)(repos);
+
+        return action;
     };
 }

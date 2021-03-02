@@ -8,29 +8,30 @@ import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
-export type IPayAction = factory.action.trade.pay.IAction;
-
 export type IAuthorizeOperation<T> = (repos: {
     action: ActionRepo;
     transaction: TransactionRepo;
 }) => Promise<T>;
 
-export function findPayAction(params: {
-    project: { id: string };
-    paymentMethodId: string;
-}) {
+/**
+ * 決済後のアクション
+ */
+export function onPaid(
+    __: factory.action.trade.pay.IAction
+) {
+    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
-        action: ActionRepo;
-    }): Promise<IPayAction | undefined> => {
-        const payActions = <IPayAction[]>await repos.action.search<factory.actionType.PayAction>({
-            limit: 1,
-            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
-            project: { id: { $eq: params.project.id } },
-            typeOf: { $eq: factory.actionType.PayAction },
-            object: { paymentMethod: { paymentMethodId: { $eq: params.paymentMethodId } } }
-        });
+        project: ProjectRepo;
+        task: TaskRepo;
+    }) => {
+        // const project = await repos.project.findById({ id: refundActionAttributes.project.id });
 
-        return payActions.shift();
+        // const potentialActions = refundActionAttributes.potentialActions;
+        // const now = new Date();
+        const taskAttributes: factory.task.IAttributes[] = [];
+
+        // タスク保管
+        return repos.task.saveMany(taskAttributes);
     };
 }
 
@@ -38,7 +39,7 @@ export function findPayAction(params: {
  * 返金後のアクション
  */
 export function onRefund(
-    refundActionAttributes: factory.action.trade.refund.IAttributes
+    refundAction: factory.action.trade.refund.IAction
     // order?: factory.order.IOrder
 ) {
     // tslint:disable-next-line:max-func-body-length
@@ -53,9 +54,9 @@ export function onRefund(
         const taskAttributes: factory.task.IAttributes[] = [];
 
         // 手数料決済があれば処理
-        const refundFee = refundActionAttributes.object[0]?.refundFee;
+        const refundFee = refundAction.object[0]?.refundFee;
         if (typeof refundFee === 'number' && refundFee > 0) {
-            const payObject: factory.action.trade.pay.IObject = refundActionAttributes.object.map((o) => {
+            const payObject: factory.action.trade.pay.IObject = refundAction.object.map((o) => {
                 return {
                     typeOf: o.typeOf,
                     paymentMethod: {
@@ -73,15 +74,15 @@ export function onRefund(
                 };
             });
             const payAction: factory.action.trade.pay.IAttributes = {
-                project: refundActionAttributes.project,
+                project: refundAction.project,
                 typeOf: <factory.actionType.PayAction>factory.actionType.PayAction,
                 object: payObject,
-                agent: <any>refundActionAttributes.recipient,
-                recipient: <any>refundActionAttributes.agent, // 返金者は販売者のはず
-                purpose: refundActionAttributes.purpose
+                agent: <any>refundAction.recipient,
+                recipient: <any>refundAction.agent, // 返金者は販売者のはず
+                purpose: refundAction.purpose
             };
             const payTask: factory.task.pay.IAttributes = {
-                project: refundActionAttributes.project,
+                project: refundAction.project,
                 name: <factory.taskName.Pay>factory.taskName.Pay,
                 status: factory.taskStatus.Ready,
                 runsAt: now,

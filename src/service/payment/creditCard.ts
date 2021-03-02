@@ -12,7 +12,7 @@ import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 
-import { findPayAction, onRefund } from './any';
+import { onPaid, onRefund } from './any';
 
 const debug = createDebug('chevre-domain:service');
 
@@ -275,6 +275,7 @@ export function payCreditCard(params: factory.task.pay.IData) {
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
+        task: TaskRepo;
     }): Promise<factory.action.trade.pay.IAction> => {
         const payObject = params.object;
 
@@ -294,7 +295,7 @@ export function payCreditCard(params: factory.task.pay.IData) {
         const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: seller })(repos);
 
         // アクション開始
-        const action = await repos.action.start(params);
+        let action = <factory.action.trade.pay.IAction>await repos.action.start(params);
         const alterTranResults: GMO.factory.credit.IAlterTranResult[] = [];
 
         try {
@@ -404,8 +405,12 @@ export function payCreditCard(params: factory.task.pay.IData) {
             creditCardSales: alterTranResults
         };
 
-        return <Promise<factory.action.trade.pay.IAction>>
-            repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+        action = <factory.action.trade.pay.IAction>
+            await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: actionResult });
+
+        await onPaid(action)(repos);
+
+        return action;
     };
 }
 
@@ -420,12 +425,12 @@ export function refundCreditCard(params: factory.task.refund.IData) {
         seller: SellerRepo;
         task: TaskRepo;
         // transaction: TransactionRepo;
-    }) => {
+    }): Promise<factory.action.trade.refund.IAction> => {
         const paymentMethodType = params.object[0]?.paymentMethod.typeOf;
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
         // 本アクションに対応するPayActionを取り出す(Cinerino側で決済していた時期に関してはpayActionが存在しないので注意)
-        const payAction = await findPayAction({ project: { id: params.project.id }, paymentMethodId })(repos);
+        const payAction = await repos.action.findPayAction({ project: { id: params.project.id }, paymentMethodId });
         // if (payAction === undefined) {
         //     throw new factory.errors.NotFound('PayAction');
         // }
@@ -440,7 +445,7 @@ export function refundCreditCard(params: factory.task.refund.IData) {
             typeOf: factory.service.paymentService.PaymentServiceType.CreditCard
         });
 
-        const action = await repos.action.start(params);
+        let action = <factory.action.trade.refund.IAction>await repos.action.start(params);
         let alterTranResult: GMO.factory.credit.IAlterTranResult[] = [];
 
         try {
@@ -463,14 +468,17 @@ export function refundCreditCard(params: factory.task.refund.IData) {
             throw error;
         }
 
-        await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: { alterTranResult } });
+        action = <factory.action.trade.refund.IAction>
+            await repos.action.complete({ typeOf: action.typeOf, id: action.id, result: { alterTranResult } });
 
         if (!USE_GMO_CHANGE_TRAN) {
-            await onRefund(params)({ project: repos.project, task: repos.task });
+            await onRefund(action)(repos);
         }
 
         // 潜在アクション
         // await onRefund(refundActionAttributes, order)({ project: repos.project, task: repos.task });
+
+        return action;
     };
 }
 

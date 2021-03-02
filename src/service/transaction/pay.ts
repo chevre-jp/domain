@@ -27,6 +27,7 @@ export type IStartOperation<T> = (repos: {
     project: ProjectRepo;
     seller: SellerRepo;
     transaction: TransactionRepo;
+    task: TaskRepo;
 }) => Promise<T>;
 
 export type ICancelOperation<T> = (repos: {
@@ -99,6 +100,7 @@ export function start(params: factory.transaction.pay.IStartParamsWithoutDetail)
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;
+        task: TaskRepo;
     }) => {
         const paymentServiceType = params.object?.typeOf;
 
@@ -252,6 +254,7 @@ function processAuthorizeMovieTicket(
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;
+        task: TaskRepo;
     }): Promise<factory.transaction.pay.ITransaction> => {
         const authorizeResult = await MovieTicketPayment.authorize(params, transaction)(repos);
 
