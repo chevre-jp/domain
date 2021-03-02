@@ -1,5 +1,5 @@
 /**
- * 口座決済サービス
+ * ペイメントカード決済サービス
  */
 import * as pecorinoapi from '@pecorino/api-nodejs-client';
 import * as moment from 'moment-timezone';
@@ -12,7 +12,6 @@ import * as factory from '../../factory';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
-import { MongoRepository as SellerRepo } from '../../repo/seller';
 import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
 
@@ -29,7 +28,6 @@ export type IPendingTransaction = pecorinoapi.factory.transaction.withdraw.ITran
 export function authorize(params: factory.transaction.pay.IStartParamsWithoutDetail) {
     return async (repos: {
         project: ProjectRepo;
-        seller: SellerRepo;
     }): Promise<IPendingTransaction> => {
         const project = await repos.project.findById({ id: params.project.id });
 
@@ -123,8 +121,6 @@ async function processAccountTransaction(params: {
 
 export function voidTransaction(params: factory.task.voidPayment.IData) {
     return async (__: {
-        project: ProjectRepo;
-        seller: SellerRepo;
     }) => {
         const transaction = params.object;
 
@@ -149,12 +145,8 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
 export function payAccount(params: factory.task.pay.IData) {
     return async (repos: {
         action: ActionRepo;
-        project: ProjectRepo;
-        seller: SellerRepo;
     }): Promise<factory.action.trade.pay.IAction> => {
         const payObject = params.object;
-
-        // const seller = await repos.seller.findById({ id: String(params.recipient?.id) });
 
         // アクション開始
         const action = await repos.action.start(params);
@@ -189,9 +181,6 @@ export function payAccount(params: factory.task.pay.IData) {
 export function refundAccount(params: factory.task.refund.IData) {
     return async (repos: {
         action: ActionRepo;
-        project: ProjectRepo;
-        seller: SellerRepo;
-        // task: TaskRepo;
         transaction: TransactionRepo;
         transactionNumber: TransactionNumberRepo;
     }) => {
@@ -201,8 +190,6 @@ export function refundAccount(params: factory.task.refund.IData) {
             typeOf: factory.transactionType.Pay,
             transactionNumber: paymentMethodId
         });
-
-        // const seller = await repos.seller.findById({ id: String(params.agent.id) });
 
         const action = await repos.action.start(params);
 

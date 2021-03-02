@@ -614,14 +614,5 @@ function getGMOInfoFromSeller(params: {
             shopId,
             shopPass
         };
-
-        // if (typeof creditCardPaymentAccepted.gmoInfo?.shopPass !== 'string') {
-        //     throw new factory.errors.Argument('transaction', 'Credit card payment settings not enough');
-        // }
-
-        // return {
-        //     shopId: creditCardPaymentAccepted.gmoInfo.shopId,
-        //     shopPass: creditCardPaymentAccepted.gmoInfo.shopPass
-        // };
     };
 }
