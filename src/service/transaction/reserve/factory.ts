@@ -59,9 +59,11 @@ export function createReservedTicket(params: {
     ticketOffer: factory.event.screeningEvent.ITicketOffer;
     transaction: factory.transaction.ITransaction<factory.transactionType.Reserve>;
 }): factory.reservation.ITicket<factory.reservationType.EventReservation> {
-    let acceptedTicketedSeat = (<any>params.acceptedOffer).ticketedSeat; // 互換性維持対応
+    let acceptedTicketedSeat: factory.reservation.ISeat<factory.reservationType.EventReservation> | undefined;
+    // acceptedTicketedSeat = (<any>params.acceptedOffer).ticketedSeat; // 互換性維持対応
     const acceptedTicketedSeatByItemOffered = params.acceptedOffer.itemOffered?.serviceOutput?.reservedTicket?.ticketedSeat;
-    if (acceptedTicketedSeatByItemOffered !== undefined && acceptedTicketedSeatByItemOffered !== null) {
+    const acceptedTicketedSeatNumber = acceptedTicketedSeatByItemOffered?.seatNumber;
+    if (typeof acceptedTicketedSeatNumber === 'string') {
         acceptedTicketedSeat = acceptedTicketedSeatByItemOffered;
     }
 

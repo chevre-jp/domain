@@ -269,26 +269,17 @@ export function addReservations(params: {
 
             // 座席指定であれば、座席タイプチャージを検索する
             const seatPriceComponent: factory.place.seat.IPriceComponent[] = [];
-            const ticketedSeat = reservedTicket.ticketedSeat;
-            if (ticketedSeat !== undefined && ticketedSeat !== null) {
-                const availableSeatSectionOffer = availableSeatOffers.find((o) => o.branchCode === ticketedSeat.seatSection);
-                if (availableSeatSectionOffer !== undefined) {
-                    if (Array.isArray(availableSeatSectionOffer.containsPlace)) {
-                        const availableSeat =
-                            availableSeatSectionOffer.containsPlace.find((o) => o.branchCode === ticketedSeat.seatNumber);
-                        if (availableSeat !== undefined) {
-                            if (Array.isArray(availableSeat.offers)) {
-                                if (availableSeat.offers[0] !== undefined) {
-                                    const availableSeatOffer = availableSeat.offers[0];
-                                    if (availableSeatOffer !== undefined) {
-                                        if (availableSeatOffer.priceSpecification !== undefined
-                                            && availableSeatOffer.priceSpecification !== null
-                                            && Array.isArray(availableSeatOffer.priceSpecification.priceComponent)) {
-                                            seatPriceComponent.push(...availableSeatOffer.priceSpecification.priceComponent);
-                                        }
-                                    }
-                                }
-                            }
+            const seatSection = reservedTicket.ticketedSeat?.seatSection;
+            const seatNumber = reservedTicket.ticketedSeat?.seatNumber;
+            if (typeof seatSection === 'string' && typeof seatNumber === 'string') {
+                const availableSeatOffersInSection = availableSeatOffers.find((o) => o.branchCode === seatSection)?.containsPlace;
+                if (Array.isArray(availableSeatOffersInSection)) {
+                    const offersOnSeat = availableSeatOffersInSection.find((o) => o.branchCode === seatNumber)?.offers;
+                    if (Array.isArray(offersOnSeat)) {
+                        const availableSeatOffer = offersOnSeat[0];
+                        const seatPriceSpecs = availableSeatOffer?.priceSpecification?.priceComponent;
+                        if (Array.isArray(seatPriceSpecs)) {
+                            seatPriceComponent.push(...seatPriceSpecs);
                         }
                     }
                 }
