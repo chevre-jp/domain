@@ -55,13 +55,19 @@ export function start(
 
         let paymentServiceType = params.object?.typeOf;
         // paymentServiceTypeの指定がなければ、決済取引を検索
-        if (typeof paymentServiceType !== 'string' || paymentServiceType.length === 0) {
-            const payTransaction = await repos.transaction.findByTransactionNumber({
-                typeOf: factory.transactionType.Pay,
-                transactionNumber: paymentMethodId
-            });
-            paymentServiceType = payTransaction.object.typeOf;
-        }
+        // if (typeof paymentServiceType !== 'string' || paymentServiceType.length === 0) {
+        //     const payTransaction = await repos.transaction.findByTransactionNumber({
+        //         typeOf: factory.transactionType.Pay,
+        //         transactionNumber: paymentMethodId
+        //     });
+        //     paymentServiceType = payTransaction.object.typeOf;
+        // }
+        // 必ず、決済取引からpaymentServiceTypeを取得する
+        const payTransaction = await repos.transaction.findByTransactionNumber({
+            typeOf: factory.transactionType.Pay,
+            transactionNumber: paymentMethodId
+        });
+        paymentServiceType = payTransaction.object.typeOf;
 
         // PayActionを確認する？
         if (USE_CHECK_PAY_ACTION_BEFORE_REFUND) {
