@@ -16,6 +16,7 @@ const schema = new mongoose.Schema(
         additionalTicketText: String,
         bookingAgent: mongoose.SchemaTypes.Mixed,
         bookingTime: Date,
+        broker: mongoose.SchemaTypes.Mixed,
         cancelReservationUrl: String,
         checkinUrl: String,
         confirmReservationUrl: String,
@@ -313,6 +314,56 @@ schema.index(
         name: 'searchByReservedTicketTicketTypeCategoryCodeValue-v3',
         partialFilterExpression: {
             'reservedTicket.ticketType.category.codeValue': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'broker.id': 1, bookingTime: -1 },
+    {
+        name: 'searchByBrokerId',
+        partialFilterExpression: {
+            'broker.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'broker.name': 1, bookingTime: -1 },
+    {
+        name: 'searchByBrokerName',
+        partialFilterExpression: {
+            'broker.name': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'broker.familyName': 1, bookingTime: -1 },
+    {
+        name: 'searchByBrokerFamilyName',
+        partialFilterExpression: {
+            'broker.familyName': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'broker.givenName': 1, bookingTime: -1 },
+    {
+        name: 'searchByBrokerGivenName',
+        partialFilterExpression: {
+            'broker.givenName': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'broker.identifier': 1, bookingTime: -1 },
+    {
+        name: 'searchByBrokerIdentifier',
+        partialFilterExpression: {
+            'broker.identifier': { $exists: true }
         }
     }
 );

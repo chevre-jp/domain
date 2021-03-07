@@ -302,6 +302,7 @@ export function addReservations(params: {
                 id: `${reservationNumber}-${index}`,
                 reserveDate: now,
                 agent: transaction.agent,
+                broker: (<any>transaction.object).broker,
                 reservationNumber: reservationNumber,
                 reservationFor: event,
                 reservedTicket: reservedTicket,

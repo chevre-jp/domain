@@ -573,6 +573,55 @@ export class MongoRepository {
             }
         }
 
+        const brokerIdRegex = params.broker?.id;
+        if (typeof brokerIdRegex === 'string') {
+            andConditions.push({
+                'broker.id': {
+                    $exists: true,
+                    $regex: new RegExp(brokerIdRegex)
+                }
+            });
+        }
+
+        const brokerIdentifierAll = params.broker?.identifier?.$all;
+        if (Array.isArray(brokerIdentifierAll)) {
+            andConditions.push({
+                'broker.identifier': {
+                    $exists: true,
+                    $all: brokerIdentifierAll
+                }
+            });
+        }
+
+        const brokerIdentifierIn = params.broker?.identifier?.$in;
+        if (Array.isArray(brokerIdentifierIn)) {
+            andConditions.push({
+                'broker.identifier': {
+                    $exists: true,
+                    $in: brokerIdentifierIn
+                }
+            });
+        }
+
+        const brokerIdentifierNin = params.broker?.identifier?.$nin;
+        if (Array.isArray(brokerIdentifierNin)) {
+            andConditions.push({
+                'broker.identifier': {
+                    $nin: brokerIdentifierNin
+                }
+            });
+        }
+
+        const brokerIdentifierElemMatch = params.broker?.identifier?.$elemMatch;
+        if (brokerIdentifierElemMatch !== undefined && brokerIdentifierElemMatch !== null) {
+            andConditions.push({
+                'broker.identifier': {
+                    $exists: true,
+                    $elemMatch: brokerIdentifierElemMatch
+                }
+            });
+        }
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.underName !== undefined) {

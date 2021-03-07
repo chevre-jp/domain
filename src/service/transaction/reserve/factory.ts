@@ -36,7 +36,8 @@ export function createStartParams(params: factory.transaction.reserve.IStartPara
         typeOf: factory.reservationType.ReservationPackage,
         onReservationStatusChanged: {
             informReservation: informReservationParams
-        }
+        },
+        ...(typeof (<any>params.object).broker?.typeOf === 'string') ? { broker: (<any>params.object).broker } : undefined
     };
 
     return {
@@ -284,6 +285,7 @@ export function createReservation(params: {
     id: string;
     reserveDate: Date;
     agent: factory.transaction.reserve.IAgent;
+    broker?: factory.reservation.IBroker<factory.reservationType.EventReservation>;
     reservationNumber: string;
     reservationFor: factory.event.screeningEvent.IEvent;
     reservedTicket: factory.reservation.ITicket<factory.reservationType.EventReservation>;
@@ -350,7 +352,8 @@ export function createReservation(params: {
         checkedIn: false,
         attended: false,
         ...(typeof params.additionalTicketText === 'string') ? { additionalTicketText: params.additionalTicketText } : undefined,
-        ...(Array.isArray(params.subReservation)) ? { subReservation: params.subReservation } : undefined
+        ...(Array.isArray(params.subReservation)) ? { subReservation: params.subReservation } : undefined,
+        ...(typeof params.broker?.typeOf === 'string') ? { broker: params.broker } : undefined
     };
 }
 
