@@ -103,12 +103,17 @@ function createPayActions(params: {
             throw new factory.errors.NotImplemented(`Payment service "${transaction.object.typeOf}" not implemented.`);
     }
 
+    const informPaymentActions = createInformPaymentActions(params);
+
     if (payObject !== undefined) {
         payActions.push({
             project: params.transaction.project,
             typeOf: <factory.actionType.PayAction>factory.actionType.PayAction,
             object: [payObject],
             agent: params.transaction.agent,
+            potentialActions: {
+                informPayment: informPaymentActions
+            },
             recipient: params.transaction.recipient,
             ...(params.potentialActions?.pay?.purpose !== undefined)
                 ? { purpose: params.potentialActions?.pay?.purpose }
@@ -117,6 +122,41 @@ function createPayActions(params: {
     }
 
     return payActions;
+}
+
+function createInformPaymentActions(params: {
+    transaction: factory.transaction.ITransaction<factory.transactionType.Pay>;
+}) {
+    const transaction = params.transaction;
+
+    const informPaymentActions: factory.action.trade.pay.IInformPayment[] = [];
+
+    // 取引に指定があれば設定
+    const informPayment = transaction.object.onPaymentStatusChanged?.informPayment;
+    if (Array.isArray(informPayment)) {
+        informPaymentActions.push(...informPayment.map(
+            (a): factory.action.trade.pay.IInformPayment => {
+                return {
+                    project: transaction.project,
+                    typeOf: factory.actionType.InformAction,
+                    agent: transaction.project,
+                    recipient: {
+                        typeOf: transaction.agent.typeOf,
+                        name: transaction.agent.name,
+                        ...a.recipient
+                    },
+                    // 実際にタスクが生成される直前にactionに置き換える
+                    object: {},
+                    purpose: {
+                        typeOf: transaction.typeOf,
+                        id: transaction.id
+                    }
+                };
+            })
+        );
+    }
+
+    return informPaymentActions;
 }
 
 /**

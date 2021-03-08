@@ -17,18 +17,36 @@ export type IAuthorizeOperation<T> = (repos: {
  * 決済後のアクション
  */
 export function onPaid(
-    __: factory.action.trade.pay.IAction
+    payAction: factory.action.trade.pay.IAction
 ) {
-    // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         project: ProjectRepo;
         task: TaskRepo;
     }) => {
-        // const project = await repos.project.findById({ id: refundActionAttributes.project.id });
-
-        // const potentialActions = refundActionAttributes.potentialActions;
-        // const now = new Date();
+        const potentialActions = payAction.potentialActions;
+        const now = new Date();
         const taskAttributes: factory.task.IAttributes[] = [];
+
+        const informPayment = potentialActions?.informPayment;
+        if (Array.isArray(informPayment)) {
+            taskAttributes.push(...informPayment.map(
+                (a): factory.task.triggerWebhook.IAttributes => {
+                    return {
+                        project: a.project,
+                        name: factory.taskName.TriggerWebhook,
+                        status: factory.taskStatus.Ready,
+                        runsAt: now, // なるはやで実行
+                        remainingNumberOfTries: 10,
+                        numberOfTried: 0,
+                        executionResults: [],
+                        data: {
+                            ...a,
+                            object: payAction
+                        }
+                    };
+                })
+            );
+        }
 
         // タスク保管
         return repos.task.saveMany(taskAttributes);
@@ -47,9 +65,7 @@ export function onRefund(
         project: ProjectRepo;
         task: TaskRepo;
     }) => {
-        // const project = await repos.project.findById({ id: refundActionAttributes.project.id });
-
-        // const potentialActions = refundActionAttributes.potentialActions;
+        const potentialActions = refundAction.potentialActions;
         const now = new Date();
         const taskAttributes: factory.task.IAttributes[] = [];
 
@@ -94,82 +110,26 @@ export function onRefund(
             taskAttributes.push(payTask);
         }
 
-        // プロジェクトの通知設定を適用
-        // const informOrderByProject = project.settings?.payment?.onRefunded?.informOrder;
-        // if (Array.isArray(informOrderByProject)) {
-        //     if (order !== undefined) {
-        //         taskAttributes.push(...informOrderByProject.map(
-        //             (informOrder): factory.task.IAttributes<factory.taskName.TriggerWebhook> => {
-        //                 return {
-        //                     project: { typeOf: factory.chevre.organizationType.Project, id: project.id },
-        //                     name: factory.taskName.TriggerWebhook,
-        //                     status: factory.taskStatus.Ready,
-        //                     runsAt: now,
-        //                     remainingNumberOfTries: 10,
-        //                     numberOfTried: 0,
-        //                     executionResults: [],
-        //                     data: {
-        //                         agent: {
-        //                             typeOf: order.seller.typeOf,
-        //                             name: order.seller.name,
-        //                             id: order.seller.id,
-        //                             project: { typeOf: factory.chevre.organizationType.Project, id: project.id }
-        //                         },
-        //                         object: order,
-        //                         project: { typeOf: factory.chevre.organizationType.Project, id: project.id },
-        //                         recipient: {
-        //                             id: '',
-        //                             ...informOrder.recipient
-        //                         },
-        //                         typeOf: factory.actionType.InformAction
-        //                     }
-        //                 };
-        //             })
-        //         );
-        //     }
-        // }
-
-        // const sendEmailMessageByPotentialActions = potentialActions?.sendEmailMessage;
-        // if (Array.isArray(sendEmailMessageByPotentialActions)) {
-        //     sendEmailMessageByPotentialActions.forEach((s) => {
-        //         const sendEmailMessageTask: factory.task.IAttributes<factory.taskName.SendEmailMessage> = {
-        //             project: s.project,
-        //             name: factory.taskName.SendEmailMessage,
-        //             status: factory.taskStatus.Ready,
-        //             runsAt: now,
-        //             remainingNumberOfTries: 3,
-        //             numberOfTried: 0,
-        //             executionResults: [],
-        //             data: {
-        //                 actionAttributes: s
-        //             }
-        //         };
-        //         taskAttributes.push(sendEmailMessageTask);
-        //     });
-        // }
-
-        // const informOrderByPotentialActions = potentialActions?.informOrder;
-        // if (Array.isArray(informOrderByPotentialActions)) {
-        //     if (order !== undefined) {
-        //         taskAttributes.push(...informOrderByPotentialActions.map(
-        //             (a): factory.task.IAttributes<factory.taskName.TriggerWebhook> => {
-        //                 return {
-        //                     project: a.project,
-        //                     name: factory.taskName.TriggerWebhook,
-        //                     status: factory.taskStatus.Ready,
-        //                     runsAt: now,
-        //                     remainingNumberOfTries: 10,
-        //                     numberOfTried: 0,
-        //                     executionResults: [],
-        //                     data: {
-        //                         ...a,
-        //                         object: order
-        //                     }
-        //                 };
-        //             })
-        //         );
-        //     }
-        // }
+        const informPayment = potentialActions?.informPayment;
+        if (Array.isArray(informPayment)) {
+            taskAttributes.push(...informPayment.map(
+                (a): factory.task.triggerWebhook.IAttributes => {
+                    return {
+                        project: a.project,
+                        name: factory.taskName.TriggerWebhook,
+                        status: factory.taskStatus.Ready,
+                        runsAt: now, // なるはやで実行
+                        remainingNumberOfTries: 10,
+                        numberOfTried: 0,
+                        executionResults: [],
+                        data: {
+                            ...a,
+                            object: refundAction
+                        }
+                    };
+                })
+            );
+        }
 
         // タスク保管
         return repos.task.saveMany(taskAttributes);

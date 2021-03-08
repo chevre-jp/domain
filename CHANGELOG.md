@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 決済後処理を追加
 - 返金後処理を追加
 - 予約にbrokerを追加
+- グローバル設定に決済ステータス変更時設定を追加
+- 決済と返金後の通知アクションを追加
 
 ### Changed
 
