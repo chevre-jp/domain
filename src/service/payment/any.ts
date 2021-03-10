@@ -69,6 +69,8 @@ export function onRefund(
         const now = new Date();
         const taskAttributes: factory.task.IAttributes[] = [];
 
+        const informPayment = potentialActions?.informPayment;
+
         // 手数料決済があれば処理
         const refundFee = refundAction.object[0]?.refundFee;
         if (typeof refundFee === 'number' && refundFee > 0) {
@@ -95,7 +97,10 @@ export function onRefund(
                 object: payObject,
                 agent: <any>refundAction.recipient,
                 recipient: <any>refundAction.agent, // 返金者は販売者のはず
-                purpose: refundAction.purpose
+                purpose: refundAction.purpose,
+                potentialActions: {
+                    informPayment: (Array.isArray(informPayment)) ? informPayment : []
+                }
             };
             const payTask: factory.task.pay.IAttributes = {
                 project: refundAction.project,
@@ -110,7 +115,6 @@ export function onRefund(
             taskAttributes.push(payTask);
         }
 
-        const informPayment = potentialActions?.informPayment;
         if (Array.isArray(informPayment)) {
             taskAttributes.push(...informPayment.map(
                 (a): factory.task.triggerWebhook.IAttributes => {
