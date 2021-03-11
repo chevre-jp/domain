@@ -29,6 +29,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Fixed
 
+- 取引番号発行時のエラーハンドリング調整
+
 ### Security
 
 ## v15.45.0 - 2021-02-18
