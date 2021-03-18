@@ -415,7 +415,7 @@ export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
                 /* istanbul ignore next */
                 default:
                     throw new factory.errors.NotImplemented(
-                        `Transaction type '${(<any>pendingTransaction).typeOf}' not implemented.`
+                        `Transaction type '${transactionType}' not implemented.`
                     );
             }
         } catch (error) {

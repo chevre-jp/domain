@@ -35,6 +35,7 @@ const chevre = require("@chevre/domain");
 | `COA_REFRESH_TOKEN`            | false    |                 | COA API Settings                  |
 | `INFORM_PAYMENT_URL`           | false    |                 | Inform payment URL                |
 | `INFORM_RESERVATION_URL`       | false    |                 | Inform reservation URL            |
+| `INFORM_USE_RESERVATION_URL`   | false    |                 | Inform use reservation action URL |
 | `LINE_NOTIFY_URL`              | false    |                 | LINE Notify Settings              |
 | `LINE_NOTIFY_ACCESS_TOKEN`     | false    |                 | LINE Notify Settings              |
 

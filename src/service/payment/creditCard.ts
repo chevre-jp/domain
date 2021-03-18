@@ -140,7 +140,7 @@ async function processAuthorizeCreditCard(params: {
         accessId: entryTranResult.accessId,
         accessPass: entryTranResult.accessPass,
         orderId: params.orderId,
-        method: <any>params.object.method,
+        method: <GMO.utils.util.Method>params.object.method,
         siteId: params.availableChannel.credentials?.siteId,
         sitePass: params.availableChannel.credentials?.sitePass,
         cardNo: (<IUncheckedCardRaw>creditCard).cardNo,
