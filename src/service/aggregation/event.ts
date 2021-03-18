@@ -606,22 +606,6 @@ function filterByEligibleSeatingType(params: {
             remainingAttendeeCapacity = 0;
         }
 
-        // 適用座席タイプに対する予約数から算出する場合はこちら↓
-        // const reseravtionCount4eligibleSeatingType = await repos.reservation.count({
-        //     typeOf: factory.reservationType.EventReservation,
-        //     reservationFor: { ids: [params.event.id] },
-        //     reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
-        //     reservedTicket: {
-        //         ticketedSeat: <any>{
-        //             ...{
-        //                 seatingType: { $in: eligibleSeatingTypes.map((eligibleSeatingType) => eligibleSeatingType.codeValue) }
-        //             }
-        //         }
-        //     }
-        // });
-
-        // remainingAttendeeCapacity = maximumAttendeeCapacity - reseravtionCount4eligibleSeatingType;
-
         return { maximumAttendeeCapacity, remainingAttendeeCapacity };
     };
 }

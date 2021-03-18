@@ -61,7 +61,7 @@ export class RedisRepository {
                     } else {
                         // tslint:disable-next-line:no-single-line-block-comment
                         /* istanbul ignore else: please write tests */
-                        if (Number.isInteger(results[0])) {
+                        if (Array.isArray(results) && Number.isInteger(results[0])) {
                             let transactionNumber = timestamp;
                             const no: number = results[0];
                             debug('no incremented.', no);

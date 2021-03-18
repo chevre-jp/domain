@@ -6,6 +6,7 @@ import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
+import { MongoRepository as TaskRepo } from '../../repo/task';
 
 import * as PaymentService from '../payment';
 
@@ -18,12 +19,14 @@ export function call(data: factory.task.voidPayment.IData): IOperation<void> {
         const productRepo = new ProductRepo(settings.connection);
         const projectRepo = new ProjectRepo(settings.connection);
         const sellerRepo = new SellerRepo(settings.connection);
+        const taskRepo = new TaskRepo(settings.connection);
 
         await PaymentService.voidPayment(data)({
             action: actionRepo,
             product: productRepo,
             project: projectRepo,
-            seller: sellerRepo
+            seller: sellerRepo,
+            task: taskRepo
         });
     };
 }

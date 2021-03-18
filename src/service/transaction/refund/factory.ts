@@ -2,6 +2,7 @@
  * 返金取引ファクトリー
  */
 import * as factory from '../../../factory';
+import { settings } from '../../../settings';
 
 export function createStartParams(params: factory.transaction.refund.IStartParamsWithoutDetail & {
     transactionNumber: string;
@@ -20,6 +21,8 @@ export function createStartParams(params: factory.transaction.refund.IStartParam
     const additionalProperty = params.object.paymentMethod?.additionalProperty;
     const name = params.object.paymentMethod?.name;
 
+    const informPaymentParams = createInformPaymentParams();
+
     return {
         project: { typeOf: factory.organizationType.Project, id: params.project.id },
         transactionNumber: params.transactionNumber,
@@ -28,6 +31,7 @@ export function createStartParams(params: factory.transaction.refund.IStartParam
         recipient: params.recipient,
         object: {
             typeOf: params.paymentServiceType,
+            onPaymentStatusChanged: { informPayment: informPaymentParams },
             paymentMethod: {
                 paymentMethodId: paymentMethodId,
                 typeOf: paymentMethodType,
@@ -40,4 +44,15 @@ export function createStartParams(params: factory.transaction.refund.IStartParam
         },
         expires: params.expires
     };
+}
+
+function createInformPaymentParams(): factory.project.IInformParams[] {
+    const informPaymentParams: factory.project.IInformParams[] = [];
+
+    const informPaymentParamsByGlobalSettings = settings.onPaymentStatusChanged?.informPayment;
+    if (Array.isArray(informPaymentParamsByGlobalSettings)) {
+        informPaymentParams.push(...informPaymentParamsByGlobalSettings);
+    }
+
+    return informPaymentParams;
 }

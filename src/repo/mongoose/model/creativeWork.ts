@@ -13,7 +13,7 @@ const schema = new mongoose.Schema(
             required: true
         },
         identifier: String,
-        name: String,
+        name: mongoose.SchemaTypes.Mixed,
         alternateName: String,
         alternativeHeadline: String,
         description: String,

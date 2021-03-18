@@ -2,6 +2,7 @@
  * 決済取引ファクトリー
  */
 import * as factory from '../../../factory';
+import { settings } from '../../../settings';
 
 export function createStartParams(params: factory.transaction.pay.IStartParamsWithoutDetail & {
     transactionNumber: string;
@@ -16,6 +17,16 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
     let totalPaymentDue: factory.monetaryAmount.IMonetaryAmount | undefined;
 
     switch (params.paymentServiceType) {
+        case factory.service.paymentService.PaymentServiceType.FaceToFace:
+            // 対面決済ではとりあえず問答無用にJPY
+            totalPaymentDue = {
+                typeOf: 'MonetaryAmount',
+                currency: factory.priceCurrency.JPY,
+                value: Number(params.amount)
+            };
+
+            break;
+
         case factory.service.paymentService.PaymentServiceType.CreditCard:
             totalPaymentDue = {
                 typeOf: 'MonetaryAmount',
@@ -40,6 +51,8 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
         // no op
     }
 
+    const informPaymentParams = createInformPaymentParams();
+
     return {
         project: { typeOf: factory.organizationType.Project, id: params.project.id },
         transactionNumber: params.transactionNumber,
@@ -49,6 +62,7 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
         object: {
             // パラメータから必要なもののみ取り込む
             typeOf: params.paymentServiceType,
+            onPaymentStatusChanged: { informPayment: informPaymentParams },
             paymentMethod: {
                 additionalProperty: (Array.isArray(params.object.paymentMethod?.additionalProperty))
                     ? params.object.paymentMethod?.additionalProperty
@@ -81,4 +95,15 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
         },
         expires: params.expires
     };
+}
+
+function createInformPaymentParams(): factory.project.IInformParams[] {
+    const informPaymentParams: factory.project.IInformParams[] = [];
+
+    const informPaymentParamsByGlobalSettings = settings.onPaymentStatusChanged?.informPayment;
+    if (Array.isArray(informPaymentParamsByGlobalSettings)) {
+        informPaymentParams.push(...informPaymentParamsByGlobalSettings);
+    }
+
+    return informPaymentParams;
 }

@@ -269,26 +269,17 @@ export function addReservations(params: {
 
             // 座席指定であれば、座席タイプチャージを検索する
             const seatPriceComponent: factory.place.seat.IPriceComponent[] = [];
-            const ticketedSeat = reservedTicket.ticketedSeat;
-            if (ticketedSeat !== undefined && ticketedSeat !== null) {
-                const availableSeatSectionOffer = availableSeatOffers.find((o) => o.branchCode === ticketedSeat.seatSection);
-                if (availableSeatSectionOffer !== undefined) {
-                    if (Array.isArray(availableSeatSectionOffer.containsPlace)) {
-                        const availableSeat =
-                            availableSeatSectionOffer.containsPlace.find((o) => o.branchCode === ticketedSeat.seatNumber);
-                        if (availableSeat !== undefined) {
-                            if (Array.isArray(availableSeat.offers)) {
-                                if (availableSeat.offers[0] !== undefined) {
-                                    const availableSeatOffer = availableSeat.offers[0];
-                                    if (availableSeatOffer !== undefined) {
-                                        if (availableSeatOffer.priceSpecification !== undefined
-                                            && availableSeatOffer.priceSpecification !== null
-                                            && Array.isArray(availableSeatOffer.priceSpecification.priceComponent)) {
-                                            seatPriceComponent.push(...availableSeatOffer.priceSpecification.priceComponent);
-                                        }
-                                    }
-                                }
-                            }
+            const seatSection = reservedTicket.ticketedSeat?.seatSection;
+            const seatNumber = reservedTicket.ticketedSeat?.seatNumber;
+            if (typeof seatSection === 'string' && typeof seatNumber === 'string') {
+                const availableSeatOffersInSection = availableSeatOffers.find((o) => o.branchCode === seatSection)?.containsPlace;
+                if (Array.isArray(availableSeatOffersInSection)) {
+                    const offersOnSeat = availableSeatOffersInSection.find((o) => o.branchCode === seatNumber)?.offers;
+                    if (Array.isArray(offersOnSeat)) {
+                        const availableSeatOffer = offersOnSeat[0];
+                        const seatPriceSpecs = availableSeatOffer?.priceSpecification?.priceComponent;
+                        if (Array.isArray(seatPriceSpecs)) {
+                            seatPriceComponent.push(...seatPriceSpecs);
                         }
                     }
                 }
@@ -311,6 +302,7 @@ export function addReservations(params: {
                 id: `${reservationNumber}-${index}`,
                 reserveDate: now,
                 agent: transaction.agent,
+                broker: transaction.object.broker,
                 reservationNumber: reservationNumber,
                 reservationFor: event,
                 reservedTicket: reservedTicket,
@@ -511,40 +503,39 @@ function onReservationCreated(
         const taskAttributes: factory.task.IAttributes[] = [];
 
         // 予約ステータス変更時イベント
-        if (transaction.object !== undefined && transaction.object.onReservationStatusChanged !== undefined) {
-            if (Array.isArray(transaction.object.onReservationStatusChanged.informReservation)) {
-                taskAttributes.push(...transaction.object.onReservationStatusChanged.informReservation.map(
-                    (a): factory.task.triggerWebhook.IAttributes => {
-                        return {
+        const informReservation = transaction.object.onReservationStatusChanged?.informReservation;
+        if (Array.isArray(informReservation)) {
+            taskAttributes.push(...informReservation.map(
+                (a): factory.task.triggerWebhook.IAttributes => {
+                    return {
+                        project: transaction.project,
+                        name: factory.taskName.TriggerWebhook,
+                        status: factory.taskStatus.Ready,
+                        runsAt: now, // なるはやで実行
+                        remainingNumberOfTries: 10,
+                        numberOfTried: 0,
+                        executionResults: [],
+                        data: {
                             project: transaction.project,
-                            name: factory.taskName.TriggerWebhook,
-                            status: factory.taskStatus.Ready,
-                            runsAt: now, // なるはやで実行
-                            remainingNumberOfTries: 10,
-                            numberOfTried: 0,
-                            executionResults: [],
-                            data: {
-                                project: transaction.project,
-                                typeOf: factory.actionType.InformAction,
-                                agent: (reservation.reservedTicket !== undefined
-                                    && reservation.reservedTicket.issuedBy !== undefined)
-                                    ? reservation.reservedTicket.issuedBy
-                                    : transaction.project,
-                                recipient: {
-                                    typeOf: transaction.agent.typeOf,
-                                    name: transaction.agent.name,
-                                    ...a.recipient
-                                },
-                                object: reservation,
-                                purpose: {
-                                    typeOf: transaction.typeOf,
-                                    id: transaction.id
-                                }
+                            typeOf: factory.actionType.InformAction,
+                            agent: (reservation.reservedTicket !== undefined
+                                && reservation.reservedTicket.issuedBy !== undefined)
+                                ? reservation.reservedTicket.issuedBy
+                                : transaction.project,
+                            recipient: {
+                                typeOf: transaction.agent.typeOf,
+                                name: transaction.agent.name,
+                                ...a.recipient
+                            },
+                            object: reservation,
+                            purpose: {
+                                typeOf: transaction.typeOf,
+                                id: transaction.id
                             }
-                        };
-                    })
-                );
-            }
+                        }
+                    };
+                })
+            );
         }
 
         // タスク保管
@@ -655,30 +646,29 @@ export function cancel(params: {
                     const informReservationActions: factory.action.reserve.IInformReservation[] = [];
 
                     // 取引に予約ステータス変更時イベントの指定があれば設定
-                    if (transaction.object !== undefined && transaction.object.onReservationStatusChanged !== undefined) {
-                        if (Array.isArray(transaction.object.onReservationStatusChanged.informReservation)) {
-                            informReservationActions.push(...transaction.object.onReservationStatusChanged.informReservation.map(
-                                (a): factory.action.reserve.IInformReservation => {
-                                    return {
-                                        project: transaction.project,
-                                        typeOf: factory.actionType.InformAction,
-                                        agent: (reservation.reservedTicket.issuedBy !== undefined)
-                                            ? reservation.reservedTicket.issuedBy
-                                            : transaction.project,
-                                        recipient: {
-                                            typeOf: transaction.agent.typeOf,
-                                            name: transaction.agent.name,
-                                            ...a.recipient
-                                        },
-                                        object: reservation,
-                                        purpose: {
-                                            typeOf: transaction.typeOf,
-                                            id: transaction.id
-                                        }
-                                    };
-                                })
-                            );
-                        }
+                    const informReservation = transaction.object.onReservationStatusChanged?.informReservation;
+                    if (Array.isArray(informReservation)) {
+                        informReservationActions.push(...informReservation.map(
+                            (a): factory.action.reserve.IInformReservation => {
+                                return {
+                                    project: transaction.project,
+                                    typeOf: factory.actionType.InformAction,
+                                    agent: (reservation.reservedTicket.issuedBy !== undefined)
+                                        ? reservation.reservedTicket.issuedBy
+                                        : transaction.project,
+                                    recipient: {
+                                        typeOf: transaction.agent.typeOf,
+                                        name: transaction.agent.name,
+                                        ...a.recipient
+                                    },
+                                    object: reservation,
+                                    purpose: {
+                                        typeOf: transaction.typeOf,
+                                        id: transaction.id
+                                    }
+                                };
+                            })
+                        );
                     }
 
                     return {
@@ -755,30 +745,29 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                         const informReservationActions: factory.action.reserve.IInformReservation[] = [];
 
                         // 取引に予約ステータス変更時イベントの指定があれば設定
-                        if (transaction.object !== undefined && transaction.object.onReservationStatusChanged !== undefined) {
-                            if (Array.isArray(transaction.object.onReservationStatusChanged.informReservation)) {
-                                informReservationActions.push(...transaction.object.onReservationStatusChanged.informReservation.map(
-                                    (a): factory.action.reserve.IInformReservation => {
-                                        return {
-                                            project: transaction.project,
-                                            typeOf: factory.actionType.InformAction,
-                                            agent: (reservation.reservedTicket.issuedBy !== undefined)
-                                                ? reservation.reservedTicket.issuedBy
-                                                : transaction.project,
-                                            recipient: {
-                                                typeOf: transaction.agent.typeOf,
-                                                name: transaction.agent.name,
-                                                ...a.recipient
-                                            },
-                                            object: reservation,
-                                            purpose: {
-                                                typeOf: transaction.typeOf,
-                                                id: transaction.id
-                                            }
-                                        };
-                                    })
-                                );
-                            }
+                        const informReservation = transaction.object.onReservationStatusChanged?.informReservation;
+                        if (Array.isArray(informReservation)) {
+                            informReservationActions.push(...informReservation.map(
+                                (a): factory.action.reserve.IInformReservation => {
+                                    return {
+                                        project: transaction.project,
+                                        typeOf: factory.actionType.InformAction,
+                                        agent: (reservation.reservedTicket.issuedBy !== undefined)
+                                            ? reservation.reservedTicket.issuedBy
+                                            : transaction.project,
+                                        recipient: {
+                                            typeOf: transaction.agent.typeOf,
+                                            name: transaction.agent.name,
+                                            ...a.recipient
+                                        },
+                                        object: reservation,
+                                        purpose: {
+                                            typeOf: transaction.typeOf,
+                                            id: transaction.id
+                                        }
+                                    };
+                                })
+                            );
                         }
 
                         return {

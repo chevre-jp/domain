@@ -4,6 +4,7 @@ import * as factory from '../factory';
 import ActionModel from './mongoose/model/action';
 
 export type IAction<T extends factory.actionType> = factory.action.IAction<factory.action.IAttributes<T, any, any>>;
+export type IPayAction = factory.action.trade.pay.IAction;
 
 /**
  * アクションリポジトリ
@@ -281,5 +282,20 @@ export class MongoRepository {
         }
 
         return doc.toObject();
+    }
+
+    public async findPayAction(params: {
+        project: { id: string };
+        paymentMethodId: string;
+    }): Promise<IPayAction | undefined> {
+        const payActions = <IPayAction[]>await this.search<factory.actionType.PayAction>({
+            limit: 1,
+            actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
+            project: { id: { $eq: params.project.id } },
+            typeOf: { $eq: factory.actionType.PayAction },
+            object: { paymentMethod: { paymentMethodId: { $eq: params.paymentMethodId } } }
+        });
+
+        return payActions.shift();
     }
 }

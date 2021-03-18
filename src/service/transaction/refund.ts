@@ -5,6 +5,7 @@ import * as moment from 'moment';
 
 import * as factory from '../../factory';
 
+import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
 import { MongoRepository as TaskRepo } from '../../repo/task';
@@ -13,7 +14,10 @@ import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 import { createStartParams } from './refund/factory';
 import { createPotentialActions } from './refund/potentialActions';
 
+const USE_CHECK_PAY_ACTION_BEFORE_REFUND = process.env.USE_CHECK_PAY_ACTION_BEFORE_REFUND === '1';
+
 export type IStartOperation<T> = (repos: {
+    action: ActionRepo;
     project: ProjectRepo;
     seller: SellerRepo;
     transaction: TransactionRepo;
@@ -39,6 +43,7 @@ export function start(
     params: factory.transaction.refund.IStartParamsWithoutDetail
 ): IStartOperation<factory.transaction.refund.ITransaction> {
     return async (repos: {
+        action: ActionRepo;
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;
@@ -50,12 +55,26 @@ export function start(
 
         let paymentServiceType = params.object?.typeOf;
         // paymentServiceTypeの指定がなければ、決済取引を検索
-        if (typeof paymentServiceType !== 'string' || paymentServiceType.length === 0) {
-            const payTransaction = await repos.transaction.findByTransactionNumber({
-                typeOf: factory.transactionType.Pay,
-                transactionNumber: paymentMethodId
-            });
-            paymentServiceType = payTransaction.object.typeOf;
+        // if (typeof paymentServiceType !== 'string' || paymentServiceType.length === 0) {
+        //     const payTransaction = await repos.transaction.findByTransactionNumber({
+        //         typeOf: factory.transactionType.Pay,
+        //         transactionNumber: paymentMethodId
+        //     });
+        //     paymentServiceType = payTransaction.object.typeOf;
+        // }
+        // 必ず、決済取引からpaymentServiceTypeを取得する
+        const payTransaction = await repos.transaction.findByTransactionNumber({
+            typeOf: factory.transactionType.Pay,
+            transactionNumber: paymentMethodId
+        });
+        paymentServiceType = payTransaction.object.typeOf;
+
+        // PayActionを確認する？
+        if (USE_CHECK_PAY_ACTION_BEFORE_REFUND) {
+            const payAction = await repos.action.findPayAction({ project: { id: params.project.id }, paymentMethodId });
+            if (payAction === undefined) {
+                throw new factory.errors.NotFound(factory.actionType.PayAction);
+            }
         }
 
         const transactionNumber: string | undefined = params.transactionNumber;
@@ -75,6 +94,9 @@ export function start(
             transaction = await repos.transaction.start<factory.transactionType.Refund>(startParams);
 
             switch (paymentServiceType) {
+                case factory.service.paymentService.PaymentServiceType.FaceToFace:
+                    break;
+
                 case factory.service.paymentService.PaymentServiceType.PaymentCard:
                     break;
 

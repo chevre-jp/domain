@@ -27,6 +27,7 @@ export type IStartOperation<T> = (repos: {
     project: ProjectRepo;
     seller: SellerRepo;
     transaction: TransactionRepo;
+    task: TaskRepo;
 }) => Promise<T>;
 
 export type ICancelOperation<T> = (repos: {
@@ -99,6 +100,7 @@ export function start(params: factory.transaction.pay.IStartParamsWithoutDetail)
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;
+        task: TaskRepo;
     }) => {
         const paymentServiceType = params.object?.typeOf;
 
@@ -113,6 +115,8 @@ export function start(params: factory.transaction.pay.IStartParamsWithoutDetail)
             throw new factory.errors.ArgumentNull('transactionNumber');
         }
 
+        await validateSeller(params)(repos);
+
         // 取引開始
         let transaction: factory.transaction.pay.ITransaction;
         const startParams: factory.transaction.IStartParams<factory.transactionType.Pay> = createStartParams({
@@ -125,6 +129,11 @@ export function start(params: factory.transaction.pay.IStartParamsWithoutDetail)
         transaction = await repos.transaction.start<factory.transactionType.Pay>(startParams);
 
         switch (paymentServiceType) {
+            case factory.service.paymentService.PaymentServiceType.FaceToFace:
+                // 対面決済は特に何もしない
+
+                break;
+
             case factory.service.paymentService.PaymentServiceType.PaymentCard:
                 transaction = await processAuthorizeAccount(params, transaction)(repos);
 
@@ -145,6 +154,30 @@ export function start(params: factory.transaction.pay.IStartParamsWithoutDetail)
         }
 
         return transaction;
+    };
+}
+
+function validateSeller(params: factory.transaction.pay.IStartParamsWithoutDetail) {
+    return async (repos: {
+        seller: SellerRepo;
+    }): Promise<void> => {
+        const sellerId = params.recipient?.id;
+        if (typeof sellerId !== 'string') {
+            throw new factory.errors.ArgumentNull('recipient.id');
+        }
+
+        const seller = await repos.seller.findById({ id: sellerId });
+
+        const paymentMethodType = params.object.paymentMethod?.typeOf;
+        if (typeof paymentMethodType !== 'string') {
+            throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
+        }
+
+        // 販売者の対応決済方法かどうか確認
+        const paymentAccepted = seller.paymentAccepted?.some((a) => a.paymentMethodType === paymentMethodType);
+        if (paymentAccepted !== true) {
+            throw new factory.errors.Argument('object.paymentMethod.typeOf', `payment not accepted`);
+        }
     };
 }
 
@@ -221,6 +254,7 @@ function processAuthorizeMovieTicket(
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;
+        task: TaskRepo;
     }): Promise<factory.transaction.pay.ITransaction> => {
         const authorizeResult = await MovieTicketPayment.authorize(params, transaction)(repos);
 
