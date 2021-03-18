@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## v15.46.0 - 2021-03-18
+
+### Added
+
 - 決済サービスタイプにFaceToFaceを追加
 - ペイメントサービスのプロバイダー認証情報にトークン認証コードを追加
 - 決済後処理を追加
@@ -25,15 +39,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 返金取引開始時に、必ず決済取引から決済サービスタイプを取得するように調整
 - コンテンツ名称を多言語対応
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - 取引番号発行時のエラーハンドリング調整
-
-### Security
 
 ## v15.45.0 - 2021-02-18
 
