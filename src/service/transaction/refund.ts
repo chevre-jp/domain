@@ -14,8 +14,6 @@ import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 import { createStartParams } from './refund/factory';
 import { createPotentialActions } from './refund/potentialActions';
 
-const USE_CHECK_PAY_ACTION_BEFORE_REFUND = process.env.USE_CHECK_PAY_ACTION_BEFORE_REFUND === '1';
-
 export type IStartOperation<T> = (repos: {
     action: ActionRepo;
     project: ProjectRepo;
@@ -69,12 +67,10 @@ export function start(
         });
         paymentServiceType = payTransaction.object.typeOf;
 
-        // PayActionを確認する？
-        if (USE_CHECK_PAY_ACTION_BEFORE_REFUND) {
-            const payAction = await repos.action.findPayAction({ project: { id: params.project.id }, paymentMethodId });
-            if (payAction === undefined) {
-                throw new factory.errors.NotFound(factory.actionType.PayAction);
-            }
+        // PayActionを確認する
+        const payAction = await repos.action.findPayAction({ project: { id: params.project.id }, paymentMethodId });
+        if (payAction === undefined) {
+            throw new factory.errors.NotFound(factory.actionType.PayAction);
         }
 
         const transactionNumber: string | undefined = params.transactionNumber;
