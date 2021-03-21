@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- USE_CHECK_PAY_ACTION_BEFORE_REFUND設定を削除
+
 ### Deprecated
 
 ### Removed
