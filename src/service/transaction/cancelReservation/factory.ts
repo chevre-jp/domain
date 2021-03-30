@@ -125,7 +125,11 @@ export function createPotentialActions(params: {
             typeOf: <factory.actionType.CancelAction>factory.actionType.CancelAction,
             // description: transaction.object.notes,
             result: {},
-            object: reservation,
+            object: {
+                ...reservation,
+                // ReservationConfirmed->ReservationCancelledのみ処理されるように保証する
+                reservationStatus: factory.reservationStatusType.ReservationConfirmed
+            },
             agent: transaction.agent,
             potentialActions: {
                 informReservation: informReservationActions
