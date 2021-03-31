@@ -39,13 +39,13 @@ function validateStartParams(params: factory.transaction.cancelReservation.IStar
         let reserveTransaction: factory.transaction.ITransaction<factory.transactionType.Reserve> | undefined;
         let reservations: factory.reservation.IReservation<factory.reservationType.EventReservation>[] | undefined;
 
-        // 予約取引存在確認
-        if (typeof params.object.transaction?.id === 'string') {
-            reserveTransaction = await repos.transaction.findById({
-                typeOf: factory.transactionType.Reserve,
-                id: params.object.transaction.id
-            });
-        }
+        // 予約取引存在確認(2021-03-21廃止)
+        // if (typeof params.object.transaction?.id === 'string') {
+        //     reserveTransaction = await repos.transaction.findById({
+        //         typeOf: factory.transactionType.Reserve,
+        //         id: params.object.transaction.id
+        //     });
+        // }
 
         // 予約番号で取引存在確認
         if (typeof params.object.reservation?.reservationNumber === 'string') {
