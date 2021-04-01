@@ -203,7 +203,7 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    // tslint:disable-next-line:max-func-body-length
+    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     public async searchSeats(params: factory.place.seat.ISearchConditions): Promise<factory.place.seat.IPlace[]> {
         const matchStages: any[] = [];
         if (params.project !== undefined) {
@@ -325,6 +325,12 @@ export class MongoRepository {
             });
         }
 
+        let includeScreeningRooms = true;
+        if ((<any>params).$projection !== undefined && (<any>params).$projection !== null
+            && (<any>params).$projection['containedInPlace.containedInPlace'] === 0) {
+            includeScreeningRooms = false;
+        }
+
         const aggregate = this.placeModel.aggregate([
             { $unwind: '$containsPlace' },
             { $unwind: '$containsPlace.containsPlace' },
@@ -341,17 +347,21 @@ export class MongoRepository {
                         typeOf: '$containsPlace.containsPlace.typeOf',
                         branchCode: '$containsPlace.containsPlace.branchCode',
                         name: '$containsPlace.containsPlace.name',
-                        containedInPlace: {
-                            typeOf: '$containsPlace.typeOf',
-                            branchCode: '$containsPlace.branchCode',
-                            name: '$containsPlace.name',
-                            containedInPlace: {
-                                id: '$_id',
-                                typeOf: '$typeOf',
-                                branchCode: '$branchCode',
-                                name: '$name'
+                        ...(includeScreeningRooms)
+                            ? {
+                                containedInPlace: {
+                                    typeOf: '$containsPlace.typeOf',
+                                    branchCode: '$containsPlace.branchCode',
+                                    name: '$containsPlace.name',
+                                    containedInPlace: {
+                                        id: '$_id',
+                                        typeOf: '$typeOf',
+                                        branchCode: '$branchCode',
+                                        name: '$name'
+                                    }
+                                }
                             }
-                        }
+                            : undefined
                     },
                     additionalProperty: '$containsPlace.containsPlace.containsPlace.additionalProperty'
                 }

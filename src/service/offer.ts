@@ -169,6 +169,7 @@ export function searchEventSeatOffersWithPaging(params: {
     limit?: number;
     page?: number;
     event: { id: string };
+    $projection?: any;
 }) {
     return async (repos: {
         event: EventRepo;
