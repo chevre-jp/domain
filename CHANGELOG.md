@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 予約ステータス変更の冪等性担保
 - 予約取消取引開始パラメータからtransactionを削除
 - イベントの座席検索に$projection指定を追加
+- 予約取消取引開始前に予約ステータスが確定済かどうか確認するように調整
 
 ### Deprecated
 

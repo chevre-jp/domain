@@ -194,12 +194,25 @@ export class MongoRepository {
             }
         }
 
+        const reservationStatusEq = params.reservationStatus?.$eq;
+        if (typeof reservationStatusEq === 'string') {
+            andConditions.push({ reservationStatus: { $eq: reservationStatusEq } });
+        }
+
+        const reservationStatusNe = params.reservationStatus?.$ne;
+        if (typeof reservationStatusNe === 'string') {
+            andConditions.push({ reservationStatus: { $ne: reservationStatusNe } });
+        }
+
+        const reservationStatusIn = params.reservationStatus?.$in;
+        if (Array.isArray(reservationStatusIn)) {
+            andConditions.push({ reservationStatus: { $in: reservationStatusIn } });
+        }
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (Array.isArray(params.reservationStatuses)) {
-            andConditions.push({
-                reservationStatus: { $in: params.reservationStatuses }
-            });
+            andConditions.push({ reservationStatus: { $in: params.reservationStatuses } });
         }
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */

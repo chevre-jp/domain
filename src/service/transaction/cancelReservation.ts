@@ -1,5 +1,5 @@
 /**
- * 予約キャンセル取引サービス
+ * 予約取消取引サービス
  */
 import * as createDebug from 'debug';
 import * as mongoose from 'mongoose';
@@ -39,22 +39,25 @@ function validateStartParams(params: factory.transaction.cancelReservation.IStar
         let reserveTransaction: factory.transaction.ITransaction<factory.transactionType.Reserve> | undefined;
         let reservations: factory.reservation.IReservation<factory.reservationType.EventReservation>[] | undefined;
 
-        // 予約取引存在確認(2021-03-21廃止)
-        // if (typeof params.object.transaction?.id === 'string') {
-        //     reserveTransaction = await repos.transaction.findById({
-        //         typeOf: factory.transactionType.Reserve,
-        //         id: params.object.transaction.id
-        //     });
-        // }
-
         // 予約番号で取引存在確認
         if (typeof params.object.reservation?.reservationNumber === 'string') {
             const transactions = await repos.transaction.search<factory.transactionType.Reserve>({
                 limit: 1,
                 typeOf: factory.transactionType.Reserve,
-                object: { reservationNumber: { $eq: params.object.reservation?.reservationNumber } }
+                object: { reservationNumber: { $eq: params.object.reservation.reservationNumber } }
             });
             reserveTransaction = transactions.shift();
+
+            // 予約ステータス確認
+            const unconfirmedReservations = await repos.reservation.search({
+                limit: 1,
+                typeOf: factory.reservationType.EventReservation,
+                reservationNumber: { $eq: params.object.reservation.reservationNumber },
+                reservationStatus: { $ne: factory.reservationStatusType.ReservationConfirmed }
+            });
+            if (unconfirmedReservations.length > 0) {
+                throw new factory.errors.Argument('object.reservation.reservationNumber', `Reservation ${unconfirmedReservations[0].id} not confirmed`);
+            }
         }
 
         // 取引指定が確認できなければ、予約指定を確認
@@ -65,6 +68,11 @@ function validateStartParams(params: factory.transaction.cancelReservation.IStar
                     id: params.object.reservation.id
                 });
                 reservations = [reservation];
+
+                // 予約ステータス確認
+                if (reservation.reservationStatus !== factory.reservationStatusType.ReservationConfirmed) {
+                    throw new factory.errors.Argument('object.reservation.id', `Reservation ${reservation.id} not confirmed`);
+                }
             }
         }
 
