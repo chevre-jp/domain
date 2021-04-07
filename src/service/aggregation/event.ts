@@ -643,7 +643,11 @@ function aggregateReservationByEvent(params: {
         }
         if (reservedSeatsAvailable({ event: params.event })) {
             const screeningRoomSeatCount = (Array.isArray(params.screeningRoom.containsPlace))
-                ? params.screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0)
+                // b.containsPlaceがundefinedの場合があるので注意(座席未登録)
+                ? params.screeningRoom.containsPlace.reduce(
+                    (a, b) => a + ((Array.isArray(b.containsPlace)) ? b.containsPlace.length : 0),
+                    0
+                )
                 : 0;
             maximumAttendeeCapacity = screeningRoomSeatCount;
 

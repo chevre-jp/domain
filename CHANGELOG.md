@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 予約取消取引開始パラメータからtransactionを削除
 - イベントの座席検索に$projection指定を追加
 - 予約取消取引開始前に予約ステータスが確定済かどうか確認するように調整
+- セクションに座席が未登録の場合のイベント予約集計を調整
 
 ### Deprecated
 
