@@ -571,21 +571,23 @@ function filterByEligibleSeatingType(params: {
                 (a, b) => {
                     return [
                         ...a,
-                        ...b.containsPlace.filter((place) => {
-                            const seatingTypes = (Array.isArray(place.seatingType)) ? place.seatingType
-                                : (typeof place.seatingType === 'string') ? [place.seatingType]
-                                    : [];
+                        ...(Array.isArray(b.containsPlace))
+                            ? b.containsPlace.filter((place) => {
+                                const seatingTypes = (Array.isArray(place.seatingType)) ? place.seatingType
+                                    : (typeof place.seatingType === 'string') ? [place.seatingType]
+                                        : [];
 
-                            return seatingTypes.some((seatingTypeCodeValue) => params.eligibleSeatingTypes.some(
-                                (eligibleSeatingType) => eligibleSeatingType === seatingTypeCodeValue)
-                            );
-                        })
-                            .map((place) => {
-                                return {
-                                    seatSection: b.branchCode,
-                                    seatNumber: place.branchCode
-                                };
+                                return seatingTypes.some((seatingTypeCodeValue) => params.eligibleSeatingTypes.some(
+                                    (eligibleSeatingType) => eligibleSeatingType === seatingTypeCodeValue)
+                                );
                             })
+                                .map((place) => {
+                                    return {
+                                        seatSection: b.branchCode,
+                                        seatNumber: place.branchCode
+                                    };
+                                })
+                            : []
                     ];
                 },
                 []
