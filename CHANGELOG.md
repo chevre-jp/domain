@@ -23,6 +23,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Fixed
 
+- イベントの座席オファー検索におけるコーディングバグに対応
+
 ### Security
 
 ## v15.46.1 - 2021-03-21

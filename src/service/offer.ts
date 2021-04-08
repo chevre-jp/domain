@@ -145,15 +145,17 @@ export function searchEventSeatOffers(params: {
             offers = screeningRoom.containsPlace.map((sectionOffer) => {
                 return {
                     ...sectionOffer,
-                    containsPlace: sectionOffer.containsPlace.map((seat) => {
-                        return addOffers2Seat({
-                            project: event.project,
-                            seat: seat,
-                            seatSection: sectionOffer.branchCode,
-                            unavailableOffers: unavailableOffers,
-                            priceSpecs: priceSpecs
-                        });
-                    })
+                    containsPlace: (Array.isArray(sectionOffer.containsPlace))
+                        ? sectionOffer.containsPlace.map((seat) => {
+                            return addOffers2Seat({
+                                project: event.project,
+                                seat: seat,
+                                seatSection: sectionOffer.branchCode,
+                                unavailableOffers: unavailableOffers,
+                                priceSpecs: priceSpecs
+                            });
+                        })
+                        : []
                 };
             });
         }
