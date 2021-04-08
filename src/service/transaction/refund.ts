@@ -83,7 +83,8 @@ export function start(
         const startParams: factory.transaction.IStartParams<factory.transactionType.Refund> = createStartParams({
             ...params,
             transactionNumber,
-            paymentServiceType
+            paymentServiceType,
+            payAction
         });
 
         try {

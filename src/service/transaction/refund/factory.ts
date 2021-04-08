@@ -7,6 +7,7 @@ import { settings } from '../../../settings';
 export function createStartParams(params: factory.transaction.refund.IStartParamsWithoutDetail & {
     transactionNumber: string;
     paymentServiceType: factory.service.paymentService.PaymentServiceType;
+    payAction: factory.action.trade.pay.IAction;
 }): factory.transaction.IStartParams<factory.transactionType.Refund> {
     const paymentMethodType = params.object.paymentMethod?.typeOf;
     if (typeof paymentMethodType !== 'string') {
@@ -33,10 +34,13 @@ export function createStartParams(params: factory.transaction.refund.IStartParam
             typeOf: params.paymentServiceType,
             onPaymentStatusChanged: { informPayment: informPaymentParams },
             paymentMethod: {
+                additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : [],
+                name: (typeof name === 'string') ? name : paymentMethodType,
                 paymentMethodId: paymentMethodId,
                 typeOf: paymentMethodType,
-                name: (typeof name === 'string') ? name : paymentMethodType,
-                additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : []
+                ...(Array.isArray(params.payAction.object) && params.payAction.object.length > 0)
+                    ? { totalPaymentDue: params.payAction.object[0].paymentMethod.totalPaymentDue }
+                    : undefined
             },
             ...(typeof params.object.refundFee === 'number')
                 ? { refundFee: params.object.refundFee }
