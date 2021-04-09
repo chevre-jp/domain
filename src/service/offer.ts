@@ -682,35 +682,7 @@ export function onEventChanged(params: factory.event.IEvent<factory.eventType>) 
             await repos.task.save(aggregateTask);
         } else {
             // イベント通知タスク
-            const project = await repos.project.findById({ id: event.project.id });
-
-            if (project.settings !== undefined
-                && project.settings.onEventChanged !== undefined
-                && Array.isArray(project.settings.onEventChanged.informEvent)) {
-                await Promise.all(project.settings.onEventChanged.informEvent.map(async (informParams) => {
-                    const triggerWebhookTask: factory.task.triggerWebhook.IAttributes = {
-                        project: event.project,
-                        name: factory.taskName.TriggerWebhook,
-                        status: factory.taskStatus.Ready,
-                        runsAt: new Date(),
-                        remainingNumberOfTries: 3,
-                        numberOfTried: 0,
-                        executionResults: [],
-                        data: {
-                            project: event.project,
-                            typeOf: factory.actionType.InformAction,
-                            agent: event.project,
-                            recipient: {
-                                typeOf: 'Person',
-                                ...informParams.recipient
-                            },
-                            object: event
-                        }
-                    };
-
-                    await repos.task.save(triggerWebhookTask);
-                }));
-            }
+            // const project = await repos.project.findById({ id: event.project.id });
         }
     };
 }
