@@ -11,6 +11,7 @@ import { MongoRepository as InvoiceRepo } from './repo/invoice';
 import { RedisRepository as ScreeningEventItemAvailabilityRepo } from './repo/itemAvailability/screeningEvent';
 import { MongoRepository as OfferRepo } from './repo/offer';
 import { MongoRepository as OfferCatalogRepo } from './repo/offerCatalog';
+import { MongoRepository as OrderRepo } from './repo/order';
 import { MongoRepository as PaymentMethodRepo } from './repo/paymentMethod';
 import { MongoRepository as PlaceRepo } from './repo/place';
 import { MongoRepository as PriceSpecificationRepo } from './repo/priceSpecification';
@@ -37,6 +38,10 @@ export class Event extends EventRepo { }
 export class Invoice extends InvoiceRepo { }
 export class Offer extends OfferRepo { }
 export class OfferCatalog extends OfferCatalogRepo { }
+/**
+ * 注文リポジトリ
+ */
+export class Order extends OrderRepo { }
 /**
  * 決済方法リポジトリ
  */

@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - インボイスリポジトリを追加
 - 決済方法リポジトリを追加
+- 注文リポジトリを追加
 
 ### Changed
 
