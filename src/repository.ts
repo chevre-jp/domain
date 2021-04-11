@@ -7,9 +7,11 @@ import { MongoRepository as ActionRepo } from './repo/action';
 import { MongoRepository as CategoryCodeRepo } from './repo/categoryCode';
 import { MongoRepository as CreativeWorkRepo } from './repo/creativeWork';
 import { MongoRepository as EventRepo } from './repo/event';
+import { MongoRepository as InvoiceRepo } from './repo/invoice';
 import { RedisRepository as ScreeningEventItemAvailabilityRepo } from './repo/itemAvailability/screeningEvent';
 import { MongoRepository as OfferRepo } from './repo/offer';
 import { MongoRepository as OfferCatalogRepo } from './repo/offerCatalog';
+import { MongoRepository as PaymentMethodRepo } from './repo/paymentMethod';
 import { MongoRepository as PlaceRepo } from './repo/place';
 import { MongoRepository as PriceSpecificationRepo } from './repo/priceSpecification';
 import { MongoRepository as ProductRepo } from './repo/product';
@@ -29,8 +31,16 @@ export class Action extends ActionRepo { }
 export class CategoryCode extends CategoryCodeRepo { }
 export class CreativeWork extends CreativeWorkRepo { }
 export class Event extends EventRepo { }
+/**
+ * 請求書リポジトリ
+ */
+export class Invoice extends InvoiceRepo { }
 export class Offer extends OfferRepo { }
 export class OfferCatalog extends OfferCatalogRepo { }
+/**
+ * 決済方法リポジトリ
+ */
+export class PaymentMethod extends PaymentMethodRepo { }
 export class Place extends PlaceRepo { }
 export class PriceSpecification extends PriceSpecificationRepo { }
 export class Product extends ProductRepo { }

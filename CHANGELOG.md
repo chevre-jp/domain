@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- インボイスリポジトリを追加
+- 決済方法リポジトリを追加
+
 ### Changed
 
 - 予約ステータス変更の冪等性担保
