@@ -8,10 +8,8 @@ import { MongoErrorCode } from '../errorHandler';
 
 const debug = createDebug('cinerino-domain:repository');
 
-// export type IInvoice = factory.invoice.IInvoice;
-export type IInvoice = any;
-// export type ISearchConditions = factory.invoice.ISearchConditions;
-export type ISearchConditions = any;
+export type IInvoice = factory.invoice.IInvoice;
+export type ISearchConditions = factory.invoice.ISearchConditions;
 
 /**
  * インボイスリポジトリ
@@ -245,7 +243,7 @@ export class MongoRepository {
         referencesOrder: { orderNumber: string };
         paymentMethod: string;
         paymentMethodId: string;
-        paymentStatus: string;
+        paymentStatus: factory.paymentStatusType;
     }) {
         const doc = await this.invoiceModel.findOneAndUpdate(
             {
