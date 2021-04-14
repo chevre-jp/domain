@@ -10,11 +10,7 @@ const schema = new mongoose.Schema(
         project: mongoose.SchemaTypes.Mixed,
         reservation: mongoose.SchemaTypes.Mixed,
         category: String,
-        /**
-         * 購入座席インデックス
-         * @deprecated
-         */
-        payment_seat_index: Number, // 購入座席インデックス
+        payment_seat_index: Number,
         sortBy: String,
         mainEntity: mongoose.SchemaTypes.Mixed,
         amount: Number,

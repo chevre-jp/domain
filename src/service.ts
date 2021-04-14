@@ -9,6 +9,7 @@ import * as ProjectService from './service/project';
 import * as ReportService from './service/report';
 import * as TaskService from './service/task';
 import * as TransactionService from './service/transaction';
+import * as WebhookService from './service/webhook';
 
 export import aggregation = AggregationService;
 export import event = EventService;
@@ -18,3 +19,4 @@ export import project = ProjectService;
 export import report = ReportService;
 export import task = TaskService;
 export import transaction = TransactionService;
+export import webhook = WebhookService;

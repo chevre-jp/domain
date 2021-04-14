@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 注文リポジトリを追加
 - 経理レポートリポジトリを追加
 - 旧売上レポートリポジトリを追加
+- ウェブフックサービスを追加
 
 ### Changed
 
