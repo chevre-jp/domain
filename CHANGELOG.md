@@ -11,6 +11,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - インボイスリポジトリを追加
 - 決済方法リポジトリを追加
 - 注文リポジトリを追加
+- 経理レポートリポジトリを追加
+- 旧売上レポートリポジトリを追加
 
 ### Changed
 

@@ -2,6 +2,7 @@
 /**
  * リポジトリ
  */
+import { MongoRepository as AccountingReportRepo } from './repo/accountingReport';
 import { MongoRepository as AccountTitleRepo } from './repo/accountTitle';
 import { MongoRepository as ActionRepo } from './repo/action';
 import { MongoRepository as CategoryCodeRepo } from './repo/categoryCode';
@@ -19,6 +20,7 @@ import { MongoRepository as ProductRepo } from './repo/product';
 import { MongoRepository as ProgramMembershipRepo } from './repo/programMembership';
 import { MongoRepository as ProjectRepo } from './repo/project';
 import { RedisRepository as OfferRateLimitRepo } from './repo/rateLimit/offer';
+import { MongoRepository as ReportRepo } from './repo/report';
 import { MongoRepository as ReservationRepo } from './repo/reservation';
 import { MongoRepository as SellerRepo } from './repo/seller';
 import { MongoRepository as ServiceOutputRepo } from './repo/serviceOutput';
@@ -27,6 +29,10 @@ import { MongoRepository as TaskRepo } from './repo/task';
 import { MongoRepository as TransactionRepo } from './repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from './repo/transactionNumber';
 
+/**
+ * 経理レポートリポジトリ
+ */
+export class AccountingReport extends AccountingReportRepo { }
 export class AccountTitle extends AccountTitleRepo { }
 export class Action extends ActionRepo { }
 export class CategoryCode extends CategoryCodeRepo { }
@@ -51,6 +57,10 @@ export class PriceSpecification extends PriceSpecificationRepo { }
 export class Product extends ProductRepo { }
 export class ProgramMembership extends ProgramMembershipRepo { }
 export class Project extends ProjectRepo { }
+/**
+ * レポートリポジトリ
+ */
+export class Report extends ReportRepo { }
 export class Reservation extends ReservationRepo { }
 /**
  * 販売者リポジトリ
