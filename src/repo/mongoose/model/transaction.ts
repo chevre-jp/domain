@@ -13,6 +13,7 @@ const schema = new mongoose.Schema(
         transactionNumber: String,
         agent: mongoose.SchemaTypes.Mixed,
         recipient: mongoose.SchemaTypes.Mixed,
+        seller: mongoose.SchemaTypes.Mixed,
         error: mongoose.SchemaTypes.Mixed,
         result: mongoose.SchemaTypes.Mixed,
         object: mongoose.SchemaTypes.Mixed,
