@@ -35,6 +35,15 @@ export function onOrderStatusChanged(params: factory.order.IOrder) {
         )
             .exec();
 
+        await createAccountingReportIfNotExist(params)(repos);
+    };
+}
+
+export function createAccountingReportIfNotExist(params: factory.order.IOrder) {
+    return async (repos: {
+        accountingReport: AccountingReportRepo;
+    }) => {
+        const order4report: IOrder4report = createOrder4report(params);
         const accountingReport: IAccountingReport = createAccountingReport(order4report);
 
         // 経理レポートを保管
