@@ -247,7 +247,7 @@ export class MongoRepository {
     /**
      * コードを保管する
      */
-    private async save(params: {
+    public async save(params: {
         project: factory.project.IProject;
         code: ICode;
         data: IData;
