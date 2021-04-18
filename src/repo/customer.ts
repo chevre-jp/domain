@@ -31,7 +31,7 @@ export class MongoRepository {
             });
         }
 
-        const nameRegex = params.name.$regex;
+        const nameRegex = params.name?.$regex;
         if (typeof nameRegex === 'string') {
             andConditions.push({
                 $or: [
