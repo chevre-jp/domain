@@ -8,6 +8,7 @@ import { MongoRepository as ActionRepo } from './repo/action';
 import { MongoRepository as CategoryCodeRepo } from './repo/categoryCode';
 import { MongoRepository as CodeRepo } from './repo/code';
 import { MongoRepository as CreativeWorkRepo } from './repo/creativeWork';
+import { MongoRepository as CustomerRepo } from './repo/customer';
 import { MongoRepository as EventRepo } from './repo/event';
 import { MongoRepository as InvoiceRepo } from './repo/invoice';
 import { RedisRepository as ScreeningEventItemAvailabilityRepo } from './repo/itemAvailability/screeningEvent';
@@ -45,6 +46,10 @@ export class CategoryCode extends CategoryCodeRepo { }
  */
 export class Code extends CodeRepo { }
 export class CreativeWork extends CreativeWorkRepo { }
+/**
+ * 顧客リポジトリ
+ */
+export class Customer extends CustomerRepo { }
 export class Event extends EventRepo { }
 /**
  * 請求書リポジトリ
