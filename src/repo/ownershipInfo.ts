@@ -223,6 +223,29 @@ export class MongoRepository {
             });
         }
 
+        const ownedFromGte = (<any>params).ownedFromGte;
+        if (ownedFromGte instanceof Date) {
+            andConditions.push({
+                ownedFrom: { $gte: ownedFromGte }
+            });
+        }
+        const ownedFromLte = (<any>params).ownedFromLte;
+        if (ownedFromLte instanceof Date) {
+            andConditions.push({
+                ownedFrom: { $lte: ownedFromLte }
+            });
+        }
+
+        const acquiredFromIdIn = params.acquiredFrom?.id?.$in;
+        if (Array.isArray(acquiredFromIdIn)) {
+            andConditions.push({
+                'acquiredFrom.id': {
+                    $exists: true,
+                    $in: acquiredFromIdIn
+                }
+            });
+        }
+
         return andConditions;
     }
 
