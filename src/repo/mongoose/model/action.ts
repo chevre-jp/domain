@@ -31,7 +31,7 @@ const schema = new mongoose.Schema(
         id: true,
         read: 'primaryPreferred',
         writeConcern: writeConcern,
-        strict: true,
+        strict: false,
         useNestedStrict: true,
         timestamps: {
             createdAt: 'createdAt',
