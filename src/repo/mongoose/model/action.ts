@@ -1,5 +1,7 @@
 import * as mongoose from 'mongoose';
 
+const modelName = 'Action';
+
 const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
 /**
@@ -204,7 +206,7 @@ schema.index(
     }
 );
 
-export default mongoose.model('Action', schema)
+mongoose.model(modelName, schema)
     .on(
         'index',
         // tslint:disable-next-line:no-single-line-block-comment
@@ -216,3 +218,5 @@ export default mongoose.model('Action', schema)
             }
         }
     );
+
+export { modelName, schema };

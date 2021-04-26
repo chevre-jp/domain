@@ -1,5 +1,7 @@
 import * as mongoose from 'mongoose';
 
+const modelName = 'Task';
+
 const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
 /**
@@ -93,9 +95,65 @@ schema.index(
 );
 
 schema.index(
+    { 'data.agent.id': 1, runsAt: -1 },
+    {
+        name: 'searchByDataAgentId',
+        partialFilterExpression: {
+            'data.agent.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'data.object.itemOffered.id': 1, runsAt: -1 },
+    {
+        name: 'searchByDataObjectItemOfferedId',
+        partialFilterExpression: {
+            'data.object.itemOffered.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'data.object.itemOffered.membershipFor.id': 1, runsAt: -1 },
+    {
+        name: 'searchByDataObjectItemOfferedMembershipForId',
+        partialFilterExpression: {
+            'data.object.itemOffered.membershipFor.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'data.purpose.id': 1, runsAt: -1 },
+    {
+        name: 'searchByDataPurposeId',
+        partialFilterExpression: {
+            'data.purpose.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { status: 1, name: 1, numberOfTried: 1, runsAt: 1 },
     {
         name: 'executeOneByName'
+    }
+);
+
+schema.index(
+    {
+        'project.id': 1,
+        status: 1,
+        name: 1,
+        numberOfTried: 1,
+        runsAt: 1
+    },
+    {
+        name: 'executeOneByName-v2',
+        partialFilterExpression: {
+            'project.id': { $exists: true }
+        }
     }
 );
 
@@ -110,6 +168,26 @@ schema.index(
 );
 
 schema.index(
+    { 'data.transactionId': 1 },
+    {
+        partialFilterExpression: {
+            'data.transactionId': { $exists: true }
+        }
+    }
+);
+
+// メール送信タスク存在確認に使用
+schema.index(
+    { 'data.actionAttributes.object.identifier': 1, runsAt: -1 },
+    {
+        name: 'searchByDataActionAttributesObjectIdentifier',
+        partialFilterExpression: {
+            'data.actionAttributes.object.identifier': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'data.transactionId': 1, runsAt: -1 },
     {
         name: 'searchByDataTransactionId',
@@ -119,7 +197,7 @@ schema.index(
     }
 );
 
-export default mongoose.model('Task', schema)
+mongoose.model(modelName, schema)
     .on(
         'index',
         // tslint:disable-next-line:no-single-line-block-comment
@@ -131,3 +209,5 @@ export default mongoose.model('Task', schema)
             }
         }
     );
+
+export { modelName, schema };

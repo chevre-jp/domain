@@ -42,7 +42,7 @@
     "@types/lodash.difference": "^4.5.6",
     "@types/mocha": "^5.2.7",
     "@types/moment-timezone": "^0.5.13",
-    "@types/mongoose": "^5.7.24",
+    "@types/mongoose": "^5.10.5",
     "@types/power-assert": "^1.5.3",
     "@types/redis": "^2.8.22",
     "@types/request": "^2.48.5",

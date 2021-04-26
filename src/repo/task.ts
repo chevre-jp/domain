@@ -1,6 +1,7 @@
 import * as moment from 'moment';
-import { Connection } from 'mongoose';
-import taskModel from './mongoose/model/task';
+import { Connection, Model } from 'mongoose';
+
+import { modelName } from './mongoose/model/task';
 
 import * as factory from '../factory';
 
@@ -16,10 +17,10 @@ const sortOrder4executionOfTasks = {
  * タスクリポジトリ
  */
 export class MongoRepository {
-    public readonly taskModel: typeof taskModel;
+    public readonly taskModel: typeof Model;
 
     constructor(connection: Connection) {
-        this.taskModel = connection.model(taskModel.modelName);
+        this.taskModel = connection.model(modelName);
     }
 
     public static CREATE_MONGO_CONDITIONS<T extends factory.taskName>(params: factory.task.ISearchConditions<T>) {
@@ -131,7 +132,7 @@ export class MongoRepository {
             {
                 status: factory.taskStatus.Running, // 実行中に変更
                 lastTriedAt: new Date(),
-                $inc: {
+                $inc: <any>{
                     remainingNumberOfTries: -1, // 残りトライ可能回数減らす
                     numberOfTried: 1 // トライ回数増やす
                 }
@@ -226,7 +227,7 @@ export class MongoRepository {
             id,
             {
                 status: status, // 失敗してもここでは戻さない(Runningのまま待機)
-                $push: { executionResults: executionResult }
+                $push: <any>{ executionResults: executionResult }
             }
         )
             .exec();

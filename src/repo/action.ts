@@ -1,7 +1,7 @@
-import { Connection } from 'mongoose';
+import { Connection, Model } from 'mongoose';
 
 import * as factory from '../factory';
-import ActionModel from './mongoose/model/action';
+import { modelName } from './mongoose/model/action';
 
 export type IAction<T extends factory.actionType> = factory.action.IAction<factory.action.IAttributes<T, any, any>>;
 export type IPayAction = factory.action.trade.pay.IAction;
@@ -10,9 +10,9 @@ export type IPayAction = factory.action.trade.pay.IAction;
  * アクションリポジトリ
  */
 export class MongoRepository {
-    public readonly actionModel: typeof ActionModel;
+    public readonly actionModel: typeof Model;
     constructor(connection: Connection) {
-        this.actionModel = connection.model(ActionModel.modelName);
+        this.actionModel = connection.model(modelName);
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
