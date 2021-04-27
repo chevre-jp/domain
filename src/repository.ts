@@ -5,6 +5,7 @@
 import { MongoRepository as AccountingReportRepo } from './repo/accountingReport';
 import { MongoRepository as AccountTitleRepo } from './repo/accountTitle';
 import { MongoRepository as ActionRepo } from './repo/action';
+import { MongoRepository as AssetTransactionRepo } from './repo/assetTransaction';
 import { MongoRepository as CategoryCodeRepo } from './repo/categoryCode';
 import { MongoRepository as CodeRepo } from './repo/code';
 import { MongoRepository as CreativeWorkRepo } from './repo/creativeWork';
@@ -31,7 +32,6 @@ import { MongoRepository as SellerRepo } from './repo/seller';
 import { MongoRepository as ServiceOutputRepo } from './repo/serviceOutput';
 import { RedisRepository as ServiceOutputIdentifierRepo } from './repo/serviceOutputIdentifier';
 import { MongoRepository as TaskRepo } from './repo/task';
-import { MongoRepository as TransactionRepo } from './repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from './repo/transactionNumber';
 
 /**
@@ -40,6 +40,7 @@ import { RedisRepository as TransactionNumberRepo } from './repo/transactionNumb
 export class AccountingReport extends AccountingReportRepo { }
 export class AccountTitle extends AccountTitleRepo { }
 export class Action extends ActionRepo { }
+export class AssetTransaction extends AssetTransactionRepo { }
 export class CategoryCode extends CategoryCodeRepo { }
 /**
  * 所有権コードリポジトリ
@@ -94,7 +95,6 @@ export class Seller extends SellerRepo { }
 export class ServiceOutput extends ServiceOutputRepo { }
 export class ServiceOutputIdentifier extends ServiceOutputIdentifierRepo { }
 export class Task extends TaskRepo { }
-export class Transaction extends TransactionRepo { }
 export class TransactionNumber extends TransactionNumberRepo { }
 export namespace aggregation {
 }

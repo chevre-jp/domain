@@ -9,13 +9,13 @@ import { credentials } from '../../credentials';
 
 import * as OfferService from '../offer';
 
+import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 import { MongoRepository as OfferRepo } from '../../repo/offer';
 import { MongoRepository as OfferCatalogRepo } from '../../repo/offerCatalog';
 import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
-import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
 import { createPointAward, createServiceOutput } from './registerService/factory';
 

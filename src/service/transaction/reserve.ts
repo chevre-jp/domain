@@ -5,6 +5,7 @@ import * as moment from 'moment';
 
 import * as factory from '../../factory';
 import { MongoRepository as ActionRepo } from '../../repo/action';
+import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 import { MongoRepository as EventRepo } from '../../repo/event';
 import { IOffer as IOffer4lock, RedisRepository as ScreeningEventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
 import { MongoRepository as OfferRepo } from '../../repo/offer';
@@ -16,7 +17,6 @@ import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../../repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
 import { MongoRepository as TaskRepo } from '../../repo/task';
-import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
 
 import * as OfferService from '../offer';

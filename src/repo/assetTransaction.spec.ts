@@ -23,7 +23,7 @@ describe('start()', () => {
 
     it('repositoryの状態が正常であれば、開始できるはず', async () => {
         const transaction = { typeOf: domain.factory.transactionType.Reserve, id: 'id' };
-        const repository = new domain.repository.Transaction(mongoose.connection);
+        const repository = new domain.repository.AssetTransaction(mongoose.connection);
         sandbox.mock(repository.transactionModel)
             .expects('create')
             .once()
@@ -44,7 +44,7 @@ describe('confirm()', () => {
         const transactionId = 'transactionId';
         const transactionResult = {};
         const potentialActions = {};
-        const repository = new domain.repository.Transaction(mongoose.connection);
+        const repository = new domain.repository.AssetTransaction(mongoose.connection);
         const doc = new repository.transactionModel();
         sandbox.mock(repository.transactionModel)
             .expects('findOneAndUpdate')
@@ -70,7 +70,7 @@ describe('reexportTasks()', () => {
 
     it('MongoDBの状態が正常であれば、エラーにならないはず', async () => {
         const intervalInMinutes = 10;
-        const repository = new domain.repository.Transaction(mongoose.connection);
+        const repository = new domain.repository.AssetTransaction(mongoose.connection);
         sandbox.mock(repository.transactionModel)
             .expects('findOneAndUpdate')
             .once()
@@ -90,7 +90,7 @@ describe('setTasksExportedById()', () => {
 
     it('MongoDBの状態が正常であれば、エラーにならないはず', async () => {
         const transactionId = 'transactionId';
-        const repository = new domain.repository.Transaction(mongoose.connection);
+        const repository = new domain.repository.AssetTransaction(mongoose.connection);
         sandbox.mock(repository.transactionModel)
             .expects('findByIdAndUpdate')
             .once()
@@ -110,7 +110,7 @@ describe('makeExpired()', () => {
     });
 
     it('MongoDBの状態が正常であれば、エラーにならないはず', async () => {
-        const repository = new domain.repository.Transaction(mongoose.connection);
+        const repository = new domain.repository.AssetTransaction(mongoose.connection);
         sandbox.mock(repository.transactionModel)
             .expects('updateMany')
             .once()
@@ -134,7 +134,7 @@ describe('startExportTasks()', () => {
             id: 'transactionId',
             status: domain.factory.transactionStatusType.Confirmed
         };
-        const repository = new domain.repository.Transaction(mongoose.connection);
+        const repository = new domain.repository.AssetTransaction(mongoose.connection);
         sandbox.mock(repository.transactionModel)
             .expects('findOneAndUpdate')
             .once()
@@ -152,7 +152,7 @@ describe('startExportTasks()', () => {
             id: 'transactionId',
             status: domain.factory.transactionStatusType.Confirmed
         };
-        const repository = new domain.repository.Transaction(mongoose.connection);
+        const repository = new domain.repository.AssetTransaction(mongoose.connection);
         sandbox.mock(repository.transactionModel)
             .expects('findOneAndUpdate')
             .once()
@@ -173,7 +173,7 @@ describe('IDで取引を取得する', () => {
     });
 
     it('取引が存在すればオブジェクトを取得できるはず', async () => {
-        const transactionRepo = new domain.repository.Transaction(mongoose.connection);
+        const transactionRepo = new domain.repository.AssetTransaction(mongoose.connection);
         sandbox.mock(transactionRepo.transactionModel)
             .expects('findOne')
             .once()
@@ -186,7 +186,7 @@ describe('IDで取引を取得する', () => {
     });
 
     it('取引が存在しなければNotFoundエラー', async () => {
-        const transactionRepo = new domain.repository.Transaction(mongoose.connection);
+        const transactionRepo = new domain.repository.AssetTransaction(mongoose.connection);
         sandbox.mock(transactionRepo.transactionModel)
             .expects('findOne')
             .once()
@@ -207,7 +207,7 @@ describe('取引を中止する', () => {
     });
 
     it('進行中取引が存在すれば中止できるはず', async () => {
-        const transactionRepo = new domain.repository.Transaction(mongoose.connection);
+        const transactionRepo = new domain.repository.AssetTransaction(mongoose.connection);
         sandbox.mock(transactionRepo.transactionModel)
             .expects('findOneAndUpdate')
             .once()
@@ -226,7 +226,7 @@ describe('取引を検索する', () => {
     });
 
     it('MongoDBが正常であれば配列を取得できるはず', async () => {
-        const transactionRepo = new domain.repository.Transaction(mongoose.connection);
+        const transactionRepo = new domain.repository.AssetTransaction(mongoose.connection);
         sandbox.mock(transactionRepo.transactionModel)
             .expects('find')
             .once()

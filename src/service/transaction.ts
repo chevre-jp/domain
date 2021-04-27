@@ -3,9 +3,9 @@
  */
 import * as factory from '../factory';
 
+import { MongoRepository as TransactionRepo } from '../repo/assetTransaction';
 import { MongoRepository as ProjectRepo } from '../repo/project';
 import { MongoRepository as TaskRepo } from '../repo/task';
-import { MongoRepository as TransactionRepo } from '../repo/transaction';
 
 import * as CancelReservationTransactionService from './transaction/cancelReservation';
 import * as MoneyTransferTransactionService from './transaction/moneyTransfer';

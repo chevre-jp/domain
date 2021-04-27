@@ -9,8 +9,8 @@ import { credentials } from '../credentials';
 import * as factory from '../factory';
 
 import { MongoRepository as ActionRepo } from '../repo/action';
+import { MongoRepository as TransactionRepo } from '../repo/assetTransaction';
 import { MongoRepository as ProjectRepo } from '../repo/project';
-import { MongoRepository as TransactionRepo } from '../repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from '../repo/transactionNumber';
 
 import { handlePecorinoError } from '../errorHandler';

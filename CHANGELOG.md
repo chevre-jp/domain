@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 返金アクションにtotalPaymentDueをセット
 - プロジェクトのイベント変更時設定を廃止
 - cinerinoのMongoDBインデックスを移行
+- 資産取引コレクションをrename
 
 ### Deprecated
 

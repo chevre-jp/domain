@@ -6,10 +6,10 @@ import * as moment from 'moment';
 import * as factory from '../../factory';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
+import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
 import { MongoRepository as TaskRepo } from '../../repo/task';
-import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
 import { createStartParams } from './refund/factory';
 import { createPotentialActions } from './refund/potentialActions';

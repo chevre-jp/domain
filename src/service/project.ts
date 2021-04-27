@@ -3,6 +3,7 @@
  */
 import { MongoRepository as AccountTitleRepo } from '../repo/accountTitle';
 import { MongoRepository as ActionRepo } from '../repo/action';
+import { MongoRepository as TransactionRepo } from '../repo/assetTransaction';
 import { MongoRepository as CategoryCodeRepo } from '../repo/categoryCode';
 import { MongoRepository as CreativeWorkRepo } from '../repo/creativeWork';
 import { MongoRepository as EventRepo } from '../repo/event';
@@ -16,7 +17,6 @@ import { MongoRepository as ReservationRepo } from '../repo/reservation';
 import { MongoRepository as SellerRepo } from '../repo/seller';
 import { MongoRepository as ServiceOutputRepo } from '../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../repo/task';
-import { MongoRepository as TransactionRepo } from '../repo/transaction';
 
 export function deleteProject(params: { id: string }) {
     return async (repos: {

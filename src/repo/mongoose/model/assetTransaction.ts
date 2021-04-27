@@ -1,9 +1,11 @@
 import * as mongoose from 'mongoose';
 
+const modelName = 'AssetTransaction';
+
 const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
 /**
- * 取引スキーマ
+ * 資産取引スキーマ
  */
 const schema = new mongoose.Schema(
     {
@@ -25,7 +27,7 @@ const schema = new mongoose.Schema(
         potentialActions: mongoose.SchemaTypes.Mixed
     },
     {
-        collection: 'transactions',
+        collection: 'assetTransactions',
         id: true,
         read: 'primaryPreferred',
         writeConcern: writeConcern,
@@ -198,7 +200,7 @@ schema.index(
     { name: 'makeExpired' }
 );
 
-export default mongoose.model('Transaction', schema)
+mongoose.model('AssetTransaction', schema)
     .on(
         'index',
         // tslint:disable-next-line:no-single-line-block-comment
@@ -210,3 +212,5 @@ export default mongoose.model('Transaction', schema)
             }
         }
     );
+
+export { modelName, schema };

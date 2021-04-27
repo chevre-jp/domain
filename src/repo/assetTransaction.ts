@@ -1,17 +1,18 @@
 import * as moment from 'moment';
-import { Connection } from 'mongoose';
+import { Connection, Model } from 'mongoose';
+
+import { modelName } from './mongoose/model/assetTransaction';
 
 import * as factory from '../factory';
-import TransactionModel from './mongoose/model/transaction';
 
 /**
- * 取引リポジトリ
+ * 資産取引リポジトリ
  */
 export class MongoRepository {
-    public readonly transactionModel: typeof TransactionModel;
+    public readonly transactionModel: typeof Model;
 
     constructor(connection: Connection) {
-        this.transactionModel = connection.model(TransactionModel.modelName);
+        this.transactionModel = connection.model(modelName);
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
