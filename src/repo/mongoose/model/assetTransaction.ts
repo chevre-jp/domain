@@ -200,7 +200,7 @@ schema.index(
     { name: 'makeExpired' }
 );
 
-mongoose.model('AssetTransaction', schema)
+mongoose.model(modelName, schema)
     .on(
         'index',
         // tslint:disable-next-line:no-single-line-block-comment
