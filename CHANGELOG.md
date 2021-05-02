@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - プロジェクトのイベント変更時設定を廃止
 - cinerinoのMongoDBインデックスを移行
 - 資産取引コレクションをrename
+- cinerinoのアクション検索条件を継承
 
 ### Deprecated
 

@@ -19,6 +19,16 @@ export class MongoRepository {
     public static CREATE_MONGO_CONDITIONS(params: factory.action.ISearchConditions) {
         const andConditions: any[] = [];
 
+        const projectIdIn = (<any>params).project?.ids;
+        if (Array.isArray(projectIdIn)) {
+            andConditions.push({
+                'project.id': {
+                    $exists: true,
+                    $in: projectIdIn
+                }
+            });
+        }
+
         const projectIdEq = params.project?.id?.$eq;
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -31,6 +41,28 @@ export class MongoRepository {
             });
         }
 
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        const agentTypeOfIn = (<any>params).agent?.typeOf?.$in;
+        if (Array.isArray(agentTypeOfIn)) {
+            andConditions.push({
+                'agent.typeOf': {
+                    $exists: true,
+                    $in: agentTypeOfIn
+                }
+            });
+        }
+
+        const agentIdIn = (<any>params).agent?.id?.$in;
+        if (Array.isArray(agentIdIn)) {
+            andConditions.push({
+                'agent.id': {
+                    $exists: true,
+                    $in: agentIdIn
+                }
+            });
+        }
+
         const locationIdentifierEq = params.location?.identifier?.$eq;
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -39,6 +71,30 @@ export class MongoRepository {
                 'location.identifier': {
                     $exists: true,
                     $eq: locationIdentifierEq
+                }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        const objectPaymentMethodEq = (<any>params).object?.paymentMethod?.$eq;
+        if (typeof objectPaymentMethodEq === 'string') {
+            andConditions.push({
+                'object.paymentMethod': {
+                    $exists: true,
+                    $eq: objectPaymentMethodEq
+                }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        const objectPaymentMethodIdEq = (<any>params).object?.paymentMethodId?.$eq;
+        if (typeof objectPaymentMethodIdEq === 'string') {
+            andConditions.push({
+                'object.paymentMethodId': {
+                    $exists: true,
+                    $eq: objectPaymentMethodIdEq
                 }
             });
         }
@@ -79,6 +135,16 @@ export class MongoRepository {
             });
         }
 
+        const objectPaymentMethodPaymentMethodIdIn = (<any>params).object?.paymentMethod?.paymentMethodId?.$in;
+        if (Array.isArray(objectPaymentMethodPaymentMethodIdIn)) {
+            andConditions.push({
+                'object.paymentMethod.paymentMethodId': {
+                    $exists: true,
+                    $in: objectPaymentMethodPaymentMethodIdIn
+                }
+            });
+        }
+
         const objectPaymentMethodTypeOfEq = params.object?.paymentMethod?.typeOf?.$eq;
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -103,6 +169,16 @@ export class MongoRepository {
             });
         }
 
+        const objectTypeOfIn = (<any>params).object?.typeOf?.$in;
+        if (Array.isArray(objectTypeOfIn)) {
+            andConditions.push({
+                'object.typeOf': {
+                    $exists: true,
+                    $in: objectTypeOfIn
+                }
+            });
+        }
+
         const objectIdEq = params.object?.id?.$eq;
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -111,6 +187,46 @@ export class MongoRepository {
                 'object.id': {
                     $exists: true,
                     $eq: objectIdEq
+                }
+            });
+        }
+
+        const objectIdIn = (<any>params).object?.id?.$in;
+        if (Array.isArray(objectIdIn)) {
+            andConditions.push({
+                'object.id': {
+                    $exists: true,
+                    $in: objectIdIn
+                }
+            });
+        }
+
+        const objectOrderNumberIn = (<any>params).object?.orderNumber?.$in;
+        if (Array.isArray(objectOrderNumberIn)) {
+            andConditions.push({
+                'object.orderNumber': {
+                    $exists: true,
+                    $in: objectOrderNumberIn
+                }
+            });
+        }
+
+        const objectEventIdIn = (<any>params).object?.event?.id?.$in;
+        if (Array.isArray(objectEventIdIn)) {
+            andConditions.push({
+                'object.event.id': {
+                    $exists: true,
+                    $in: objectEventIdIn
+                }
+            });
+        }
+
+        const objectAcceptedOfferSeatNumberIn = (<any>params).object?.acceptedOffer?.ticketedSeat?.seatNumber?.$in;
+        if (Array.isArray(objectAcceptedOfferSeatNumberIn)) {
+            andConditions.push({
+                'object.acceptedOffer.ticketedSeat.seatNumber': {
+                    $exists: true,
+                    $in: objectAcceptedOfferSeatNumberIn
                 }
             });
         }
@@ -124,12 +240,166 @@ export class MongoRepository {
             });
         }
 
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (typeof params.typeOf === 'string') {
+            andConditions.push({
+                typeOf: params.typeOf
+            });
+        }
+
         const actionStatusIn = params.actionStatus?.$in;
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (Array.isArray(actionStatusIn)) {
             andConditions.push({
                 actionStatus: { $in: actionStatusIn }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (Array.isArray((<any>params).actionStatusTypes)) {
+            andConditions.push({
+                actionStatus: { $in: (<any>params).actionStatusTypes }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        const startDateGte = (<any>params).startFrom;
+        if (startDateGte instanceof Date) {
+            andConditions.push({
+                startDate: { $gte: startDateGte }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        const startDateLte = (<any>params).startThrough;
+        if (startDateLte instanceof Date) {
+            andConditions.push({
+                startDate: { $lte: startDateLte }
+            });
+        }
+
+        const fromLocationTypeOfIn = (<any>params).fromLocation?.typeOf?.$in;
+        if (Array.isArray(fromLocationTypeOfIn)) {
+            andConditions.push({
+                'fromLocation.typeOf': {
+                    $exists: true,
+                    $in: fromLocationTypeOfIn
+                }
+            });
+        }
+        const fromLocationAccountNumberIn = (<any>params).fromLocation?.accountNumber?.$in;
+        if (Array.isArray(fromLocationAccountNumberIn)) {
+            andConditions.push({
+                'fromLocation.accountNumber': {
+                    $exists: true,
+                    $in: fromLocationAccountNumberIn
+                }
+            });
+        }
+        const fromLocationAccountTypeIn = (<any>params).fromLocation?.accountType?.$in;
+        if (Array.isArray(fromLocationAccountTypeIn)) {
+            andConditions.push({
+                'fromLocation.accountType': {
+                    $exists: true,
+                    $in: fromLocationAccountTypeIn
+                }
+            });
+        }
+        const toLocationTypeOfIn = (<any>params).toLocation?.typeOf?.$in;
+        if (Array.isArray(toLocationTypeOfIn)) {
+            andConditions.push({
+                'toLocation.typeOf': {
+                    $exists: true,
+                    $in: toLocationTypeOfIn
+                }
+            });
+        }
+        const toLocationAccountNumberIn = (<any>params).toLocation?.accountNumber?.$in;
+        if (Array.isArray(toLocationAccountNumberIn)) {
+            andConditions.push({
+                'toLocation.accountNumber': {
+                    $exists: true,
+                    $in: toLocationAccountNumberIn
+                }
+            });
+        }
+        const toLocationAccountTypeIn = (<any>params).toLocation?.accountType?.$in;
+        if (Array.isArray(toLocationAccountTypeIn)) {
+            andConditions.push({
+                'toLocation.accountType': {
+                    $exists: true,
+                    $in: toLocationAccountTypeIn
+                }
+            });
+        }
+
+        const purposeTypeOfIn = (<any>params).purpose?.typeOf?.$in;
+        if (Array.isArray(purposeTypeOfIn)) {
+            andConditions.push({
+                'purpose.typeOf': {
+                    $exists: true,
+                    $in: purposeTypeOfIn
+                }
+            });
+        }
+        const purposeIdIn = (<any>params).purpose?.id?.$in;
+        if (Array.isArray(purposeIdIn)) {
+            andConditions.push({
+                'purpose.id': {
+                    $exists: true,
+                    $in: purposeIdIn
+                }
+            });
+        }
+        const purposeOrderNumberIn = (<any>params).purpose?.orderNumber?.$in;
+        if (Array.isArray(purposeOrderNumberIn)) {
+            andConditions.push({
+                'purpose.orderNumber': {
+                    $exists: true,
+                    $in: purposeOrderNumberIn
+                }
+            });
+        }
+        const resultTypeOfIn = (<any>params).result?.typeOf?.$in;
+        if (Array.isArray(resultTypeOfIn)) {
+            andConditions.push({
+                'result.typeOf': {
+                    $exists: true,
+                    $in: resultTypeOfIn
+                }
+            });
+        }
+        const resultIdIn = (<any>params).result?.id?.$in;
+        if (Array.isArray(resultIdIn)) {
+            andConditions.push({
+                'result.id': {
+                    $exists: true,
+                    $in: resultIdIn
+                }
+            });
+        }
+        const resultOrderNumberIn = (<any>params).result?.orderNumber?.$in;
+        if (Array.isArray(resultOrderNumberIn)) {
+            andConditions.push({
+                'result.orderNumber': {
+                    $exists: true,
+                    $in: resultOrderNumberIn
+                }
+            });
+        }
+
+        const resultCodeIn = (<any>params).result?.code?.$in;
+        if (Array.isArray(resultCodeIn)) {
+            andConditions.push({
+                'result.code': {
+                    $exists: true,
+                    $in: resultCodeIn
+                }
             });
         }
 
