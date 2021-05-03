@@ -17,7 +17,7 @@ const pecorinoAuthClient = new pecorinoapi.auth.ClientCredentials({
     state: ''
 });
 
-export function validateAccount(params: factory.transaction.pay.IStartParamsWithoutDetail) {
+export function validateAccount(params: factory.assetTransaction.pay.IStartParamsWithoutDetail) {
     return async (repos: {
         project: ProjectRepo;
         seller: SellerRepo;

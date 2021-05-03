@@ -7,7 +7,7 @@ export type IUnitPriceSpecification = factory.priceSpecification.IPriceSpecifica
  * ポイント特典を作成する
  */
 export function createPointAward(params: {
-    acceptedOffer: factory.transaction.registerService.IAcceptedOffer;
+    acceptedOffer: factory.assetTransaction.registerService.IAcceptedOffer;
     offer: factory.event.screeningEvent.ITicketOffer;
 }): factory.product.IPointAward | undefined {
     let pointAward: factory.product.IPointAward | undefined;
@@ -47,7 +47,7 @@ export function createPointAward(params: {
 export function createServiceOutput(params: {
     dateIssued: Date;
     product: factory.product.IProduct;
-    acceptedOffer: factory.transaction.registerService.IAcceptedOffer;
+    acceptedOffer: factory.assetTransaction.registerService.IAcceptedOffer;
     offer: factory.event.screeningEvent.ITicketOffer;
     transactionNumber: string;
 }): factory.service.IServiceOutput {

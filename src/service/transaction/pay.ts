@@ -92,7 +92,9 @@ export function check(
 /**
  * 取引開始
  */
-export function start(params: factory.transaction.pay.IStartParamsWithoutDetail): IStartOperation<factory.transaction.pay.ITransaction> {
+export function start(
+    params: factory.assetTransaction.pay.IStartParamsWithoutDetail
+): IStartOperation<factory.assetTransaction.pay.ITransaction> {
     return async (repos: {
         action: ActionRepo;
         event: EventRepo;
@@ -118,15 +120,15 @@ export function start(params: factory.transaction.pay.IStartParamsWithoutDetail)
         await validateSeller(params)(repos);
 
         // 取引開始
-        let transaction: factory.transaction.pay.ITransaction;
-        const startParams: factory.transaction.IStartParams<factory.transactionType.Pay> = createStartParams({
+        let transaction: factory.assetTransaction.pay.ITransaction;
+        const startParams: factory.assetTransaction.IStartParams<factory.assetTransactionType.Pay> = createStartParams({
             ...params,
             transactionNumber,
             paymentServiceType,
             amount
         });
 
-        transaction = await repos.transaction.start<factory.transactionType.Pay>(startParams);
+        transaction = await repos.transaction.start<factory.assetTransactionType.Pay>(startParams);
 
         switch (paymentServiceType) {
             case factory.service.paymentService.PaymentServiceType.FaceToFace:
@@ -157,7 +159,7 @@ export function start(params: factory.transaction.pay.IStartParamsWithoutDetail)
     };
 }
 
-function validateSeller(params: factory.transaction.pay.IStartParamsWithoutDetail) {
+function validateSeller(params: factory.assetTransaction.pay.IStartParamsWithoutDetail) {
     return async (repos: {
         seller: SellerRepo;
     }): Promise<void> => {
@@ -182,7 +184,7 @@ function validateSeller(params: factory.transaction.pay.IStartParamsWithoutDetai
 }
 
 function processAuthorizeAccount(
-    params: factory.transaction.pay.IStartParamsWithoutDetail,
+    params: factory.assetTransaction.pay.IStartParamsWithoutDetail,
     transaction: { id: string }
 ) {
     return async (repos: {
@@ -190,7 +192,7 @@ function processAuthorizeAccount(
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;
-    }): Promise<factory.transaction.pay.ITransaction> => {
+    }): Promise<factory.assetTransaction.pay.ITransaction> => {
         await validateAccount(params)(repos);
 
         const authorizeResult = await AccountPayment.authorize(params)(repos);
@@ -217,7 +219,7 @@ function processAuthorizeAccount(
 }
 
 function processAuthorizeCreditCard(
-    params: factory.transaction.pay.IStartParamsWithoutDetail,
+    params: factory.assetTransaction.pay.IStartParamsWithoutDetail,
     transaction: { id: string }
 ) {
     return async (repos: {
@@ -226,7 +228,7 @@ function processAuthorizeCreditCard(
         project: ProjectRepo;
         seller: SellerRepo;
         transaction: TransactionRepo;
-    }): Promise<factory.transaction.pay.ITransaction> => {
+    }): Promise<factory.assetTransaction.pay.ITransaction> => {
         const authorizeResult = await CreditCardPayment.authorize(params)(repos);
 
         return saveAuthorizeResult({
@@ -244,8 +246,8 @@ function processAuthorizeCreditCard(
 }
 
 function processAuthorizeMovieTicket(
-    params: factory.transaction.pay.IStartParamsWithoutDetail,
-    transaction: factory.transaction.pay.ITransaction
+    params: factory.assetTransaction.pay.IStartParamsWithoutDetail,
+    transaction: factory.assetTransaction.pay.ITransaction
 ) {
     return async (repos: {
         action: ActionRepo;
@@ -255,7 +257,7 @@ function processAuthorizeMovieTicket(
         seller: SellerRepo;
         transaction: TransactionRepo;
         task: TaskRepo;
-    }): Promise<factory.transaction.pay.ITransaction> => {
+    }): Promise<factory.assetTransaction.pay.ITransaction> => {
         const authorizeResult = await MovieTicketPayment.authorize(params, transaction)(repos);
 
         return saveAuthorizeResult({
@@ -275,7 +277,7 @@ function saveAuthorizeResult(params: {
 }) {
     return async (repos: {
         transaction: TransactionRepo;
-    }): Promise<factory.transaction.pay.ITransaction> => {
+    }): Promise<factory.assetTransaction.pay.ITransaction> => {
         return repos.transaction.transactionModel.findByIdAndUpdate(
             { _id: params.id },
             params.update,
@@ -295,21 +297,21 @@ function saveAuthorizeResult(params: {
 /**
  * 取引確定
  */
-export function confirm(params: factory.transaction.pay.IConfirmParams): IConfirmOperation<void> {
+export function confirm(params: factory.assetTransaction.pay.IConfirmParams): IConfirmOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        let transaction: factory.transaction.ITransaction<factory.transactionType.Pay>;
+        let transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Pay>;
 
         // 取引存在確認
         if (typeof params.id === 'string') {
             transaction = await repos.transaction.findById({
-                typeOf: factory.transactionType.Pay,
+                typeOf: factory.assetTransactionType.Pay,
                 id: params.id
             });
         } else if (typeof params.transactionNumber === 'string') {
             transaction = await repos.transaction.findByTransactionNumber({
-                typeOf: factory.transactionType.Pay,
+                typeOf: factory.assetTransactionType.Pay,
                 transactionNumber: params.transactionNumber
             });
         } else {
@@ -322,7 +324,7 @@ export function confirm(params: factory.transaction.pay.IConfirmParams): IConfir
         });
 
         await repos.transaction.confirm({
-            typeOf: factory.transactionType.Pay,
+            typeOf: factory.assetTransactionType.Pay,
             id: transaction.id,
             result: {},
             potentialActions: potentialActions
@@ -341,7 +343,7 @@ export function cancel(params: {
         transaction: TransactionRepo;
     }) => {
         await repos.transaction.cancel({
-            typeOf: factory.transactionType.Pay,
+            typeOf: factory.assetTransactionType.Pay,
             id: params.id,
             transactionNumber: params.transactionNumber
         });
@@ -363,7 +365,7 @@ export function exportTasksById(params: {
         transaction: TransactionRepo;
     }) => {
         const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.Pay,
+            typeOf: factory.assetTransactionType.Pay,
             id: params.id
         });
         const potentialActions = transaction.potentialActions;

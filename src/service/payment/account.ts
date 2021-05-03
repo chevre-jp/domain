@@ -28,7 +28,7 @@ const pecorinoAuthClient = new pecorinoapi.auth.ClientCredentials({
 
 export type IPendingTransaction = pecorinoapi.factory.transaction.withdraw.ITransaction;
 
-export function authorize(params: factory.transaction.pay.IStartParamsWithoutDetail) {
+export function authorize(params: factory.assetTransaction.pay.IStartParamsWithoutDetail) {
     return async (repos: {
         project: ProjectRepo;
     }): Promise<IPendingTransaction> => {
@@ -50,9 +50,9 @@ export function authorize(params: factory.transaction.pay.IStartParamsWithoutDet
             pendingTransaction = await processAccountTransaction({
                 transactionNumber,
                 project: project,
-                paymentMethod: <factory.transaction.pay.IPaymentMethod>params.object.paymentMethod,
+                paymentMethod: <factory.assetTransaction.pay.IPaymentMethod>params.object.paymentMethod,
                 agent: params.agent,
-                recipient: <factory.transaction.pay.IRecipient>params.recipient,
+                recipient: <factory.assetTransaction.pay.IRecipient>params.recipient,
                 expires: expires
             });
         } catch (error) {
@@ -67,14 +67,14 @@ export function authorize(params: factory.transaction.pay.IStartParamsWithoutDet
 async function processAccountTransaction(params: {
     transactionNumber: string;
     project: factory.project.IProject;
-    paymentMethod: factory.transaction.pay.IPaymentMethod;
-    agent: factory.transaction.pay.IAgent;
-    recipient: factory.transaction.pay.IRecipient;
+    paymentMethod: factory.assetTransaction.pay.IPaymentMethod;
+    agent: factory.assetTransaction.pay.IAgent;
+    recipient: factory.assetTransaction.pay.IRecipient;
     expires: Date;
 }): Promise<IPendingTransaction> {
     let pendingTransaction: IPendingTransaction;
 
-    const defaultName = `${factory.transactionType.Pay} Transaction ${params.transactionNumber}`;
+    const defaultName = `${factory.assetTransactionType.Pay} Transaction ${params.transactionNumber}`;
 
     const agent = {
         typeOf: params.agent.typeOf,
@@ -198,7 +198,7 @@ export function refundAccount(params: factory.task.refund.IData) {
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
         const payTransaction = await repos.transaction.findByTransactionNumber({
-            typeOf: factory.transactionType.Pay,
+            typeOf: factory.assetTransactionType.Pay,
             transactionNumber: paymentMethodId
         });
 

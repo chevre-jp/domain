@@ -16,7 +16,7 @@ export class MongoRepository {
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
-    public static CREATE_MONGO_CONDITIONS(params: factory.transaction.ISearchConditions<factory.transactionType>) {
+    public static CREATE_MONGO_CONDITIONS(params: factory.assetTransaction.ISearchConditions<factory.assetTransactionType>) {
         const andConditions: any[] = [
             {
                 typeOf: params.typeOf
@@ -105,10 +105,10 @@ export class MongoRepository {
         }
 
         switch (params.typeOf) {
-            case factory.transactionType.CancelReservation:
+            case factory.assetTransactionType.CancelReservation:
                 break;
 
-            case factory.transactionType.Reserve:
+            case factory.assetTransactionType.Reserve:
                 const objectReservationNumberEq = params.object?.reservationNumber?.$eq;
                 if (typeof objectReservationNumberEq === 'string') {
                     andConditions.push({
@@ -169,9 +169,9 @@ export class MongoRepository {
     /**
      * 取引を開始する
      */
-    public async start<T extends factory.transactionType>(
-        params: factory.transaction.IStartParams<T>
-    ): Promise<factory.transaction.ITransaction<T>> {
+    public async start<T extends factory.assetTransactionType>(
+        params: factory.assetTransaction.IStartParams<T>
+    ): Promise<factory.assetTransaction.ITransaction<T>> {
         return this.transactionModel.create({
             typeOf: params.typeOf,
             ...<Object>params,
@@ -183,10 +183,10 @@ export class MongoRepository {
             .then((doc) => doc.toObject());
     }
 
-    public async findById<T extends factory.transactionType>(params: {
+    public async findById<T extends factory.assetTransactionType>(params: {
         typeOf: T;
         id: string;
-    }): Promise<factory.transaction.ITransaction<T>> {
+    }): Promise<factory.assetTransaction.ITransaction<T>> {
         const doc = await this.transactionModel.findOne({
             _id: params.id,
             typeOf: params.typeOf
@@ -200,10 +200,10 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    public async findByTransactionNumber<T extends factory.transactionType>(params: {
+    public async findByTransactionNumber<T extends factory.assetTransactionType>(params: {
         typeOf: T;
         transactionNumber: string;
-    }): Promise<factory.transaction.ITransaction<T>> {
+    }): Promise<factory.assetTransaction.ITransaction<T>> {
         const doc = await this.transactionModel.findOne({
             transactionNumber: { $exists: true, $eq: params.transactionNumber },
             typeOf: params.typeOf
@@ -221,10 +221,10 @@ export class MongoRepository {
      * 取引を確定する
      */
     public async addReservations(params: {
-        typeOf: factory.transactionType.Reserve;
+        typeOf: factory.assetTransactionType.Reserve;
         id: string;
-        object: factory.transaction.reserve.IObject;
-    }): Promise<factory.transaction.ITransaction<factory.transactionType.Reserve>> {
+        object: factory.assetTransaction.reserve.IObject;
+    }): Promise<factory.assetTransaction.ITransaction<factory.assetTransactionType.Reserve>> {
         const doc = await this.transactionModel.findOneAndUpdate(
             {
                 _id: params.id,
@@ -251,12 +251,12 @@ export class MongoRepository {
     /**
      * 取引を確定する
      */
-    public async confirm<T extends factory.transactionType>(params: {
+    public async confirm<T extends factory.assetTransactionType>(params: {
         typeOf: T;
         id: string;
-        result: factory.transaction.IResult<T>;
-        potentialActions: factory.transaction.IPotentialActions<T>;
-    }): Promise<factory.transaction.ITransaction<T>> {
+        result: factory.assetTransaction.IResult<T>;
+        potentialActions: factory.assetTransaction.IPotentialActions<T>;
+    }): Promise<factory.assetTransaction.ITransaction<T>> {
         const doc = await this.transactionModel.findOneAndUpdate(
             {
                 _id: params.id,
@@ -293,13 +293,13 @@ export class MongoRepository {
     /**
      * 取引を開始&確定
      */
-    public async startAndConfirm<T extends factory.transactionType>(
-        params: factory.transaction.IStartParams<T> & {
+    public async startAndConfirm<T extends factory.assetTransactionType>(
+        params: factory.assetTransaction.IStartParams<T> & {
             id: string;
-            result: factory.transaction.IResult<T>;
-            potentialActions: factory.transaction.IPotentialActions<T>;
+            result: factory.assetTransaction.IResult<T>;
+            potentialActions: factory.assetTransaction.IPotentialActions<T>;
         }
-    ): Promise<factory.transaction.ITransaction<T>> {
+    ): Promise<factory.assetTransaction.ITransaction<T>> {
         return this.transactionModel.create({
             _id: params.id,
             typeOf: params.typeOf,
@@ -317,11 +317,11 @@ export class MongoRepository {
     /**
      * タスク未エクスポートの取引をひとつ取得してエクスポートを開始する
      */
-    public async startExportTasks<T extends factory.transactionType>(params: {
+    public async startExportTasks<T extends factory.assetTransactionType>(params: {
         project?: { id: string };
         typeOf?: { $in: T[] };
         status: factory.transactionStatusType;
-    }): Promise<factory.transaction.ITransaction<T> | null> {
+    }): Promise<factory.assetTransaction.ITransaction<T> | null> {
         return this.transactionModel.findOneAndUpdate(
             {
                 ...(typeof params.project?.id === 'string')
@@ -405,11 +405,11 @@ export class MongoRepository {
     /**
      * 取引を中止する
      */
-    public async cancel<T extends factory.transactionType>(params: {
+    public async cancel<T extends factory.assetTransactionType>(params: {
         typeOf: T;
         id?: string;
         transactionNumber?: string;
-    }): Promise<factory.transaction.ITransaction<T>> {
+    }): Promise<factory.assetTransaction.ITransaction<T>> {
         const endDate = moment()
             .toDate();
 
@@ -432,7 +432,7 @@ export class MongoRepository {
             .exec();
         // NotFoundであれば取引状態確認
         if (doc === null) {
-            let transaction: factory.transaction.ITransaction<T>;
+            let transaction: factory.assetTransaction.ITransaction<T>;
             if (typeof params.id === 'string') {
                 transaction = await this.findById<T>({ typeOf: params.typeOf, id: params.id });
             } else if (typeof params.transactionNumber === 'string') {
@@ -459,7 +459,7 @@ export class MongoRepository {
         return doc.toObject();
     }
 
-    public async count<T extends factory.transactionType>(params: factory.transaction.ISearchConditions<T>): Promise<number> {
+    public async count<T extends factory.assetTransactionType>(params: factory.assetTransaction.ISearchConditions<T>): Promise<number> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
 
         return this.transactionModel.countDocuments(
@@ -472,9 +472,9 @@ export class MongoRepository {
     /**
      * 取引を検索する
      */
-    public async search<T extends factory.transactionType>(
-        params: factory.transaction.ISearchConditions<T>
-    ): Promise<factory.transaction.ITransaction<T>[]> {
+    public async search<T extends factory.assetTransactionType>(
+        params: factory.assetTransaction.ISearchConditions<T>
+    ): Promise<factory.assetTransaction.ITransaction<T>[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.transactionModel.find(
             { $and: conditions },

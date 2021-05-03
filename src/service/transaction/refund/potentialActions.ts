@@ -1,8 +1,8 @@
 import * as factory from '../../../factory';
 
 function createReundActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.Refund>;
-    potentialActions?: factory.transaction.refund.IPotentialActionsParams;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Refund>;
+    potentialActions?: factory.assetTransaction.refund.IPotentialActionsParams;
 }): factory.action.trade.refund.IAttributes[] {
     const transaction = params.transaction;
     const refundActions: factory.action.trade.refund.IAttributes[] = [];
@@ -27,7 +27,7 @@ function createReundActions(params: {
 }
 
 function createInformPaymentActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.Refund>;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Refund>;
 }) {
     const transaction = params.transaction;
 
@@ -65,9 +65,9 @@ function createInformPaymentActions(params: {
  * 取引のポストアクションを作成する
  */
 export async function createPotentialActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.Refund>;
-    potentialActions?: factory.transaction.refund.IPotentialActionsParams;
-}): Promise<factory.transaction.IPotentialActions<factory.transactionType.Refund>> {
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Refund>;
+    potentialActions?: factory.assetTransaction.refund.IPotentialActionsParams;
+}): Promise<factory.assetTransaction.IPotentialActions<factory.assetTransactionType.Refund>> {
     const refundActionAttributesList = createReundActions(params);
 
     return {

@@ -24,7 +24,7 @@ export import reserve = ReserveTransactionService;
 /**
  * ひとつの取引のタスクをエクスポートする
  */
-export function exportTasks<T extends factory.transactionType>(params: {
+export function exportTasks<T extends factory.assetTransactionType>(params: {
     // project?: factory.project.IProject;
     /**
      * タスク実行日時バッファ
@@ -51,42 +51,42 @@ export function exportTasks<T extends factory.transactionType>(params: {
 
         // 失敗してもここでは戻さない(RUNNINGのまま待機)
         switch (transaction.typeOf) {
-            case factory.transactionType.CancelReservation:
+            case factory.assetTransactionType.CancelReservation:
                 tasks = await CancelReservationTransactionService.exportTasksById({
                     id: transaction.id
                     // runsTasksAfterInSeconds: params.runsTasksAfterInSeconds
                 })(repos);
                 break;
 
-            case factory.transactionType.MoneyTransfer:
+            case factory.assetTransactionType.MoneyTransfer:
                 tasks = await MoneyTransferTransactionService.exportTasksById({
                     id: transaction.id,
                     runsTasksAfterInSeconds: params.runsTasksAfterInSeconds
                 })(repos);
                 break;
 
-            case factory.transactionType.Pay:
+            case factory.assetTransactionType.Pay:
                 tasks = await PayTransactionService.exportTasksById({
                     id: transaction.id,
                     runsTasksAfterInSeconds: params.runsTasksAfterInSeconds
                 })(repos);
                 break;
 
-            case factory.transactionType.Refund:
+            case factory.assetTransactionType.Refund:
                 tasks = await RefundTransactionService.exportTasksById({
                     id: transaction.id,
                     runsTasksAfterInSeconds: params.runsTasksAfterInSeconds
                 })(repos);
                 break;
 
-            case factory.transactionType.RegisterService:
+            case factory.assetTransactionType.RegisterService:
                 tasks = await RegisterServiceTransactionService.exportTasksById({
                     id: transaction.id
                     // runsTasksAfterInSeconds: params.runsTasksAfterInSeconds
                 })(repos);
                 break;
 
-            case factory.transactionType.Reserve:
+            case factory.assetTransactionType.Reserve:
                 tasks = await ReserveTransactionService.exportTasksById({
                     id: transaction.id
                     // runsTasksAfterInSeconds: params.runsTasksAfterInSeconds

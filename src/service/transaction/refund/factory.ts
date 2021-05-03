@@ -4,11 +4,11 @@
 import * as factory from '../../../factory';
 import { settings } from '../../../settings';
 
-export function createStartParams(params: factory.transaction.refund.IStartParamsWithoutDetail & {
+export function createStartParams(params: factory.assetTransaction.refund.IStartParamsWithoutDetail & {
     transactionNumber: string;
     paymentServiceType: factory.service.paymentService.PaymentServiceType;
     payAction: factory.action.trade.pay.IAction;
-}): factory.transaction.IStartParams<factory.transactionType.Refund> {
+}): factory.assetTransaction.IStartParams<factory.assetTransactionType.Refund> {
     const paymentMethodType = params.object.paymentMethod?.typeOf;
     if (typeof paymentMethodType !== 'string') {
         throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
@@ -27,7 +27,7 @@ export function createStartParams(params: factory.transaction.refund.IStartParam
     return {
         project: { typeOf: factory.organizationType.Project, id: params.project.id },
         transactionNumber: params.transactionNumber,
-        typeOf: factory.transactionType.Refund,
+        typeOf: factory.assetTransactionType.Refund,
         agent: params.agent,
         recipient: params.recipient,
         object: {

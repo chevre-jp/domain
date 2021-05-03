@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - cinerinoのMongoDBインデックスを移行
 - 資産取引コレクションをrename
 - cinerinoのアクション検索条件を継承
+- 資産取引のネームスペースを変更
 
 ### Deprecated
 

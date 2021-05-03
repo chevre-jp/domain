@@ -3,7 +3,7 @@ import * as moment from 'moment';
 import * as factory from '../../../factory';
 
 function createMoneyTransferActions(__: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.RegisterService>;
 }): factory.action.transfer.moneyTransfer.IAttributes[] {
     return [];
     // const transaction = params.transaction;
@@ -22,7 +22,7 @@ function createMoneyTransferActions(__: {
     //             },
     //             object: {
     //                 pendingTransaction: {
-    //                     typeOf: pecorinoapi.factory.transactionType.Deposit,
+    //                     typeOf: pecorinoapi.factory.assetTransactionType.Deposit,
     //                     transactionNumber: transaction.transactionNumber
     //                 }
     //             },
@@ -39,7 +39,7 @@ function createMoneyTransferActions(__: {
 }
 
 function createRegisterServiceActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.RegisterService>;
     endDate?: Date;
 }): factory.action.interact.register.service.IAttributes[] {
     const validFrom = (params.endDate instanceof Date) ? params.endDate : new Date();
@@ -121,9 +121,9 @@ function createRegisterServiceActions(params: {
  * 取引のポストアクションを作成する
  */
 export async function createPotentialActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.RegisterService>;
     endDate?: Date;
-}): Promise<factory.transaction.IPotentialActions<factory.transactionType.RegisterService>> {
+}): Promise<factory.assetTransaction.IPotentialActions<factory.assetTransactionType.RegisterService>> {
     // 通貨転送アクション属性作成
     const moneyTransferActionAttributesList = createMoneyTransferActions(params);
 

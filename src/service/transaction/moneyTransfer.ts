@@ -54,8 +54,8 @@ export type ICancelOperation<T> = (repos: {
  */
 // tslint:disable-next-line:max-func-body-length
 export function start(
-    params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail
-): IStartOperation<factory.transaction.moneyTransfer.ITransaction> {
+    params: factory.assetTransaction.moneyTransfer.IStartParamsWithoutDetail
+): IStartOperation<factory.assetTransaction.moneyTransfer.ITransaction> {
     return async (repos: {
         product: ProductRepo;
         project: ProjectRepo;
@@ -104,10 +104,10 @@ export function start(
         }
 
         // 取引開始
-        const startParams: factory.transaction.IStartParams<factory.transactionType.MoneyTransfer> = {
+        const startParams: factory.assetTransaction.IStartParams<factory.assetTransactionType.MoneyTransfer> = {
             project: params.project,
             transactionNumber: transactionNumber,
-            typeOf: factory.transactionType.MoneyTransfer,
+            typeOf: factory.assetTransactionType.MoneyTransfer,
             agent: params.agent,
             recipient: params.recipient,
             object: {
@@ -126,9 +126,9 @@ export function start(
         };
 
         // 取引開始
-        let transaction: factory.transaction.moneyTransfer.ITransaction;
+        let transaction: factory.assetTransaction.moneyTransfer.ITransaction;
         try {
-            transaction = await repos.transaction.start<factory.transactionType.MoneyTransfer>(startParams);
+            transaction = await repos.transaction.start<factory.assetTransactionType.MoneyTransfer>(startParams);
 
             const pendingTransaction = await authorizeAccount({ transaction })(repos);
 
@@ -159,7 +159,7 @@ export function start(
 }
 
 function authorizeAccount(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.MoneyTransfer>;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.MoneyTransfer>;
 }) {
     return async (repos: {
         project: ProjectRepo;
@@ -198,7 +198,7 @@ function authorizeAccount(params: {
     };
 }
 
-function fixServiceOutput(params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail) {
+function fixServiceOutput(params: factory.assetTransaction.moneyTransfer.IStartParamsWithoutDetail) {
     let serviceOutputType: string;
 
     const transactionType = params.object.pendingTransaction?.typeOf;
@@ -228,12 +228,12 @@ function fixServiceOutput(params: factory.transaction.moneyTransfer.IStartParams
 
 // tslint:disable-next-line:max-func-body-length
 function fixFromLocation(
-    params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail,
+    params: factory.assetTransaction.moneyTransfer.IStartParamsWithoutDetail,
     product: factory.product.IProduct
 ) {
     return async (__: {
         serviceOutput: ServiceOutputRepo;
-    }): Promise<factory.transaction.moneyTransfer.IFromLocation> => {
+    }): Promise<factory.assetTransaction.moneyTransfer.IFromLocation> => {
         const amount = params.object.amount;
         if (typeof amount?.value !== 'number') {
             throw new factory.errors.ArgumentNull('amount.value');
@@ -327,14 +327,14 @@ function fixFromLocation(
 
 // tslint:disable-next-line:max-func-body-length
 function fixToLocation(
-    params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail,
+    params: factory.assetTransaction.moneyTransfer.IStartParamsWithoutDetail,
     product: factory.product.IProduct
 ) {
     return async (__: {
         product: ProductRepo;
         serviceOutput: ServiceOutputRepo;
-    }): Promise<factory.transaction.moneyTransfer.IToLocation> => {
-        let toLocation: factory.transaction.moneyTransfer.IToLocation = params.object.toLocation;
+    }): Promise<factory.assetTransaction.moneyTransfer.IToLocation> => {
+        let toLocation: factory.assetTransaction.moneyTransfer.IToLocation = params.object.toLocation;
 
         const amount = params.object.amount;
         if (typeof amount?.value !== 'number') {
@@ -436,17 +436,17 @@ export function confirm(params: {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        let transaction: factory.transaction.ITransaction<factory.transactionType.MoneyTransfer>;
+        let transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.MoneyTransfer>;
 
         // 取引存在確認
         if (typeof params.id === 'string') {
             transaction = await repos.transaction.findById({
-                typeOf: factory.transactionType.MoneyTransfer,
+                typeOf: factory.assetTransactionType.MoneyTransfer,
                 id: params.id
             });
         } else if (typeof params.transactionNumber === 'string') {
             transaction = await repos.transaction.findByTransactionNumber({
-                typeOf: factory.transactionType.MoneyTransfer,
+                typeOf: factory.assetTransactionType.MoneyTransfer,
                 transactionNumber: params.transactionNumber
             });
         } else {
@@ -458,7 +458,7 @@ export function confirm(params: {
         });
 
         await repos.transaction.confirm({
-            typeOf: factory.transactionType.MoneyTransfer,
+            typeOf: factory.assetTransactionType.MoneyTransfer,
             id: transaction.id,
             result: {},
             potentialActions: potentialActions
@@ -477,7 +477,7 @@ export function cancel(params: {
         transaction: TransactionRepo;
     }) => {
         await repos.transaction.cancel({
-            typeOf: factory.transactionType.MoneyTransfer,
+            typeOf: factory.assetTransactionType.MoneyTransfer,
             id: params.id,
             transactionNumber: params.transactionNumber
         });
@@ -499,7 +499,7 @@ export function exportTasksById(params: {
         transaction: TransactionRepo;
     }) => {
         const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.MoneyTransfer,
+            typeOf: factory.assetTransactionType.MoneyTransfer,
             id: params.id
         });
         const potentialActions = transaction.potentialActions;

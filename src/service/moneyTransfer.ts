@@ -46,7 +46,7 @@ export function authorize(params: {
     agent: factory.action.transfer.moneyTransfer.IAgent;
     object: IObject;
     recipient: factory.action.transfer.moneyTransfer.IRecipient;
-    purpose: { typeOf: factory.transactionType; id: string };
+    purpose: { typeOf: factory.assetTransactionType; id: string };
 }): IAuthorizeOperation<factory.action.transfer.moneyTransfer.IPendingTransaction> {
     return async (repos: {
         project: ProjectRepo;
@@ -91,7 +91,7 @@ async function processAccountTransaction(params: {
     object: IObject;
     agent: factory.action.transfer.moneyTransfer.IAgent;
     recipient: factory.action.transfer.moneyTransfer.IRecipient;
-    transaction: factory.transaction.ITransaction<factory.transactionType>;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType>;
 }): Promise<factory.action.transfer.moneyTransfer.IPendingTransaction> {
     let pendingTransaction: factory.action.transfer.moneyTransfer.IPendingTransaction;
 
@@ -235,15 +235,15 @@ async function processAccountTransaction(params: {
  */
 export function cancelMoneyTransfer(params: {
     purpose: {
-        typeOf: factory.transactionType;
+        typeOf: factory.assetTransactionType;
         id: string;
     };
 }) {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        const transaction = await repos.transaction.findById<factory.transactionType.MoneyTransfer>({
-            typeOf: factory.transactionType.MoneyTransfer,
+        const transaction = await repos.transaction.findById<factory.assetTransactionType.MoneyTransfer>({
+            typeOf: factory.assetTransactionType.MoneyTransfer,
             id: params.purpose.id
         });
 

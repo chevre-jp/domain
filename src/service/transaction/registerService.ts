@@ -55,8 +55,8 @@ export type IExportTasksOperation<T> = (repos: {
  * 取引開始
  */
 export function start(
-    params: factory.transaction.registerService.IStartParamsWithoutDetail
-): IStartOperation<factory.transaction.ITransaction<factory.transactionType.RegisterService>> {
+    params: factory.assetTransaction.registerService.IStartParamsWithoutDetail
+): IStartOperation<factory.assetTransaction.ITransaction<factory.assetTransactionType.RegisterService>> {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         offer: OfferRepo;
@@ -73,7 +73,7 @@ export function start(
             auth: pecorinoAuthClient
         });
 
-        // const informProgramMembershipParams: factory.transaction.registerProgramMembership.IInformProgramMembershipParams[] = [];
+        // const informProgramMembershipParams: factory.assetTransaction.registerProgramMembership.IInformProgramMembershipParams[] = [];
 
         // if (project.settings !== undefined
         //     && project.settings !== null
@@ -120,7 +120,7 @@ export function start(
 
         // サービスアウトプット作成
         const dateIssued = new Date();
-        const transactionObject: factory.transaction.registerService.IObject = acceptedOffers.map((acceptedOffer) => {
+        const transactionObject: factory.assetTransaction.registerService.IObject = acceptedOffers.map((acceptedOffer) => {
             const offer = offers.find((o) => o.id === acceptedOffer.id);
             if (offer === undefined) {
                 throw new factory.errors.NotFound('Offer', `Offer ${acceptedOffer.id} not found`);
@@ -153,9 +153,9 @@ export function start(
         });
 
         // 取引開始
-        const startParams: factory.transaction.IStartParams<factory.transactionType.RegisterService> = {
+        const startParams: factory.assetTransaction.IStartParams<factory.assetTransactionType.RegisterService> = {
             project: { typeOf: project.typeOf, id: project.id },
-            typeOf: factory.transactionType.RegisterService,
+            typeOf: factory.assetTransactionType.RegisterService,
             agent: params.agent,
             object: transactionObject,
             expires: params.expires,
@@ -163,9 +163,9 @@ export function start(
         };
 
         // 取引作成
-        let transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+        let transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.RegisterService>;
         try {
-            transaction = await repos.transaction.start<factory.transactionType.RegisterService>(startParams);
+            transaction = await repos.transaction.start<factory.assetTransactionType.RegisterService>(startParams);
         } catch (error) {
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore next */
@@ -228,21 +228,21 @@ export function start(
 /**
  * 取引確定
  */
-export function confirm(params: factory.transaction.registerService.IConfirmParams): IConfirmOperation<void> {
+export function confirm(params: factory.assetTransaction.registerService.IConfirmParams): IConfirmOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        let transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+        let transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.RegisterService>;
 
         // 取引存在確認
         if (typeof params.id === 'string') {
             transaction = await repos.transaction.findById({
-                typeOf: factory.transactionType.RegisterService,
+                typeOf: factory.assetTransactionType.RegisterService,
                 id: params.id
             });
         } else if (typeof params.transactionNumber === 'string') {
             transaction = await repos.transaction.findByTransactionNumber({
-                typeOf: factory.transactionType.RegisterService,
+                typeOf: factory.assetTransactionType.RegisterService,
                 transactionNumber: params.transactionNumber
             });
         } else {
@@ -255,9 +255,9 @@ export function confirm(params: factory.transaction.registerService.IConfirmPara
         });
 
         // 取引確定
-        const result: factory.transaction.registerService.IResult = {};
+        const result: factory.assetTransaction.registerService.IResult = {};
         await repos.transaction.confirm({
-            typeOf: factory.transactionType.RegisterService,
+            typeOf: factory.assetTransactionType.RegisterService,
             id: transaction.id,
             result: result,
             potentialActions: potentialActions
@@ -276,7 +276,7 @@ export function cancel(params: {
         transaction: TransactionRepo;
     }) => {
         await repos.transaction.cancel({
-            typeOf: factory.transactionType.RegisterService,
+            typeOf: factory.assetTransactionType.RegisterService,
             id: params.id,
             transactionNumber: params.transactionNumber
         });
@@ -293,7 +293,7 @@ export function exportTasksById(params: { id: string }): IExportTasksOperation<f
         transaction: TransactionRepo;
     }) => {
         const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.RegisterService,
+            typeOf: factory.assetTransactionType.RegisterService,
             id: params.id
         });
         const potentialActions = transaction.potentialActions;

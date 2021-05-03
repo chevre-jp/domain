@@ -334,8 +334,8 @@ export interface IAuthorizeResult {
 }
 
 export function authorize(
-    params: factory.transaction.pay.IStartParamsWithoutDetail,
-    transaction: factory.transaction.pay.ITransaction
+    params: factory.assetTransaction.pay.IStartParamsWithoutDetail,
+    transaction: factory.assetTransaction.pay.ITransaction
 ) {
     return async (repos: {
         action: ActionRepo;

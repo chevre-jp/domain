@@ -22,7 +22,7 @@ describe('start()', () => {
     });
 
     it('repositoryの状態が正常であれば、開始できるはず', async () => {
-        const transaction = { typeOf: domain.factory.transactionType.Reserve, id: 'id' };
+        const transaction = { typeOf: domain.factory.assetTransactionType.Reserve, id: 'id' };
         const repository = new domain.repository.AssetTransaction(mongoose.connection);
         sandbox.mock(repository.transactionModel)
             .expects('create')
@@ -53,7 +53,7 @@ describe('confirm()', () => {
             .resolves(doc);
 
         const result = await repository.confirm({
-            typeOf: domain.factory.transactionType.Reserve,
+            typeOf: domain.factory.assetTransactionType.Reserve,
             id: transactionId,
             result: <any>transactionResult,
             potentialActions: <any>potentialActions
@@ -130,7 +130,7 @@ describe('startExportTasks()', () => {
 
     it('タスク未出力の取引が存在すればオブジェクトが返却されるはず', async () => {
         const transaction = {
-            typeOf: domain.factory.transactionType.Reserve,
+            typeOf: domain.factory.assetTransactionType.Reserve,
             id: 'transactionId',
             status: domain.factory.transactionStatusType.Confirmed
         };
@@ -148,7 +148,7 @@ describe('startExportTasks()', () => {
 
     it('タスク未出力の取引が存在しなければnullを返却するはず', async () => {
         const transaction = {
-            typeOf: domain.factory.transactionType.Reserve,
+            typeOf: domain.factory.assetTransactionType.Reserve,
             id: 'transactionId',
             status: domain.factory.transactionStatusType.Confirmed
         };
@@ -180,7 +180,7 @@ describe('IDで取引を取得する', () => {
             .chain('exec')
             .resolves(new transactionRepo.transactionModel());
 
-        const result = await transactionRepo.findById({ typeOf: domain.factory.transactionType.Reserve, id: 'transactionId' });
+        const result = await transactionRepo.findById({ typeOf: domain.factory.assetTransactionType.Reserve, id: 'transactionId' });
         assert.equal(typeof result, 'object');
         sandbox.verify();
     });
@@ -194,7 +194,7 @@ describe('IDで取引を取得する', () => {
             // tslint:disable-next-line:no-null-keyword
             .resolves(null);
 
-        const result = await transactionRepo.findById({ typeOf: domain.factory.transactionType.Reserve, id: 'transactionId' })
+        const result = await transactionRepo.findById({ typeOf: domain.factory.assetTransactionType.Reserve, id: 'transactionId' })
             .catch((err) => err);
         assert(result instanceof domain.factory.errors.NotFound);
         sandbox.verify();
@@ -214,7 +214,7 @@ describe('取引を中止する', () => {
             .chain('exec')
             .resolves(new transactionRepo.transactionModel());
 
-        const result = await transactionRepo.cancel({ typeOf: domain.factory.transactionType.Reserve, id: 'transactionId' });
+        const result = await transactionRepo.cancel({ typeOf: domain.factory.assetTransactionType.Reserve, id: 'transactionId' });
         assert.equal(typeof result, 'object');
         sandbox.verify();
     });
@@ -234,7 +234,7 @@ describe('取引を検索する', () => {
             .resolves([new transactionRepo.transactionModel()]);
 
         const result = await transactionRepo.search({
-            typeOf: domain.factory.transactionType.Reserve,
+            typeOf: domain.factory.assetTransactionType.Reserve,
             startFrom: new Date(),
             startThrough: new Date()
         });

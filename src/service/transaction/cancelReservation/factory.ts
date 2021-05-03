@@ -6,12 +6,12 @@ import { settings } from '../../../settings';
  */
 export function createStartParams(
     params: {
-        paramsWithoutDetail: factory.transaction.cancelReservation.IStartParamsWithoutDetail;
+        paramsWithoutDetail: factory.assetTransaction.cancelReservation.IStartParamsWithoutDetail;
         project: factory.project.IProject;
-        transaction?: factory.transaction.ITransaction<factory.transactionType.Reserve>;
+        transaction?: factory.assetTransaction.ITransaction<factory.assetTransactionType.Reserve>;
         reservations?: factory.reservation.IReservation<factory.reservationType.EventReservation>[];
     }
-): factory.transaction.IStartParams<factory.transactionType.CancelReservation> {
+): factory.assetTransaction.IStartParams<factory.assetTransactionType.CancelReservation> {
 
     const informReservationParams: factory.project.IInformParams[] = [];
 
@@ -30,7 +30,7 @@ export function createStartParams(
         informReservationParams.push(...informReservationParamsFromStartParams);
     }
 
-    const cancelReservationObject: factory.transaction.cancelReservation.IObject = {
+    const cancelReservationObject: factory.assetTransaction.cancelReservation.IObject = {
         clientUser: params.paramsWithoutDetail.object.clientUser,
         transaction: params.transaction,
         reservations: params.reservations,
@@ -41,7 +41,7 @@ export function createStartParams(
 
     return {
         project: params.project,
-        typeOf: factory.transactionType.CancelReservation,
+        typeOf: factory.assetTransactionType.CancelReservation,
         agent: params.paramsWithoutDetail.agent,
         object: cancelReservationObject,
         expires: params.paramsWithoutDetail.expires
@@ -49,9 +49,9 @@ export function createStartParams(
 }
 
 export function createPotentialActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.CancelReservation>;
-    confirmParams: factory.transaction.cancelReservation.IConfirmParams;
-}): factory.transaction.cancelReservation.IPotentialActions {
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.CancelReservation>;
+    confirmParams: factory.assetTransaction.cancelReservation.IConfirmParams;
+}): factory.assetTransaction.cancelReservation.IPotentialActions {
     const transaction = params.transaction;
     const confirmParams = params.confirmParams;
 

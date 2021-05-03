@@ -38,8 +38,8 @@ export type IExportTasksOperation<T> = (repos: {
  * 取引開始
  */
 export function start(
-    params: factory.transaction.refund.IStartParamsWithoutDetail
-): IStartOperation<factory.transaction.refund.ITransaction> {
+    params: factory.assetTransaction.refund.IStartParamsWithoutDetail
+): IStartOperation<factory.assetTransaction.refund.ITransaction> {
     return async (repos: {
         action: ActionRepo;
         project: ProjectRepo;
@@ -55,14 +55,14 @@ export function start(
         // paymentServiceTypeの指定がなければ、決済取引を検索
         // if (typeof paymentServiceType !== 'string' || paymentServiceType.length === 0) {
         //     const payTransaction = await repos.transaction.findByTransactionNumber({
-        //         typeOf: factory.transactionType.Pay,
+        //         typeOf: factory.assetTransactionType.Pay,
         //         transactionNumber: paymentMethodId
         //     });
         //     paymentServiceType = payTransaction.object.typeOf;
         // }
         // 必ず、決済取引からpaymentServiceTypeを取得する
         const payTransaction = await repos.transaction.findByTransactionNumber({
-            typeOf: factory.transactionType.Pay,
+            typeOf: factory.assetTransactionType.Pay,
             transactionNumber: paymentMethodId
         });
         paymentServiceType = payTransaction.object.typeOf;
@@ -79,8 +79,8 @@ export function start(
         }
 
         // 取引開始
-        let transaction: factory.transaction.refund.ITransaction;
-        const startParams: factory.transaction.IStartParams<factory.transactionType.Refund> = createStartParams({
+        let transaction: factory.assetTransaction.refund.ITransaction;
+        const startParams: factory.assetTransaction.IStartParams<factory.assetTransactionType.Refund> = createStartParams({
             ...params,
             transactionNumber,
             paymentServiceType,
@@ -88,7 +88,7 @@ export function start(
         });
 
         try {
-            transaction = await repos.transaction.start<factory.transactionType.Refund>(startParams);
+            transaction = await repos.transaction.start<factory.assetTransactionType.Refund>(startParams);
 
             switch (paymentServiceType) {
                 case factory.service.paymentService.PaymentServiceType.FaceToFace:
@@ -123,21 +123,21 @@ export function start(
 /**
  * 取引確定
  */
-export function confirm(params: factory.transaction.refund.IConfirmParams): IConfirmOperation<void> {
+export function confirm(params: factory.assetTransaction.refund.IConfirmParams): IConfirmOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        let transaction: factory.transaction.ITransaction<factory.transactionType.Refund>;
+        let transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Refund>;
 
         // 取引存在確認
         if (typeof params.id === 'string') {
             transaction = await repos.transaction.findById({
-                typeOf: factory.transactionType.Refund,
+                typeOf: factory.assetTransactionType.Refund,
                 id: params.id
             });
         } else if (typeof params.transactionNumber === 'string') {
             transaction = await repos.transaction.findByTransactionNumber({
-                typeOf: factory.transactionType.Refund,
+                typeOf: factory.assetTransactionType.Refund,
                 transactionNumber: params.transactionNumber
             });
         } else {
@@ -150,7 +150,7 @@ export function confirm(params: factory.transaction.refund.IConfirmParams): ICon
         });
 
         await repos.transaction.confirm({
-            typeOf: factory.transactionType.Refund,
+            typeOf: factory.assetTransactionType.Refund,
             id: transaction.id,
             result: {},
             potentialActions: potentialActions
@@ -169,7 +169,7 @@ export function cancel(params: {
         transaction: TransactionRepo;
     }) => {
         await repos.transaction.cancel({
-            typeOf: factory.transactionType.Refund,
+            typeOf: factory.assetTransactionType.Refund,
             id: params.id,
             transactionNumber: params.transactionNumber
         });
@@ -191,7 +191,7 @@ export function exportTasksById(params: {
         transaction: TransactionRepo;
     }) => {
         const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.Refund,
+            typeOf: factory.assetTransactionType.Refund,
             id: params.id
         });
         const potentialActions = transaction.potentialActions;

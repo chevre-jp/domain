@@ -200,9 +200,9 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
             try {
                 // 予約取引を検索
                 const reserveTransactions = await
-                    repos.transaction.search<factory.transactionType.Reserve>({
+                    repos.transaction.search<factory.assetTransactionType.Reserve>({
                         limit: 1,
-                        typeOf: factory.transactionType.Reserve,
+                        typeOf: factory.assetTransactionType.Reserve,
                         object: { reservations: { id: { $in: [reservation.id] } } }
                     });
                 const reserveTransaction = reserveTransactions.shift();
