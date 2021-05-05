@@ -19,7 +19,7 @@ export class MongoRepository {
     public static CREATE_MONGO_CONDITIONS(params: factory.action.ISearchConditions) {
         const andConditions: any[] = [];
 
-        const projectIdIn = (<any>params).project?.ids;
+        const projectIdIn = params.project?.ids;
         if (Array.isArray(projectIdIn)) {
             andConditions.push({
                 'project.id': {
@@ -43,7 +43,7 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        const agentTypeOfIn = (<any>params).agent?.typeOf?.$in;
+        const agentTypeOfIn = params.agent?.typeOf?.$in;
         if (Array.isArray(agentTypeOfIn)) {
             andConditions.push({
                 'agent.typeOf': {
@@ -53,7 +53,7 @@ export class MongoRepository {
             });
         }
 
-        const agentIdIn = (<any>params).agent?.id?.$in;
+        const agentIdIn = params.agent?.id?.$in;
         if (Array.isArray(agentIdIn)) {
             andConditions.push({
                 'agent.id': {
@@ -89,7 +89,7 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        const objectPaymentMethodIdEq = (<any>params).object?.paymentMethodId?.$eq;
+        const objectPaymentMethodIdEq = params.object?.paymentMethodId?.$eq;
         if (typeof objectPaymentMethodIdEq === 'string') {
             andConditions.push({
                 'object.paymentMethodId': {
@@ -169,7 +169,7 @@ export class MongoRepository {
             });
         }
 
-        const objectTypeOfIn = (<any>params).object?.typeOf?.$in;
+        const objectTypeOfIn = params.object?.typeOf?.$in;
         if (Array.isArray(objectTypeOfIn)) {
             andConditions.push({
                 'object.typeOf': {
@@ -191,7 +191,7 @@ export class MongoRepository {
             });
         }
 
-        const objectIdIn = (<any>params).object?.id?.$in;
+        const objectIdIn = params.object?.id?.$in;
         if (Array.isArray(objectIdIn)) {
             andConditions.push({
                 'object.id': {
@@ -201,7 +201,7 @@ export class MongoRepository {
             });
         }
 
-        const objectOrderNumberIn = (<any>params).object?.orderNumber?.$in;
+        const objectOrderNumberIn = params.object?.orderNumber?.$in;
         if (Array.isArray(objectOrderNumberIn)) {
             andConditions.push({
                 'object.orderNumber': {
@@ -211,7 +211,7 @@ export class MongoRepository {
             });
         }
 
-        const objectEventIdIn = (<any>params).object?.event?.id?.$in;
+        const objectEventIdIn = params.object?.event?.id?.$in;
         if (Array.isArray(objectEventIdIn)) {
             andConditions.push({
                 'object.event.id': {
@@ -221,7 +221,7 @@ export class MongoRepository {
             });
         }
 
-        const objectAcceptedOfferSeatNumberIn = (<any>params).object?.acceptedOffer?.ticketedSeat?.seatNumber?.$in;
+        const objectAcceptedOfferSeatNumberIn = params.object?.acceptedOffer?.ticketedSeat?.seatNumber?.$in;
         if (Array.isArray(objectAcceptedOfferSeatNumberIn)) {
             andConditions.push({
                 'object.acceptedOffer.ticketedSeat.seatNumber': {
@@ -231,21 +231,21 @@ export class MongoRepository {
             });
         }
 
-        const typeOfEq = params.typeOf?.$eq;
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (typeof typeOfEq === 'string') {
-            andConditions.push({
-                typeOf: { $eq: typeOfEq }
-            });
-        }
-
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (typeof params.typeOf === 'string') {
             andConditions.push({
                 typeOf: params.typeOf
             });
+        } else {
+            const typeOfEq = params.typeOf?.$eq;
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (typeof typeOfEq === 'string') {
+                andConditions.push({
+                    typeOf: { $eq: typeOfEq }
+                });
+            }
         }
 
         const actionStatusIn = params.actionStatus?.$in;
@@ -259,15 +259,15 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (Array.isArray((<any>params).actionStatusTypes)) {
+        if (Array.isArray(params.actionStatusTypes)) {
             andConditions.push({
-                actionStatus: { $in: (<any>params).actionStatusTypes }
+                actionStatus: { $in: params.actionStatusTypes }
             });
         }
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        const startDateGte = (<any>params).startFrom;
+        const startDateGte = params.startFrom;
         if (startDateGte instanceof Date) {
             andConditions.push({
                 startDate: { $gte: startDateGte }
@@ -276,14 +276,14 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        const startDateLte = (<any>params).startThrough;
+        const startDateLte = params.startThrough;
         if (startDateLte instanceof Date) {
             andConditions.push({
                 startDate: { $lte: startDateLte }
             });
         }
 
-        const fromLocationTypeOfIn = (<any>params).fromLocation?.typeOf?.$in;
+        const fromLocationTypeOfIn = params.fromLocation?.typeOf?.$in;
         if (Array.isArray(fromLocationTypeOfIn)) {
             andConditions.push({
                 'fromLocation.typeOf': {
@@ -292,7 +292,7 @@ export class MongoRepository {
                 }
             });
         }
-        const fromLocationAccountNumberIn = (<any>params).fromLocation?.accountNumber?.$in;
+        const fromLocationAccountNumberIn = params.fromLocation?.accountNumber?.$in;
         if (Array.isArray(fromLocationAccountNumberIn)) {
             andConditions.push({
                 'fromLocation.accountNumber': {
@@ -301,7 +301,7 @@ export class MongoRepository {
                 }
             });
         }
-        const fromLocationAccountTypeIn = (<any>params).fromLocation?.accountType?.$in;
+        const fromLocationAccountTypeIn = params.fromLocation?.accountType?.$in;
         if (Array.isArray(fromLocationAccountTypeIn)) {
             andConditions.push({
                 'fromLocation.accountType': {
@@ -310,7 +310,7 @@ export class MongoRepository {
                 }
             });
         }
-        const toLocationTypeOfIn = (<any>params).toLocation?.typeOf?.$in;
+        const toLocationTypeOfIn = params.toLocation?.typeOf?.$in;
         if (Array.isArray(toLocationTypeOfIn)) {
             andConditions.push({
                 'toLocation.typeOf': {
@@ -319,7 +319,7 @@ export class MongoRepository {
                 }
             });
         }
-        const toLocationAccountNumberIn = (<any>params).toLocation?.accountNumber?.$in;
+        const toLocationAccountNumberIn = params.toLocation?.accountNumber?.$in;
         if (Array.isArray(toLocationAccountNumberIn)) {
             andConditions.push({
                 'toLocation.accountNumber': {
@@ -328,7 +328,7 @@ export class MongoRepository {
                 }
             });
         }
-        const toLocationAccountTypeIn = (<any>params).toLocation?.accountType?.$in;
+        const toLocationAccountTypeIn = params.toLocation?.accountType?.$in;
         if (Array.isArray(toLocationAccountTypeIn)) {
             andConditions.push({
                 'toLocation.accountType': {
@@ -338,7 +338,7 @@ export class MongoRepository {
             });
         }
 
-        const purposeTypeOfIn = (<any>params).purpose?.typeOf?.$in;
+        const purposeTypeOfIn = params.purpose?.typeOf?.$in;
         if (Array.isArray(purposeTypeOfIn)) {
             andConditions.push({
                 'purpose.typeOf': {
@@ -347,7 +347,7 @@ export class MongoRepository {
                 }
             });
         }
-        const purposeIdIn = (<any>params).purpose?.id?.$in;
+        const purposeIdIn = params.purpose?.id?.$in;
         if (Array.isArray(purposeIdIn)) {
             andConditions.push({
                 'purpose.id': {
@@ -356,7 +356,7 @@ export class MongoRepository {
                 }
             });
         }
-        const purposeOrderNumberIn = (<any>params).purpose?.orderNumber?.$in;
+        const purposeOrderNumberIn = params.purpose?.orderNumber?.$in;
         if (Array.isArray(purposeOrderNumberIn)) {
             andConditions.push({
                 'purpose.orderNumber': {
@@ -365,7 +365,7 @@ export class MongoRepository {
                 }
             });
         }
-        const resultTypeOfIn = (<any>params).result?.typeOf?.$in;
+        const resultTypeOfIn = params.result?.typeOf?.$in;
         if (Array.isArray(resultTypeOfIn)) {
             andConditions.push({
                 'result.typeOf': {
@@ -374,7 +374,7 @@ export class MongoRepository {
                 }
             });
         }
-        const resultIdIn = (<any>params).result?.id?.$in;
+        const resultIdIn = params.result?.id?.$in;
         if (Array.isArray(resultIdIn)) {
             andConditions.push({
                 'result.id': {
@@ -383,7 +383,7 @@ export class MongoRepository {
                 }
             });
         }
-        const resultOrderNumberIn = (<any>params).result?.orderNumber?.$in;
+        const resultOrderNumberIn = params.result?.orderNumber?.$in;
         if (Array.isArray(resultOrderNumberIn)) {
             andConditions.push({
                 'result.orderNumber': {
