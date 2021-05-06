@@ -518,11 +518,11 @@ function onReservationCreated(
                         data: {
                             project: transaction.project,
                             typeOf: factory.actionType.InformAction,
-                            agent: (reservation.reservedTicket !== undefined
-                                && reservation.reservedTicket.issuedBy !== undefined)
-                                ? reservation.reservedTicket.issuedBy
+                            agent: (typeof reservation.reservedTicket?.issuedBy?.typeOf === 'string')
+                                ? <factory.seller.ISeller>reservation.reservedTicket.issuedBy
                                 : transaction.project,
-                            recipient: {
+                            // tslint:disable-next-line:no-object-literal-type-assertion
+                            recipient: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>{
                                 typeOf: transaction.agent.typeOf,
                                 name: transaction.agent.name,
                                 ...a.recipient
@@ -653,10 +653,11 @@ export function cancel(params: {
                                 return {
                                     project: transaction.project,
                                     typeOf: factory.actionType.InformAction,
-                                    agent: (reservation.reservedTicket.issuedBy !== undefined)
-                                        ? reservation.reservedTicket.issuedBy
+                                    agent: (typeof reservation.reservedTicket.issuedBy?.typeOf === 'string')
+                                        ? <factory.seller.ISeller>reservation.reservedTicket.issuedBy
                                         : transaction.project,
-                                    recipient: {
+                                    // tslint:disable-next-line:max-line-length no-object-literal-type-assertion
+                                    recipient: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>{
                                         typeOf: transaction.agent.typeOf,
                                         name: transaction.agent.name,
                                         ...a.recipient
@@ -678,7 +679,8 @@ export function cancel(params: {
                             typeOf: transaction.typeOf,
                             id: transaction.id
                         },
-                        agent: transaction.agent,
+                        // tslint:disable-next-line:max-line-length
+                        agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>transaction.agent,
                         object: reservation,
                         potentialActions: {
                             informReservation: informReservationActions
@@ -752,10 +754,11 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                                     return {
                                         project: transaction.project,
                                         typeOf: factory.actionType.InformAction,
-                                        agent: (reservation.reservedTicket.issuedBy !== undefined)
-                                            ? reservation.reservedTicket.issuedBy
+                                        agent: (typeof reservation.reservedTicket.issuedBy?.typeOf === 'string')
+                                            ? <factory.seller.ISeller>reservation.reservedTicket.issuedBy
                                             : transaction.project,
-                                        recipient: {
+                                        // tslint:disable-next-line:max-line-length no-object-literal-type-assertion
+                                        recipient: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>{
                                             typeOf: transaction.agent.typeOf,
                                             name: transaction.agent.name,
                                             ...a.recipient
@@ -777,7 +780,8 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                                 typeOf: transaction.typeOf,
                                 id: transaction.id
                             },
-                            agent: transaction.agent,
+                            // tslint:disable-next-line:max-line-length
+                            agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>transaction.agent,
                             object: reservation,
                             potentialActions: {
                                 informReservation: informReservationActions

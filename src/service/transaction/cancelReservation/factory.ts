@@ -76,10 +76,11 @@ export function createPotentialActions(params: {
                     return {
                         project: transaction.project,
                         typeOf: factory.actionType.InformAction,
-                        agent: (reservation.reservedTicket.issuedBy !== undefined)
-                            ? reservation.reservedTicket.issuedBy
+                        agent: (typeof reservation.reservedTicket.issuedBy?.typeOf === 'string')
+                            ? <factory.seller.ISeller>reservation.reservedTicket.issuedBy
                             : transaction.project,
-                        recipient: {
+                        // tslint:disable-next-line:no-object-literal-type-assertion
+                        recipient: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>{
                             typeOf: transaction.agent.typeOf,
                             name: transaction.agent.name,
                             ...a.recipient
@@ -102,10 +103,11 @@ export function createPotentialActions(params: {
                     return {
                         project: transaction.project,
                         typeOf: factory.actionType.InformAction,
-                        agent: (reservation.reservedTicket.issuedBy !== undefined)
-                            ? reservation.reservedTicket.issuedBy
+                        agent: (typeof reservation.reservedTicket.issuedBy?.typeOf === 'string')
+                            ? <factory.seller.ISeller>reservation.reservedTicket.issuedBy
                             : transaction.project,
-                        recipient: {
+                        // tslint:disable-next-line:no-object-literal-type-assertion
+                        recipient: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>{
                             typeOf: transaction.agent.typeOf,
                             name: transaction.agent.name,
                             ...a.recipient
@@ -130,7 +132,7 @@ export function createPotentialActions(params: {
                 // ReservationConfirmed->ReservationCancelledのみ処理されるように保証する
                 reservationStatus: factory.reservationStatusType.ReservationConfirmed
             },
-            agent: transaction.agent,
+            agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>transaction.agent,
             potentialActions: {
                 informReservation: informReservationActions
             },

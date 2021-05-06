@@ -415,10 +415,16 @@ export function createPotentialActions(params: factory.assetTransaction.reserve.
                     return {
                         project: transaction.project,
                         typeOf: factory.actionType.InformAction,
-                        agent: (reservation.reservedTicket.issuedBy !== undefined)
-                            ? reservation.reservedTicket.issuedBy
+                        agent: (typeof reservation.reservedTicket.issuedBy?.typeOf === 'string')
+                            ? {
+                                ...reservation.reservedTicket.issuedBy,
+                                project: transaction.project,
+                                id: (typeof reservation.reservedTicket.issuedBy.id === 'string') ? reservation.reservedTicket.issuedBy.id : '',
+                                typeOf: <factory.organizationType>reservation.reservedTicket.issuedBy.typeOf
+                            }
                             : transaction.project,
                         recipient: {
+                            project: transaction.project,
                             typeOf: transaction.agent.typeOf,
                             name: transaction.agent.name,
                             ...a.recipient
@@ -441,10 +447,16 @@ export function createPotentialActions(params: factory.assetTransaction.reserve.
                     return {
                         project: transaction.project,
                         typeOf: factory.actionType.InformAction,
-                        agent: (reservation.reservedTicket.issuedBy !== undefined)
-                            ? reservation.reservedTicket.issuedBy
+                        agent: (typeof reservation.reservedTicket.issuedBy?.typeOf === 'string')
+                            ? {
+                                ...reservation.reservedTicket.issuedBy,
+                                project: transaction.project,
+                                id: (typeof reservation.reservedTicket.issuedBy.id === 'string') ? reservation.reservedTicket.issuedBy.id : '',
+                                typeOf: <factory.organizationType>reservation.reservedTicket.issuedBy.typeOf
+                            }
                             : transaction.project,
                         recipient: {
+                            project: transaction.project,
                             typeOf: transaction.agent.typeOf,
                             name: transaction.agent.name,
                             ...a.recipient
@@ -464,7 +476,7 @@ export function createPotentialActions(params: factory.assetTransaction.reserve.
             typeOf: <factory.actionType.ReserveAction>factory.actionType.ReserveAction,
             result: {},
             object: reservation,
-            agent: transaction.agent,
+            agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>transaction.agent,
             potentialActions: {
                 informReservation: informReservationActions
             },

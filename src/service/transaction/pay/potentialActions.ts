@@ -140,7 +140,8 @@ function createInformPaymentActions(params: {
                     project: transaction.project,
                     typeOf: factory.actionType.InformAction,
                     agent: transaction.project,
-                    recipient: {
+                    // tslint:disable-next-line:no-object-literal-type-assertion
+                    recipient: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>{
                         typeOf: transaction.agent.typeOf,
                         name: transaction.agent.name,
                         ...a.recipient

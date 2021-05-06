@@ -73,7 +73,7 @@ function createRegisterServiceActions(params: {
                 moneyTransfer.push({
                     project: params.transaction.project,
                     typeOf: factory.actionType.MoneyTransfer,
-                    agent: fromLocation,
+                    agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>fromLocation,
                     object: {
                         typeOf: pecorinoapi.factory.transactionType.Deposit
                     },
@@ -105,7 +105,7 @@ function createRegisterServiceActions(params: {
                 validFrom: validFrom,
                 validUntil: validUntil
             },
-            agent: params.transaction.agent,
+            agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>params.transaction.agent,
             potentialActions: {
                 moneyTransfer: moneyTransfer
             },
