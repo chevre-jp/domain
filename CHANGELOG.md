@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - プロジェクトメンバーリポジトリを追加
 - IAMロールリポジトリを追加
 - 顧客リポジトリを追加
+- IAMサービスを追加
 
 ### Changed
 
