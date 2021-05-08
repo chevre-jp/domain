@@ -25,7 +25,7 @@ export function onPaid(
     }) => {
         const potentialActions = payAction.potentialActions;
         const now = new Date();
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         const informPayment = potentialActions?.informPayment;
         if (Array.isArray(informPayment)) {
@@ -67,7 +67,7 @@ export function onRefund(
     }) => {
         const potentialActions = refundAction.potentialActions;
         const now = new Date();
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         const informPayment = potentialActions?.informPayment;
 

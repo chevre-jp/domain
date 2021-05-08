@@ -286,7 +286,7 @@ export function cancel(params: {
 /**
  * 取引タスク出力
  */
-export function exportTasksById(params: { id: string }): IExportTasksOperation<factory.task.ITask[]> {
+export function exportTasksById(params: { id: string }): IExportTasksOperation<factory.task.ITask<factory.taskName>[]> {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         task: TaskRepo;
@@ -298,7 +298,7 @@ export function exportTasksById(params: { id: string }): IExportTasksOperation<f
         });
         const potentialActions = transaction.potentialActions;
 
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         const taskRunsAt = new Date();
 

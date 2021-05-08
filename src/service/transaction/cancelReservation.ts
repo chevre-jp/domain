@@ -205,7 +205,7 @@ export function startAndConfirm(
 /**
  * 取引タスク出力
  */
-export function exportTasksById(params: { id: string }): ITaskAndTransactionOperation<factory.task.ITask[]> {
+export function exportTasksById(params: { id: string }): ITaskAndTransactionOperation<factory.task.ITask<factory.taskName>[]> {
     return async (repos: {
         task: TaskRepo;
         transaction: TransactionRepo;
@@ -216,7 +216,7 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
         });
         const potentialActions = transaction.potentialActions;
 
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
         switch (transaction.status) {
             case factory.transactionStatusType.Confirmed:
                 // tslint:disable-next-line:no-single-line-block-comment

@@ -500,7 +500,7 @@ function onReservationCreated(
         task: TaskRepo;
     }) => {
         const now = new Date();
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         // 予約ステータス変更時イベント
         const informReservation = transaction.object.onReservationStatusChanged?.informReservation;
@@ -553,7 +553,7 @@ function onReservationsCreated(params: {
         task: TaskRepo;
     }) => {
         const now = new Date();
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         // 集計タスク
         const aggregateTask: factory.task.aggregateScreeningEvent.IAttributes = {
@@ -699,7 +699,7 @@ export function cancel(params: {
 /**
  * 取引タスク出力
  */
-export function exportTasksById(params: { id: string }): ITaskAndTransactionOperation<factory.task.ITask[]> {
+export function exportTasksById(params: { id: string }): ITaskAndTransactionOperation<factory.task.ITask<factory.taskName>[]> {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         task: TaskRepo;
@@ -711,7 +711,7 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
         });
         const potentialActions = transaction.potentialActions;
 
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
         switch (transaction.status) {
             case factory.transactionStatusType.Confirmed:
                 // tslint:disable-next-line:no-single-line-block-comment

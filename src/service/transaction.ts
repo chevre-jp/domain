@@ -47,7 +47,7 @@ export function exportTasks<T extends factory.assetTransactionType>(params: {
             return;
         }
 
-        let tasks: factory.task.ITask[] = [];
+        let tasks: factory.task.ITask<factory.taskName>[] = [];
 
         // 失敗してもここでは戻さない(RUNNINGのまま待機)
         switch (transaction.typeOf) {

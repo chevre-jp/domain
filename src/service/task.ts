@@ -42,7 +42,7 @@ export function executeByName<T extends factory.taskName>(params: {
 
         // 未実行のタスクを取得
         // tslint:disable-next-line:no-null-keyword
-        let task: factory.task.ITask | null = null;
+        let task: factory.task.ITask<T> | null = null;
         try {
             task = await taskRepo.executeOneByName(params);
         } catch (error) {
@@ -59,7 +59,7 @@ export function executeByName<T extends factory.taskName>(params: {
 /**
  * タスクを実行する
  */
-export function execute(task: factory.task.ITask): IOperation<void> {
+export function execute(task: factory.task.ITask<factory.taskName>): IOperation<void> {
     const now = new Date();
 
     return async (settings: IConnectionSettings) => {
@@ -133,7 +133,7 @@ export function abort(params: {
             ? abortedTask.executionResults[abortedTask.executionResults.length - 1]
             : undefined;
         const lastMessage: string = (lastExecutionResult !== undefined)
-            ? (typeof lastExecutionResult.error === 'string') ? lastExecutionResult.error : (<any>lastExecutionResult.error).message
+            ? (typeof lastExecutionResult.error === 'string') ? lastExecutionResult.error : lastExecutionResult.error?.message
             : '';
 
         await NotificationService.report2developers(

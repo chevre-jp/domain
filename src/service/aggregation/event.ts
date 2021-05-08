@@ -240,7 +240,7 @@ function onAggregated(params: {
 
         if (USE_AGGREGATE_ON_PROJECT) {
             // プロジェクト集計タスク作成
-            const aggregateOnProjectTask: factory.task.IAttributes = {
+            const aggregateOnProjectTask: factory.task.aggregateOnProject.IAttributes = {
                 name: factory.taskName.AggregateOnProject,
                 project: event.project,
                 runsAt: new Date(),

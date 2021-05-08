@@ -359,7 +359,7 @@ export function exportTasksById(params: {
      * タスク実行日時バッファ
      */
     runsTasksAfterInSeconds?: number;
-}): IExportTasksOperation<factory.task.ITask[]> {
+}): IExportTasksOperation<factory.task.ITask<factory.taskName>[]> {
     return async (repos: {
         task: TaskRepo;
         transaction: TransactionRepo;
@@ -370,7 +370,7 @@ export function exportTasksById(params: {
         });
         const potentialActions = transaction.potentialActions;
 
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         // タスク実行日時バッファの指定があれば調整
         let taskRunsAt = new Date();

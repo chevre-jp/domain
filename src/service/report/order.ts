@@ -316,7 +316,7 @@ function onDownloaded(
     return async (repos: { task: TaskRepo }) => {
         const potentialActions = actionAttributes.potentialActions;
         const now = new Date();
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -325,7 +325,7 @@ function onDownloaded(
             /* istanbul ignore else */
             if (Array.isArray(potentialActions.sendEmailMessage)) {
                 potentialActions.sendEmailMessage.forEach((s) => {
-                    const sendEmailMessageTask: factory.task.IAttributes = {
+                    const sendEmailMessageTask: factory.task.sendEmailMessage.IAttributes = {
                         project: s.project,
                         name: factory.taskName.SendEmailMessage,
                         status: factory.taskStatus.Ready,
