@@ -1,9 +1,8 @@
 import * as moment from 'moment';
 import { Connection, Model } from 'mongoose';
 
-import { modelName } from './mongoose/model/task';
-
 import * as factory from '../factory';
+import { modelName } from './mongoose/model/task';
 
 /**
  * タスク実行時のソート条件
@@ -38,6 +37,17 @@ export class MongoRepository {
                         $in: params.project.ids
                     }
                 });
+            }
+
+            if (params.project.id !== undefined && params.project.id !== null) {
+                if (typeof params.project.id.$eq === 'string') {
+                    andConditions.push({
+                        'project.id': {
+                            $exists: true,
+                            $eq: params.project.id.$eq
+                        }
+                    });
+                }
             }
         }
 

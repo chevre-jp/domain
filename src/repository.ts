@@ -32,6 +32,8 @@ import { MongoRepository as SellerRepo } from './repo/seller';
 import { MongoRepository as ServiceOutputRepo } from './repo/serviceOutput';
 import { RedisRepository as ServiceOutputIdentifierRepo } from './repo/serviceOutputIdentifier';
 import { MongoRepository as TaskRepo } from './repo/task';
+import { MongoRepository as TelemetryRepo } from './repo/telemetry';
+import { MongoRepository as TransactionRepo } from './repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from './repo/transactionNumber';
 
 /**
@@ -95,6 +97,8 @@ export class Seller extends SellerRepo { }
 export class ServiceOutput extends ServiceOutputRepo { }
 export class ServiceOutputIdentifier extends ServiceOutputIdentifierRepo { }
 export class Task extends TaskRepo { }
+export class Telemetry extends TelemetryRepo { }
+export class Transaction extends TransactionRepo { }
 export class TransactionNumber extends TransactionNumberRepo { }
 export namespace aggregation {
 }
