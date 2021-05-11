@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - IAMサービスを追加
 - telemetryリポジトリを追加
 - 取引リポジトリを追加
+- cinerinoからリポジトリを移行
+- credentialsをエクスポート
 
 ### Changed
 

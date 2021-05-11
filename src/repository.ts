@@ -36,18 +36,31 @@ import { MongoRepository as TelemetryRepo } from './repo/telemetry';
 import { MongoRepository as TransactionRepo } from './repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from './repo/transactionNumber';
 
+import { RedisRepository as RegisterServiceActionInProgress } from './repo/action/registerServiceInProgress';
+import { RedisRepository as ConfirmationNumberRepo } from './repo/confirmationNumber';
+import { RedisRepository as OrderNumberRepo } from './repo/orderNumber';
+import { GMORepository as CreditCardRepo } from './repo/paymentMethod/creditCard';
+import { CognitoRepository as PersonRepo } from './repo/person';
+
 /**
  * 経理レポートリポジトリ
  */
 export class AccountingReport extends AccountingReportRepo { }
 export class AccountTitle extends AccountTitleRepo { }
 export class Action extends ActionRepo { }
+export namespace action {
+    export class RegisterServiceInProgress extends RegisterServiceActionInProgress { }
+}
 export class AssetTransaction extends AssetTransactionRepo { }
 export class CategoryCode extends CategoryCodeRepo { }
 /**
  * 所有権コードリポジトリ
  */
 export class Code extends CodeRepo { }
+/**
+ * 確認番号リポジトリ
+ */
+export class ConfirmationNumber extends ConfirmationNumberRepo { }
 export class CreativeWork extends CreativeWorkRepo { }
 /**
  * 顧客リポジトリ
@@ -69,6 +82,10 @@ export class OfferCatalog extends OfferCatalogRepo { }
  */
 export class Order extends OrderRepo { }
 /**
+ * 注文番号リポジトリ
+ */
+export class OrderNumber extends OrderNumberRepo { }
+/**
  * 所有権リポジトリ
  */
 export class OwnershipInfo extends OwnershipInfoRepo { }
@@ -76,6 +93,16 @@ export class OwnershipInfo extends OwnershipInfoRepo { }
  * 決済方法リポジトリ
  */
 export class PaymentMethod extends PaymentMethodRepo { }
+export namespace paymentMethod {
+    /**
+     * クレジットカードリポジトリ
+     */
+    export class CreditCard extends CreditCardRepo { }
+}
+/**
+ * 顧客リポジトリ
+ */
+export class Person extends PersonRepo { }
 export class Place extends PlaceRepo { }
 export class PriceSpecification extends PriceSpecificationRepo { }
 export class Product extends ProductRepo { }
@@ -100,8 +127,6 @@ export class Task extends TaskRepo { }
 export class Telemetry extends TelemetryRepo { }
 export class Transaction extends TransactionRepo { }
 export class TransactionNumber extends TransactionNumberRepo { }
-export namespace aggregation {
-}
 export namespace itemAvailability {
     export class ScreeningEvent extends ScreeningEventItemAvailabilityRepo { }
 }
