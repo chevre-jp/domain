@@ -11,7 +11,7 @@ import { MongoRepository as TaskRepo } from '../repo/task';
 import * as NotificationService from './notification';
 import { task2lineNotify } from './notification/factory';
 
-const debug = createDebug('cinerino-domain:service');
+const debug = createDebug('chevre-domain:service');
 
 const ABORTED_TASKS_WITHOUT_REPORT: string[] = (typeof process.env.ABORTED_TASKS_WITHOUT_REPORT === 'string')
     ? process.env.ABORTED_TASKS_WITHOUT_REPORT.split(',')

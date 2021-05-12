@@ -1,7 +1,7 @@
 import * as createDebug from 'debug';
 import * as redis from 'redis';
 
-const debug = createDebug('cinerino:repository');
+const debug = createDebug('chevre:repository');
 
 /**
  * 進行アクションキーインターフェース

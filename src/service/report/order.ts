@@ -16,7 +16,7 @@ import { MongoRepository as TaskRepo } from '../../repo/task';
 
 import { uploadFileFromStream } from '../util';
 
-const debug = createDebug('cinerino-domain:service');
+const debug = createDebug('chevre-domain:service');
 
 export interface ISeller {
     typeOf: string;

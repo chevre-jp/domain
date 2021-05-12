@@ -5,7 +5,7 @@ import * as util from 'util';
 
 import * as factory from '../factory';
 
-const debug = createDebug('cinerino-domain:repository');
+const debug = createDebug('chevre-domain:repository');
 
 /**
  * 注文確認番号リポジトリ

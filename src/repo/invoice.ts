@@ -6,7 +6,7 @@ import { modelName } from './mongoose/model/invoice';
 
 import { MongoErrorCode } from '../errorHandler';
 
-const debug = createDebug('cinerino-domain:repository');
+const debug = createDebug('chevre-domain:repository');
 
 export type IInvoice = factory.invoice.IInvoice;
 export type ISearchConditions = factory.invoice.ISearchConditions;

@@ -10,6 +10,7 @@ import * as ProjectService from './service/project';
 import * as ReportService from './service/report';
 import * as TaskService from './service/task';
 import * as TransactionService from './service/transaction';
+import * as UtilService from './service/util';
 import * as WebhookService from './service/webhook';
 
 export import aggregation = AggregationService;
@@ -22,3 +23,4 @@ export import report = ReportService;
 export import task = TaskService;
 export import transaction = TransactionService;
 export import webhook = WebhookService;
+export import util = UtilService;
