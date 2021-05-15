@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - cinerinoからリポジトリを移行
 - credentialsをエクスポート
 - utilサービスを追加
+- errorHandlerをエクスポート
 
 ### Changed
 
