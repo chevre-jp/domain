@@ -2,8 +2,11 @@
 /**
  * リポジトリ
  */
+import { MongoRepository as AccountRepo } from './repo/account';
+import { MongoRepository as AccountActionRepo } from './repo/accountAction';
 import { MongoRepository as AccountingReportRepo } from './repo/accountingReport';
 import { MongoRepository as AccountTitleRepo } from './repo/accountTitle';
+import { MongoRepository as AccountTransactionRepo } from './repo/accountTransaction';
 import { MongoRepository as ActionRepo } from './repo/action';
 import { MongoRepository as AssetTransactionRepo } from './repo/assetTransaction';
 import { MongoRepository as CategoryCodeRepo } from './repo/categoryCode';
@@ -43,10 +46,22 @@ import { GMORepository as CreditCardRepo } from './repo/paymentMethod/creditCard
 import { CognitoRepository as PersonRepo } from './repo/person';
 
 /**
+ * 口座リポジトリ
+ */
+export class Account extends AccountRepo { }
+/**
+ * 口座アクションリポジトリ
+ */
+export class AccountAction extends AccountActionRepo { }
+/**
  * 経理レポートリポジトリ
  */
 export class AccountingReport extends AccountingReportRepo { }
 export class AccountTitle extends AccountTitleRepo { }
+/**
+ * 口座取引リポジトリ
+ */
+export class AccountTransaction extends AccountTransactionRepo { }
 export class Action extends ActionRepo { }
 export namespace action {
     export class RegisterServiceInProgress extends RegisterServiceActionInProgress { }

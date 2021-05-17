@@ -26,6 +26,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - credentialsをエクスポート
 - utilサービスを追加
 - errorHandlerをエクスポート
+- 口座リポジトリを追加
+- 口座アクションリポジトリを追加
+- 口座取引リポジトリを追加
 
 ### Changed
 
