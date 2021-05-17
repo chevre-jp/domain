@@ -116,5 +116,5 @@
     "postversion": "git push origin --tags",
     "prepublishOnly": "npm run clean && npm run build && npm test && npm run doc"
   },
-  "version": "15.46.1"
+  "version": "15.47.0-alpha.38"
 }
