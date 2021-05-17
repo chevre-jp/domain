@@ -98,7 +98,7 @@ export function start(
             });
         }
 
-        const transationType: pecorino.factory.transactionType | undefined = params.object.pendingTransaction?.typeOf;
+        const transationType: pecorino.factory.account.transactionType | undefined = params.object.pendingTransaction?.typeOf;
         if (typeof transationType !== 'string') {
             throw new factory.errors.ArgumentNull('object.pendingTransaction.typeOf');
         }
@@ -204,15 +204,15 @@ function fixServiceOutput(params: factory.assetTransaction.moneyTransfer.IStartP
     const transactionType = params.object.pendingTransaction?.typeOf;
 
     switch (transactionType) {
-        case pecorino.factory.transactionType.Deposit:
-        case pecorino.factory.transactionType.Transfer:
+        case pecorino.factory.account.transactionType.Deposit:
+        case pecorino.factory.account.transactionType.Transfer:
             const toLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>params.object.toLocation;
 
             serviceOutputType = toLocationObject.typeOf;
 
             break;
 
-        case pecorino.factory.transactionType.Withdraw:
+        case pecorino.factory.account.transactionType.Withdraw:
             const fromLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>params.object.fromLocation;
 
             serviceOutputType = fromLocationObject.typeOf;
@@ -250,8 +250,8 @@ function fixFromLocation(
         const transactionType = params.object.pendingTransaction?.typeOf;
 
         switch (transactionType) {
-            case pecorino.factory.transactionType.Withdraw:
-            case pecorino.factory.transactionType.Transfer:
+            case pecorino.factory.account.transactionType.Withdraw:
+            case pecorino.factory.account.transactionType.Transfer:
                 const fromLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>fromLocation;
 
                 switch (product.typeOf) {
@@ -351,8 +351,8 @@ function fixToLocation(
         const transactionType = params.object.pendingTransaction?.typeOf;
 
         switch (transactionType) {
-            case pecorino.factory.transactionType.Deposit:
-            case pecorino.factory.transactionType.Transfer:
+            case pecorino.factory.account.transactionType.Deposit:
+            case pecorino.factory.account.transactionType.Transfer:
                 const toLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>toLocation;
 
                 switch (product.typeOf) {

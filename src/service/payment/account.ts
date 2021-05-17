@@ -26,7 +26,7 @@ const pecorinoAuthClient = new pecorinoapi.auth.ClientCredentials({
     state: ''
 });
 
-export type IPendingTransaction = pecorinoapi.factory.transaction.withdraw.ITransaction;
+export type IPendingTransaction = pecorinoapi.factory.account.transaction.withdraw.ITransaction;
 
 export function authorize(params: factory.assetTransaction.pay.IStartParamsWithoutDetail) {
     return async (repos: {
@@ -77,18 +77,20 @@ async function processAccountTransaction(params: {
     const defaultName = `${factory.assetTransactionType.Pay} Transaction ${params.transactionNumber}`;
 
     const agent = {
-        typeOf: params.agent.typeOf,
-        id: params.agent.id,
+        ...params.agent,
+        // typeOf: params.agent.typeOf,
+        // id: params.agent.id,
         name: (typeof params.agent.name === 'string') ? params.agent.name : defaultName
     };
 
     const recipient = {
-        typeOf: params.recipient.typeOf,
-        id: params.recipient.id,
+        ...params.recipient,
+        // typeOf: params.recipient.typeOf,
+        // id: params.recipient.id,
         name: (typeof params.recipient.name === 'string')
             ? params.recipient.name
-            : (typeof params.recipient.name?.ja === 'string') ? params.recipient.name.ja : defaultName,
-        ...(typeof params.recipient.url === 'string') ? { url: params.recipient.url } : undefined
+            : (typeof params.recipient.name?.ja === 'string') ? params.recipient.name.ja : defaultName
+        // ...(typeof params.recipient.url === 'string') ? { url: params.recipient.url } : undefined
     };
 
     const description = (typeof params.paymentMethod?.description === 'string') ? params.paymentMethod?.description : '';
@@ -106,7 +108,7 @@ async function processAccountTransaction(params: {
     pendingTransaction = await withdrawService.start({
         transactionNumber: params.transactionNumber,
         project: { typeOf: params.project.typeOf, id: params.project.id },
-        typeOf: pecorinoapi.factory.transactionType.Withdraw,
+        typeOf: pecorinoapi.factory.account.transactionType.Withdraw,
         agent: agent,
         expires: params.expires,
         recipient: recipient,
@@ -215,16 +217,18 @@ export function refundAccount(params: factory.task.refund.IData) {
                 .toDate();
 
             const agent = {
-                typeOf: params.agent.typeOf,
-                id: params.agent.id,
+                ...params.agent,
+                // typeOf: params.agent.typeOf,
+                // id: params.agent.id,
                 name: (typeof params.agent.name === 'string')
                     ? params.agent.name
                     : `${params.agent.typeOf} ${params.agent.id}`
             };
 
             const recipient = {
-                typeOf: String(params.recipient?.typeOf),
-                id: params.recipient?.id,
+                ...<factory.person.IPerson | factory.creativeWork.softwareApplication.webApplication.ICreativeWork>params.recipient,
+                // typeOf: String(params.recipient?.typeOf),
+                // id: params.recipient?.id,
                 name: (typeof params.recipient?.name === 'string')
                     ? params.recipient.name
                     : (typeof params.recipient?.name?.ja === 'string')
@@ -239,7 +243,7 @@ export function refundAccount(params: factory.task.refund.IData) {
             await depositService.start({
                 transactionNumber: transactionNumber,
                 project: { typeOf: params.project.typeOf, id: params.project.id },
-                typeOf: pecorinoapi.factory.transactionType.Deposit,
+                typeOf: pecorinoapi.factory.account.transactionType.Deposit,
                 agent: agent,
                 expires: expires,
                 recipient: recipient,

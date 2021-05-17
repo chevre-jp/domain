@@ -75,7 +75,7 @@ function createRegisterServiceActions(params: {
                     typeOf: factory.actionType.MoneyTransfer,
                     agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>fromLocation,
                     object: {
-                        typeOf: pecorinoapi.factory.transactionType.Deposit
+                        typeOf: pecorinoapi.factory.account.transactionType.Deposit
                     },
                     purpose: {
                         typeOf: params.transaction.typeOf,
