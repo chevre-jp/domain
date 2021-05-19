@@ -2,6 +2,7 @@
  * index module
  */
 import * as mvtkreserveapi from '@movieticket/reserve-api-nodejs-client';
+import * as pecorinoapi from '@pecorino/api-nodejs-client';
 import * as AWS from 'aws-sdk';
 
 import { credentials as cred } from './credentials';
@@ -17,6 +18,7 @@ export import repository = repository;
 export import service = service;
 
 export import mvtkreserveapi = mvtkreserveapi;
+export import pecorinoapi = pecorinoapi;
 
 /**
  * AWS SDK

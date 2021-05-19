@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 口座リポジトリを追加
 - 口座アクションリポジトリを追加
 - 口座取引リポジトリを追加
+- Pecorino SDKをエクスポート
 
 ### Changed
 

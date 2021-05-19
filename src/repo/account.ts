@@ -284,7 +284,7 @@ export class MongoRepository {
 
     /**
      * 金額を確保する
-     * @see https://en.wikipedia.org/wiki/Authorization_hold
+     * https://en.wikipedia.org/wiki/Authorization_hold
      */
     public async authorizeAmount(params: {
         /**
@@ -416,7 +416,7 @@ export class MongoRepository {
     /**
      * 取引を取り消す
      * 口座上で進行中の取引を中止します。
-     * @see https://www.investopedia.com/terms/v/void-transaction.asp
+     * https://www.investopedia.com/terms/v/void-transaction.asp
      */
     public async voidTransaction(params: {
         fromAccountNumber?: string;
