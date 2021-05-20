@@ -43,6 +43,7 @@ function validateStartParams(params: factory.assetTransaction.cancelReservation.
         if (typeof params.object.reservation?.reservationNumber === 'string') {
             const transactions = await repos.transaction.search<factory.assetTransactionType.Reserve>({
                 limit: 1,
+                page: 1,
                 typeOf: factory.assetTransactionType.Reserve,
                 object: { reservationNumber: { $eq: params.object.reservation.reservationNumber } }
             });
@@ -51,6 +52,7 @@ function validateStartParams(params: factory.assetTransaction.cancelReservation.
             // 予約ステータス確認
             const unconfirmedReservations = await repos.reservation.search({
                 limit: 1,
+                page: 1,
                 typeOf: factory.reservationType.EventReservation,
                 reservationNumber: { $eq: params.object.reservation.reservationNumber },
                 reservationStatus: { $ne: factory.reservationStatusType.ReservationConfirmed }

@@ -564,6 +564,7 @@ export class MongoRepository {
     }): Promise<IPayAction | undefined> {
         const payActions = <IPayAction[]>await this.search<factory.actionType.PayAction>({
             limit: 1,
+            page: 1,
             actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
             project: { id: { $eq: params.project.id } },
             typeOf: { $eq: factory.actionType.PayAction },

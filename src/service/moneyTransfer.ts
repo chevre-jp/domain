@@ -245,48 +245,55 @@ export function cancelMoneyTransfer(params: {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        const transaction = await repos.transaction.findById<factory.assetTransactionType.MoneyTransfer>({
+        // const transaction = await repos.transaction.findById<factory.assetTransactionType.MoneyTransfer>({
+        //     typeOf: factory.assetTransactionType.MoneyTransfer,
+        //     id: params.purpose.id
+        // });
+        const transactions = await repos.transaction.search<factory.assetTransactionType.MoneyTransfer>({
             typeOf: factory.assetTransactionType.MoneyTransfer,
-            id: params.purpose.id
+            ids: [params.purpose.id]
         });
+        if (transactions.length > 0) {
+            for (const transaction of transactions) {
+                const pendingTransaction = transaction.object?.pendingTransaction;
+                if (typeof pendingTransaction?.transactionNumber === 'string') {
+                    // アクションステータスに関係なく取消処理実行
+                    switch (pendingTransaction.typeOf) {
+                        case pecorinoapi.factory.account.transactionType.Deposit:
+                            const depositService = new pecorinoapi.service.transaction.Deposit({
+                                endpoint: credentials.pecorino.endpoint,
+                                auth: pecorinoAuthClient
+                            });
+                            await depositService.cancel({ transactionNumber: pendingTransaction.transactionNumber });
 
-        const pendingTransaction = transaction.object?.pendingTransaction;
-        if (pendingTransaction !== undefined) {
-            // アクションステータスに関係なく取消処理実行
-            switch (pendingTransaction.typeOf) {
-                case pecorinoapi.factory.account.transactionType.Deposit:
-                    const depositService = new pecorinoapi.service.transaction.Deposit({
-                        endpoint: credentials.pecorino.endpoint,
-                        auth: pecorinoAuthClient
-                    });
-                    await depositService.cancel({ transactionNumber: pendingTransaction.transactionNumber });
+                            break;
 
-                    break;
+                        case pecorinoapi.factory.account.transactionType.Withdraw:
+                            const withdrawService = new pecorinoapi.service.transaction.Withdraw({
+                                endpoint: credentials.pecorino.endpoint,
+                                auth: pecorinoAuthClient
+                            });
+                            await withdrawService.cancel({ transactionNumber: pendingTransaction.transactionNumber });
 
-                case pecorinoapi.factory.account.transactionType.Withdraw:
-                    const withdrawService = new pecorinoapi.service.transaction.Withdraw({
-                        endpoint: credentials.pecorino.endpoint,
-                        auth: pecorinoAuthClient
-                    });
-                    await withdrawService.cancel({ transactionNumber: pendingTransaction.transactionNumber });
+                            break;
 
-                    break;
+                        case pecorinoapi.factory.account.transactionType.Transfer:
+                            const transferService = new pecorinoapi.service.transaction.Transfer({
+                                endpoint: credentials.pecorino.endpoint,
+                                auth: pecorinoAuthClient
+                            });
+                            await transferService.cancel({ transactionNumber: pendingTransaction.transactionNumber });
 
-                case pecorinoapi.factory.account.transactionType.Transfer:
-                    const transferService = new pecorinoapi.service.transaction.Transfer({
-                        endpoint: credentials.pecorino.endpoint,
-                        auth: pecorinoAuthClient
-                    });
-                    await transferService.cancel({ transactionNumber: pendingTransaction.transactionNumber });
+                            break;
 
-                    break;
-
-                // tslint:disable-next-line:no-single-line-block-comment
-                /* istanbul ignore next */
-                default:
-                    throw new factory.errors.NotImplemented(
-                        `transaction type '${pendingTransaction.typeOf}' not implemented.`
-                    );
+                        // tslint:disable-next-line:no-single-line-block-comment
+                        /* istanbul ignore next */
+                        default:
+                            throw new factory.errors.NotImplemented(
+                                `transaction type '${pendingTransaction.typeOf}' not implemented.`
+                            );
+                    }
+                }
             }
         }
     };

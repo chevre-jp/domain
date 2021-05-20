@@ -75,6 +75,7 @@ export function aggregateScreeningEvent(params: {
             .toDate();
         let aggregatingEvents = await repos.event.search({
             limit: 100,
+            page: 1,
             project: { ids: [event.project.id] },
             typeOf: event.typeOf,
             eventStatuses: [factory.eventStatusType.EventScheduled],

@@ -202,6 +202,7 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
                 const reserveTransactions = await
                     repos.transaction.search<factory.assetTransactionType.Reserve>({
                         limit: 1,
+                        page: 1,
                         typeOf: factory.assetTransactionType.Reserve,
                         object: { reservations: { id: { $in: [reservation.id] } } }
                     });

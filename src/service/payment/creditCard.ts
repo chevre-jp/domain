@@ -576,6 +576,7 @@ function getGMOInfoFromSeller(params: {
         // 決済サービスからcredentialsを取得する
         const paymentServices = <factory.service.paymentService.IService[]>await repos.product.search({
             limit: 1,
+            page: 1,
             project: { id: { $eq: seller.project.id } },
             typeOf: { $eq: factory.service.paymentService.PaymentServiceType.CreditCard },
             serviceOutput: { typeOf: { $eq: params.paymentMethodType } }

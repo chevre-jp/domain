@@ -185,6 +185,7 @@ export class MongoRepository {
     }): Promise<factory.service.paymentService.IAvailableChannel> {
         const paymentServices = await this.search({
             limit: 1,
+            page: 1,
             project: { id: { $eq: params.project.id } },
             typeOf: { $eq: params.typeOf },
             serviceOutput: { typeOf: { $eq: params.serviceOuput.typeOf } }

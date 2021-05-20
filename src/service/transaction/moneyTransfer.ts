@@ -80,6 +80,7 @@ export function start(
         // プロダクトをfix
         const products = <factory.product.IProduct[]>await repos.product.search({
             limit: 1,
+            page: 1,
             project: { id: { $eq: params.project.id } },
             serviceOutput: { typeOf: { $eq: serviceOutputType } }
         });

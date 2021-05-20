@@ -46,6 +46,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 資産取引のネームスペースを変更
 - 口座リポジトリ参照のPecorino依存を排除
 - 口座アクションリポジトリ参照のPecorino依存を排除
+- 通貨転送取引中止時に取引が存在しない場合に対応
 
 ### Deprecated
 
