@@ -8,6 +8,7 @@ import { credentials } from '../credentials';
 
 import * as factory from '../factory';
 
+import { MongoRepository as AccountActionRepo } from '../repo/accountAction';
 import { MongoRepository as ActionRepo } from '../repo/action';
 import { MongoRepository as TransactionRepo } from '../repo/assetTransaction';
 import { MongoRepository as ProjectRepo } from '../repo/project';
@@ -294,6 +295,7 @@ export function cancelMoneyTransfer(params: {
 export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     return async (repos: {
+        accountAction: AccountActionRepo;
         action: ActionRepo;
         transactionNumber: TransactionNumberRepo;
     }) => {
@@ -331,17 +333,25 @@ export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
                     if (pendingTransaction === undefined) {
                         // すでに入金済かどうか確認
                         if (typeof params.purpose.identifier === 'string') {
-                            const actionService = new pecorinoapi.service.Action({
-                                endpoint: credentials.pecorino.endpoint,
-                                auth: pecorinoAuthClient
-                            });
-                            const searchActionsResult = await actionService.searchMoneyTransferActions({
+                            // const actionService = new pecorinoapi.service.Action({
+                            //     endpoint: credentials.pecorino.endpoint,
+                            //     auth: pecorinoAuthClient
+                            // });
+                            const accountActions = await repos.accountAction.searchTransferActions({
                                 limit: 1,
+                                page: 1,
                                 project: { id: { $eq: params.project.id } },
                                 actionStatus: { $in: [pecorinoapi.factory.actionStatusType.CompletedActionStatus] },
                                 purpose: { identifier: { $eq: params.purpose.identifier } }
                             });
-                            if (searchActionsResult.data.length > 0) {
+                            // const searchActionsResult = await actionService.searchMoneyTransferActions({
+                            //     limit: 1,
+                            //     project: { id: { $eq: params.project.id } },
+                            //     actionStatus: { $in: [pecorinoapi.factory.actionStatusType.CompletedActionStatus] },
+                            //     purpose: { identifier: { $eq: params.purpose.identifier } }
+                            // });
+                            // if (searchActionsResult.data.length > 0) {
+                            if (accountActions.length > 0) {
                                 // 入金済であれば何もしない
                                 break;
                             }

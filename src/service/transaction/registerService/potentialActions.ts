@@ -1,4 +1,4 @@
-import * as pecorinoapi from '@pecorino/api-nodejs-client';
+// import * as pecorinoapi from '@pecorino/api-nodejs-client';
 import * as moment from 'moment';
 import * as factory from '../../../factory';
 
@@ -22,7 +22,7 @@ function createMoneyTransferActions(__: {
     //             },
     //             object: {
     //                 pendingTransaction: {
-    //                     typeOf: pecorinoapi.factory.assetTransactionType.Deposit,
+    //                     typeOf: factory.assetTransactionType.Deposit,
     //                     transactionNumber: transaction.transactionNumber
     //                 }
     //             },
@@ -75,7 +75,7 @@ function createRegisterServiceActions(params: {
                     typeOf: factory.actionType.MoneyTransfer,
                     agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>fromLocation,
                     object: {
-                        typeOf: pecorinoapi.factory.account.transactionType.Deposit
+                        typeOf: factory.account.transactionType.Deposit
                     },
                     purpose: {
                         typeOf: params.transaction.typeOf,

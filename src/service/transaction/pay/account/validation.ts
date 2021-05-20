@@ -1,24 +1,26 @@
 /**
  * 口座決済サービス
  */
-import * as pecorinoapi from '@pecorino/api-nodejs-client';
+// import * as pecorinoapi from '@pecorino/api-nodejs-client';
 
+import { MongoRepository as AccountRepo } from '../../../../repo/account';
 import { MongoRepository as ProjectRepo } from '../../../../repo/project';
 import { MongoRepository as SellerRepo } from '../../../../repo/seller';
 
-import { credentials } from '../../../../credentials';
+// import { credentials } from '../../../../credentials';
 import * as factory from '../../../../factory';
 
-const pecorinoAuthClient = new pecorinoapi.auth.ClientCredentials({
-    domain: credentials.pecorino.authorizeServerDomain,
-    clientId: credentials.pecorino.clientId,
-    clientSecret: credentials.pecorino.clientSecret,
-    scopes: [],
-    state: ''
-});
+// const pecorinoAuthClient = new pecorinoapi.auth.ClientCredentials({
+//     domain: credentials.pecorino.authorizeServerDomain,
+//     clientId: credentials.pecorino.clientId,
+//     clientSecret: credentials.pecorino.clientSecret,
+//     scopes: [],
+//     state: ''
+// });
 
 export function validateAccount(params: factory.assetTransaction.pay.IStartParamsWithoutDetail) {
     return async (repos: {
+        account: AccountRepo;
         project: ProjectRepo;
         seller: SellerRepo;
     }) => {
@@ -45,20 +47,29 @@ export function validateAccount(params: factory.assetTransaction.pay.IStartParam
             throw new factory.errors.Argument('recipient', `payment not accepted`);
         }
 
-        const accountService = new pecorinoapi.service.Account({
-            endpoint: credentials.pecorino.endpoint,
-            auth: pecorinoAuthClient
-        });
-        const searchAccountsResult = await accountService.search({
+        // const accountService = new pecorinoapi.service.Account({
+        //     endpoint: credentials.pecorino.endpoint,
+        //     auth: pecorinoAuthClient
+        // });
+        const accounts = await repos.account.search({
             limit: 1,
+            page: 1,
             project: { id: { $eq: params.project.id } },
-            accountNumbers: [accountNumber],
-            statuses: [pecorinoapi.factory.accountStatusType.Opened],
+            accountNumber: { $eq: accountNumber },
+            statuses: [factory.accountStatusType.Opened],
             // 決済方法タイプが口座種別と一致しているか
             typeOf: { $eq: paymentMethodType }
         });
-
-        const account = searchAccountsResult.data.shift();
+        // const searchAccountsResult = await accountService.search({
+        //     limit: 1,
+        //     project: { id: { $eq: params.project.id } },
+        //     accountNumbers: [accountNumber],
+        //     statuses: [factory.accountStatusType.Opened],
+        //     // 決済方法タイプが口座種別と一致しているか
+        //     typeOf: { $eq: paymentMethodType }
+        // });
+        // const account = searchAccountsResult.data.shift();
+        const account = accounts.shift();
         if (account === undefined) {
             throw new factory.errors.NotFound('Account', `Account '${accountNumber}' not found`);
         }

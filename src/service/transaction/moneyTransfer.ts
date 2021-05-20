@@ -1,13 +1,14 @@
 /**
  * 通貨転送取引サービス
  */
-import * as pecorino from '@pecorino/api-nodejs-client';
+// import * as pecorino from '@pecorino/api-nodejs-client';
 import * as moment from 'moment';
 
-import { credentials } from '../../credentials';
+// import { credentials } from '../../credentials';
 
 import * as factory from '../../factory';
 
+import { MongoRepository as AccountRepo } from '../../repo/account';
 import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
@@ -19,15 +20,16 @@ import * as MoneyTransferService from '../moneyTransfer';
 
 import { createPotentialActions } from './moneyTransfer/potentialActions';
 
-const pecorinoAuthClient = new pecorino.auth.ClientCredentials({
-    domain: credentials.pecorino.authorizeServerDomain,
-    clientId: credentials.pecorino.clientId,
-    clientSecret: credentials.pecorino.clientSecret,
-    scopes: [],
-    state: ''
-});
+// const pecorinoAuthClient = new pecorino.auth.ClientCredentials({
+//     domain: credentials.pecorino.authorizeServerDomain,
+//     clientId: credentials.pecorino.clientId,
+//     clientSecret: credentials.pecorino.clientSecret,
+//     scopes: [],
+//     state: ''
+// });
 
 export type IStartOperation<T> = (repos: {
+    account: AccountRepo;
     product: ProductRepo;
     project: ProjectRepo;
     serviceOutput: ServiceOutputRepo;
@@ -57,6 +59,7 @@ export function start(
     params: factory.assetTransaction.moneyTransfer.IStartParamsWithoutDetail
 ): IStartOperation<factory.assetTransaction.moneyTransfer.ITransaction> {
     return async (repos: {
+        account: AccountRepo;
         product: ProductRepo;
         project: ProjectRepo;
         serviceOutput: ServiceOutputRepo;
@@ -98,7 +101,7 @@ export function start(
             });
         }
 
-        const transationType: pecorino.factory.account.transactionType | undefined = params.object.pendingTransaction?.typeOf;
+        const transationType: factory.account.transactionType | undefined = params.object.pendingTransaction?.typeOf;
         if (typeof transationType !== 'string') {
             throw new factory.errors.ArgumentNull('object.pendingTransaction.typeOf');
         }
@@ -204,15 +207,15 @@ function fixServiceOutput(params: factory.assetTransaction.moneyTransfer.IStartP
     const transactionType = params.object.pendingTransaction?.typeOf;
 
     switch (transactionType) {
-        case pecorino.factory.account.transactionType.Deposit:
-        case pecorino.factory.account.transactionType.Transfer:
+        case factory.account.transactionType.Deposit:
+        case factory.account.transactionType.Transfer:
             const toLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>params.object.toLocation;
 
             serviceOutputType = toLocationObject.typeOf;
 
             break;
 
-        case pecorino.factory.account.transactionType.Withdraw:
+        case factory.account.transactionType.Withdraw:
             const fromLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>params.object.fromLocation;
 
             serviceOutputType = fromLocationObject.typeOf;
@@ -231,7 +234,8 @@ function fixFromLocation(
     params: factory.assetTransaction.moneyTransfer.IStartParamsWithoutDetail,
     product: factory.product.IProduct
 ) {
-    return async (__: {
+    return async (repos: {
+        account: AccountRepo;
         serviceOutput: ServiceOutputRepo;
     }): Promise<factory.assetTransaction.moneyTransfer.IFromLocation> => {
         const amount = params.object.amount;
@@ -239,10 +243,10 @@ function fixFromLocation(
             throw new factory.errors.ArgumentNull('amount.value');
         }
 
-        const accountService = new pecorino.service.Account({
-            endpoint: credentials.pecorino.endpoint,
-            auth: pecorinoAuthClient
-        });
+        // const accountService = new pecorino.service.Account({
+        //     endpoint: credentials.pecorino.endpoint,
+        //     auth: pecorinoAuthClient
+        // });
 
         let fromLocation = params.object.fromLocation;
         // let accountType: string;
@@ -250,8 +254,8 @@ function fixFromLocation(
         const transactionType = params.object.pendingTransaction?.typeOf;
 
         switch (transactionType) {
-            case pecorino.factory.account.transactionType.Withdraw:
-            case pecorino.factory.account.transactionType.Transfer:
+            case factory.account.transactionType.Withdraw:
+            case factory.account.transactionType.Transfer:
                 const fromLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>fromLocation;
 
                 switch (product.typeOf) {
@@ -298,14 +302,21 @@ function fixFromLocation(
                 }
 
                 // 口座存在確認
-                const searchAccountsResult = await accountService.search({
+                const accounts = await repos.account.search({
                     limit: 1,
+                    page: 1,
                     project: { id: { $eq: params.project.id } },
-                    accountNumbers: [fromLocationObject.identifier],
-                    statuses: [pecorino.factory.accountStatusType.Opened]
+                    accountNumber: { $eq: fromLocationObject.identifier },
+                    statuses: [factory.accountStatusType.Opened]
                 });
-
-                const account = searchAccountsResult.data.shift();
+                // const searchAccountsResult = await accountService.search({
+                //     limit: 1,
+                //     project: { id: { $eq: params.project.id } },
+                //     accountNumbers: [fromLocationObject.identifier],
+                //     statuses: [factory.accountStatusType.Opened]
+                // });
+                // const account = searchAccountsResult.data.shift();
+                const account = accounts.shift();
                 if (account === undefined) {
                     throw new factory.errors.NotFound('Account', 'From Location Not Found');
                 }
@@ -330,7 +341,8 @@ function fixToLocation(
     params: factory.assetTransaction.moneyTransfer.IStartParamsWithoutDetail,
     product: factory.product.IProduct
 ) {
-    return async (__: {
+    return async (repos: {
+        account: AccountRepo;
         product: ProductRepo;
         serviceOutput: ServiceOutputRepo;
     }): Promise<factory.assetTransaction.moneyTransfer.IToLocation> => {
@@ -341,18 +353,18 @@ function fixToLocation(
             throw new factory.errors.ArgumentNull('amount.value');
         }
 
-        const accountService = new pecorino.service.Account({
-            endpoint: credentials.pecorino.endpoint,
-            auth: pecorinoAuthClient
-        });
+        // const accountService = new pecorino.service.Account({
+        //     endpoint: credentials.pecorino.endpoint,
+        //     auth: pecorinoAuthClient
+        // });
 
         // let accountType: string;
 
         const transactionType = params.object.pendingTransaction?.typeOf;
 
         switch (transactionType) {
-            case pecorino.factory.account.transactionType.Deposit:
-            case pecorino.factory.account.transactionType.Transfer:
+            case factory.account.transactionType.Deposit:
+            case factory.account.transactionType.Transfer:
                 const toLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>toLocation;
 
                 switch (product.typeOf) {
@@ -399,14 +411,21 @@ function fixToLocation(
                 }
 
                 // 口座存在確認
-                const searchAccountsResult = await accountService.search({
+                const accounts = await repos.account.search({
                     limit: 1,
+                    page: 1,
                     project: { id: { $eq: params.project.id } },
-                    accountNumbers: [toLocationObject.identifier],
-                    statuses: [pecorino.factory.accountStatusType.Opened]
+                    accountNumber: { $eq: toLocationObject.identifier },
+                    statuses: [factory.accountStatusType.Opened]
                 });
-
-                const account = searchAccountsResult.data.shift();
+                // const searchAccountsResult = await accountService.search({
+                //     limit: 1,
+                //     project: { id: { $eq: params.project.id } },
+                //     accountNumbers: [toLocationObject.identifier],
+                //     statuses: [factory.accountStatusType.Opened]
+                // });
+                // const account = searchAccountsResult.data.shift();
+                const account = accounts.shift();
                 if (account === undefined) {
                     throw new factory.errors.NotFound('Account', 'To Location Not Found');
                 }

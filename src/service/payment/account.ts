@@ -26,7 +26,7 @@ const pecorinoAuthClient = new pecorinoapi.auth.ClientCredentials({
     state: ''
 });
 
-export type IPendingTransaction = pecorinoapi.factory.account.transaction.withdraw.ITransaction;
+export type IPendingTransaction = factory.account.transaction.withdraw.ITransaction;
 
 export function authorize(params: factory.assetTransaction.pay.IStartParamsWithoutDetail) {
     return async (repos: {
@@ -108,7 +108,7 @@ async function processAccountTransaction(params: {
     pendingTransaction = await withdrawService.start({
         transactionNumber: params.transactionNumber,
         project: { typeOf: params.project.typeOf, id: params.project.id },
-        typeOf: pecorinoapi.factory.account.transactionType.Withdraw,
+        typeOf: factory.account.transactionType.Withdraw,
         agent: agent,
         expires: params.expires,
         recipient: recipient,
@@ -243,7 +243,7 @@ export function refundAccount(params: factory.task.refund.IData) {
             await depositService.start({
                 transactionNumber: transactionNumber,
                 project: { typeOf: params.project.typeOf, id: params.project.id },
-                typeOf: pecorinoapi.factory.account.transactionType.Deposit,
+                typeOf: factory.account.transactionType.Deposit,
                 agent: agent,
                 expires: expires,
                 recipient: recipient,

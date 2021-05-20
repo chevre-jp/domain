@@ -5,6 +5,7 @@ import * as moment from 'moment';
 
 import * as factory from '../../factory';
 
+import { MongoRepository as AccountRepo } from '../../repo/account';
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 import { MongoRepository as EventRepo } from '../../repo/event';
@@ -21,6 +22,7 @@ import { createStartParams } from './pay/factory';
 import { createPotentialActions } from './pay/potentialActions';
 
 export type IStartOperation<T> = (repos: {
+    account: AccountRepo;
     action: ActionRepo;
     event: EventRepo;
     product: ProductRepo;
@@ -96,6 +98,7 @@ export function start(
     params: factory.assetTransaction.pay.IStartParamsWithoutDetail
 ): IStartOperation<factory.assetTransaction.pay.ITransaction> {
     return async (repos: {
+        account: AccountRepo;
         action: ActionRepo;
         event: EventRepo;
         product: ProductRepo;
@@ -188,6 +191,7 @@ function processAuthorizeAccount(
     transaction: { id: string }
 ) {
     return async (repos: {
+        account: AccountRepo;
         event: EventRepo;
         project: ProjectRepo;
         seller: SellerRepo;

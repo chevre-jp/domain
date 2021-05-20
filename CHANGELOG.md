@@ -44,6 +44,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 資産取引コレクションをrename
 - cinerinoのアクション検索条件を継承
 - 資産取引のネームスペースを変更
+- 口座リポジトリ参照のPecorino依存を排除
+- 口座アクションリポジトリ参照のPecorino依存を排除
 
 ### Deprecated
 
