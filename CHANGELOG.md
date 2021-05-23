@@ -30,6 +30,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 口座アクションリポジトリを追加
 - 口座取引リポジトリを追加
 - Pecorino SDKをエクスポート
+- 口座サービスを追加(@pecorino/domainから移行)
+- 口座取引サービスを追加(@pecorino/domainから移行)
 
 ### Changed
 

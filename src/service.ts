@@ -1,6 +1,8 @@
 /**
  * service module
  */
+import * as AccountService from './service/account';
+import * as AccountTransactionService from './service/accountTransaction';
 import * as AggregationService from './service/aggregation';
 import * as EventService from './service/event';
 import * as IAMService from './service/iam';
@@ -13,6 +15,8 @@ import * as TransactionService from './service/transaction';
 import * as UtilService from './service/util';
 import * as WebhookService from './service/webhook';
 
+export import account = AccountService;
+export import accountTransaction = AccountTransactionService;
 export import aggregation = AggregationService;
 export import event = EventService;
 export import iam = IAMService;
