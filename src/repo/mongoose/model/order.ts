@@ -127,6 +127,15 @@ schema.index(
     }
 );
 schema.index(
+    { 'broker.id': 1, orderDate: -1 },
+    {
+        name: 'searchByBrokerId',
+        partialFilterExpression: {
+            'broker.id': { $exists: true }
+        }
+    }
+);
+schema.index(
     { confirmationNumber: 1, orderDate: -1 },
     {
         name: 'searchOrdersByConfirmationNumberAndOrderDate',

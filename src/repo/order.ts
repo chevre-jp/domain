@@ -93,6 +93,17 @@ export class MongoRepository {
                 });
             }
         }
+
+        const brokerIdEq = params.broker?.id?.$eq;
+        if (typeof brokerIdEq === 'string') {
+            andConditions.push({
+                'broker.id': {
+                    $exists: true,
+                    $eq: brokerIdEq
+                }
+            });
+        }
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.customer !== undefined) {
