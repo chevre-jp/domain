@@ -12,6 +12,7 @@ const schema = new mongoose.Schema(
         additionalProperty: [mongoose.SchemaTypes.Mixed],
         contactPoint: [mongoose.SchemaTypes.Mixed],
         email: String,
+        identifier: String,
         name: mongoose.SchemaTypes.Mixed,
         project: mongoose.SchemaTypes.Mixed,
         typeOf: {

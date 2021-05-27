@@ -3,9 +3,6 @@ import { modelName } from './mongoose/model/customer';
 
 import * as factory from '../factory';
 
-export type ICustomer = any;
-export type ISearchConditions = any;
-
 /**
  * 顧客リポジトリ
  */
@@ -17,7 +14,7 @@ export class MongoRepository {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    public static CREATE_MONGO_CONDITIONS(params: ISearchConditions) {
+    public static CREATE_MONGO_CONDITIONS(params: factory.customer.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [];
 
@@ -27,6 +24,15 @@ export class MongoRepository {
             andConditions.push({
                 'project.id': {
                     $eq: projectIdEq
+                }
+            });
+        }
+
+        const identifierRegex = params.identifier?.$regex;
+        if (typeof identifierRegex === 'string') {
+            andConditions.push({
+                identifier: {
+                    $regex: new RegExp(identifierRegex)
                 }
             });
         }
@@ -59,7 +65,7 @@ export class MongoRepository {
             id: string;
         },
         projection?: any
-    ): Promise<ICustomer> {
+    ): Promise<factory.customer.ICustomer> {
         const doc = await this.customerModel.findOne(
             { _id: conditions.id },
             {
@@ -79,9 +85,9 @@ export class MongoRepository {
 
     public async save(params: {
         id?: string;
-        attributes: ICustomer;
-    }): Promise<ICustomer> {
-        let customer: ICustomer;
+        attributes: factory.customer.ICustomer;
+    }): Promise<factory.customer.ICustomer> {
+        let customer: factory.customer.ICustomer;
         if (params.id === undefined) {
             const doc = await this.customerModel.create(params.attributes);
             customer = doc.toObject();
@@ -105,9 +111,9 @@ export class MongoRepository {
      * 販売者検索
      */
     public async search(
-        conditions: ISearchConditions,
+        conditions: factory.customer.ISearchConditions,
         projection?: any
-    ): Promise<ICustomer[]> {
+    ): Promise<factory.customer.ICustomer[]> {
         const andConditions = MongoRepository.CREATE_MONGO_CONDITIONS(conditions);
 
         const query = this.customerModel.find(
@@ -129,8 +135,8 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (conditions.sort !== undefined) {
-            query.sort(conditions.sort);
+        if ((<any>conditions).sort !== undefined) {
+            query.sort((<any>conditions).sort);
         }
 
         return query.setOptions({ maxTimeMS: 10000 })
