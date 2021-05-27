@@ -315,7 +315,7 @@ export function transaction2report(params: {
                 name: String(order.customer.name),
                 email: String(order.customer.email),
                 telephone: String(order.customer.telephone),
-                memberOf: order.customer.memberOf,
+                memberOf: (order.customer.typeOf === factory.personType.Person) ? order.customer.memberOf : undefined,
                 tokenIssuer: tokenIssuer,
                 clientId: clientId
             },
