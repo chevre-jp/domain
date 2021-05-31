@@ -26,6 +26,7 @@ describe('取引を確定する', () => {
             agent: {},
             recipient: {},
             object: {
+                amount: { value: 1 },
                 fromLocation: {},
                 toLocation: {}
             },

@@ -204,7 +204,9 @@ function processAuthorizeAccount(
         const totalPaymentDue: factory.monetaryAmount.IMonetaryAmount = {
             typeOf: 'MonetaryAmount',
             currency: authorizeResult.object.fromLocation.accountType,
-            value: authorizeResult.object.amount
+            value: (typeof authorizeResult.object.amount === 'number')
+                ? authorizeResult.object.amount
+                : authorizeResult.object.amount.value
         };
         const pendingTransaction: factory.action.trade.pay.IPendingTransaction = {
             typeOf: authorizeResult.typeOf,

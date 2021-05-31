@@ -4,7 +4,7 @@ import { Connection, Model } from 'mongoose';
 import * as factory from '../factory';
 import { modelName } from './mongoose/model/accountAction';
 
-const debug = createDebug('pecorino-domain:repository');
+const debug = createDebug('chevre-domain:repository');
 
 export type IAction<T extends factory.actionType> =
     T extends factory.actionType.MoneyTransfer ? factory.account.action.moneyTransfer.IAction :

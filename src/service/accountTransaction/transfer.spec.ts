@@ -27,6 +27,7 @@ describe('転送取引を開始する', () => {
             agent: {},
             recipient: {},
             object: {
+                amount: { value: 1 },
                 fromLocation: fromAccount,
                 toLocation: toAccount
             },
@@ -83,6 +84,7 @@ describe('転送取引を開始する', () => {
             agent: {},
             recipient: {},
             object: {
+                amount: { value: 1 },
                 fromLocation: fromAccount,
                 toLocation: toAccount
             },

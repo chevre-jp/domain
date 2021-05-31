@@ -178,7 +178,9 @@ export function cancelMoneyTransfer(params: {
         await repos.account.voidTransaction({
             fromAccountNumber: fromAccountNumber,
             toAccountNumber: toAccountNumber,
-            amount: transaction.object.amount,
+            amount: (typeof transaction.object.amount === 'number')
+                ? transaction.object.amount
+                : transaction.object.amount.value,
             transactionId: transaction.id
         });
 

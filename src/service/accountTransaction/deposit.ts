@@ -72,7 +72,9 @@ export function start(
         const pendingTransaction: factory.account.IPendingTransaction = {
             typeOf: transaction.typeOf,
             id: transaction.id,
-            amount: params.object.amount
+            amount: (typeof params.object.amount === 'number')
+                ? params.object.amount
+                : params.object.amount.value
         };
 
         // 入金先口座に進行中取引を追加

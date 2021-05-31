@@ -26,6 +26,7 @@ describe('出金取引を開始する', () => {
             agent: {},
             recipient: {},
             object: {
+                amount: { value: 1 },
                 fromLocation: {}
             },
             expires: new Date(),
@@ -73,6 +74,7 @@ describe('出金取引を開始する', () => {
             agent: {},
             recipient: {},
             object: {
+                amount: { value: 1 },
                 fromLocation: {}
             },
             expires: new Date(),

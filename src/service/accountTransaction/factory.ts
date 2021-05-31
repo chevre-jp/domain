@@ -62,7 +62,9 @@ export function createMoneyTransferActionAttributes(params: {
         amount: {
             typeOf: 'MonetaryAmount',
             currency: accountType,
-            value: transaction.object.amount
+            value: (typeof transaction.object.amount === 'number')
+                ? transaction.object.amount
+                : transaction.object.amount.value
         },
         fromLocation: fromLocation,
         toLocation: toLocation,

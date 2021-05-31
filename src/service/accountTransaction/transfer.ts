@@ -10,7 +10,7 @@ import { MongoRepository as AccountTransactionRepo } from '../../repo/accountTra
 
 import { createMoneyTransferActionAttributes } from './factory';
 
-const debug = createDebug('pecorino-domain:service');
+const debug = createDebug('chevre-domain:service');
 
 export type IStartOperation<T> = (repos: {
     account: AccountRepo;
@@ -100,13 +100,17 @@ export function start(
         const pendingTransaction: factory.account.IPendingTransaction = {
             typeOf: transaction.typeOf,
             id: transaction.id,
-            amount: params.object.amount
+            amount: (typeof params.object.amount === 'number')
+                ? params.object.amount
+                : params.object.amount.value
         };
 
         // 残高確認
         await repos.account.authorizeAmount({
             accountNumber: params.object.fromLocation.accountNumber,
-            amount: params.object.amount,
+            amount: (typeof params.object.amount === 'number')
+                ? params.object.amount
+                : params.object.amount.value,
             transaction: pendingTransaction
         });
 

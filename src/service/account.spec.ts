@@ -200,6 +200,7 @@ describe('金額転送を中止する', () => {
             };
             const transaction = {
                 object: {
+                    amount: { value: 1 },
                     fromLocation: {},
                     toLocation: {}
                 }
@@ -244,6 +245,7 @@ describe('金額転送を中止する', () => {
         };
         const transaction = {
             object: {
+                amount: { value: 1 },
                 fromLocation: {},
                 toLocation: {}
             }
