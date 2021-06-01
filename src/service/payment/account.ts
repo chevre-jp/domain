@@ -113,7 +113,7 @@ async function processAccountTransaction(params: {
         expires: params.expires,
         recipient: recipient,
         object: {
-            amount: params.paymentMethod?.amount,
+            amount: { value: params.paymentMethod?.amount },
             description: description,
             fromLocation: {
                 accountNumber: accountNumber
@@ -248,7 +248,9 @@ export function refundAccount(params: factory.task.refund.IData) {
                 expires: expires,
                 recipient: recipient,
                 object: {
-                    amount: Number(payTransaction.object?.paymentMethod?.totalPaymentDue?.value),
+                    amount: {
+                        value: Number(payTransaction.object?.paymentMethod?.totalPaymentDue?.value)
+                    },
                     description: `Refund [${payTransaction.object?.paymentMethod?.description}]`,
                     toLocation: {
                         accountNumber: String(payTransaction.object.paymentMethod?.accountId)

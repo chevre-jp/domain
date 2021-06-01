@@ -153,7 +153,7 @@ async function processAccountTransaction(params: {
                 expires: expires,
                 recipient: recipient,
                 object: {
-                    amount: params.object.amount,
+                    amount: { value: params.object.amount },
                     description: description,
                     toLocation: {
                         accountNumber: params.object.toAccount.accountNumber
@@ -184,7 +184,7 @@ async function processAccountTransaction(params: {
                 expires: expires,
                 recipient: recipient,
                 object: {
-                    amount: params.object.amount,
+                    amount: { value: params.object.amount },
                     description: description,
                     fromLocation: {
                         accountNumber: params.object.fromAccount.accountNumber
@@ -216,7 +216,7 @@ async function processAccountTransaction(params: {
                 expires: expires,
                 recipient: recipient,
                 object: {
-                    amount: params.object.amount,
+                    amount: { value: params.object.amount },
                     description: description,
                     fromLocation: {
                         accountNumber: params.object.fromAccount.accountNumber
@@ -397,7 +397,7 @@ export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
                             expires: expires,
                             recipient: recipient,
                             object: {
-                                amount: amount,
+                                amount: { value: amount },
                                 description: description,
                                 fromLocation: params.fromLocation,
                                 toLocation: {
