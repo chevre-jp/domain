@@ -9,6 +9,7 @@ import { credentials } from '../../credentials';
 
 import * as OfferService from '../offer';
 
+import { MongoRepository as AccountRepo } from '../../repo/account';
 import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 import { MongoRepository as OfferRepo } from '../../repo/offer';
 import { MongoRepository as OfferCatalogRepo } from '../../repo/offerCatalog';
@@ -30,6 +31,7 @@ const pecorinoAuthClient = new pecorino.auth.ClientCredentials({
 });
 
 export type IStartOperation<T> = (repos: {
+    account: AccountRepo;
     offer: OfferRepo;
     offerCatalog: OfferCatalogRepo;
     product: ProductRepo;
@@ -59,6 +61,7 @@ export function start(
 ): IStartOperation<factory.assetTransaction.ITransaction<factory.assetTransactionType.RegisterService>> {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
+        account: AccountRepo;
         offer: OfferRepo;
         offerCatalog: OfferCatalogRepo;
         product: ProductRepo;
@@ -73,28 +76,13 @@ export function start(
             auth: pecorinoAuthClient
         });
 
-        // const informProgramMembershipParams: factory.assetTransaction.registerProgramMembership.IInformProgramMembershipParams[] = [];
-
-        // if (project.settings !== undefined
-        //     && project.settings !== null
-        //     && project.settings.onReservationStatusChanged !== undefined
-        //     && Array.isArray(project.settings.onReservationStatusChanged.informReservation)) {
-        //     informReservationParams.push(...project.settings.onReservationStatusChanged.informReservation);
-        // }
-
-        // if (params.object !== undefined
-        //     && params.object.onReservationStatusChanged !== undefined
-        //     && Array.isArray(params.object.onReservationStatusChanged.informReservation)) {
-        //     informReservationParams.push(...params.object.onReservationStatusChanged.informReservation);
-        // }
-
         // objectはオファー
-        let acceptedOffers = <any[]>params.object;
+        let acceptedOffers = params.object;
         if (!Array.isArray(acceptedOffers)) {
             acceptedOffers = [acceptedOffers];
         }
 
-        const productIds = [...new Set(acceptedOffers.map<string>((o) => o.itemOffered.id))];
+        const productIds = [...new Set(acceptedOffers.map<string>((o) => String(o.itemOffered.id)))];
         if (productIds.length !== 1) {
             throw new factory.errors.Argument('object.itemOffered.id', 'Number of product ID must be 1');
         }
@@ -105,10 +93,7 @@ export function start(
         }
 
         // プロダクト確認
-        const product = <factory.product.IProduct>await repos.product.findById({
-            id: productId
-        });
-
+        const product = <factory.product.IProduct>await repos.product.findById({ id: productId });
         // オファー検索
         const offers = await OfferService.searchProductOffers({ itemOffered: { id: String(product.id) } })(repos);
 
@@ -120,11 +105,14 @@ export function start(
 
         // サービスアウトプット作成
         const dateIssued = new Date();
-        const transactionObject: factory.assetTransaction.registerService.IObject = acceptedOffers.map((acceptedOffer) => {
+        const transactionObject: factory.assetTransaction.registerService.IObject = [];
+        for (const acceptedOffer of acceptedOffers) {
             const offer = offers.find((o) => o.id === acceptedOffer.id);
             if (offer === undefined) {
                 throw new factory.errors.NotFound('Offer', `Offer ${acceptedOffer.id} not found`);
             }
+
+            await validatePointAward({ acceptedOffer })(repos);
 
             const pointAward = createPointAward({
                 acceptedOffer: acceptedOffer,
@@ -139,7 +127,7 @@ export function start(
                 transactionNumber: transactionNumber
             });
 
-            return {
+            transactionObject.push({
                 typeOf: factory.offerType.Offer,
                 id: String(offer.id),
                 itemOffered: {
@@ -149,8 +137,8 @@ export function start(
                     serviceOutput: serviceOutput,
                     ...(pointAward !== undefined) ? { pointAward } : undefined
                 }
-            };
-        });
+            });
+        }
 
         // 取引開始
         const startParams: factory.assetTransaction.IStartParams<factory.assetTransactionType.RegisterService> = {
@@ -222,6 +210,27 @@ export function start(
         await repos.serviceOutput.serviceOutputModel.create(serviceOutputs);
 
         return transaction;
+    };
+}
+
+function validatePointAward(params: {
+    acceptedOffer: factory.assetTransaction.registerService.IAcceptedOffer;
+}) {
+    return async (repos: {
+        account: AccountRepo;
+    }) => {
+        const pointAwardToAccountNumber = params.acceptedOffer.itemOffered?.pointAward?.toLocation?.identifier;
+        if (typeof pointAwardToAccountNumber === 'string' && pointAwardToAccountNumber.length > 0) {
+            // pointAwardの指定がある場合、口座の存在確認
+            const searchAccountsResult = await repos.account.search({
+                limit: 1,
+                page: 1,
+                accountNumber: { $eq: pointAwardToAccountNumber }
+            });
+            if (searchAccountsResult.length < 1) {
+                throw new factory.errors.NotFound('pointAward.toLocation');
+            }
+        }
     };
 }
 

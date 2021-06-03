@@ -634,7 +634,7 @@ function coaTicket2offer(params: {
         availability: factory.itemAvailability.InStock,
         itemOffered: {
             project: { typeOf: params.project.typeOf, id: params.project.id },
-            typeOf: 'EventService'
+            typeOf: factory.product.ProductType.EventService
         },
         priceSpecification: unitPriceSpec,
         // eligibleCustomerType: eligibleCustomerType,
