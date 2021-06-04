@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## v15.47.0 - 2021-06-04
+
+### Added
+
 - インボイスリポジトリを追加
 - 決済方法リポジトリを追加
 - 注文リポジトリを追加
@@ -51,15 +65,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 通貨転送取引中止時に取引が存在しない場合に対応
 - サービス登録開始前に特典付与先口座の存在を確認するように調整
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - イベントの座席オファー検索におけるコーディングバグに対応
-
-### Security
 
 ## v15.46.1 - 2021-03-21
 
