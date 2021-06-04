@@ -194,12 +194,25 @@ export class MongoRepository {
             }
         }
 
+        const reservationStatusEq = params.reservationStatus?.$eq;
+        if (typeof reservationStatusEq === 'string') {
+            andConditions.push({ reservationStatus: { $eq: reservationStatusEq } });
+        }
+
+        const reservationStatusNe = params.reservationStatus?.$ne;
+        if (typeof reservationStatusNe === 'string') {
+            andConditions.push({ reservationStatus: { $ne: reservationStatusNe } });
+        }
+
+        const reservationStatusIn = params.reservationStatus?.$in;
+        if (Array.isArray(reservationStatusIn)) {
+            andConditions.push({ reservationStatus: { $in: reservationStatusIn } });
+        }
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (Array.isArray(params.reservationStatuses)) {
-            andConditions.push({
-                reservationStatus: { $in: params.reservationStatuses }
-            });
+            andConditions.push({ reservationStatus: { $in: params.reservationStatuses } });
         }
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -961,11 +974,17 @@ export class MongoRepository {
     /**
      * 予約確定
      */
-    public async confirm<T extends factory.reservationType>(
-        params: factory.reservation.IReservation<T> & {
-            previousReservationStatus?: factory.reservationStatusType;
-        }
-    ): Promise<factory.reservation.IReservation<T>> {
+    public async confirm<T extends factory.reservationType>(params: factory.reservation.IReservation<T> & {
+        previousReservationStatus?: factory.reservationStatusType;
+    }): Promise<factory.reservation.IReservation<T>> {
+        const conditions = {
+            _id: String(params.id),
+            // 変更前ステータスの指定があれば条件に追加
+            ... (typeof params.previousReservationStatus === 'string')
+                ? { reservationStatus: params.previousReservationStatus }
+                : undefined
+        };
+
         const update = {
             ...params,
             reservationStatus: factory.reservationStatusType.ReservationConfirmed,
@@ -980,17 +999,26 @@ export class MongoRepository {
             delete update.attended;
         }
 
-        const doc = await this.reservationModel.findByIdAndUpdate(
-            String(params.id),
+        const doc = await this.reservationModel.findOneAndUpdate(
+            conditions,
             <any>update,
-            {
-                new: true
-            }
+            { new: true }
         )
             .select({ __v: 0, createdAt: 0, updatedAt: 0 })
             .exec();
+
+        // NotFoundであれば状態確認
         if (doc === null) {
-            throw new factory.errors.NotFound(this.reservationModel.modelName);
+            const reservation = await this.findById<T>({ id: String(params.id) });
+            if (reservation.reservationStatus === factory.reservationStatusType.ReservationConfirmed) {
+                // すでに確定済の場合
+                return reservation;
+            } else {
+                throw new factory.errors.Argument(
+                    'id',
+                    `Reservation ${reservation.id} already changed -> ${reservation.reservationStatus}`
+                );
+            }
         }
 
         return doc.toObject();
@@ -999,29 +1027,46 @@ export class MongoRepository {
     /**
      * 予約取消
      */
-    public async cancel<T extends factory.reservationType>(
-        params: {
-            id: string;
-            previousReservationStatus?: factory.reservationStatusType;
-        }
-    ): Promise<factory.reservation.IReservation<T>> {
-        const doc = await this.reservationModel.findByIdAndUpdate(
-            params.id,
-            {
-                ... (typeof params.previousReservationStatus === 'string')
-                    ? { previousReservationStatus: params.previousReservationStatus }
-                    : undefined,
-                reservationStatus: factory.reservationStatusType.ReservationCancelled,
-                modifiedTime: new Date()
-            },
-            {
-                new: true
-            }
+    public async cancel<T extends factory.reservationType>(params: {
+        id: string;
+        previousReservationStatus?: factory.reservationStatusType;
+    }): Promise<factory.reservation.IReservation<T>> {
+        const conditions = {
+            _id: String(params.id),
+            // 変更前ステータスの指定があれば条件に追加
+            ... (typeof params.previousReservationStatus === 'string')
+                ? { reservationStatus: params.previousReservationStatus }
+                : undefined
+        };
+
+        const update = {
+            ... (typeof params.previousReservationStatus === 'string')
+                ? { previousReservationStatus: params.previousReservationStatus }
+                : undefined,
+            reservationStatus: factory.reservationStatusType.ReservationCancelled,
+            modifiedTime: new Date()
+        };
+
+        const doc = await this.reservationModel.findOneAndUpdate(
+            conditions,
+            update,
+            { new: true }
         )
             .select({ __v: 0, createdAt: 0, updatedAt: 0 })
             .exec();
+
+        // NotFoundであれば状態確認
         if (doc === null) {
-            throw new factory.errors.NotFound(this.reservationModel.modelName);
+            const reservation = await this.findById<T>({ id: String(params.id) });
+            if (reservation.reservationStatus === factory.reservationStatusType.ReservationCancelled) {
+                // すでに取消済の場合
+                return reservation;
+            } else {
+                throw new factory.errors.Argument(
+                    'id',
+                    `Reservation ${reservation.id} already changed -> ${reservation.reservationStatus}`
+                );
+            }
         }
 
         return doc.toObject();

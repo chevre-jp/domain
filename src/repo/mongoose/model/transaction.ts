@@ -1,5 +1,9 @@
 import * as mongoose from 'mongoose';
 
+import * as factory from '../../../factory';
+
+const modelName = 'Transaction';
+
 const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
 
 /**
@@ -10,9 +14,9 @@ const schema = new mongoose.Schema(
         project: mongoose.SchemaTypes.Mixed,
         status: String,
         typeOf: String,
-        transactionNumber: String,
         agent: mongoose.SchemaTypes.Mixed,
         recipient: mongoose.SchemaTypes.Mixed,
+        seller: mongoose.SchemaTypes.Mixed,
         error: mongoose.SchemaTypes.Mixed,
         result: mongoose.SchemaTypes.Mixed,
         object: mongoose.SchemaTypes.Mixed,
@@ -59,25 +63,6 @@ schema.index(
 );
 
 schema.index(
-    { transactionNumber: 1 },
-    {
-        unique: true,
-        partialFilterExpression: {
-            transactionNumber: { $exists: true }
-        }
-    }
-);
-
-schema.index(
-    { transactionNumber: 1, startDate: -1 },
-    {
-        partialFilterExpression: {
-            transactionNumber: { $exists: true }
-        }
-    }
-);
-
-schema.index(
     { 'project.id': 1, startDate: -1 },
     {
         name: 'searchByProjectId',
@@ -89,115 +74,265 @@ schema.index(
 
 schema.index(
     { typeOf: 1, startDate: -1 },
-    { name: 'searchByTypeOf-v2' }
+    { name: 'searchByTypeOfAndStartDate' }
 );
-
 schema.index(
     { status: 1, startDate: -1 },
-    { name: 'searchByStatus-v2' }
+    { name: 'searchByStatusAndStartDate' }
 );
-
 schema.index(
     { startDate: -1 },
-    { name: 'searchByStartDate-v2' }
+    { name: 'searchByStartDateDescending' }
 );
-
 schema.index(
     { endDate: 1, startDate: -1 },
     {
-        name: 'searchByEndDate-v2',
+        name: 'searchByEndDateAndStartDate',
         partialFilterExpression: {
             endDate: { $exists: true }
         }
     }
 );
-
 schema.index(
     { expires: 1, startDate: -1 },
-    { name: 'searchByExpires-v2' }
+    { name: 'searchByExpiresAndStartDate' }
 );
-
 schema.index(
     { tasksExportationStatus: 1, startDate: -1 },
-    { name: 'searchByTasksExportationStatus-v2' }
+    { name: 'searchByTasksExportationStatusAndStartDate' }
 );
-
 schema.index(
     { tasksExportedAt: 1, startDate: -1 },
     {
-        name: 'searchByTasksExportedAt-v2',
+        name: 'searchByTasksExportedAtAndStartDate',
         partialFilterExpression: {
             tasksExportedAt: { $exists: true }
         }
     }
 );
-
 schema.index(
-    { 'object.reservations.id': 1, startDate: -1 },
+    { 'result.order.confirmationNumber': 1, startDate: -1 },
     {
-        name: 'searchByObjectReservationsId',
+        name: 'searchByResultOrderConfirmationNumber',
         partialFilterExpression: {
-            'object.reservations.id': { $exists: true }
+            'result.order.confirmationNumber': { $exists: true }
         }
     }
 );
-
 schema.index(
-    { 'object.reservations.reservationNumber': 1, startDate: -1 },
+    { 'result.order.orderNumber': 1, startDate: -1 },
     {
-        name: 'searchByObjectReservationsReservationNumber',
+        name: 'searchByResultOrderNumberAndStartDate',
         partialFilterExpression: {
-            'object.reservations.reservationNumber': { $exists: true }
+            'result.order.orderNumber': { $exists: true }
         }
     }
 );
-
 schema.index(
-    { 'object.reservations.reservationFor.id': 1, startDate: -1 },
+    { 'object.confirmationNumber': 1, startDate: -1 },
     {
-        name: 'searchByObjectReservationsReservationForId',
+        name: 'searchByObjectConfirmationNumber',
         partialFilterExpression: {
-            'object.reservations.reservationFor.id': { $exists: true }
+            'object.confirmationNumber': { $exists: true }
         }
     }
 );
-
 schema.index(
-    { 'object.reservationNumber': 1, startDate: -1 },
+    { 'object.orderNumber': 1, startDate: -1 },
     {
-        name: 'searchByObjectReservationNumber',
+        name: 'searchByObjectOrderNumber',
         partialFilterExpression: {
-            'object.reservationNumber': { $exists: true }
+            'object.orderNumber': { $exists: true }
         }
     }
 );
-
 schema.index(
-    { 'object.membershipNumber': 1, startDate: -1 },
+    { 'object.identifier': 1, startDate: -1 },
     {
-        name: 'searchByObjectMembershipNumber',
+        name: 'searchByObjectIdentifier',
         partialFilterExpression: {
-            'object.membershipNumber': { $exists: true }
+            'object.identifier': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'object.order.orderNumber': 1, startDate: -1 },
+    {
+        name: 'searchByObjectOrderNumberAndStartDate',
+        partialFilterExpression: {
+            'object.order.orderNumber': { $exists: true }
+        }
+    }
+);
+// 結果の注文番号はユニークなはず
+schema.index(
+    {
+        typeOf: 1,
+        'result.order.orderNumber': 1
+    },
+    {
+        name: 'searchPlaceOrderByOrderNumber',
+        unique: true,
+        partialFilterExpression: {
+            'result.order.orderNumber': { $exists: true }
+        }
+    }
+);
+schema.index(
+    {
+        typeOf: 1,
+        'object.order.orderNumber': 1
+    },
+    {
+        name: 'searchReturnOrderByOrderNumber',
+        partialFilterExpression: {
+            'object.order.orderNumber': { $exists: true }
+        }
+    }
+);
+// ひとつの注文取引に対する確定返品取引はユニークなはず
+schema.index(
+    { 'object.order.orderNumber': 1 },
+    {
+        unique: true,
+        partialFilterExpression: {
+            typeOf: factory.transactionType.ReturnOrder, // 返品取引
+            status: factory.transactionStatusType.Confirmed, // 確定ステータス
+            'object.order.orderNumber': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'agent.typeOf': 1, startDate: -1 },
+    {
+        name: 'searchByAgentTypeOfAndStartDate',
+        partialFilterExpression: {
+            'agent.typeOf': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'agent.id': 1, startDate: -1 },
+    {
+        name: 'searchByAgentIdAndStartDate',
+        partialFilterExpression: {
+            'agent.id': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'agent.identifier': 1, startDate: -1 },
+    {
+        name: 'searchByAgentIdentifierAndStartDate',
+        partialFilterExpression: {
+            'agent.identifier': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'agent.familyName': 1, startDate: -1 },
+    {
+        name: 'searchByAgentFamilyName',
+        partialFilterExpression: {
+            'agent.familyName': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'agent.givenName': 1, startDate: -1 },
+    {
+        name: 'searchByAgentGivenName',
+        partialFilterExpression: {
+            'agent.givenName': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'agent.email': 1, startDate: -1 },
+    {
+        name: 'searchByAgentEmail',
+        partialFilterExpression: {
+            'agent.email': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'agent.telephone': 1, startDate: -1 },
+    {
+        name: 'searchByAgentTelephone',
+        partialFilterExpression: {
+            'agent.telephone': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'seller.typeOf': 1, startDate: -1 },
+    {
+        name: 'searchBySellerTypeOfAndStartDate',
+        partialFilterExpression: {
+            'seller.typeOf': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'seller.id': 1, startDate: -1 },
+    {
+        name: 'searchBySellerIdAndStartDate',
+        partialFilterExpression: {
+            'seller.id': { $exists: true }
         }
     }
 );
 
 schema.index(
     { typeOf: 1, status: 1, tasksExportationStatus: 1 },
-    { name: 'startExportTasks' }
+    {
+        name: 'startExportTasks'
+    }
+);
+schema.index(
+    { 'project.id': 1, typeOf: 1, status: 1, tasksExportationStatus: 1 },
+    {
+        name: 'startExportTasks-v2',
+        partialFilterExpression: {
+            'project.id': { $exists: true }
+        }
+    }
 );
 
 schema.index(
     { tasksExportationStatus: 1, updatedAt: 1 },
-    { name: 'reexportTasks' }
+    {
+        name: 'reexportTasks'
+    }
+);
+schema.index(
+    { 'project.id': 1, tasksExportationStatus: 1, updatedAt: 1 },
+    {
+        name: 'reexportTasks-v2',
+        partialFilterExpression: {
+            'project.id': { $exists: true }
+        }
+    }
 );
 
 schema.index(
     { status: 1, expires: 1 },
-    { name: 'makeExpired' }
+    {
+        name: 'makeExpired'
+    }
+);
+schema.index(
+    { 'project.id': 1, status: 1, expires: 1 },
+    {
+        name: 'makeExpired-v2',
+        partialFilterExpression: {
+            'project.id': { $exists: true }
+        }
+    }
 );
 
-export default mongoose.model('Transaction', schema)
+mongoose.model(modelName, schema)
     .on(
         'index',
         // tslint:disable-next-line:no-single-line-block-comment
@@ -209,3 +344,5 @@ export default mongoose.model('Transaction', schema)
             }
         }
     );
+
+export { modelName, schema };

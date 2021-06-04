@@ -1,6 +1,6 @@
 import * as factory from '../../factory';
 
-import { MongoRepository as TransactionRepo } from '../../repo/transaction';
+import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 
 import * as MoneyTransferService from '../moneyTransfer';
 

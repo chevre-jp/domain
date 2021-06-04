@@ -9,13 +9,14 @@ import { credentials } from '../../credentials';
 
 import * as OfferService from '../offer';
 
+import { MongoRepository as AccountRepo } from '../../repo/account';
+import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 import { MongoRepository as OfferRepo } from '../../repo/offer';
 import { MongoRepository as OfferCatalogRepo } from '../../repo/offerCatalog';
 import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
-import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
 import { createPointAward, createServiceOutput } from './registerService/factory';
 
@@ -30,6 +31,7 @@ const pecorinoAuthClient = new pecorino.auth.ClientCredentials({
 });
 
 export type IStartOperation<T> = (repos: {
+    account: AccountRepo;
     offer: OfferRepo;
     offerCatalog: OfferCatalogRepo;
     product: ProductRepo;
@@ -55,10 +57,11 @@ export type IExportTasksOperation<T> = (repos: {
  * 取引開始
  */
 export function start(
-    params: factory.transaction.registerService.IStartParamsWithoutDetail
-): IStartOperation<factory.transaction.ITransaction<factory.transactionType.RegisterService>> {
+    params: factory.assetTransaction.registerService.IStartParamsWithoutDetail
+): IStartOperation<factory.assetTransaction.ITransaction<factory.assetTransactionType.RegisterService>> {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
+        account: AccountRepo;
         offer: OfferRepo;
         offerCatalog: OfferCatalogRepo;
         product: ProductRepo;
@@ -73,28 +76,13 @@ export function start(
             auth: pecorinoAuthClient
         });
 
-        // const informProgramMembershipParams: factory.transaction.registerProgramMembership.IInformProgramMembershipParams[] = [];
-
-        // if (project.settings !== undefined
-        //     && project.settings !== null
-        //     && project.settings.onReservationStatusChanged !== undefined
-        //     && Array.isArray(project.settings.onReservationStatusChanged.informReservation)) {
-        //     informReservationParams.push(...project.settings.onReservationStatusChanged.informReservation);
-        // }
-
-        // if (params.object !== undefined
-        //     && params.object.onReservationStatusChanged !== undefined
-        //     && Array.isArray(params.object.onReservationStatusChanged.informReservation)) {
-        //     informReservationParams.push(...params.object.onReservationStatusChanged.informReservation);
-        // }
-
         // objectはオファー
-        let acceptedOffers = <any[]>params.object;
+        let acceptedOffers = params.object;
         if (!Array.isArray(acceptedOffers)) {
             acceptedOffers = [acceptedOffers];
         }
 
-        const productIds = [...new Set(acceptedOffers.map<string>((o) => o.itemOffered.id))];
+        const productIds = [...new Set(acceptedOffers.map<string>((o) => String(o.itemOffered.id)))];
         if (productIds.length !== 1) {
             throw new factory.errors.Argument('object.itemOffered.id', 'Number of product ID must be 1');
         }
@@ -105,10 +93,7 @@ export function start(
         }
 
         // プロダクト確認
-        const product = <factory.product.IProduct>await repos.product.findById({
-            id: productId
-        });
-
+        const product = <factory.product.IProduct>await repos.product.findById({ id: productId });
         // オファー検索
         const offers = await OfferService.searchProductOffers({ itemOffered: { id: String(product.id) } })(repos);
 
@@ -120,11 +105,14 @@ export function start(
 
         // サービスアウトプット作成
         const dateIssued = new Date();
-        const transactionObject: factory.transaction.registerService.IObject = acceptedOffers.map((acceptedOffer) => {
+        const transactionObject: factory.assetTransaction.registerService.IObject = [];
+        for (const acceptedOffer of acceptedOffers) {
             const offer = offers.find((o) => o.id === acceptedOffer.id);
             if (offer === undefined) {
                 throw new factory.errors.NotFound('Offer', `Offer ${acceptedOffer.id} not found`);
             }
+
+            await validatePointAward({ acceptedOffer })(repos);
 
             const pointAward = createPointAward({
                 acceptedOffer: acceptedOffer,
@@ -139,7 +127,7 @@ export function start(
                 transactionNumber: transactionNumber
             });
 
-            return {
+            transactionObject.push({
                 typeOf: factory.offerType.Offer,
                 id: String(offer.id),
                 itemOffered: {
@@ -149,13 +137,13 @@ export function start(
                     serviceOutput: serviceOutput,
                     ...(pointAward !== undefined) ? { pointAward } : undefined
                 }
-            };
-        });
+            });
+        }
 
         // 取引開始
-        const startParams: factory.transaction.IStartParams<factory.transactionType.RegisterService> = {
+        const startParams: factory.assetTransaction.IStartParams<factory.assetTransactionType.RegisterService> = {
             project: { typeOf: project.typeOf, id: project.id },
-            typeOf: factory.transactionType.RegisterService,
+            typeOf: factory.assetTransactionType.RegisterService,
             agent: params.agent,
             object: transactionObject,
             expires: params.expires,
@@ -163,9 +151,9 @@ export function start(
         };
 
         // 取引作成
-        let transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+        let transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.RegisterService>;
         try {
-            transaction = await repos.transaction.start<factory.transactionType.RegisterService>(startParams);
+            transaction = await repos.transaction.start<factory.assetTransactionType.RegisterService>(startParams);
         } catch (error) {
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore next */
@@ -225,24 +213,45 @@ export function start(
     };
 }
 
+function validatePointAward(params: {
+    acceptedOffer: factory.assetTransaction.registerService.IAcceptedOffer;
+}) {
+    return async (repos: {
+        account: AccountRepo;
+    }) => {
+        const pointAwardToAccountNumber = params.acceptedOffer.itemOffered?.pointAward?.toLocation?.identifier;
+        if (typeof pointAwardToAccountNumber === 'string' && pointAwardToAccountNumber.length > 0) {
+            // pointAwardの指定がある場合、口座の存在確認
+            const searchAccountsResult = await repos.account.search({
+                limit: 1,
+                page: 1,
+                accountNumber: { $eq: pointAwardToAccountNumber }
+            });
+            if (searchAccountsResult.length < 1) {
+                throw new factory.errors.NotFound('pointAward.toLocation');
+            }
+        }
+    };
+}
+
 /**
  * 取引確定
  */
-export function confirm(params: factory.transaction.registerService.IConfirmParams): IConfirmOperation<void> {
+export function confirm(params: factory.assetTransaction.registerService.IConfirmParams): IConfirmOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        let transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+        let transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.RegisterService>;
 
         // 取引存在確認
         if (typeof params.id === 'string') {
             transaction = await repos.transaction.findById({
-                typeOf: factory.transactionType.RegisterService,
+                typeOf: factory.assetTransactionType.RegisterService,
                 id: params.id
             });
         } else if (typeof params.transactionNumber === 'string') {
             transaction = await repos.transaction.findByTransactionNumber({
-                typeOf: factory.transactionType.RegisterService,
+                typeOf: factory.assetTransactionType.RegisterService,
                 transactionNumber: params.transactionNumber
             });
         } else {
@@ -255,9 +264,9 @@ export function confirm(params: factory.transaction.registerService.IConfirmPara
         });
 
         // 取引確定
-        const result: factory.transaction.registerService.IResult = {};
+        const result: factory.assetTransaction.registerService.IResult = {};
         await repos.transaction.confirm({
-            typeOf: factory.transactionType.RegisterService,
+            typeOf: factory.assetTransactionType.RegisterService,
             id: transaction.id,
             result: result,
             potentialActions: potentialActions
@@ -276,7 +285,7 @@ export function cancel(params: {
         transaction: TransactionRepo;
     }) => {
         await repos.transaction.cancel({
-            typeOf: factory.transactionType.RegisterService,
+            typeOf: factory.assetTransactionType.RegisterService,
             id: params.id,
             transactionNumber: params.transactionNumber
         });
@@ -286,19 +295,19 @@ export function cancel(params: {
 /**
  * 取引タスク出力
  */
-export function exportTasksById(params: { id: string }): IExportTasksOperation<factory.task.ITask[]> {
+export function exportTasksById(params: { id: string }): IExportTasksOperation<factory.task.ITask<factory.taskName>[]> {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
         const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.RegisterService,
+            typeOf: factory.assetTransactionType.RegisterService,
             id: params.id
         });
         const potentialActions = transaction.potentialActions;
 
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         const taskRunsAt = new Date();
 

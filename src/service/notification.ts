@@ -1,3 +1,6 @@
+/**
+ * 通知サービス
+ */
 // tslint:disable-next-line:no-implicit-dependencies no-submodule-imports
 import { MailData } from '@sendgrid/helpers/classes/mail';
 // tslint:disable-next-line:no-require-imports
@@ -37,11 +40,11 @@ export function sendEmailMessage(params: factory.action.transfer.send.message.em
         let result: any = {};
 
         try {
-            const apiKey = credentials.sendGrid.apiKey;
+            let apiKey = credentials.sendGrid.apiKey;
             // プロジェクト固有のSendGrid設定があれば、そちらを使用
-            // if (typeof project.settings?.sendgridApiKey === 'string' && project.settings.sendgridApiKey.length > 0) {
-            //     apiKey = project.settings.sendgridApiKey;
-            // }
+            if (typeof project.settings?.sendgridApiKey === 'string' && project.settings.sendgridApiKey.length > 0) {
+                apiKey = project.settings.sendgridApiKey;
+            }
             if (typeof apiKey !== 'string') {
                 throw new factory.errors.ServiceUnavailable('API Key not found');
             }
@@ -153,7 +156,7 @@ ${content}`
     };
 }
 
-export function triggerWebhook(params: factory.task.triggerWebhook.IData) {
+export function triggerWebhook(params: factory.task.IData<factory.taskName.TriggerWebhook>) {
     return async (repos: {
         action: ActionRepo;
     }) => {
@@ -162,9 +165,7 @@ export function triggerWebhook(params: factory.task.triggerWebhook.IData) {
         let result: any = {};
 
         try {
-            if (params.recipient !== undefined
-                && params.recipient !== null
-                && typeof params.recipient.url === 'string') {
+            if (typeof params.recipient?.url === 'string') {
                 const url = params.recipient.url;
 
                 await new Promise<void>((resolve, reject) => {
@@ -194,7 +195,10 @@ export function triggerWebhook(params: factory.task.triggerWebhook.IData) {
                                         break;
 
                                     default:
-                                        reject(body);
+                                        reject({
+                                            statusCode: response.statusCode,
+                                            body: body
+                                        });
                                 }
                             }
                         }

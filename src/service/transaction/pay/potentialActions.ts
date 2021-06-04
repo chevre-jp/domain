@@ -2,8 +2,8 @@ import * as factory from '../../../factory';
 
 // tslint:disable-next-line:max-func-body-length
 function createPayActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.Pay>;
-    potentialActions?: factory.transaction.pay.IPotentialActionsParams;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Pay>;
+    potentialActions?: factory.assetTransaction.pay.IPotentialActionsParams;
 }): factory.action.trade.pay.IAttributes[] {
     const transaction = params.transaction;
     const payActions: factory.action.trade.pay.IAttributes[] = [];
@@ -125,7 +125,7 @@ function createPayActions(params: {
 }
 
 function createInformPaymentActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.Pay>;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Pay>;
 }) {
     const transaction = params.transaction;
 
@@ -140,7 +140,8 @@ function createInformPaymentActions(params: {
                     project: transaction.project,
                     typeOf: factory.actionType.InformAction,
                     agent: transaction.project,
-                    recipient: {
+                    // tslint:disable-next-line:no-object-literal-type-assertion
+                    recipient: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>{
                         typeOf: transaction.agent.typeOf,
                         name: transaction.agent.name,
                         ...a.recipient
@@ -163,9 +164,9 @@ function createInformPaymentActions(params: {
  * 取引のポストアクションを作成する
  */
 export async function createPotentialActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.Pay>;
-    potentialActions?: factory.transaction.pay.IPotentialActionsParams;
-}): Promise<factory.transaction.IPotentialActions<factory.transactionType.Pay>> {
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Pay>;
+    potentialActions?: factory.assetTransaction.pay.IPotentialActionsParams;
+}): Promise<factory.assetTransaction.IPotentialActions<factory.assetTransactionType.Pay>> {
     const payActionAttributesList = createPayActions(params);
 
     return {

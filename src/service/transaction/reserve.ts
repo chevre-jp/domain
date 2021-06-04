@@ -5,6 +5,7 @@ import * as moment from 'moment';
 
 import * as factory from '../../factory';
 import { MongoRepository as ActionRepo } from '../../repo/action';
+import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 import { MongoRepository as EventRepo } from '../../repo/event';
 import { IOffer as IOffer4lock, RedisRepository as ScreeningEventAvailabilityRepo } from '../../repo/itemAvailability/screeningEvent';
 import { MongoRepository as OfferRepo } from '../../repo/offer';
@@ -16,7 +17,6 @@ import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../../repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
 import { MongoRepository as TaskRepo } from '../../repo/task';
-import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
 
 import * as OfferService from '../offer';
@@ -89,8 +89,8 @@ export type ITransactionOperation<T> = (repos: {
  * 予約番号を発行 & 取引を開始するだけ
  */
 export function start(
-    params: factory.transaction.reserve.IStartParamsWithoutDetail
-): IStartOperation<factory.transaction.ITransaction<factory.transactionType.Reserve>> {
+    params: factory.assetTransaction.reserve.IStartParamsWithoutDetail
+): IStartOperation<factory.assetTransaction.ITransaction<factory.assetTransactionType.Reserve>> {
     return async (repos: {
         eventAvailability: ScreeningEventAvailabilityRepo;
         event: EventRepo;
@@ -126,9 +126,9 @@ export function start(
         });
 
         // 取引作成
-        let transaction: factory.transaction.ITransaction<factory.transactionType.Reserve>;
+        let transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Reserve>;
         try {
-            transaction = await repos.transaction.start<factory.transactionType.Reserve>(startParams);
+            transaction = await repos.transaction.start<factory.assetTransactionType.Reserve>(startParams);
         } catch (error) {
             // tslint:disable-next-line:no-single-line-block-comment
             /* istanbul ignore next */
@@ -156,8 +156,8 @@ export function start(
  */
 export function addReservations(params: {
     id: string;
-    object: factory.transaction.reserve.IObjectWithoutDetail;
-}): IAddReservationsOperation<factory.transaction.ITransaction<factory.transactionType.Reserve>> {
+    object: factory.assetTransaction.reserve.IObjectWithoutDetail;
+}): IAddReservationsOperation<factory.assetTransaction.ITransaction<factory.assetTransactionType.Reserve>> {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         eventAvailability: ScreeningEventAvailabilityRepo;
@@ -176,7 +176,7 @@ export function addReservations(params: {
 
         // 取引存在確認
         let transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.Reserve,
+            typeOf: factory.assetTransactionType.Reserve,
             id: params.id
         });
 
@@ -323,7 +323,7 @@ export function addReservations(params: {
             })(repos);
 
             transaction = await repos.transaction.addReservations({
-                typeOf: factory.transactionType.Reserve,
+                typeOf: factory.assetTransactionType.Reserve,
                 id: transaction.id,
                 object: {
                     project: transaction.project,
@@ -493,14 +493,14 @@ function processLockSeats(params: {
  * 予約作成時イベント
  */
 function onReservationCreated(
-    transaction: factory.transaction.ITransaction<factory.transactionType.Reserve>,
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Reserve>,
     reservation: factory.reservation.IReservation<any>
 ) {
     return async (repos: {
         task: TaskRepo;
     }) => {
         const now = new Date();
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         // 予約ステータス変更時イベント
         const informReservation = transaction.object.onReservationStatusChanged?.informReservation;
@@ -518,11 +518,11 @@ function onReservationCreated(
                         data: {
                             project: transaction.project,
                             typeOf: factory.actionType.InformAction,
-                            agent: (reservation.reservedTicket !== undefined
-                                && reservation.reservedTicket.issuedBy !== undefined)
-                                ? reservation.reservedTicket.issuedBy
+                            agent: (typeof reservation.reservedTicket?.issuedBy?.typeOf === 'string')
+                                ? <factory.seller.ISeller>reservation.reservedTicket.issuedBy
                                 : transaction.project,
-                            recipient: {
+                            // tslint:disable-next-line:no-object-literal-type-assertion
+                            recipient: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>{
                                 typeOf: transaction.agent.typeOf,
                                 name: transaction.agent.name,
                                 ...a.recipient
@@ -553,7 +553,7 @@ function onReservationsCreated(params: {
         task: TaskRepo;
     }) => {
         const now = new Date();
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         // 集計タスク
         const aggregateTask: factory.task.aggregateScreeningEvent.IAttributes = {
@@ -576,21 +576,21 @@ function onReservationsCreated(params: {
 /**
  * 取引確定
  */
-export function confirm(params: factory.transaction.reserve.IConfirmParams): ITransactionOperation<void> {
+export function confirm(params: factory.assetTransaction.reserve.IConfirmParams): ITransactionOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        let transaction: factory.transaction.ITransaction<factory.transactionType.Reserve>;
+        let transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Reserve>;
 
         // 取引存在確認
         if (typeof params.id === 'string') {
             transaction = await repos.transaction.findById({
-                typeOf: factory.transactionType.Reserve,
+                typeOf: factory.assetTransactionType.Reserve,
                 id: params.id
             });
         } else if (typeof params.transactionNumber === 'string') {
             transaction = await repos.transaction.findByTransactionNumber({
-                typeOf: factory.transactionType.Reserve,
+                typeOf: factory.assetTransactionType.Reserve,
                 transactionNumber: params.transactionNumber
             });
         } else {
@@ -598,15 +598,15 @@ export function confirm(params: factory.transaction.reserve.IConfirmParams): ITr
         }
 
         // potentialActions作成
-        const potentialActions: factory.transaction.reserve.IPotentialActions = createPotentialActions({
+        const potentialActions: factory.assetTransaction.reserve.IPotentialActions = createPotentialActions({
             ...params,
             transaction: transaction
         });
 
         // 取引確定
-        const result: factory.transaction.reserve.IResult = {};
+        const result: factory.assetTransaction.reserve.IResult = {};
         await repos.transaction.confirm({
-            typeOf: factory.transactionType.Reserve,
+            typeOf: factory.assetTransactionType.Reserve,
             id: transaction.id,
             result: result,
             potentialActions: potentialActions
@@ -631,7 +631,7 @@ export function cancel(params: {
     }) => {
         // まず取引状態変更
         const transaction = await repos.transaction.cancel({
-            typeOf: factory.transactionType.Reserve,
+            typeOf: factory.assetTransactionType.Reserve,
             id: params.id,
             transactionNumber: params.transactionNumber
         });
@@ -653,10 +653,11 @@ export function cancel(params: {
                                 return {
                                     project: transaction.project,
                                     typeOf: factory.actionType.InformAction,
-                                    agent: (reservation.reservedTicket.issuedBy !== undefined)
-                                        ? reservation.reservedTicket.issuedBy
+                                    agent: (typeof reservation.reservedTicket.issuedBy?.typeOf === 'string')
+                                        ? <factory.seller.ISeller>reservation.reservedTicket.issuedBy
                                         : transaction.project,
-                                    recipient: {
+                                    // tslint:disable-next-line:max-line-length no-object-literal-type-assertion
+                                    recipient: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>{
                                         typeOf: transaction.agent.typeOf,
                                         name: transaction.agent.name,
                                         ...a.recipient
@@ -678,7 +679,8 @@ export function cancel(params: {
                             typeOf: transaction.typeOf,
                             id: transaction.id
                         },
-                        agent: transaction.agent,
+                        // tslint:disable-next-line:max-line-length
+                        agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>transaction.agent,
                         object: reservation,
                         potentialActions: {
                             informReservation: informReservationActions
@@ -697,19 +699,19 @@ export function cancel(params: {
 /**
  * 取引タスク出力
  */
-export function exportTasksById(params: { id: string }): ITaskAndTransactionOperation<factory.task.ITask[]> {
+export function exportTasksById(params: { id: string }): ITaskAndTransactionOperation<factory.task.ITask<factory.taskName>[]> {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
         const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.Reserve,
+            typeOf: factory.assetTransactionType.Reserve,
             id: params.id
         });
         const potentialActions = transaction.potentialActions;
 
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
         switch (transaction.status) {
             case factory.transactionStatusType.Confirmed:
                 // tslint:disable-next-line:no-single-line-block-comment
@@ -752,10 +754,11 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                                     return {
                                         project: transaction.project,
                                         typeOf: factory.actionType.InformAction,
-                                        agent: (reservation.reservedTicket.issuedBy !== undefined)
-                                            ? reservation.reservedTicket.issuedBy
+                                        agent: (typeof reservation.reservedTicket.issuedBy?.typeOf === 'string')
+                                            ? <factory.seller.ISeller>reservation.reservedTicket.issuedBy
                                             : transaction.project,
-                                        recipient: {
+                                        // tslint:disable-next-line:max-line-length no-object-literal-type-assertion
+                                        recipient: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>{
                                             typeOf: transaction.agent.typeOf,
                                             name: transaction.agent.name,
                                             ...a.recipient
@@ -777,7 +780,8 @@ export function exportTasksById(params: { id: string }): ITaskAndTransactionOper
                                 typeOf: transaction.typeOf,
                                 id: transaction.id
                             },
-                            agent: transaction.agent,
+                            // tslint:disable-next-line:max-line-length
+                            agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>transaction.agent,
                             object: reservation,
                             potentialActions: {
                                 informReservation: informReservationActions

@@ -75,6 +75,7 @@ export function aggregateScreeningEvent(params: {
             .toDate();
         let aggregatingEvents = await repos.event.search({
             limit: 100,
+            page: 1,
             project: { ids: [event.project.id] },
             typeOf: event.typeOf,
             eventStatuses: [factory.eventStatusType.EventScheduled],
@@ -236,38 +237,11 @@ function onAggregated(params: {
         const event = params.event;
 
         // イベント通知タスク
-        const targetProject = await repos.project.findById({ id: event.project.id });
-
-        const informEvent = targetProject.settings?.onEventChanged?.informEvent;
-        if (Array.isArray(informEvent)) {
-            await Promise.all(informEvent.map(async (informParams) => {
-                const triggerWebhookTask: factory.task.triggerWebhook.IAttributes = {
-                    project: event.project,
-                    name: factory.taskName.TriggerWebhook,
-                    status: factory.taskStatus.Ready,
-                    runsAt: new Date(),
-                    remainingNumberOfTries: 3,
-                    numberOfTried: 0,
-                    executionResults: [],
-                    data: {
-                        project: event.project,
-                        typeOf: factory.actionType.InformAction,
-                        agent: event.project,
-                        recipient: {
-                            typeOf: 'Person',
-                            ...informParams.recipient
-                        },
-                        object: event
-                    }
-                };
-
-                await repos.task.save(triggerWebhookTask);
-            }));
-        }
+        // const targetProject = await repos.project.findById({ id: event.project.id });
 
         if (USE_AGGREGATE_ON_PROJECT) {
             // プロジェクト集計タスク作成
-            const aggregateOnProjectTask: factory.task.IAttributes = {
+            const aggregateOnProjectTask: factory.task.aggregateOnProject.IAttributes = {
                 name: factory.taskName.AggregateOnProject,
                 project: event.project,
                 runsAt: new Date(),
@@ -571,21 +545,23 @@ function filterByEligibleSeatingType(params: {
                 (a, b) => {
                     return [
                         ...a,
-                        ...b.containsPlace.filter((place) => {
-                            const seatingTypes = (Array.isArray(place.seatingType)) ? place.seatingType
-                                : (typeof place.seatingType === 'string') ? [place.seatingType]
-                                    : [];
+                        ...(Array.isArray(b.containsPlace))
+                            ? b.containsPlace.filter((place) => {
+                                const seatingTypes = (Array.isArray(place.seatingType)) ? place.seatingType
+                                    : (typeof place.seatingType === 'string') ? [place.seatingType]
+                                        : [];
 
-                            return seatingTypes.some((seatingTypeCodeValue) => params.eligibleSeatingTypes.some(
-                                (eligibleSeatingType) => eligibleSeatingType === seatingTypeCodeValue)
-                            );
-                        })
-                            .map((place) => {
-                                return {
-                                    seatSection: b.branchCode,
-                                    seatNumber: place.branchCode
-                                };
+                                return seatingTypes.some((seatingTypeCodeValue) => params.eligibleSeatingTypes.some(
+                                    (eligibleSeatingType) => eligibleSeatingType === seatingTypeCodeValue)
+                                );
                             })
+                                .map((place) => {
+                                    return {
+                                        seatSection: b.branchCode,
+                                        seatNumber: place.branchCode
+                                    };
+                                })
+                            : []
                     ];
                 },
                 []
@@ -643,7 +619,11 @@ function aggregateReservationByEvent(params: {
         }
         if (reservedSeatsAvailable({ event: params.event })) {
             const screeningRoomSeatCount = (Array.isArray(params.screeningRoom.containsPlace))
-                ? params.screeningRoom.containsPlace.reduce((a, b) => a + b.containsPlace.length, 0)
+                // b.containsPlaceがundefinedの場合があるので注意(座席未登録)
+                ? params.screeningRoom.containsPlace.reduce(
+                    (a, b) => a + ((Array.isArray(b.containsPlace)) ? b.containsPlace.length : 0),
+                    0
+                )
                 : 0;
             maximumAttendeeCapacity = screeningRoomSeatCount;
 

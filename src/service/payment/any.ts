@@ -4,9 +4,9 @@
 import * as factory from '../../factory';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
+import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as TaskRepo } from '../../repo/task';
-import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
 export type IAuthorizeOperation<T> = (repos: {
     action: ActionRepo;
@@ -25,7 +25,7 @@ export function onPaid(
     }) => {
         const potentialActions = payAction.potentialActions;
         const now = new Date();
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         const informPayment = potentialActions?.informPayment;
         if (Array.isArray(informPayment)) {
@@ -67,7 +67,7 @@ export function onRefund(
     }) => {
         const potentialActions = refundAction.potentialActions;
         const now = new Date();
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         const informPayment = potentialActions?.informPayment;
 

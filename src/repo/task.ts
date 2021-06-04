@@ -1,8 +1,8 @@
 import * as moment from 'moment';
-import { Connection } from 'mongoose';
-import taskModel from './mongoose/model/task';
+import { Connection, Model } from 'mongoose';
 
 import * as factory from '../factory';
+import { modelName } from './mongoose/model/task';
 
 /**
  * タスク実行時のソート条件
@@ -16,10 +16,10 @@ const sortOrder4executionOfTasks = {
  * タスクリポジトリ
  */
 export class MongoRepository {
-    public readonly taskModel: typeof taskModel;
+    public readonly taskModel: typeof Model;
 
     constructor(connection: Connection) {
-        this.taskModel = connection.model(taskModel.modelName);
+        this.taskModel = connection.model(modelName);
     }
 
     public static CREATE_MONGO_CONDITIONS<T extends factory.taskName>(params: factory.task.ISearchConditions<T>) {
@@ -37,6 +37,17 @@ export class MongoRepository {
                         $in: params.project.ids
                     }
                 });
+            }
+
+            if (params.project.id !== undefined && params.project.id !== null) {
+                if (typeof params.project.id.$eq === 'string') {
+                    andConditions.push({
+                        'project.id': {
+                            $exists: true,
+                            $eq: params.project.id.$eq
+                        }
+                    });
+                }
             }
         }
 
@@ -92,12 +103,12 @@ export class MongoRepository {
         return andConditions;
     }
 
-    public async save(taskAttributes: factory.task.IAttributes): Promise<factory.task.ITask> {
+    public async save(taskAttributes: factory.task.IAttributes<factory.taskName>): Promise<factory.task.ITask<factory.taskName>> {
         return this.taskModel.create(taskAttributes)
-            .then((doc) => <factory.task.ITask>doc.toObject());
+            .then((doc) => <factory.task.ITask<factory.taskName>>doc.toObject());
     }
 
-    public async saveMany(taskAttributes: factory.task.IAttributes[]): Promise<any> {
+    public async saveMany(taskAttributes: factory.task.IAttributes<factory.taskName>[]): Promise<any> {
         if (taskAttributes.length > 0) {
             const result = <any>await this.taskModel.insertMany(taskAttributes, { ordered: false, rawResult: true });
 
@@ -114,7 +125,7 @@ export class MongoRepository {
     public async executeOneByName<T extends factory.taskName>(params: {
         project?: { id: string };
         name: T;
-    }): Promise<factory.task.ITask | null> {
+    }): Promise<factory.task.ITask<T> | null> {
         const doc = await this.taskModel.findOneAndUpdate(
             {
                 ...(params.project !== undefined)
@@ -131,7 +142,7 @@ export class MongoRepository {
             {
                 status: factory.taskStatus.Running, // 実行中に変更
                 lastTriedAt: new Date(),
-                $inc: {
+                $inc: <any>{
                     remainingNumberOfTries: -1, // 残りトライ可能回数減らす
                     numberOfTried: 1 // トライ回数増やす
                 }
@@ -182,7 +193,7 @@ export class MongoRepository {
     public async abortOne(params: {
         project?: { id: string };
         intervalInMinutes: number;
-    }): Promise<factory.task.ITask | null> {
+    }): Promise<factory.task.ITask<factory.taskName> | null> {
         const lastTriedAtShoudBeLessThan = moment()
             .add(-params.intervalInMinutes, 'minutes')
             .toDate();
@@ -220,13 +231,13 @@ export class MongoRepository {
     public async pushExecutionResultById(
         id: string,
         status: factory.taskStatus,
-        executionResult: factory.taskExecutionResult.IAttributes
+        executionResult: factory.task.IExecutionResult
     ): Promise<void> {
         await this.taskModel.findByIdAndUpdate(
             id,
             {
                 status: status, // 失敗してもここでは戻さない(Runningのまま待機)
-                $push: { executionResults: executionResult }
+                $push: <any>{ executionResults: executionResult }
             }
         )
             .exec();
@@ -238,7 +249,7 @@ export class MongoRepository {
     public async findById<T extends factory.taskName>(params: {
         name: T;
         id: string;
-    }): Promise<factory.task.ITask> {
+    }): Promise<factory.task.ITask<T>> {
         const doc = await this.taskModel.findOne(
             {
                 name: params.name,
@@ -271,7 +282,7 @@ export class MongoRepository {
      */
     public async search<T extends factory.taskName>(
         params: factory.task.ISearchConditions<T>
-    ): Promise<factory.task.ITask[]> {
+    ): Promise<factory.task.ITask<T>[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.taskModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},

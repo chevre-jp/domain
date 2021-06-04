@@ -24,7 +24,7 @@ export import IUnauthorizedCardOfMember = factory.paymentMethod.paymentCard.cred
  * クレジットカード決済承認
  */
 export function authorize(
-    params: factory.transaction.pay.IStartParamsWithoutDetail
+    params: factory.assetTransaction.pay.IStartParamsWithoutDetail
 ) {
     return async (repos: {
         product: ProductRepo;
@@ -67,7 +67,7 @@ export function authorize(
                 shopPass: shopPass,
                 orderId: orderId,
                 availableChannel: availableChannel,
-                object: <factory.transaction.pay.IPaymentMethod>params.object.paymentMethod
+                object: <factory.assetTransaction.pay.IPaymentMethod>params.object.paymentMethod
             });
         } catch (error) {
             throw handleAuthorizeError(error);
@@ -112,7 +112,7 @@ async function processAuthorizeCreditCard(params: {
     shopPass: string;
     orderId: string;
     availableChannel: factory.service.paymentService.IAvailableChannel;
-    object: factory.transaction.pay.IPaymentMethod;
+    object: factory.assetTransaction.pay.IPaymentMethod;
 }): Promise<IAuthorizeResult> {
     // GMOオーソリ取得
     let entryTranArgs: GMO.factory.credit.IEntryTranArgs & GMO.factory.credit.IOptionalSiteArgs;
@@ -576,6 +576,7 @@ function getGMOInfoFromSeller(params: {
         // 決済サービスからcredentialsを取得する
         const paymentServices = <factory.service.paymentService.IService[]>await repos.product.search({
             limit: 1,
+            page: 1,
             project: { id: { $eq: seller.project.id } },
             typeOf: { $eq: factory.service.paymentService.PaymentServiceType.CreditCard },
             serviceOutput: { typeOf: { $eq: params.paymentMethodType } }

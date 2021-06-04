@@ -5,6 +5,10 @@
 import { BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, TOO_MANY_REQUESTS, UNAUTHORIZED } from 'http-status';
 import { errors } from './factory';
 
+export enum MongoErrorCode {
+    DuplicateKey = 11000
+}
+
 /**
  * COA仮予約エラーハンドリング
  */
@@ -25,7 +29,7 @@ export function handleCOAReserveTemporarilyError(error: any) {
         if (reserveServiceHttpStatusCode < INTERNAL_SERVER_ERROR) {
             handledError = new errors.Argument('Event', error.message);
         } else {
-            handledError = new errors.ServiceUnavailable('Reserve service temporarily unavailable');
+            handledError = new errors.ServiceUnavailable(`Reserve service temporarily unavailable. name:${error.name} code:${error.code} message:${error.message}`);
         }
     }
 
@@ -45,7 +49,10 @@ export function handlePecorinoError(error: any) {
         const message = `${error.name}:${error.message}`;
         switch (error.code) {
             case BAD_REQUEST: // 400
-                handledError = new errors.Argument('PecorinoArgument', message);
+                handledError = new errors.Argument(
+                    (typeof error.argumentName === 'string' && error.argumentName.length > 0) ? error.argumentName : 'PecorinoArgument',
+                    message
+                );
                 break;
             case UNAUTHORIZED: // 401
                 handledError = new errors.Unauthorized(message);
@@ -80,7 +87,10 @@ export function handleMvtkReserveError(error: any) {
         const message = `${error.name}:${error.message}`;
         switch (error.code) {
             case BAD_REQUEST: // 400
-                handledError = new errors.Argument('MovieticketReserveArgument', message);
+                handledError = new errors.Argument(
+                    (typeof error.argumentName === 'string' && error.argumentName.length > 0) ? error.argumentName : 'MovieticketReserveArgument',
+                    message
+                );
                 break;
             case UNAUTHORIZED: // 401
                 handledError = new errors.Unauthorized(message);

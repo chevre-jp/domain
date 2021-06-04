@@ -11,9 +11,9 @@ import { handlePecorinoError } from '../../errorHandler';
 import * as factory from '../../factory';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
+import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as TaskRepo } from '../../repo/task';
-import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
 
 import { onPaid, onRefund } from './any';
@@ -26,9 +26,9 @@ const pecorinoAuthClient = new pecorinoapi.auth.ClientCredentials({
     state: ''
 });
 
-export type IPendingTransaction = pecorinoapi.factory.transaction.withdraw.ITransaction;
+export type IPendingTransaction = factory.account.transaction.withdraw.ITransaction;
 
-export function authorize(params: factory.transaction.pay.IStartParamsWithoutDetail) {
+export function authorize(params: factory.assetTransaction.pay.IStartParamsWithoutDetail) {
     return async (repos: {
         project: ProjectRepo;
     }): Promise<IPendingTransaction> => {
@@ -50,9 +50,9 @@ export function authorize(params: factory.transaction.pay.IStartParamsWithoutDet
             pendingTransaction = await processAccountTransaction({
                 transactionNumber,
                 project: project,
-                paymentMethod: <factory.transaction.pay.IPaymentMethod>params.object.paymentMethod,
+                paymentMethod: <factory.assetTransaction.pay.IPaymentMethod>params.object.paymentMethod,
                 agent: params.agent,
-                recipient: <factory.transaction.pay.IRecipient>params.recipient,
+                recipient: <factory.assetTransaction.pay.IRecipient>params.recipient,
                 expires: expires
             });
         } catch (error) {
@@ -67,28 +67,30 @@ export function authorize(params: factory.transaction.pay.IStartParamsWithoutDet
 async function processAccountTransaction(params: {
     transactionNumber: string;
     project: factory.project.IProject;
-    paymentMethod: factory.transaction.pay.IPaymentMethod;
-    agent: factory.transaction.pay.IAgent;
-    recipient: factory.transaction.pay.IRecipient;
+    paymentMethod: factory.assetTransaction.pay.IPaymentMethod;
+    agent: factory.assetTransaction.pay.IAgent;
+    recipient: factory.assetTransaction.pay.IRecipient;
     expires: Date;
 }): Promise<IPendingTransaction> {
     let pendingTransaction: IPendingTransaction;
 
-    const defaultName = `${factory.transactionType.Pay} Transaction ${params.transactionNumber}`;
+    const defaultName = `${factory.assetTransactionType.Pay} Transaction ${params.transactionNumber}`;
 
     const agent = {
-        typeOf: params.agent.typeOf,
-        id: params.agent.id,
+        ...params.agent,
+        // typeOf: params.agent.typeOf,
+        // id: params.agent.id,
         name: (typeof params.agent.name === 'string') ? params.agent.name : defaultName
     };
 
     const recipient = {
-        typeOf: params.recipient.typeOf,
-        id: params.recipient.id,
+        ...params.recipient,
+        // typeOf: params.recipient.typeOf,
+        // id: params.recipient.id,
         name: (typeof params.recipient.name === 'string')
             ? params.recipient.name
-            : (typeof params.recipient.name?.ja === 'string') ? params.recipient.name.ja : defaultName,
-        ...(typeof params.recipient.url === 'string') ? { url: params.recipient.url } : undefined
+            : (typeof params.recipient.name?.ja === 'string') ? params.recipient.name.ja : defaultName
+        // ...(typeof params.recipient.url === 'string') ? { url: params.recipient.url } : undefined
     };
 
     const description = (typeof params.paymentMethod?.description === 'string') ? params.paymentMethod?.description : '';
@@ -106,12 +108,12 @@ async function processAccountTransaction(params: {
     pendingTransaction = await withdrawService.start({
         transactionNumber: params.transactionNumber,
         project: { typeOf: params.project.typeOf, id: params.project.id },
-        typeOf: pecorinoapi.factory.transactionType.Withdraw,
+        typeOf: factory.account.transactionType.Withdraw,
         agent: agent,
         expires: params.expires,
         recipient: recipient,
         object: {
-            amount: params.paymentMethod?.amount,
+            amount: { value: params.paymentMethod?.amount },
             description: description,
             fromLocation: {
                 accountNumber: accountNumber
@@ -198,7 +200,7 @@ export function refundAccount(params: factory.task.refund.IData) {
         const paymentMethodId = params.object[0]?.paymentMethod.paymentMethodId;
 
         const payTransaction = await repos.transaction.findByTransactionNumber({
-            typeOf: factory.transactionType.Pay,
+            typeOf: factory.assetTransactionType.Pay,
             transactionNumber: paymentMethodId
         });
 
@@ -215,16 +217,18 @@ export function refundAccount(params: factory.task.refund.IData) {
                 .toDate();
 
             const agent = {
-                typeOf: params.agent.typeOf,
-                id: params.agent.id,
+                ...params.agent,
+                // typeOf: params.agent.typeOf,
+                // id: params.agent.id,
                 name: (typeof params.agent.name === 'string')
                     ? params.agent.name
                     : `${params.agent.typeOf} ${params.agent.id}`
             };
 
             const recipient = {
-                typeOf: String(params.recipient?.typeOf),
-                id: params.recipient?.id,
+                ...<factory.person.IPerson | factory.creativeWork.softwareApplication.webApplication.ICreativeWork>params.recipient,
+                // typeOf: String(params.recipient?.typeOf),
+                // id: params.recipient?.id,
                 name: (typeof params.recipient?.name === 'string')
                     ? params.recipient.name
                     : (typeof params.recipient?.name?.ja === 'string')
@@ -239,12 +243,14 @@ export function refundAccount(params: factory.task.refund.IData) {
             await depositService.start({
                 transactionNumber: transactionNumber,
                 project: { typeOf: params.project.typeOf, id: params.project.id },
-                typeOf: pecorinoapi.factory.transactionType.Deposit,
+                typeOf: factory.account.transactionType.Deposit,
                 agent: agent,
                 expires: expires,
                 recipient: recipient,
                 object: {
-                    amount: Number(payTransaction.object?.paymentMethod?.totalPaymentDue?.value),
+                    amount: {
+                        value: Number(payTransaction.object?.paymentMethod?.totalPaymentDue?.value)
+                    },
                     description: `Refund [${payTransaction.object?.paymentMethod?.description}]`,
                     toLocation: {
                         accountNumber: String(payTransaction.object.paymentMethod?.accountId)

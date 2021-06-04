@@ -1,7 +1,7 @@
 import * as factory from '../../../factory';
 
 function createMoneyTransferActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.MoneyTransfer>;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.MoneyTransfer>;
 }): factory.action.transfer.moneyTransfer.IAttributes[] {
     const transaction = params.transaction;
 
@@ -56,8 +56,8 @@ function createMoneyTransferActions(params: {
  * 取引のポストアクションを作成する
  */
 export async function createPotentialActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.MoneyTransfer>;
-}): Promise<factory.transaction.IPotentialActions<factory.transactionType.MoneyTransfer>> {
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.MoneyTransfer>;
+}): Promise<factory.assetTransaction.IPotentialActions<factory.assetTransactionType.MoneyTransfer>> {
     // 通貨転送アクション属性作成
     const moneyTransferActionAttributesList = createMoneyTransferActions(params);
 

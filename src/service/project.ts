@@ -3,9 +3,11 @@
  */
 import { MongoRepository as AccountTitleRepo } from '../repo/accountTitle';
 import { MongoRepository as ActionRepo } from '../repo/action';
+import { MongoRepository as TransactionRepo } from '../repo/assetTransaction';
 import { MongoRepository as CategoryCodeRepo } from '../repo/categoryCode';
 import { MongoRepository as CreativeWorkRepo } from '../repo/creativeWork';
 import { MongoRepository as EventRepo } from '../repo/event';
+import { MongoRepository as MemberRepo } from '../repo/member';
 import { MongoRepository as OfferRepo } from '../repo/offer';
 import { MongoRepository as OfferCatalogRepo } from '../repo/offerCatalog';
 import { MongoRepository as PlaceRepo } from '../repo/place';
@@ -16,7 +18,6 @@ import { MongoRepository as ReservationRepo } from '../repo/reservation';
 import { MongoRepository as SellerRepo } from '../repo/seller';
 import { MongoRepository as ServiceOutputRepo } from '../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../repo/task';
-import { MongoRepository as TransactionRepo } from '../repo/transaction';
 
 export function deleteProject(params: { id: string }) {
     return async (repos: {
@@ -25,6 +26,7 @@ export function deleteProject(params: { id: string }) {
         categoryCode: CategoryCodeRepo;
         creativeWork: CreativeWorkRepo;
         event: EventRepo;
+        member: MemberRepo;
         offer: OfferRepo;
         offerCatalog: OfferCatalogRepo;
         place: PlaceRepo;
@@ -99,6 +101,11 @@ export function deleteProject(params: { id: string }) {
             .exec();
 
         await repos.categoryCode.categoryCodeModel.deleteMany({
+            'project.id': { $exists: true, $eq: params.id }
+        })
+            .exec();
+
+        await repos.member.memberModel.deleteMany({
             'project.id': { $exists: true, $eq: params.id }
         })
             .exec();

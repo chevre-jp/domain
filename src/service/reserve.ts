@@ -6,11 +6,11 @@ import * as moment from 'moment';
 import * as factory from '../factory';
 
 import { MongoRepository as ActionRepo } from '../repo/action';
+import { MongoRepository as TransactionRepo } from '../repo/assetTransaction';
 import { IUnlockKey, RedisRepository as ScreeningEventAvailabilityRepo } from '../repo/itemAvailability/screeningEvent';
 import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from '../repo/reservation';
 import { MongoRepository as TaskRepo } from '../repo/task';
-import { MongoRepository as TransactionRepo } from '../repo/transaction';
 
 /**
  * 予約を確定する
@@ -77,7 +77,7 @@ function onConfirmed(
         const potentialActions = actionAttributes.potentialActions;
         const now = new Date();
 
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -200,9 +200,10 @@ export function cancelReservation(actionAttributesList: factory.action.cancel.re
             try {
                 // 予約取引を検索
                 const reserveTransactions = await
-                    repos.transaction.search<factory.transactionType.Reserve>({
+                    repos.transaction.search<factory.assetTransactionType.Reserve>({
                         limit: 1,
-                        typeOf: factory.transactionType.Reserve,
+                        page: 1,
+                        typeOf: factory.assetTransactionType.Reserve,
                         object: { reservations: { id: { $in: [reservation.id] } } }
                     });
                 const reserveTransaction = reserveTransactions.shift();
@@ -384,7 +385,7 @@ function onCanceled(
         const potentialActions = actionAttributes.potentialActions;
         const now = new Date();
 
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */

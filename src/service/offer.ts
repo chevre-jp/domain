@@ -145,15 +145,17 @@ export function searchEventSeatOffers(params: {
             offers = screeningRoom.containsPlace.map((sectionOffer) => {
                 return {
                     ...sectionOffer,
-                    containsPlace: sectionOffer.containsPlace.map((seat) => {
-                        return addOffers2Seat({
-                            project: event.project,
-                            seat: seat,
-                            seatSection: sectionOffer.branchCode,
-                            unavailableOffers: unavailableOffers,
-                            priceSpecs: priceSpecs
-                        });
-                    })
+                    containsPlace: (Array.isArray(sectionOffer.containsPlace))
+                        ? sectionOffer.containsPlace.map((seat) => {
+                            return addOffers2Seat({
+                                project: event.project,
+                                seat: seat,
+                                seatSection: sectionOffer.branchCode,
+                                unavailableOffers: unavailableOffers,
+                                priceSpecs: priceSpecs
+                            });
+                        })
+                        : []
                 };
             });
         }
@@ -169,6 +171,7 @@ export function searchEventSeatOffersWithPaging(params: {
     limit?: number;
     page?: number;
     event: { id: string };
+    $projection?: any;
 }) {
     return async (repos: {
         event: EventRepo;
@@ -631,7 +634,7 @@ function coaTicket2offer(params: {
         availability: factory.itemAvailability.InStock,
         itemOffered: {
             project: { typeOf: params.project.typeOf, id: params.project.id },
-            typeOf: 'EventService'
+            typeOf: factory.product.ProductType.EventService
         },
         priceSpecification: unitPriceSpec,
         // eligibleCustomerType: eligibleCustomerType,
@@ -679,35 +682,7 @@ export function onEventChanged(params: factory.event.IEvent<factory.eventType>) 
             await repos.task.save(aggregateTask);
         } else {
             // イベント通知タスク
-            const project = await repos.project.findById({ id: event.project.id });
-
-            if (project.settings !== undefined
-                && project.settings.onEventChanged !== undefined
-                && Array.isArray(project.settings.onEventChanged.informEvent)) {
-                await Promise.all(project.settings.onEventChanged.informEvent.map(async (informParams) => {
-                    const triggerWebhookTask: factory.task.triggerWebhook.IAttributes = {
-                        project: event.project,
-                        name: factory.taskName.TriggerWebhook,
-                        status: factory.taskStatus.Ready,
-                        runsAt: new Date(),
-                        remainingNumberOfTries: 3,
-                        numberOfTried: 0,
-                        executionResults: [],
-                        data: {
-                            project: event.project,
-                            typeOf: factory.actionType.InformAction,
-                            agent: event.project,
-                            recipient: {
-                                typeOf: 'Person',
-                                ...informParams.recipient
-                            },
-                            object: event
-                        }
-                    };
-
-                    await repos.task.save(triggerWebhookTask);
-                }));
-            }
+            // const project = await repos.project.findById({ id: event.project.id });
         }
     };
 }

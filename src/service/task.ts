@@ -1,7 +1,7 @@
 /**
  * タスクサービス
  */
-import * as moment from 'moment';
+import * as createDebug from 'debug';
 import * as mongoose from 'mongoose';
 import * as redis from 'redis';
 
@@ -9,6 +9,9 @@ import * as factory from '../factory';
 import { MongoRepository as TaskRepo } from '../repo/task';
 
 import * as NotificationService from './notification';
+import { task2lineNotify } from './notification/factory';
+
+const debug = createDebug('chevre-domain:service');
 
 const ABORTED_TASKS_WITHOUT_REPORT: string[] = (typeof process.env.ABORTED_TASKS_WITHOUT_REPORT === 'string')
     ? process.env.ABORTED_TASKS_WITHOUT_REPORT.split(',')
@@ -28,8 +31,6 @@ export interface IConnectionSettings {
 export type TaskOperation<T> = (repos: { task: TaskRepo }) => Promise<T>;
 export type IOperation<T> = (settings: IConnectionSettings) => Promise<T>;
 
-export const ABORT_REPORT_SUBJECT = 'Task aborted !!!';
-
 /**
  * タスク名でタスクをひとつ実行する
  */
@@ -42,11 +43,13 @@ export function executeByName<T extends factory.taskName>(params: {
 
         // 未実行のタスクを取得
         // tslint:disable-next-line:no-null-keyword
-        let task: factory.task.ITask | null = null;
+        let task: factory.task.ITask<T> | null = null;
         try {
             task = await taskRepo.executeOneByName(params);
         } catch (error) {
-            // no op
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore next */
+            debug('executeByName error:', error);
         }
 
         // タスクがなければ終了
@@ -59,7 +62,7 @@ export function executeByName<T extends factory.taskName>(params: {
 /**
  * タスクを実行する
  */
-export function execute(task: factory.task.ITask): IOperation<void> {
+export function execute(task: factory.task.ITask<factory.taskName>): IOperation<void> {
     const now = new Date();
 
     return async (settings: IConnectionSettings) => {
@@ -71,13 +74,20 @@ export function execute(task: factory.task.ITask): IOperation<void> {
             await call(task.data)(settings);
             const result = {
                 executedAt: now,
+                endDate: new Date(),
                 error: ''
             };
             await taskRepo.pushExecutionResultById(task.id, factory.taskStatus.Executed, result);
         } catch (error) {
+            debug('service.task.execute:', error);
+            if (typeof error !== 'object') {
+                error = { message: String(error) };
+            }
+
             // 実行結果追加
             const result = {
                 executedAt: now,
+                endDate: new Date(),
                 error: {
                     ...error,
                     code: error.code,
@@ -122,6 +132,7 @@ export function abort(params: {
         if (abortedTask === null) {
             return;
         }
+        debug('abortedTask found', abortedTask);
 
         // 中止を報告しないタスクであれば終了
         if (ABORTED_TASKS_WITHOUT_REPORT.includes(abortedTask.name)) {
@@ -129,24 +140,7 @@ export function abort(params: {
         }
 
         // 開発者へ報告
-        const lastExecutionResult = (abortedTask.executionResults.length > 0)
-            ? abortedTask.executionResults[abortedTask.executionResults.length - 1]
-            : undefined;
-        const lastMessage: string = (lastExecutionResult !== undefined)
-            ? (typeof lastExecutionResult.error === 'string') ? lastExecutionResult.error : (<any>lastExecutionResult.error).message
-            : '';
-
-        await NotificationService.report2developers(
-            ABORT_REPORT_SUBJECT,
-            `project:${abortedTask.project.id}
-id:${abortedTask.id}
-name:${abortedTask.name}
-runsAt:${moment(abortedTask.runsAt)
-                .toISOString()}
-lastTriedAt:${moment(<Date>abortedTask.lastTriedAt)
-                .toISOString()}
-numberOfTried:${abortedTask.numberOfTried}
-lastMessage:${lastMessage}`
-        )();
+        const message = task2lineNotify({ task: abortedTask });
+        await NotificationService.report2developers(message.subject, message.content)();
     };
 }

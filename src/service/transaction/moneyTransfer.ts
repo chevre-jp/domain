@@ -1,33 +1,35 @@
 /**
  * 通貨転送取引サービス
  */
-import * as pecorino from '@pecorino/api-nodejs-client';
+// import * as pecorino from '@pecorino/api-nodejs-client';
 import * as moment from 'moment';
 
-import { credentials } from '../../credentials';
+// import { credentials } from '../../credentials';
 
 import * as factory from '../../factory';
 
+import { MongoRepository as AccountRepo } from '../../repo/account';
+import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
-import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
 
 import * as MoneyTransferService from '../moneyTransfer';
 
 import { createPotentialActions } from './moneyTransfer/potentialActions';
 
-const pecorinoAuthClient = new pecorino.auth.ClientCredentials({
-    domain: credentials.pecorino.authorizeServerDomain,
-    clientId: credentials.pecorino.clientId,
-    clientSecret: credentials.pecorino.clientSecret,
-    scopes: [],
-    state: ''
-});
+// const pecorinoAuthClient = new pecorino.auth.ClientCredentials({
+//     domain: credentials.pecorino.authorizeServerDomain,
+//     clientId: credentials.pecorino.clientId,
+//     clientSecret: credentials.pecorino.clientSecret,
+//     scopes: [],
+//     state: ''
+// });
 
 export type IStartOperation<T> = (repos: {
+    account: AccountRepo;
     product: ProductRepo;
     project: ProjectRepo;
     serviceOutput: ServiceOutputRepo;
@@ -54,9 +56,10 @@ export type ICancelOperation<T> = (repos: {
  */
 // tslint:disable-next-line:max-func-body-length
 export function start(
-    params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail
-): IStartOperation<factory.transaction.moneyTransfer.ITransaction> {
+    params: factory.assetTransaction.moneyTransfer.IStartParamsWithoutDetail
+): IStartOperation<factory.assetTransaction.moneyTransfer.ITransaction> {
     return async (repos: {
+        account: AccountRepo;
         product: ProductRepo;
         project: ProjectRepo;
         serviceOutput: ServiceOutputRepo;
@@ -77,6 +80,7 @@ export function start(
         // プロダクトをfix
         const products = <factory.product.IProduct[]>await repos.product.search({
             limit: 1,
+            page: 1,
             project: { id: { $eq: params.project.id } },
             serviceOutput: { typeOf: { $eq: serviceOutputType } }
         });
@@ -98,16 +102,16 @@ export function start(
             });
         }
 
-        const transationType: pecorino.factory.transactionType | undefined = params.object.pendingTransaction?.typeOf;
+        const transationType: factory.account.transactionType | undefined = params.object.pendingTransaction?.typeOf;
         if (typeof transationType !== 'string') {
             throw new factory.errors.ArgumentNull('object.pendingTransaction.typeOf');
         }
 
         // 取引開始
-        const startParams: factory.transaction.IStartParams<factory.transactionType.MoneyTransfer> = {
+        const startParams: factory.assetTransaction.IStartParams<factory.assetTransactionType.MoneyTransfer> = {
             project: params.project,
             transactionNumber: transactionNumber,
-            typeOf: factory.transactionType.MoneyTransfer,
+            typeOf: factory.assetTransactionType.MoneyTransfer,
             agent: params.agent,
             recipient: params.recipient,
             object: {
@@ -126,9 +130,9 @@ export function start(
         };
 
         // 取引開始
-        let transaction: factory.transaction.moneyTransfer.ITransaction;
+        let transaction: factory.assetTransaction.moneyTransfer.ITransaction;
         try {
-            transaction = await repos.transaction.start<factory.transactionType.MoneyTransfer>(startParams);
+            transaction = await repos.transaction.start<factory.assetTransactionType.MoneyTransfer>(startParams);
 
             const pendingTransaction = await authorizeAccount({ transaction })(repos);
 
@@ -159,7 +163,7 @@ export function start(
 }
 
 function authorizeAccount(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.MoneyTransfer>;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.MoneyTransfer>;
 }) {
     return async (repos: {
         project: ProjectRepo;
@@ -198,21 +202,21 @@ function authorizeAccount(params: {
     };
 }
 
-function fixServiceOutput(params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail) {
+function fixServiceOutput(params: factory.assetTransaction.moneyTransfer.IStartParamsWithoutDetail) {
     let serviceOutputType: string;
 
     const transactionType = params.object.pendingTransaction?.typeOf;
 
     switch (transactionType) {
-        case pecorino.factory.transactionType.Deposit:
-        case pecorino.factory.transactionType.Transfer:
+        case factory.account.transactionType.Deposit:
+        case factory.account.transactionType.Transfer:
             const toLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>params.object.toLocation;
 
             serviceOutputType = toLocationObject.typeOf;
 
             break;
 
-        case pecorino.factory.transactionType.Withdraw:
+        case factory.account.transactionType.Withdraw:
             const fromLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>params.object.fromLocation;
 
             serviceOutputType = fromLocationObject.typeOf;
@@ -228,21 +232,22 @@ function fixServiceOutput(params: factory.transaction.moneyTransfer.IStartParams
 
 // tslint:disable-next-line:max-func-body-length
 function fixFromLocation(
-    params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail,
+    params: factory.assetTransaction.moneyTransfer.IStartParamsWithoutDetail,
     product: factory.product.IProduct
 ) {
-    return async (__: {
+    return async (repos: {
+        account: AccountRepo;
         serviceOutput: ServiceOutputRepo;
-    }): Promise<factory.transaction.moneyTransfer.IFromLocation> => {
+    }): Promise<factory.assetTransaction.moneyTransfer.IFromLocation> => {
         const amount = params.object.amount;
         if (typeof amount?.value !== 'number') {
             throw new factory.errors.ArgumentNull('amount.value');
         }
 
-        const accountService = new pecorino.service.Account({
-            endpoint: credentials.pecorino.endpoint,
-            auth: pecorinoAuthClient
-        });
+        // const accountService = new pecorino.service.Account({
+        //     endpoint: credentials.pecorino.endpoint,
+        //     auth: pecorinoAuthClient
+        // });
 
         let fromLocation = params.object.fromLocation;
         // let accountType: string;
@@ -250,8 +255,8 @@ function fixFromLocation(
         const transactionType = params.object.pendingTransaction?.typeOf;
 
         switch (transactionType) {
-            case pecorino.factory.transactionType.Withdraw:
-            case pecorino.factory.transactionType.Transfer:
+            case factory.account.transactionType.Withdraw:
+            case factory.account.transactionType.Transfer:
                 const fromLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>fromLocation;
 
                 switch (product.typeOf) {
@@ -298,14 +303,21 @@ function fixFromLocation(
                 }
 
                 // 口座存在確認
-                const searchAccountsResult = await accountService.search({
+                const accounts = await repos.account.search({
                     limit: 1,
+                    page: 1,
                     project: { id: { $eq: params.project.id } },
-                    accountNumbers: [fromLocationObject.identifier],
-                    statuses: [pecorino.factory.accountStatusType.Opened]
+                    accountNumber: { $eq: fromLocationObject.identifier },
+                    statuses: [factory.accountStatusType.Opened]
                 });
-
-                const account = searchAccountsResult.data.shift();
+                // const searchAccountsResult = await accountService.search({
+                //     limit: 1,
+                //     project: { id: { $eq: params.project.id } },
+                //     accountNumbers: [fromLocationObject.identifier],
+                //     statuses: [factory.accountStatusType.Opened]
+                // });
+                // const account = searchAccountsResult.data.shift();
+                const account = accounts.shift();
                 if (account === undefined) {
                     throw new factory.errors.NotFound('Account', 'From Location Not Found');
                 }
@@ -327,32 +339,33 @@ function fixFromLocation(
 
 // tslint:disable-next-line:max-func-body-length
 function fixToLocation(
-    params: factory.transaction.moneyTransfer.IStartParamsWithoutDetail,
+    params: factory.assetTransaction.moneyTransfer.IStartParamsWithoutDetail,
     product: factory.product.IProduct
 ) {
-    return async (__: {
+    return async (repos: {
+        account: AccountRepo;
         product: ProductRepo;
         serviceOutput: ServiceOutputRepo;
-    }): Promise<factory.transaction.moneyTransfer.IToLocation> => {
-        let toLocation: factory.transaction.moneyTransfer.IToLocation = params.object.toLocation;
+    }): Promise<factory.assetTransaction.moneyTransfer.IToLocation> => {
+        let toLocation: factory.assetTransaction.moneyTransfer.IToLocation = params.object.toLocation;
 
         const amount = params.object.amount;
         if (typeof amount?.value !== 'number') {
             throw new factory.errors.ArgumentNull('amount.value');
         }
 
-        const accountService = new pecorino.service.Account({
-            endpoint: credentials.pecorino.endpoint,
-            auth: pecorinoAuthClient
-        });
+        // const accountService = new pecorino.service.Account({
+        //     endpoint: credentials.pecorino.endpoint,
+        //     auth: pecorinoAuthClient
+        // });
 
         // let accountType: string;
 
         const transactionType = params.object.pendingTransaction?.typeOf;
 
         switch (transactionType) {
-            case pecorino.factory.transactionType.Deposit:
-            case pecorino.factory.transactionType.Transfer:
+            case factory.account.transactionType.Deposit:
+            case factory.account.transactionType.Transfer:
                 const toLocationObject = <factory.action.transfer.moneyTransfer.IPaymentCard>toLocation;
 
                 switch (product.typeOf) {
@@ -399,14 +412,21 @@ function fixToLocation(
                 }
 
                 // 口座存在確認
-                const searchAccountsResult = await accountService.search({
+                const accounts = await repos.account.search({
                     limit: 1,
+                    page: 1,
                     project: { id: { $eq: params.project.id } },
-                    accountNumbers: [toLocationObject.identifier],
-                    statuses: [pecorino.factory.accountStatusType.Opened]
+                    accountNumber: { $eq: toLocationObject.identifier },
+                    statuses: [factory.accountStatusType.Opened]
                 });
-
-                const account = searchAccountsResult.data.shift();
+                // const searchAccountsResult = await accountService.search({
+                //     limit: 1,
+                //     project: { id: { $eq: params.project.id } },
+                //     accountNumbers: [toLocationObject.identifier],
+                //     statuses: [factory.accountStatusType.Opened]
+                // });
+                // const account = searchAccountsResult.data.shift();
+                const account = accounts.shift();
                 if (account === undefined) {
                     throw new factory.errors.NotFound('Account', 'To Location Not Found');
                 }
@@ -436,17 +456,17 @@ export function confirm(params: {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
-        let transaction: factory.transaction.ITransaction<factory.transactionType.MoneyTransfer>;
+        let transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.MoneyTransfer>;
 
         // 取引存在確認
         if (typeof params.id === 'string') {
             transaction = await repos.transaction.findById({
-                typeOf: factory.transactionType.MoneyTransfer,
+                typeOf: factory.assetTransactionType.MoneyTransfer,
                 id: params.id
             });
         } else if (typeof params.transactionNumber === 'string') {
             transaction = await repos.transaction.findByTransactionNumber({
-                typeOf: factory.transactionType.MoneyTransfer,
+                typeOf: factory.assetTransactionType.MoneyTransfer,
                 transactionNumber: params.transactionNumber
             });
         } else {
@@ -458,7 +478,7 @@ export function confirm(params: {
         });
 
         await repos.transaction.confirm({
-            typeOf: factory.transactionType.MoneyTransfer,
+            typeOf: factory.assetTransactionType.MoneyTransfer,
             id: transaction.id,
             result: {},
             potentialActions: potentialActions
@@ -477,7 +497,7 @@ export function cancel(params: {
         transaction: TransactionRepo;
     }) => {
         await repos.transaction.cancel({
-            typeOf: factory.transactionType.MoneyTransfer,
+            typeOf: factory.assetTransactionType.MoneyTransfer,
             id: params.id,
             transactionNumber: params.transactionNumber
         });
@@ -493,18 +513,18 @@ export function exportTasksById(params: {
      * タスク実行日時バッファ
      */
     runsTasksAfterInSeconds?: number;
-}): ITaskAndTransactionOperation<factory.task.ITask[]> {
+}): ITaskAndTransactionOperation<factory.task.ITask<factory.taskName>[]> {
     return async (repos: {
         task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
         const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.MoneyTransfer,
+            typeOf: factory.assetTransactionType.MoneyTransfer,
             id: params.id
         });
         const potentialActions = transaction.potentialActions;
 
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
 
         // タスク実行日時バッファの指定があれば調整
         let taskRunsAt = new Date();

@@ -1,5 +1,6 @@
 import * as factory from '../../factory';
 
+import { MongoRepository as AccountActionRepo } from '../../repo/accountAction';
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
 
@@ -18,10 +19,12 @@ export function call(data: factory.task.moneyTransfer.IData): IOperation<void> {
             throw new factory.errors.Argument('settings', 'redisClient required');
         }
 
+        const accountActionRepo = new AccountActionRepo(settings.connection);
         const actionRepo = new ActionRepo(settings.connection);
         const transactionNumberRepo = new TransactionNumberRepo(settings.redisClient);
 
         await MoneyTransferService.moneyTransfer(data)({
+            accountAction: accountActionRepo,
             action: actionRepo,
             transactionNumber: transactionNumberRepo
         });

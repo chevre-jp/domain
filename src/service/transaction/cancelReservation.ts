@@ -1,15 +1,15 @@
 /**
- * 予約キャンセル取引サービス
+ * 予約取消取引サービス
  */
 import * as createDebug from 'debug';
 import * as mongoose from 'mongoose';
 
 import * as factory from '../../factory';
 
+import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
 import { MongoRepository as TaskRepo } from '../../repo/task';
-import { MongoRepository as TransactionRepo } from '../../repo/transaction';
 
 import {
     createPotentialActions,
@@ -31,30 +31,35 @@ export type ITransactionOperation<T> = (repos: {
     transaction: TransactionRepo;
 }) => Promise<T>;
 
-function validateStartParams(params: factory.transaction.cancelReservation.IStartParamsWithoutDetail) {
+function validateStartParams(params: factory.assetTransaction.cancelReservation.IStartParamsWithoutDetail) {
     return async (repos: {
         reservation: ReservationRepo;
         transaction: TransactionRepo;
     }) => {
-        let reserveTransaction: factory.transaction.ITransaction<factory.transactionType.Reserve> | undefined;
+        let reserveTransaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Reserve> | undefined;
         let reservations: factory.reservation.IReservation<factory.reservationType.EventReservation>[] | undefined;
-
-        // 予約取引存在確認
-        if (typeof params.object.transaction?.id === 'string') {
-            reserveTransaction = await repos.transaction.findById({
-                typeOf: factory.transactionType.Reserve,
-                id: params.object.transaction.id
-            });
-        }
 
         // 予約番号で取引存在確認
         if (typeof params.object.reservation?.reservationNumber === 'string') {
-            const transactions = await repos.transaction.search<factory.transactionType.Reserve>({
+            const transactions = await repos.transaction.search<factory.assetTransactionType.Reserve>({
                 limit: 1,
-                typeOf: factory.transactionType.Reserve,
-                object: { reservationNumber: { $eq: params.object.reservation?.reservationNumber } }
+                page: 1,
+                typeOf: factory.assetTransactionType.Reserve,
+                object: { reservationNumber: { $eq: params.object.reservation.reservationNumber } }
             });
             reserveTransaction = transactions.shift();
+
+            // 予約ステータス確認
+            const unconfirmedReservations = await repos.reservation.search({
+                limit: 1,
+                page: 1,
+                typeOf: factory.reservationType.EventReservation,
+                reservationNumber: { $eq: params.object.reservation.reservationNumber },
+                reservationStatus: { $ne: factory.reservationStatusType.ReservationConfirmed }
+            });
+            if (unconfirmedReservations.length > 0) {
+                throw new factory.errors.Argument('object.reservation.reservationNumber', `Reservation ${unconfirmedReservations[0].id} not confirmed`);
+            }
         }
 
         // 取引指定が確認できなければ、予約指定を確認
@@ -65,6 +70,11 @@ function validateStartParams(params: factory.transaction.cancelReservation.IStar
                     id: params.object.reservation.id
                 });
                 reservations = [reservation];
+
+                // 予約ステータス確認
+                if (reservation.reservationStatus !== factory.reservationStatusType.ReservationConfirmed) {
+                    throw new factory.errors.Argument('object.reservation.id', `Reservation ${reservation.id} not confirmed`);
+                }
             }
         }
 
@@ -83,8 +93,8 @@ function validateStartParams(params: factory.transaction.cancelReservation.IStar
  * 取引開始
  */
 export function start(
-    params: factory.transaction.cancelReservation.IStartParamsWithoutDetail
-): IStartOperation<factory.transaction.cancelReservation.ITransaction> {
+    params: factory.assetTransaction.cancelReservation.IStartParamsWithoutDetail
+): IStartOperation<factory.assetTransaction.cancelReservation.ITransaction> {
     return async (repos: {
         project: ProjectRepo;
         reservation: ReservationRepo;
@@ -107,20 +117,20 @@ export function start(
         // }));
 
         // 取引作成
-        return repos.transaction.start<factory.transactionType.CancelReservation>(startParams);
+        return repos.transaction.start<factory.assetTransactionType.CancelReservation>(startParams);
     };
 }
 
 /**
  * 取引確定
  */
-export function confirm(params: factory.transaction.cancelReservation.IConfirmParams): ITransactionOperation<void> {
+export function confirm(params: factory.assetTransaction.cancelReservation.IConfirmParams): ITransactionOperation<void> {
     return async (repos: {
         transaction: TransactionRepo;
     }) => {
         // 取引存在確認
         const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.CancelReservation,
+            typeOf: factory.assetTransactionType.CancelReservation,
             id: params.id
         });
 
@@ -130,9 +140,9 @@ export function confirm(params: factory.transaction.cancelReservation.IConfirmPa
         });
 
         // 取引確定
-        const result: factory.transaction.cancelReservation.IResult = {};
+        const result: factory.assetTransaction.cancelReservation.IResult = {};
         await repos.transaction.confirm({
-            typeOf: factory.transactionType.CancelReservation,
+            typeOf: factory.assetTransactionType.CancelReservation,
             id: transaction.id,
             result: result,
             potentialActions: potentialActions
@@ -144,10 +154,10 @@ export function confirm(params: factory.transaction.cancelReservation.IConfirmPa
  * 取引開始
  */
 export function startAndConfirm(
-    params: factory.transaction.cancelReservation.IStartParamsWithoutDetail & {
-        potentialActions?: factory.transaction.cancelReservation.IPotentialActionsParams;
+    params: factory.assetTransaction.cancelReservation.IStartParamsWithoutDetail & {
+        potentialActions?: factory.assetTransaction.cancelReservation.IPotentialActionsParams;
     }
-): IStartOperation<factory.transaction.cancelReservation.ITransaction> {
+): IStartOperation<factory.assetTransaction.cancelReservation.ITransaction> {
     return async (repos: {
         project: ProjectRepo;
         reservation: ReservationRepo;
@@ -165,7 +175,7 @@ export function startAndConfirm(
         });
 
         const transactionId = new mongoose.Types.ObjectId().toHexString();
-        const transaction: factory.transaction.ITransaction<factory.transactionType.CancelReservation> = {
+        const transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.CancelReservation> = {
             ...startParams,
             project: { typeOf: project.typeOf, id: project.id },
             id: transactionId,
@@ -182,10 +192,10 @@ export function startAndConfirm(
                 potentialActions: params.potentialActions
             }
         });
-        const result: factory.transaction.cancelReservation.IResult = {};
+        const result: factory.assetTransaction.cancelReservation.IResult = {};
 
         // 取引作成
-        return repos.transaction.startAndConfirm<factory.transactionType.CancelReservation>({
+        return repos.transaction.startAndConfirm<factory.assetTransactionType.CancelReservation>({
             ...startParams,
             id: transactionId,
             result: result,
@@ -197,18 +207,18 @@ export function startAndConfirm(
 /**
  * 取引タスク出力
  */
-export function exportTasksById(params: { id: string }): ITaskAndTransactionOperation<factory.task.ITask[]> {
+export function exportTasksById(params: { id: string }): ITaskAndTransactionOperation<factory.task.ITask<factory.taskName>[]> {
     return async (repos: {
         task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
         const transaction = await repos.transaction.findById({
-            typeOf: factory.transactionType.CancelReservation,
+            typeOf: factory.assetTransactionType.CancelReservation,
             id: params.id
         });
         const potentialActions = transaction.potentialActions;
 
-        const taskAttributes: factory.task.IAttributes[] = [];
+        const taskAttributes: factory.task.IAttributes<factory.taskName>[] = [];
         switch (transaction.status) {
             case factory.transactionStatusType.Confirmed:
                 // tslint:disable-next-line:no-single-line-block-comment

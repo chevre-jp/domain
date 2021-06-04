@@ -6,12 +6,12 @@ import { settings } from '../../../settings';
  */
 export function createStartParams(
     params: {
-        paramsWithoutDetail: factory.transaction.cancelReservation.IStartParamsWithoutDetail;
+        paramsWithoutDetail: factory.assetTransaction.cancelReservation.IStartParamsWithoutDetail;
         project: factory.project.IProject;
-        transaction?: factory.transaction.ITransaction<factory.transactionType.Reserve>;
+        transaction?: factory.assetTransaction.ITransaction<factory.assetTransactionType.Reserve>;
         reservations?: factory.reservation.IReservation<factory.reservationType.EventReservation>[];
     }
-): factory.transaction.IStartParams<factory.transactionType.CancelReservation> {
+): factory.assetTransaction.IStartParams<factory.assetTransactionType.CancelReservation> {
 
     const informReservationParams: factory.project.IInformParams[] = [];
 
@@ -30,7 +30,7 @@ export function createStartParams(
         informReservationParams.push(...informReservationParamsFromStartParams);
     }
 
-    const cancelReservationObject: factory.transaction.cancelReservation.IObject = {
+    const cancelReservationObject: factory.assetTransaction.cancelReservation.IObject = {
         clientUser: params.paramsWithoutDetail.object.clientUser,
         transaction: params.transaction,
         reservations: params.reservations,
@@ -41,7 +41,7 @@ export function createStartParams(
 
     return {
         project: params.project,
-        typeOf: factory.transactionType.CancelReservation,
+        typeOf: factory.assetTransactionType.CancelReservation,
         agent: params.paramsWithoutDetail.agent,
         object: cancelReservationObject,
         expires: params.paramsWithoutDetail.expires
@@ -49,9 +49,9 @@ export function createStartParams(
 }
 
 export function createPotentialActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.CancelReservation>;
-    confirmParams: factory.transaction.cancelReservation.IConfirmParams;
-}): factory.transaction.cancelReservation.IPotentialActions {
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.CancelReservation>;
+    confirmParams: factory.assetTransaction.cancelReservation.IConfirmParams;
+}): factory.assetTransaction.cancelReservation.IPotentialActions {
     const transaction = params.transaction;
     const confirmParams = params.confirmParams;
 
@@ -76,10 +76,11 @@ export function createPotentialActions(params: {
                     return {
                         project: transaction.project,
                         typeOf: factory.actionType.InformAction,
-                        agent: (reservation.reservedTicket.issuedBy !== undefined)
-                            ? reservation.reservedTicket.issuedBy
+                        agent: (typeof reservation.reservedTicket.issuedBy?.typeOf === 'string')
+                            ? <factory.seller.ISeller>reservation.reservedTicket.issuedBy
                             : transaction.project,
-                        recipient: {
+                        // tslint:disable-next-line:no-object-literal-type-assertion
+                        recipient: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>{
                             typeOf: transaction.agent.typeOf,
                             name: transaction.agent.name,
                             ...a.recipient
@@ -102,10 +103,11 @@ export function createPotentialActions(params: {
                     return {
                         project: transaction.project,
                         typeOf: factory.actionType.InformAction,
-                        agent: (reservation.reservedTicket.issuedBy !== undefined)
-                            ? reservation.reservedTicket.issuedBy
+                        agent: (typeof reservation.reservedTicket.issuedBy?.typeOf === 'string')
+                            ? <factory.seller.ISeller>reservation.reservedTicket.issuedBy
                             : transaction.project,
-                        recipient: {
+                        // tslint:disable-next-line:no-object-literal-type-assertion
+                        recipient: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>{
                             typeOf: transaction.agent.typeOf,
                             name: transaction.agent.name,
                             ...a.recipient
@@ -125,8 +127,12 @@ export function createPotentialActions(params: {
             typeOf: <factory.actionType.CancelAction>factory.actionType.CancelAction,
             // description: transaction.object.notes,
             result: {},
-            object: reservation,
-            agent: transaction.agent,
+            object: {
+                ...reservation,
+                // ReservationConfirmed->ReservationCancelledのみ処理されるように保証する
+                reservationStatus: factory.reservationStatusType.ReservationConfirmed
+            },
+            agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>transaction.agent,
             potentialActions: {
                 informReservation: informReservationActions
             },

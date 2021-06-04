@@ -2,12 +2,12 @@
  * 決済サービス
  */
 import { MongoRepository as ActionRepo } from '../repo/action';
+import { MongoRepository as TransactionRepo } from '../repo/assetTransaction';
 import { MongoRepository as EventRepo } from '../repo/event';
 import { MongoRepository as ProductRepo } from '../repo/product';
 import { MongoRepository as ProjectRepo } from '../repo/project';
 import { MongoRepository as SellerRepo } from '../repo/seller';
 import { MongoRepository as TaskRepo } from '../repo/task';
-import { MongoRepository as TransactionRepo } from '../repo/transaction';
 import { RedisRepository as TransactionNumberRepo } from '../repo/transactionNumber';
 
 import * as factory from '../factory';

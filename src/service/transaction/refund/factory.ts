@@ -4,10 +4,11 @@
 import * as factory from '../../../factory';
 import { settings } from '../../../settings';
 
-export function createStartParams(params: factory.transaction.refund.IStartParamsWithoutDetail & {
+export function createStartParams(params: factory.assetTransaction.refund.IStartParamsWithoutDetail & {
     transactionNumber: string;
     paymentServiceType: factory.service.paymentService.PaymentServiceType;
-}): factory.transaction.IStartParams<factory.transactionType.Refund> {
+    payAction: factory.action.trade.pay.IAction;
+}): factory.assetTransaction.IStartParams<factory.assetTransactionType.Refund> {
     const paymentMethodType = params.object.paymentMethod?.typeOf;
     if (typeof paymentMethodType !== 'string') {
         throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
@@ -26,17 +27,20 @@ export function createStartParams(params: factory.transaction.refund.IStartParam
     return {
         project: { typeOf: factory.organizationType.Project, id: params.project.id },
         transactionNumber: params.transactionNumber,
-        typeOf: factory.transactionType.Refund,
+        typeOf: factory.assetTransactionType.Refund,
         agent: params.agent,
         recipient: params.recipient,
         object: {
             typeOf: params.paymentServiceType,
             onPaymentStatusChanged: { informPayment: informPaymentParams },
             paymentMethod: {
+                additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : [],
+                name: (typeof name === 'string') ? name : paymentMethodType,
                 paymentMethodId: paymentMethodId,
                 typeOf: paymentMethodType,
-                name: (typeof name === 'string') ? name : paymentMethodType,
-                additionalProperty: (Array.isArray(additionalProperty)) ? additionalProperty : []
+                ...(Array.isArray(params.payAction.object) && params.payAction.object.length > 0)
+                    ? { totalPaymentDue: params.payAction.object[0].paymentMethod.totalPaymentDue }
+                    : undefined
             },
             ...(typeof params.object.refundFee === 'number')
                 ? { refundFee: params.object.refundFee }

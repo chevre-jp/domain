@@ -4,11 +4,11 @@
 import * as factory from '../../../factory';
 import { settings } from '../../../settings';
 
-export function createStartParams(params: factory.transaction.pay.IStartParamsWithoutDetail & {
+export function createStartParams(params: factory.assetTransaction.pay.IStartParamsWithoutDetail & {
     transactionNumber: string;
     paymentServiceType: factory.service.paymentService.PaymentServiceType;
     amount: number;
-}): factory.transaction.IStartParams<factory.transactionType.Pay> {
+}): factory.assetTransaction.IStartParams<factory.assetTransactionType.Pay> {
     const paymentMethodType = params.object.paymentMethod?.typeOf;
     if (typeof paymentMethodType !== 'string') {
         throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
@@ -56,7 +56,7 @@ export function createStartParams(params: factory.transaction.pay.IStartParamsWi
     return {
         project: { typeOf: factory.organizationType.Project, id: params.project.id },
         transactionNumber: params.transactionNumber,
-        typeOf: factory.transactionType.Pay,
+        typeOf: factory.assetTransactionType.Pay,
         agent: params.agent,
         recipient: params.recipient,
         object: {

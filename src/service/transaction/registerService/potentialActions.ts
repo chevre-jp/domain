@@ -1,9 +1,9 @@
-import * as pecorinoapi from '@pecorino/api-nodejs-client';
+// import * as pecorinoapi from '@pecorino/api-nodejs-client';
 import * as moment from 'moment';
 import * as factory from '../../../factory';
 
 function createMoneyTransferActions(__: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.RegisterService>;
 }): factory.action.transfer.moneyTransfer.IAttributes[] {
     return [];
     // const transaction = params.transaction;
@@ -22,7 +22,7 @@ function createMoneyTransferActions(__: {
     //             },
     //             object: {
     //                 pendingTransaction: {
-    //                     typeOf: pecorinoapi.factory.transactionType.Deposit,
+    //                     typeOf: factory.assetTransactionType.Deposit,
     //                     transactionNumber: transaction.transactionNumber
     //                 }
     //             },
@@ -39,7 +39,7 @@ function createMoneyTransferActions(__: {
 }
 
 function createRegisterServiceActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.RegisterService>;
     endDate?: Date;
 }): factory.action.interact.register.service.IAttributes[] {
     const validFrom = (params.endDate instanceof Date) ? params.endDate : new Date();
@@ -57,43 +57,46 @@ function createRegisterServiceActions(params: {
         const moneyTransfer: factory.action.transfer.moneyTransfer.IAttributes[] = [];
 
         // ポイント特典があれば適用
-        if (pointAward !== undefined) {
-            if (typeof pointAward.amount?.value === 'number') {
-                const fromLocation: factory.action.transfer.moneyTransfer.IAnonymousLocation = {
-                    typeOf: (typeof serviceOutput?.issuedBy?.typeOf === 'string')
-                        ? serviceOutput?.issuedBy?.typeOf
-                        : params.transaction.typeOf,
-                    name: (serviceOutput?.issuedBy?.name !== undefined)
-                        ? (typeof serviceOutput?.issuedBy?.name === 'string')
-                            ? serviceOutput?.issuedBy?.name
-                            : serviceOutput?.issuedBy?.name.ja
-                        : params.transaction.id
-                };
+        const pointAwardToLocationIdentifier = pointAward?.toLocation?.identifier;
+        const pointAwardToLocationTypeOf = pointAward?.toLocation?.typeOf;
+        if (typeof pointAward?.amount?.value === 'number'
+            && typeof pointAwardToLocationIdentifier === 'string'
+            && typeof pointAwardToLocationTypeOf === 'string'
+        ) {
+            const fromLocation: factory.action.transfer.moneyTransfer.IAnonymousLocation = {
+                typeOf: (typeof serviceOutput?.issuedBy?.typeOf === 'string')
+                    ? serviceOutput?.issuedBy?.typeOf
+                    : params.transaction.typeOf,
+                name: (serviceOutput?.issuedBy?.name !== undefined)
+                    ? (typeof serviceOutput?.issuedBy?.name === 'string')
+                        ? serviceOutput?.issuedBy?.name
+                        : serviceOutput?.issuedBy?.name.ja
+                    : params.transaction.id
+            };
 
-                moneyTransfer.push({
-                    project: params.transaction.project,
-                    typeOf: factory.actionType.MoneyTransfer,
-                    agent: fromLocation,
-                    object: {
-                        typeOf: pecorinoapi.factory.transactionType.Deposit
-                    },
-                    purpose: {
-                        typeOf: params.transaction.typeOf,
-                        id: params.transaction.id,
-                        // 入金取引に識別子を指定する
-                        ...(typeof pointAward.purpose?.identifier === 'string') ? { identifier: pointAward.purpose.identifier } : undefined
-                    },
-                    amount: {
-                        typeOf: 'MonetaryAmount',
-                        value: pointAward.amount?.value,
-                        currency: pointAward.amount?.currency
-                    },
-                    fromLocation: fromLocation,
-                    toLocation: pointAward.toLocation,
-                    ...(typeof pointAward.description === 'string') ? { description: pointAward.description } : undefined,
-                    ...(pointAward.recipient !== undefined) ? { recipient: pointAward.recipient } : undefined
-                });
-            }
+            moneyTransfer.push({
+                project: params.transaction.project,
+                typeOf: factory.actionType.MoneyTransfer,
+                agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>fromLocation,
+                object: {
+                    typeOf: factory.account.transactionType.Deposit
+                },
+                purpose: {
+                    typeOf: params.transaction.typeOf,
+                    id: params.transaction.id,
+                    // 入金取引に識別子を指定する
+                    ...(typeof pointAward.purpose?.identifier === 'string') ? { identifier: pointAward.purpose.identifier } : undefined
+                },
+                amount: {
+                    typeOf: 'MonetaryAmount',
+                    value: pointAward.amount?.value,
+                    currency: pointAward.amount?.currency
+                },
+                fromLocation: fromLocation,
+                toLocation: { identifier: pointAwardToLocationIdentifier, typeOf: pointAwardToLocationTypeOf },
+                ...(typeof pointAward.description === 'string') ? { description: pointAward.description } : undefined,
+                ...(pointAward.recipient !== undefined) ? { recipient: pointAward.recipient } : undefined
+            });
         }
 
         return {
@@ -105,7 +108,7 @@ function createRegisterServiceActions(params: {
                 validFrom: validFrom,
                 validUntil: validUntil
             },
-            agent: params.transaction.agent,
+            agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>params.transaction.agent,
             potentialActions: {
                 moneyTransfer: moneyTransfer
             },
@@ -121,9 +124,9 @@ function createRegisterServiceActions(params: {
  * 取引のポストアクションを作成する
  */
 export async function createPotentialActions(params: {
-    transaction: factory.transaction.ITransaction<factory.transactionType.RegisterService>;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.RegisterService>;
     endDate?: Date;
-}): Promise<factory.transaction.IPotentialActions<factory.transactionType.RegisterService>> {
+}): Promise<factory.assetTransaction.IPotentialActions<factory.assetTransactionType.RegisterService>> {
     // 通貨転送アクション属性作成
     const moneyTransferActionAttributesList = createMoneyTransferActions(params);
 

@@ -334,8 +334,8 @@ export interface IAuthorizeResult {
 }
 
 export function authorize(
-    params: factory.transaction.pay.IStartParamsWithoutDetail,
-    transaction: factory.transaction.pay.ITransaction
+    params: factory.assetTransaction.pay.IStartParamsWithoutDetail,
+    transaction: factory.assetTransaction.pay.ITransaction
 ) {
     return async (repos: {
         action: ActionRepo;
@@ -687,6 +687,7 @@ function getCredentials(params: {
         // 決済サービスからcredentialsを取得する
         const paymentServices = <factory.service.paymentService.IService[]>await repos.product.search({
             limit: 1,
+            page: 1,
             project: { id: { $eq: params.seller.project.id } },
             typeOf: { $eq: factory.service.paymentService.PaymentServiceType.MovieTicket },
             serviceOutput: { typeOf: { $eq: params.paymentMethodType } }

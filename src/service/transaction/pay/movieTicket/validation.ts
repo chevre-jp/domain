@@ -11,7 +11,7 @@ import { MongoRepository as SellerRepo } from '../../../../repo/seller';
 import { checkByIdentifier } from '../../../payment/movieTicket';
 
 export function validateMovieTicket(
-    params: factory.transaction.pay.IStartParamsWithoutDetail
+    params: factory.assetTransaction.pay.IStartParamsWithoutDetail
 ) {
     return async (repos: {
         event: EventRepo;

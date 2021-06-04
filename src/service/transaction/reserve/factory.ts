@@ -6,10 +6,10 @@ import * as moment from 'moment';
 import * as factory from '../../../factory';
 import { settings } from '../../../settings';
 
-export function createStartParams(params: factory.transaction.reserve.IStartParamsWithoutDetail & {
+export function createStartParams(params: factory.assetTransaction.reserve.IStartParamsWithoutDetail & {
     reservationNumber: string;
     projectSettings?: factory.project.ISettings;
-}): factory.transaction.IStartParams<factory.transactionType.Reserve> {
+}): factory.assetTransaction.IStartParams<factory.assetTransactionType.Reserve> {
     const reservationNumber = params.reservationNumber;
 
     const informReservationParams: factory.project.IInformParams[] = [];
@@ -29,7 +29,7 @@ export function createStartParams(params: factory.transaction.reserve.IStartPara
         informReservationParams.push(...informReservationObject);
     }
 
-    const reservationPackage: factory.transaction.reserve.IObject = {
+    const reservationPackage: factory.assetTransaction.reserve.IObject = {
         // clientUser: params.object.clientUser,
         project: params.project,
         reservationNumber: reservationNumber,
@@ -42,7 +42,7 @@ export function createStartParams(params: factory.transaction.reserve.IStartPara
 
     return {
         project: params.project,
-        typeOf: factory.transactionType.Reserve,
+        typeOf: factory.assetTransactionType.Reserve,
         transactionNumber: reservationNumber,
         agent: params.agent,
         object: reservationPackage,
@@ -58,7 +58,7 @@ export function createReservedTicket(params: {
     reservedSeatsOnly: boolean;
     screeningRoomSections: factory.place.screeningRoomSection.IPlace[];
     ticketOffer: factory.event.screeningEvent.ITicketOffer;
-    transaction: factory.transaction.ITransaction<factory.transactionType.Reserve>;
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Reserve>;
 }): factory.reservation.ITicket<factory.reservationType.EventReservation> {
     let acceptedTicketedSeat: factory.reservation.ISeat<factory.reservationType.EventReservation> | undefined;
     const acceptedTicketedSeatByItemOffered = params.acceptedOffer.itemOffered?.serviceOutput?.reservedTicket?.ticketedSeat;
@@ -283,7 +283,7 @@ export function createReservation(params: {
     project: factory.project.IProject;
     id: string;
     reserveDate: Date;
-    agent: factory.transaction.reserve.IAgent;
+    agent: factory.assetTransaction.reserve.IAgent;
     broker?: factory.reservation.IBroker<factory.reservationType.EventReservation>;
     reservationNumber: string;
     reservationFor: factory.event.screeningEvent.IEvent;
@@ -356,9 +356,9 @@ export function createReservation(params: {
     };
 }
 
-export function createPotentialActions(params: factory.transaction.reserve.IConfirmParams & {
-    transaction: factory.transaction.ITransaction<factory.transactionType.Reserve>;
-}): factory.transaction.reserve.IPotentialActions {
+export function createPotentialActions(params: factory.assetTransaction.reserve.IConfirmParams & {
+    transaction: factory.assetTransaction.ITransaction<factory.assetTransactionType.Reserve>;
+}): factory.assetTransaction.reserve.IPotentialActions {
     const transaction = params.transaction;
 
     // 予約アクション属性作成
@@ -415,10 +415,16 @@ export function createPotentialActions(params: factory.transaction.reserve.IConf
                     return {
                         project: transaction.project,
                         typeOf: factory.actionType.InformAction,
-                        agent: (reservation.reservedTicket.issuedBy !== undefined)
-                            ? reservation.reservedTicket.issuedBy
+                        agent: (typeof reservation.reservedTicket.issuedBy?.typeOf === 'string')
+                            ? {
+                                ...reservation.reservedTicket.issuedBy,
+                                project: transaction.project,
+                                id: (typeof reservation.reservedTicket.issuedBy.id === 'string') ? reservation.reservedTicket.issuedBy.id : '',
+                                typeOf: <factory.organizationType>reservation.reservedTicket.issuedBy.typeOf
+                            }
                             : transaction.project,
                         recipient: {
+                            project: transaction.project,
                             typeOf: transaction.agent.typeOf,
                             name: transaction.agent.name,
                             ...a.recipient
@@ -441,10 +447,16 @@ export function createPotentialActions(params: factory.transaction.reserve.IConf
                     return {
                         project: transaction.project,
                         typeOf: factory.actionType.InformAction,
-                        agent: (reservation.reservedTicket.issuedBy !== undefined)
-                            ? reservation.reservedTicket.issuedBy
+                        agent: (typeof reservation.reservedTicket.issuedBy?.typeOf === 'string')
+                            ? {
+                                ...reservation.reservedTicket.issuedBy,
+                                project: transaction.project,
+                                id: (typeof reservation.reservedTicket.issuedBy.id === 'string') ? reservation.reservedTicket.issuedBy.id : '',
+                                typeOf: <factory.organizationType>reservation.reservedTicket.issuedBy.typeOf
+                            }
                             : transaction.project,
                         recipient: {
+                            project: transaction.project,
                             typeOf: transaction.agent.typeOf,
                             name: transaction.agent.name,
                             ...a.recipient
@@ -464,7 +476,7 @@ export function createPotentialActions(params: factory.transaction.reserve.IConf
             typeOf: <factory.actionType.ReserveAction>factory.actionType.ReserveAction,
             result: {},
             object: reservation,
-            agent: transaction.agent,
+            agent: <factory.creativeWork.softwareApplication.webApplication.ICreativeWork | factory.person.IPerson>transaction.agent,
             potentialActions: {
                 informReservation: informReservationActions
             },

@@ -1,23 +1,37 @@
-import { Connection } from 'mongoose';
+import { Connection, Model } from 'mongoose';
 
 import * as factory from '../factory';
-import ActionModel from './mongoose/model/action';
+import { modelName } from './mongoose/model/action';
 
-export type IAction<T extends factory.actionType> = factory.action.IAction<factory.action.IAttributes<T, any, any>>;
+export type IAction<T extends factory.actionType> =
+    T extends factory.actionType.OrderAction ? factory.action.trade.order.IAction :
+    T extends factory.actionType.AuthorizeAction ? factory.action.authorize.IAction<factory.action.authorize.IAttributes<any, any>> :
+    factory.action.IAction<factory.action.IAttributes<T, any, any>>;
 export type IPayAction = factory.action.trade.pay.IAction;
 
 /**
  * アクションリポジトリ
  */
 export class MongoRepository {
-    public readonly actionModel: typeof ActionModel;
+    public readonly actionModel: typeof Model;
+
     constructor(connection: Connection) {
-        this.actionModel = connection.model(ActionModel.modelName);
+        this.actionModel = connection.model(modelName);
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     public static CREATE_MONGO_CONDITIONS(params: factory.action.ISearchConditions) {
         const andConditions: any[] = [];
+
+        const projectIdIn = params.project?.ids;
+        if (Array.isArray(projectIdIn)) {
+            andConditions.push({
+                'project.id': {
+                    $exists: true,
+                    $in: projectIdIn
+                }
+            });
+        }
 
         const projectIdEq = params.project?.id?.$eq;
         // tslint:disable-next-line:no-single-line-block-comment
@@ -31,6 +45,28 @@ export class MongoRepository {
             });
         }
 
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        const agentTypeOfIn = params.agent?.typeOf?.$in;
+        if (Array.isArray(agentTypeOfIn)) {
+            andConditions.push({
+                'agent.typeOf': {
+                    $exists: true,
+                    $in: agentTypeOfIn
+                }
+            });
+        }
+
+        const agentIdIn = params.agent?.id?.$in;
+        if (Array.isArray(agentIdIn)) {
+            andConditions.push({
+                'agent.id': {
+                    $exists: true,
+                    $in: agentIdIn
+                }
+            });
+        }
+
         const locationIdentifierEq = params.location?.identifier?.$eq;
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -39,6 +75,30 @@ export class MongoRepository {
                 'location.identifier': {
                     $exists: true,
                     $eq: locationIdentifierEq
+                }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        const objectPaymentMethodEq = (<any>params).object?.paymentMethod?.$eq;
+        if (typeof objectPaymentMethodEq === 'string') {
+            andConditions.push({
+                'object.paymentMethod': {
+                    $exists: true,
+                    $eq: objectPaymentMethodEq
+                }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        const objectPaymentMethodIdEq = params.object?.paymentMethodId?.$eq;
+        if (typeof objectPaymentMethodIdEq === 'string') {
+            andConditions.push({
+                'object.paymentMethodId': {
+                    $exists: true,
+                    $eq: objectPaymentMethodIdEq
                 }
             });
         }
@@ -79,6 +139,16 @@ export class MongoRepository {
             });
         }
 
+        const objectPaymentMethodPaymentMethodIdIn = (<any>params).object?.paymentMethod?.paymentMethodId?.$in;
+        if (Array.isArray(objectPaymentMethodPaymentMethodIdIn)) {
+            andConditions.push({
+                'object.paymentMethod.paymentMethodId': {
+                    $exists: true,
+                    $in: objectPaymentMethodPaymentMethodIdIn
+                }
+            });
+        }
+
         const objectPaymentMethodTypeOfEq = params.object?.paymentMethod?.typeOf?.$eq;
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -103,6 +173,16 @@ export class MongoRepository {
             });
         }
 
+        const objectTypeOfIn = params.object?.typeOf?.$in;
+        if (Array.isArray(objectTypeOfIn)) {
+            andConditions.push({
+                'object.typeOf': {
+                    $exists: true,
+                    $in: objectTypeOfIn
+                }
+            });
+        }
+
         const objectIdEq = params.object?.id?.$eq;
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -115,13 +195,61 @@ export class MongoRepository {
             });
         }
 
-        const typeOfEq = params.typeOf?.$eq;
+        const objectIdIn = params.object?.id?.$in;
+        if (Array.isArray(objectIdIn)) {
+            andConditions.push({
+                'object.id': {
+                    $exists: true,
+                    $in: objectIdIn
+                }
+            });
+        }
+
+        const objectOrderNumberIn = params.object?.orderNumber?.$in;
+        if (Array.isArray(objectOrderNumberIn)) {
+            andConditions.push({
+                'object.orderNumber': {
+                    $exists: true,
+                    $in: objectOrderNumberIn
+                }
+            });
+        }
+
+        const objectEventIdIn = params.object?.event?.id?.$in;
+        if (Array.isArray(objectEventIdIn)) {
+            andConditions.push({
+                'object.event.id': {
+                    $exists: true,
+                    $in: objectEventIdIn
+                }
+            });
+        }
+
+        const objectAcceptedOfferSeatNumberIn = params.object?.acceptedOffer?.ticketedSeat?.seatNumber?.$in;
+        if (Array.isArray(objectAcceptedOfferSeatNumberIn)) {
+            andConditions.push({
+                'object.acceptedOffer.ticketedSeat.seatNumber': {
+                    $exists: true,
+                    $in: objectAcceptedOfferSeatNumberIn
+                }
+            });
+        }
+
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (typeof typeOfEq === 'string') {
+        if (typeof params.typeOf === 'string') {
             andConditions.push({
-                typeOf: { $eq: typeOfEq }
+                typeOf: params.typeOf
             });
+        } else {
+            const typeOfEq = params.typeOf?.$eq;
+            // tslint:disable-next-line:no-single-line-block-comment
+            /* istanbul ignore else */
+            if (typeof typeOfEq === 'string') {
+                andConditions.push({
+                    typeOf: { $eq: typeOfEq }
+                });
+            }
         }
 
         const actionStatusIn = params.actionStatus?.$in;
@@ -130,6 +258,152 @@ export class MongoRepository {
         if (Array.isArray(actionStatusIn)) {
             andConditions.push({
                 actionStatus: { $in: actionStatusIn }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (Array.isArray(params.actionStatusTypes)) {
+            andConditions.push({
+                actionStatus: { $in: params.actionStatusTypes }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        const startDateGte = params.startFrom;
+        if (startDateGte instanceof Date) {
+            andConditions.push({
+                startDate: { $gte: startDateGte }
+            });
+        }
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        const startDateLte = params.startThrough;
+        if (startDateLte instanceof Date) {
+            andConditions.push({
+                startDate: { $lte: startDateLte }
+            });
+        }
+
+        const fromLocationTypeOfIn = params.fromLocation?.typeOf?.$in;
+        if (Array.isArray(fromLocationTypeOfIn)) {
+            andConditions.push({
+                'fromLocation.typeOf': {
+                    $exists: true,
+                    $in: fromLocationTypeOfIn
+                }
+            });
+        }
+        const fromLocationAccountNumberIn = params.fromLocation?.accountNumber?.$in;
+        if (Array.isArray(fromLocationAccountNumberIn)) {
+            andConditions.push({
+                'fromLocation.accountNumber': {
+                    $exists: true,
+                    $in: fromLocationAccountNumberIn
+                }
+            });
+        }
+        const fromLocationAccountTypeIn = params.fromLocation?.accountType?.$in;
+        if (Array.isArray(fromLocationAccountTypeIn)) {
+            andConditions.push({
+                'fromLocation.accountType': {
+                    $exists: true,
+                    $in: fromLocationAccountTypeIn
+                }
+            });
+        }
+        const toLocationTypeOfIn = params.toLocation?.typeOf?.$in;
+        if (Array.isArray(toLocationTypeOfIn)) {
+            andConditions.push({
+                'toLocation.typeOf': {
+                    $exists: true,
+                    $in: toLocationTypeOfIn
+                }
+            });
+        }
+        const toLocationAccountNumberIn = params.toLocation?.accountNumber?.$in;
+        if (Array.isArray(toLocationAccountNumberIn)) {
+            andConditions.push({
+                'toLocation.accountNumber': {
+                    $exists: true,
+                    $in: toLocationAccountNumberIn
+                }
+            });
+        }
+        const toLocationAccountTypeIn = params.toLocation?.accountType?.$in;
+        if (Array.isArray(toLocationAccountTypeIn)) {
+            andConditions.push({
+                'toLocation.accountType': {
+                    $exists: true,
+                    $in: toLocationAccountTypeIn
+                }
+            });
+        }
+
+        const purposeTypeOfIn = params.purpose?.typeOf?.$in;
+        if (Array.isArray(purposeTypeOfIn)) {
+            andConditions.push({
+                'purpose.typeOf': {
+                    $exists: true,
+                    $in: purposeTypeOfIn
+                }
+            });
+        }
+        const purposeIdIn = params.purpose?.id?.$in;
+        if (Array.isArray(purposeIdIn)) {
+            andConditions.push({
+                'purpose.id': {
+                    $exists: true,
+                    $in: purposeIdIn
+                }
+            });
+        }
+        const purposeOrderNumberIn = params.purpose?.orderNumber?.$in;
+        if (Array.isArray(purposeOrderNumberIn)) {
+            andConditions.push({
+                'purpose.orderNumber': {
+                    $exists: true,
+                    $in: purposeOrderNumberIn
+                }
+            });
+        }
+        const resultTypeOfIn = params.result?.typeOf?.$in;
+        if (Array.isArray(resultTypeOfIn)) {
+            andConditions.push({
+                'result.typeOf': {
+                    $exists: true,
+                    $in: resultTypeOfIn
+                }
+            });
+        }
+        const resultIdIn = params.result?.id?.$in;
+        if (Array.isArray(resultIdIn)) {
+            andConditions.push({
+                'result.id': {
+                    $exists: true,
+                    $in: resultIdIn
+                }
+            });
+        }
+        const resultOrderNumberIn = params.result?.orderNumber?.$in;
+        if (Array.isArray(resultOrderNumberIn)) {
+            andConditions.push({
+                'result.orderNumber': {
+                    $exists: true,
+                    $in: resultOrderNumberIn
+                }
+            });
+        }
+
+        const resultCodeIn = (<any>params).result?.code?.$in;
+        if (Array.isArray(resultCodeIn)) {
+            andConditions.push({
+                'result.code': {
+                    $exists: true,
+                    $in: resultCodeIn
+                }
             });
         }
 
@@ -290,6 +564,7 @@ export class MongoRepository {
     }): Promise<IPayAction | undefined> {
         const payActions = <IPayAction[]>await this.search<factory.actionType.PayAction>({
             limit: 1,
+            page: 1,
             actionStatus: { $in: [factory.actionStatusType.CompletedActionStatus] },
             project: { id: { $eq: params.project.id } },
             typeOf: { $eq: factory.actionType.PayAction },
@@ -297,5 +572,115 @@ export class MongoRepository {
         });
 
         return payActions.shift();
+    }
+
+    /**
+     * アクション目的から検索する
+     * 取引に対するアクション検索時などに使用
+     */
+    public async searchByPurpose<T extends factory.actionType>(params: {
+        typeOf?: T;
+        purpose: {
+            typeOf: factory.transactionType;
+            id?: string;
+        };
+        sort?: factory.action.ISortOrder;
+    }): Promise<IAction<T>[]> {
+        const conditions: any = {
+            'purpose.typeOf': {
+                $exists: true,
+                $eq: params.purpose.typeOf
+            }
+        };
+
+        if (params.typeOf !== undefined) {
+            conditions.typeOf = params.typeOf;
+        }
+
+        if (params.purpose.id !== undefined) {
+            conditions['purpose.id'] = {
+                $exists: true,
+                $eq: params.purpose.id
+            };
+        }
+
+        const query = this.actionModel.find(conditions)
+            .select({ __v: 0, createdAt: 0, updatedAt: 0 });
+
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
+
+        return query.exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
+    }
+
+    /**
+     * 注文番号から、注文に対するアクションを検索する
+     */
+    public async searchByOrderNumber(params: {
+        orderNumber: string;
+        sort?: factory.action.ISortOrder;
+    }): Promise<IAction<factory.actionType>[]> {
+        const conditions = {
+            $or: [
+                { 'object.orderNumber': params.orderNumber },
+                { 'purpose.orderNumber': params.orderNumber }
+            ]
+        };
+        const query = this.actionModel.find(conditions)
+            .select({ __v: 0, createdAt: 0, updatedAt: 0 });
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore else */
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
+        }
+
+        return query.exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
+    }
+
+    public async printTicket(
+        agentId: string,
+        ticket: factory.action.transfer.print.ticket.ITicket,
+        project: factory.project.IProject
+    ): Promise<factory.action.transfer.print.ticket.IAction> {
+        const now = new Date();
+        const action: factory.action.transfer.print.ticket.IAction = {
+            project: project,
+            id: '',
+            typeOf: factory.actionType.PrintAction,
+            actionStatus: factory.actionStatusType.CompletedActionStatus,
+            object: {
+                typeOf: 'Ticket',
+                ticketToken: ticket.ticketToken
+            },
+            agent: {
+                typeOf: factory.personType.Person,
+                id: agentId
+            },
+            startDate: now,
+            endDate: now
+        };
+
+        return this.actionModel.create(action)
+            .then((doc) => <factory.action.transfer.print.ticket.IAction>doc.toObject());
+    }
+
+    public async searchPrintTicket(
+        conditions: factory.action.transfer.print.ticket.ISearchConditions
+    ): Promise<factory.action.transfer.print.ticket.IAction[]> {
+        return this.actionModel.find(
+            {
+                typeOf: factory.actionType.PrintAction,
+                'agent.id': conditions.agentId,
+                'object.typeOf': 'Ticket',
+                'object.ticketToken': conditions.ticketToken
+            }
+        )
+            .exec()
+            .then((docs) => docs.map((doc) => <factory.action.transfer.print.ticket.IAction>doc.toObject()));
     }
 }
