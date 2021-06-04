@@ -34,7 +34,8 @@
     "node-fpe": "^1.0.0",
     "request": "^2.88.2",
     "uniqid": "^5.2.0",
-    "uuid": "^3.4.0"
+    "uuid": "^3.4.0",
+    "snyk": "^1.621.0"
   },
   "description": "Chevre Domain Library for Node.js",
   "devDependencies": {
@@ -114,7 +115,10 @@
     "preversion": "npm run clean && npm run build && npm test && npm run doc",
     "version": "git add -A",
     "postversion": "git push origin --tags",
-    "prepublishOnly": "npm run clean && npm run build && npm test && npm run doc"
+    "prepublishOnly": "npm run clean && npm run build && npm test && npm run doc",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
-  "version": "15.47.0"
+  "version": "15.47.0",
+  "snyk": true
 }
