@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- 予約取引に使用メンバーシップを指定できるように調整
+
 ### Deprecated
 
 ### Removed

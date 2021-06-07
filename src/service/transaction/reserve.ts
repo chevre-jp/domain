@@ -16,6 +16,7 @@ import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { IRateLimitKey, RedisRepository as OfferRateLimitRepo } from '../../repo/rateLimit/offer';
 import { MongoRepository as ReservationRepo } from '../../repo/reservation';
+import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
 
@@ -47,6 +48,7 @@ export type IStartOperation<T> = (repos: {
     priceSpecification: PriceSpecificationRepo;
     project: ProjectRepo;
     reservation: ReservationRepo;
+    serviceOutput: ServiceOutputRepo;
     task: TaskRepo;
     transaction: TransactionRepo;
     transactionNumber: TransactionNumberRepo;
@@ -62,6 +64,7 @@ export type IAddReservationsOperation<T> = (repos: {
     place: PlaceRepo;
     priceSpecification: PriceSpecificationRepo;
     reservation: ReservationRepo;
+    serviceOutput: ServiceOutputRepo;
     task: TaskRepo;
     transaction: TransactionRepo;
 }) => Promise<T>;
@@ -102,6 +105,7 @@ export function start(
         priceSpecification: PriceSpecificationRepo;
         project: ProjectRepo;
         reservation: ReservationRepo;
+        serviceOutput: ServiceOutputRepo;
         task: TaskRepo;
         transaction: TransactionRepo;
         transactionNumber: TransactionNumberRepo;
@@ -158,7 +162,7 @@ export function addReservations(params: {
     id: string;
     object: factory.assetTransaction.reserve.IObjectWithoutDetail;
 }): IAddReservationsOperation<factory.assetTransaction.ITransaction<factory.assetTransactionType.Reserve>> {
-    // tslint:disable-next-line:max-func-body-length
+    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     return async (repos: {
         eventAvailability: ScreeningEventAvailabilityRepo;
         event: EventRepo;
@@ -169,6 +173,7 @@ export function addReservations(params: {
         place: PlaceRepo;
         priceSpecification: PriceSpecificationRepo;
         reservation: ReservationRepo;
+        serviceOutput: ServiceOutputRepo;
         task: TaskRepo;
         transaction: TransactionRepo;
     }) => {
@@ -235,7 +240,11 @@ export function addReservations(params: {
         const acceptedOffers = (Array.isArray(params.object.acceptedOffer)) ? params.object.acceptedOffer : [];
 
         // 仮予約作成
-        const reservations = acceptedOffers.map((acceptedOffer, index) => {
+        const reservations: factory.reservation.IReservation<factory.reservationType.EventReservation>[] = [];
+        let reservationIndex = -1;
+        for (const acceptedOffer of acceptedOffers) {
+            reservationIndex += 1;
+
             const ticketOffer = ticketOffers.find((t) => t.id === acceptedOffer.id);
             if (ticketOffer === undefined) {
                 throw new factory.errors.NotFound('Ticket Offer');
@@ -245,6 +254,11 @@ export function addReservations(params: {
             if (ticketType === undefined) {
                 throw new factory.errors.NotFound(ticketOffer.typeOf);
             }
+
+            const programMembershipUsed = await validateProgramMembershipUsed({
+                acceptedOffer,
+                project: transaction.project
+            })(repos);
 
             // チケット作成
             const reservedTicket = createReservedTicket({
@@ -297,9 +311,9 @@ export function addReservations(params: {
 
             const subReservation = acceptedOffer.itemOffered?.serviceOutput?.subReservation;
 
-            return createReservation({
+            reservations.push(createReservation({
                 project: transaction.project,
-                id: `${reservationNumber}-${index}`,
+                id: `${reservationNumber}-${reservationIndex}`,
                 reserveDate: now,
                 agent: transaction.agent,
                 broker: transaction.object.broker,
@@ -311,9 +325,12 @@ export function addReservations(params: {
                 ticketOffer: ticketOffer,
                 seatPriceComponent: seatPriceComponent,
                 acceptedAddOns: acceptedAddOns,
-                subReservation: subReservation
-            });
-        });
+                subReservation: subReservation,
+                programMembershipUsed
+            }));
+        }
+        // const reservations = acceptedOffers.map((acceptedOffer, index) => {
+        // });
 
         // 取引に予約追加
         let lockedOfferRateLimitKeys: IRateLimitKey[] = [];
@@ -369,6 +386,39 @@ export function addReservations(params: {
         await onReservationsCreated({ event })(repos);
 
         return transaction;
+    };
+}
+
+function validateProgramMembershipUsed(params: {
+    acceptedOffer: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail;
+    project: { id: string };
+}) {
+    return async (repos: {
+        serviceOutput: ServiceOutputRepo;
+    }): Promise<factory.reservation.IProgramMembershipUsed<factory.reservationType.EventReservation> | undefined> => {
+        let programMembershipUsed: factory.reservation.IProgramMembershipUsed<factory.reservationType.EventReservation> | undefined;
+
+        const programMembershipUsedIdentifier = params.acceptedOffer.itemOffered?.serviceOutput?.programMembershipUsed?.identifier;
+        if (typeof programMembershipUsedIdentifier === 'string' && programMembershipUsedIdentifier.length > 0) {
+            // メンバーシップの存在確認
+            const searchServiceOutputsResult = await repos.serviceOutput.search({
+                limit: 1,
+                page: 1,
+                project: { id: { $eq: params.project.id } },
+                identifier: { $eq: programMembershipUsedIdentifier }
+            });
+            const serviceOutput = searchServiceOutputsResult.shift();
+            if (serviceOutput === undefined) {
+                throw new factory.errors.NotFound('programMembershipUsed');
+            }
+            programMembershipUsed = {
+                project: serviceOutput.project,
+                typeOf: <any>serviceOutput.typeOf,
+                identifier: serviceOutput.identifier
+            };
+        }
+
+        return programMembershipUsed;
     };
 }
 
