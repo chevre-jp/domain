@@ -326,7 +326,8 @@ export function addReservations(params: {
                 seatPriceComponent: seatPriceComponent,
                 acceptedAddOns: acceptedAddOns,
                 subReservation: subReservation,
-                programMembershipUsed
+                programMembershipUsed,
+                availableOffer: ticketType
             }));
         }
         // const reservations = acceptedOffers.map((acceptedOffer, index) => {
