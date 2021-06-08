@@ -56,6 +56,7 @@
     "@types/uuid": "^3.4.9",
     "coveralls": "^3.1.0",
     "csv-parse": "^4.10.1",
+    "csvtojson": "^2.0.10",
     "mocha": "^5.2.0",
     "mongoose": "^5.9.18",
     "nock": "^13.0.11",
