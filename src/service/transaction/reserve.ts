@@ -144,7 +144,7 @@ export function start(
         }
 
         // 指定があれば予約追加
-        if (typeof params.object.event?.id === 'string') {
+        if (typeof params.object.reservationFor?.id === 'string') {
             transaction = await addReservations({
                 id: transaction.id,
                 object: params.object
@@ -186,13 +186,13 @@ export function addReservations(params: {
         });
 
         // イベント存在確認
-        if (params.object.event === undefined || params.object.event === null) {
-            throw new factory.errors.ArgumentNull('object.event');
+        if (typeof params.object.reservationFor?.id !== 'string' || params.object.reservationFor.id.length === 0) {
+            throw new factory.errors.ArgumentNull('object.reservationFor.id');
         }
 
         const event = await repos.event.findById<factory.eventType.ScreeningEvent>(
             {
-                id: params.object.event.id
+                id: params.object.reservationFor.id
             },
             {
                 // 予約データに不要な属性は取得しない
@@ -222,7 +222,7 @@ export function addReservations(params: {
         const reservedSeatsOnly = event.offers?.itemOffered.serviceOutput?.reservedTicket?.ticketedSeat !== undefined;
 
         // イベントオファー検索
-        const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: params.object.event.id })(repos);
+        const ticketOffers = await OfferService.searchScreeningEventTicketOffers({ eventId: event.id })(repos);
         let availableOffers: factory.offer.IUnitPriceOffer[] = [];
         if (typeof event.hasOfferCatalog?.id === 'string') {
             availableOffers = await repos.offer.findOffersByOfferCatalogId({ offerCatalog: { id: event.hasOfferCatalog.id } });

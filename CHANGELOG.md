@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 予約取引に使用メンバーシップを指定できるように調整
 - 予約取引開始時に適用メンバーシップ区分検証処理を追加
+- 予約取引開始パラメータを最適化
 
 ### Deprecated
 
