@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 
 const csvFilePath = `${__dirname}/test.csv`
 
-const project = { id: 'sskts-test' };
+const project = { id: 'sskts-production' };
 
 const now = moment('2021-05-31T15:00:00Z')
     .toDate();
@@ -31,18 +31,36 @@ async function main() {
     // return;
 
     const reports = [];
+    let i = 0;
     for (const membershipOwnershipInfo of membershipOwnershipInfos) {
+        i += 1;
+        console.log('searching person...', membershipOwnershipInfo.ownedById, i);
         const people = await personRepo.search({
             id: membershipOwnershipInfo.ownedById
         });
-        console.log(people.length, people[0].memberOf.membershipNumber, 'people found');
+
+        let person = {
+            memberOf: { membershipNumber: 'unknown' },
+            givenName: '',
+            familyName: ''
+        };
+        if (people.length > 0) {
+            person = people[0];
+            console.log(people.length, person.memberOf.membershipNumber, 'people found', membershipOwnershipInfo.ownedById, i);
+        } else {
+            console.log('people not found', membershipOwnershipInfo.ownedById, i);
+        }
 
         const account = await findAccount({
             project: project,
             customer: { id: membershipOwnershipInfo.ownedById },
             now: now
         })();
-        console.log('account found', account.accountNumber);
+        if (account !== undefined) {
+            console.log('account found', account.accountNumber, membershipOwnershipInfo.ownedById, i);
+        } else {
+            console.log('account not found', membershipOwnershipInfo.ownedById, i);
+        }
 
         const seller = sellers.find((s) => s.id === membershipOwnershipInfo.sellerId);
         console.log('seller found', seller.name.ja);
@@ -52,10 +70,10 @@ async function main() {
             // transactionNumber: transaction.transactionNumber,
             // startDate: transaction.startDate,
             personId: membershipOwnershipInfo.ownedById,
-            username: people[0].memberOf.membershipNumber,
-            givenName: people[0].givenName,
-            familyName: people[0].familyName,
-            accountNumber: account.accountNumber,
+            username: person.memberOf.membershipNumber,
+            givenName: person.givenName,
+            familyName: person.familyName,
+            accountNumber: (account !== undefined) ? account.accountNumber : 'unknown',
             sellerId: membershipOwnershipInfo.sellerId,
             sellerName: seller.name.ja
         });
@@ -120,7 +138,8 @@ function findAccount(params) {
         });
 
         if (ownershipInfos.length === 0) {
-            throw new factory.errors.NotFound('accountOwnershipInfos');
+            return;
+            // throw new domain.factory.errors.NotFound('accountOwnershipInfos');
         }
 
         return ownershipInfos[0].typeOfGood;

@@ -231,6 +231,16 @@ schema.index(
     }
 );
 
+schema.index(
+    { 'addOn.itemOffered.id': 1, 'priceSpecification.price': 1 },
+    {
+        name: 'searchByAddOnItemOfferedId',
+        partialFilterExpression: {
+            'addOn.itemOffered.id': { $exists: true }
+        }
+    }
+);
+
 export default mongoose.model('Offer', schema)
     .on(
         'index',

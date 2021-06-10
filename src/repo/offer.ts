@@ -256,6 +256,16 @@ export class MongoRepository {
             });
         }
 
+        const addOnItemOfferedIdEq = params.addOn?.itemOffered?.id?.$eq;
+        if (typeof addOnItemOfferedIdEq === 'string') {
+            andConditions.push({
+                'addOn.itemOffered.id': {
+                    $exists: true,
+                    $eq: addOnItemOfferedIdEq
+                }
+            });
+        }
+
         return andConditions;
     }
 
