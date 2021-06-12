@@ -30,6 +30,7 @@ const schema = new mongoose.Schema(
         priceSpecification: mongoose.SchemaTypes.Mixed,
         eligibleCustomerType: mongoose.SchemaTypes.Mixed,
         eligibleDuration: mongoose.SchemaTypes.Mixed,
+        eligibleMembershipType: mongoose.SchemaTypes.Mixed,
         eligibleQuantity: mongoose.SchemaTypes.Mixed,
         eligibleRegion: mongoose.SchemaTypes.Mixed,
         // eligibleMovieTicketType: String,
@@ -217,6 +218,16 @@ schema.index(
         name: 'searchByAvailableAtOrFromId',
         partialFilterExpression: {
             'availableAtOrFrom.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'eligibleMembershipType.codeValue': 1, 'priceSpecification.price': 1 },
+    {
+        name: 'searchByEligibleMembershipTypeCodeValue',
+        partialFilterExpression: {
+            'eligibleMembershipType.codeValue': { $exists: true }
         }
     }
 );

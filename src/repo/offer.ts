@@ -134,6 +134,16 @@ export class MongoRepository {
             });
         }
 
+        const eligibleMembershipTypeCodeValueEq = params.eligibleMembershipType?.codeValue?.$eq;
+        if (typeof eligibleMembershipTypeCodeValueEq === 'string') {
+            andConditions.push({
+                'eligibleMembershipType.codeValue': {
+                    $exists: true,
+                    $eq: eligibleMembershipTypeCodeValueEq
+                }
+            });
+        }
+
         const eligibleSeatingTypeCodeValueEq = params.eligibleSeatingType?.codeValue?.$eq;
         if (typeof eligibleSeatingTypeCodeValueEq === 'string') {
             andConditions.push({
