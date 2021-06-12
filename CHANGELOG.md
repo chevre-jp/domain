@@ -10,11 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- 予約取引に使用メンバーシップを指定できるように調整
-- 予約取引開始時に適用メンバーシップ区分検証処理を追加
-- 予約取引開始パラメータを最適化
-- オファー検索条件拡張
-
 ### Deprecated
 
 ### Removed
@@ -22,6 +17,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.48.0 - 2021-06-12
+
+### Changed
+
+- 予約取引に使用メンバーシップを指定できるように調整
+- 予約取引開始時に適用メンバーシップ区分検証処理を追加
+- 予約取引開始パラメータを最適化
+- オファー検索条件拡張
 
 ## v15.47.0 - 2021-06-04
 
