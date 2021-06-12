@@ -248,6 +248,29 @@ function validateEligibleSubReservation(params: {
     }
 }
 
+function validateEligibleMembershipType(params: {
+    availableOffer: factory.offer.IUnitPriceOffer;
+    programMembershipUsed?: factory.reservation.IProgramMembershipUsed<factory.reservationType.EventReservation>;
+}): void {
+    const programMembershipUsed = params.programMembershipUsed;
+
+    // 使用メンバーシップがeligibleMembershipに含まれればよい
+    const eligibleMembershipType = params.availableOffer.eligibleMembershipType;
+    if (Array.isArray(eligibleMembershipType)) {
+        if (typeof programMembershipUsed?.typeOf !== 'string' || programMembershipUsed.typeOf.length === 0) {
+            throw new factory.errors.Argument('programMembershipUsed', 'programMembership required');
+        }
+
+        const isEligible = eligibleMembershipType.some((membershipType) => membershipType.codeValue === programMembershipUsed.typeOf);
+        if (!isEligible) {
+            throw new factory.errors.Argument(
+                'programMembershipUsed',
+                `${programMembershipUsed.typeOf} is not eligible for the offer ${params.availableOffer.id}`
+            );
+        }
+    }
+}
+
 /**
  * 追加特性を生成する
  */
@@ -294,7 +317,15 @@ export function createReservation(params: {
     seatPriceComponent: factory.place.seat.IPriceComponent[];
     acceptedAddOns: factory.offer.IAddOn[];
     subReservation?: any[];
+    programMembershipUsed?: factory.reservation.IProgramMembershipUsed<factory.reservationType.EventReservation>;
+    availableOffer: factory.offer.IUnitPriceOffer;
 }): factory.reservation.IReservation<factory.reservationType.EventReservation> {
+    // 適用メンバーシップ確認
+    validateEligibleMembershipType({
+        availableOffer: params.availableOffer,
+        programMembershipUsed: params.programMembershipUsed
+    });
+
     // acceptedAddOnsがあればアドオンに対する単価仕様を価格構成に追加
     let unitPriceSpecsAppliedToAddOn: IUnitPriceSpecification[] = [];
     if (Array.isArray(params.acceptedAddOns)) {
@@ -352,7 +383,10 @@ export function createReservation(params: {
         attended: false,
         ...(typeof params.additionalTicketText === 'string') ? { additionalTicketText: params.additionalTicketText } : undefined,
         ...(Array.isArray(params.subReservation)) ? { subReservation: params.subReservation } : undefined,
-        ...(typeof params.broker?.typeOf === 'string') ? { broker: params.broker } : undefined
+        ...(typeof params.broker?.typeOf === 'string') ? { broker: params.broker } : undefined,
+        ...(typeof params.programMembershipUsed?.identifier === 'string')
+            ? { programMembershipUsed: params.programMembershipUsed }
+            : undefined
     };
 }
 

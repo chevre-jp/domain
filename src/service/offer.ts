@@ -170,6 +170,14 @@ export function searchEventSeatOffers(params: {
 export function searchEventSeatOffersWithPaging(params: {
     limit?: number;
     page?: number;
+    branchCode?: {
+        $eq?: string;
+    };
+    containedInPlace?: {
+        branchCode?: {
+            $eq?: string;
+        };
+    };
     event: { id: string };
     $projection?: any;
 }) {
@@ -203,6 +211,11 @@ export function searchEventSeatOffersWithPaging(params: {
                 ...params,
                 project: { id: { $eq: event.project.id } },
                 containedInPlace: {
+                    branchCode: {
+                        $eq: (typeof params.containedInPlace?.branchCode?.$eq === 'string')
+                            ? params.containedInPlace?.branchCode?.$eq
+                            : undefined
+                    },
                     containedInPlace: {
                         branchCode: { $eq: event.location.branchCode },
                         containedInPlace: {

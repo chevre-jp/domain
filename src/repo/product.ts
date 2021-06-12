@@ -115,6 +115,27 @@ export class MongoRepository {
             });
         }
 
+        const nameRegex = params.name?.$regex;
+        if (typeof nameRegex === 'string') {
+            const nameRegexExp = new RegExp(nameRegex);
+            andConditions.push({
+                $or: [
+                    {
+                        'name.ja': {
+                            $exists: true,
+                            $regex: nameRegexExp
+                        }
+                    },
+                    {
+                        'name.en': {
+                            $exists: true,
+                            $regex: nameRegexExp
+                        }
+                    }
+                ]
+            });
+        }
+
         return andConditions;
     }
 

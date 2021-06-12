@@ -26,7 +26,7 @@ const schema = new mongoose.Schema(
         previousReservationStatus: String,
         price: mongoose.SchemaTypes.Mixed,
         priceCurrency: String,
-        programMembershipUsed: String,
+        programMembershipUsed: mongoose.SchemaTypes.Mixed,
         reservationFor: mongoose.SchemaTypes.Mixed,
         reservationNumber: {
             type: String,

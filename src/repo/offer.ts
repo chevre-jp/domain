@@ -134,6 +134,16 @@ export class MongoRepository {
             });
         }
 
+        const eligibleMembershipTypeCodeValueEq = params.eligibleMembershipType?.codeValue?.$eq;
+        if (typeof eligibleMembershipTypeCodeValueEq === 'string') {
+            andConditions.push({
+                'eligibleMembershipType.codeValue': {
+                    $exists: true,
+                    $eq: eligibleMembershipTypeCodeValueEq
+                }
+            });
+        }
+
         const eligibleSeatingTypeCodeValueEq = params.eligibleSeatingType?.codeValue?.$eq;
         if (typeof eligibleSeatingTypeCodeValueEq === 'string') {
             andConditions.push({
@@ -252,6 +262,16 @@ export class MongoRepository {
                 'availableAtOrFrom.id': {
                     $exists: true,
                     $in: availableAtOrFromIdIn
+                }
+            });
+        }
+
+        const addOnItemOfferedIdEq = params.addOn?.itemOffered?.id?.$eq;
+        if (typeof addOnItemOfferedIdEq === 'string') {
+            andConditions.push({
+                'addOn.itemOffered.id': {
+                    $exists: true,
+                    $eq: addOnItemOfferedIdEq
                 }
             });
         }

@@ -84,6 +84,26 @@ schema.index(
     }
 );
 
+schema.index(
+    { 'name.ja': 1, productID: 1 },
+    {
+        name: 'searchByNameJa',
+        partialFilterExpression: {
+            'name.ja': { $exists: true }
+        }
+    }
+);
+
+schema.index(
+    { 'name.en': 1, productID: 1 },
+    {
+        name: 'searchByNameEn',
+        partialFilterExpression: {
+            'name.en': { $exists: true }
+        }
+    }
+);
+
 mongoose.model(modelName, schema)
     .on(
         'index',
