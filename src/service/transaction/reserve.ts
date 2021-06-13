@@ -397,8 +397,10 @@ function validateProgramMembershipUsed(params: {
     return async (repos: {
         serviceOutput: ServiceOutputRepo;
     }): Promise<factory.reservation.IProgramMembershipUsed<factory.reservationType.EventReservation> | undefined> => {
+        const now = new Date();
         let programMembershipUsed: factory.reservation.IProgramMembershipUsed<factory.reservationType.EventReservation> | undefined;
 
+        const programMembershipUsedAccessCode = (<any>params).acceptedOffer.itemOffered?.serviceOutput?.programMembershipUsed?.accessCode;
         const programMembershipUsedIdentifier = params.acceptedOffer.itemOffered?.serviceOutput?.programMembershipUsed?.identifier;
         if (typeof programMembershipUsedIdentifier === 'string' && programMembershipUsedIdentifier.length > 0) {
             // メンバーシップの存在確認
@@ -406,12 +408,29 @@ function validateProgramMembershipUsed(params: {
                 limit: 1,
                 page: 1,
                 project: { id: { $eq: params.project.id } },
-                identifier: { $eq: programMembershipUsedIdentifier }
+                identifier: { $eq: programMembershipUsedIdentifier },
+                accessCode: {
+                    // アクセスコードのチェック
+                    $eq: (typeof programMembershipUsedAccessCode === 'string') ? programMembershipUsedAccessCode : undefined
+                }
             });
             const serviceOutput = searchServiceOutputsResult.shift();
             if (serviceOutput === undefined) {
                 throw new factory.errors.NotFound('programMembershipUsed');
             }
+
+            // 有効期間のチェック
+            if (serviceOutput.validFrom === undefined || serviceOutput.validFrom === null
+                || serviceOutput.validUntil === undefined || serviceOutput.validUntil === null) {
+                throw new factory.errors.Argument('acceptedOffer.itemOffered.serviceOutput.programMembershipUsed', 'not valid programMembership');
+            }
+            if (moment(serviceOutput.validFrom)
+                .isAfter(moment(now))
+                || moment(serviceOutput.validUntil)
+                    .isBefore(moment(now))) {
+                throw new factory.errors.Argument('acceptedOffer.itemOffered.serviceOutput.programMembershipUsed', 'unavailable programMembership');
+            }
+
             programMembershipUsed = {
                 project: serviceOutput.project,
                 typeOf: <any>serviceOutput.typeOf,

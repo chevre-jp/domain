@@ -31,10 +31,7 @@ export class MongoRepository {
         const typeOfEq = params.typeOf?.$eq;
         if (typeof typeOfEq === 'string') {
             andConditions.push({
-                typeOf: {
-                    $exists: true,
-                    $eq: typeOfEq
-                }
+                typeOf: { $eq: typeOfEq }
             });
         }
 
@@ -53,6 +50,46 @@ export class MongoRepository {
                 identifier: {
                     $exists: true,
                     $eq: identifierEq
+                }
+            });
+        }
+
+        const accessCodeEq = params.accessCode?.$eq;
+        if (typeof accessCodeEq === 'string') {
+            andConditions.push({
+                accessCode: {
+                    $exists: true,
+                    $eq: accessCodeEq
+                }
+            });
+        }
+
+        const issuedByIdEq = params.issuedBy?.id?.$eq;
+        if (typeof issuedByIdEq === 'string') {
+            andConditions.push({
+                'issuedBy.id': {
+                    $exists: true,
+                    $eq: issuedByIdEq
+                }
+            });
+        }
+
+        const issuedThroughIdEq = params.issuedThrough?.id?.$eq;
+        if (typeof issuedThroughIdEq === 'string') {
+            andConditions.push({
+                'issuedThrough.id': {
+                    $exists: true,
+                    $eq: issuedThroughIdEq
+                }
+            });
+        }
+
+        const issuedThroughTypeOfEq = params.issuedThrough?.typeOf?.$eq;
+        if (typeof issuedThroughTypeOfEq === 'string') {
+            andConditions.push({
+                'issuedThrough.typeOf': {
+                    $exists: true,
+                    $eq: issuedThroughTypeOfEq
                 }
             });
         }

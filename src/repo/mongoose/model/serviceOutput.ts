@@ -97,6 +97,16 @@ schema.index(
 );
 
 schema.index(
+    { accessCode: 1, dateIssued: -1 },
+    {
+        name: 'searchByAccessCode',
+        partialFilterExpression: {
+            accessCode: { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'issuedBy.id': 1, dateIssued: -1 },
     {
         name: 'searchByIssuedById',
