@@ -10,9 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- サービスアウトプット検索条件拡張
-- 予約取引開始時の適用メンバーシップ検証にアクセスコードと有効期間確認処理を追加
-
 ### Deprecated
 
 ### Removed
@@ -20,6 +17,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.49.0 - 2021-06-13
+
+### Changed
+
+- サービスアウトプット検索条件拡張
+- 予約取引開始時の適用メンバーシップ検証にアクセスコードと有効期間確認処理を追加
 
 ## v15.48.0 - 2021-06-12
 
