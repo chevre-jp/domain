@@ -10,9 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- 単価オファーの提供アイテムを最適化
-- サービスアウトプット検索にprojectionを指定できるように調整
-
 ### Deprecated
 
 ### Removed
@@ -20,6 +17,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.50.0 - 2021-06-15
+
+### Changed
+
+- 単価オファーの提供アイテムを最適化
+- サービスアウトプット検索にprojectionを指定できるように調整
 
 ## v15.49.0 - 2021-06-13
 
