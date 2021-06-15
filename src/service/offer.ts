@@ -646,7 +646,7 @@ function coaTicket2offer(params: {
         // kanaName: params.ticketResult.ticketNameKana,
         availability: factory.itemAvailability.InStock,
         itemOffered: {
-            project: { typeOf: params.project.typeOf, id: params.project.id },
+            // project: { typeOf: params.project.typeOf, id: params.project.id },
             typeOf: factory.product.ProductType.EventService
         },
         priceSpecification: unitPriceSpec,

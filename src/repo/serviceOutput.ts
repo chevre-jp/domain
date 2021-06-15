@@ -97,14 +97,18 @@ export class MongoRepository {
         return andConditions;
     }
 
-    public async search(params: factory.product.IServiceOutputSearchConditions): Promise<factory.product.IServiceOutput[]> {
+    public async search(
+        params: factory.product.IServiceOutputSearchConditions,
+        projection?: any
+    ): Promise<factory.product.IServiceOutput[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.serviceOutputModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
             {
                 __v: 0,
                 createdAt: 0,
-                updatedAt: 0
+                updatedAt: 0,
+                ...projection
             }
         );
 

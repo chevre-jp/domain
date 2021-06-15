@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- 単価オファーの提供アイテムを最適化
+- サービスアウトプット検索にprojectionを指定できるように調整
+
 ### Deprecated
 
 ### Removed
