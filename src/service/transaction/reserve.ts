@@ -400,7 +400,7 @@ function validateProgramMembershipUsed(params: {
         const now = new Date();
         let programMembershipUsed: factory.reservation.IProgramMembershipUsed<factory.reservationType.EventReservation> | undefined;
 
-        const programMembershipUsedAccessCode = (<any>params).acceptedOffer.itemOffered?.serviceOutput?.programMembershipUsed?.accessCode;
+        const programMembershipUsedAccessCode = params.acceptedOffer.itemOffered?.serviceOutput?.programMembershipUsed?.accessCode;
         const programMembershipUsedIdentifier = params.acceptedOffer.itemOffered?.serviceOutput?.programMembershipUsed?.identifier;
         if (typeof programMembershipUsedIdentifier === 'string' && programMembershipUsedIdentifier.length > 0) {
             // メンバーシップの存在確認
