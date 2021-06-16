@@ -26,13 +26,13 @@ export class RedisRepository {
      * タイムスタンプから発行する
      */
     public async publishByTimestamp(params: {
-        project: { id: string };
+        // project: { id: string };
         startDate: Date;
     }): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             // tslint:disable-next-line:no-magic-numbers
-            const projectPrefix = params.project.id.slice(0, 3)
-                .toUpperCase();
+            // const projectPrefix = params.project.id.slice(0, 3)
+            //     .toUpperCase();
             const timestamp = moment(params.startDate)
                 .valueOf()
                 .toString();
@@ -43,9 +43,10 @@ export class RedisRepository {
                 .diff(now, 'seconds');
             debug(`TTL:${TTL} seconds`);
             const key = util.format(
-                '%s:%s:%s',
+                // '%s:%s:%s',
+                '%s:%s',
                 RedisRepository.REDIS_KEY_PREFIX,
-                projectPrefix,
+                // projectPrefix,
                 timestamp
             );
 
@@ -74,8 +75,10 @@ export class RedisRepository {
                             const cipher = fpe({ password: cd });
                             transactionNumber = cipher.encrypt(transactionNumber);
 
-                            debug('publishing transactionNumber from', projectPrefix, timestamp, no, cd);
-                            transactionNumber = `${projectPrefix}${cd}${transactionNumber}`;
+                            // debug('publishing transactionNumber from', projectPrefix, timestamp, no, cd);
+                            // transactionNumber = `${projectPrefix}${cd}${transactionNumber}`;
+                            debug('publishing transactionNumber from', timestamp, no, cd);
+                            transactionNumber = `${cd}${transactionNumber}`;
 
                             resolve(transactionNumber);
                         } else {

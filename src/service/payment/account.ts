@@ -208,7 +208,7 @@ export function refundAccount(params: factory.task.refund.IData) {
 
         try {
             const transactionNumber = await repos.transactionNumber.publishByTimestamp({
-                project: params.project,
+                // project: params.project,
                 startDate: new Date()
             });
 

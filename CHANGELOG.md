@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- 資産取引番号からプロジェクトプレフィックスを除外
+
 ### Deprecated
 
 ### Removed

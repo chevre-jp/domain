@@ -324,7 +324,7 @@ export function moneyTransfer(params: factory.task.moneyTransfer.IData) {
             // 取引番号指定でなければ発行
             if (typeof transactionNumber !== 'string') {
                 transactionNumber = await repos.transactionNumber.publishByTimestamp({
-                    project: params.project,
+                    // project: params.project,
                     startDate: new Date()
                 });
             }
