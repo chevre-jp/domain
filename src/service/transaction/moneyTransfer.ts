@@ -97,7 +97,7 @@ export function start(
         // 通貨転送取引番号の指定がなければ発行
         if (typeof transactionNumber !== 'string' || transactionNumber.length === 0) {
             transactionNumber = await repos.transactionNumber.publishByTimestamp({
-                project: params.project,
+                // project: params.project,
                 startDate: now
             });
         }

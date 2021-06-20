@@ -118,7 +118,7 @@ export function start(
         let reservationNumber: string | undefined = params.transactionNumber;
         if (typeof reservationNumber !== 'string') {
             reservationNumber = await repos.transactionNumber.publishByTimestamp({
-                project: params.project,
+                // project: params.project,
                 startDate: now
             });
         }

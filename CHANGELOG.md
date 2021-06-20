@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.51.0 - 2021-06-20
+
+### Changed
+
+- 資産取引番号からプロジェクトプレフィックスを除外
+
 ## v15.50.0 - 2021-06-15
 
 ### Changed
