@@ -115,6 +115,16 @@ export class MongoRepository {
             });
         }
 
+        const serviceOutputAmountCurrencyEq = params.serviceOutput?.amount?.currency?.$eq;
+        if (typeof serviceOutputAmountCurrencyEq === 'string') {
+            andConditions.push({
+                'serviceOutput.amount.currency': {
+                    $exists: true,
+                    $eq: serviceOutputAmountCurrencyEq
+                }
+            });
+        }
+
         const nameRegex = params.name?.$regex;
         if (typeof nameRegex === 'string') {
             const nameRegexExp = new RegExp(nameRegex);
