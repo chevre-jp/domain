@@ -233,6 +233,16 @@ schema.index(
 );
 
 schema.index(
+    { 'eligibleMonetaryAmount.currency': 1, 'priceSpecification.price': 1 },
+    {
+        name: 'searchByEligibleMonetaryAmountCurrency',
+        partialFilterExpression: {
+            'eligibleMonetaryAmount.currency': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'eligibleSeatingType.codeValue': 1, 'priceSpecification.price': 1 },
     {
         name: 'searchByEligibleSeatingTypeCodeValue',

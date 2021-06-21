@@ -144,6 +144,16 @@ export class MongoRepository {
             });
         }
 
+        const eligibleMonetaryAmountCurrencyEq = params.eligibleMonetaryAmount?.currency?.$eq;
+        if (typeof eligibleMonetaryAmountCurrencyEq === 'string') {
+            andConditions.push({
+                'eligibleMonetaryAmount.currency': {
+                    $exists: true,
+                    $eq: eligibleMonetaryAmountCurrencyEq
+                }
+            });
+        }
+
         const eligibleSeatingTypeCodeValueEq = params.eligibleSeatingType?.codeValue?.$eq;
         if (typeof eligibleSeatingTypeCodeValueEq === 'string') {
             andConditions.push({

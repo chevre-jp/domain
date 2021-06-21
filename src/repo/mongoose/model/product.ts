@@ -78,6 +78,16 @@ schema.index(
 );
 
 schema.index(
+    { 'serviceOutput.amount.currency': 1, productID: 1 },
+    {
+        name: 'searchByServiceOutputAmountCurrency',
+        partialFilterExpression: {
+            'serviceOutput.amount.currency': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { typeOf: 1, productID: 1 },
     {
         name: 'searchByTypeOf'
