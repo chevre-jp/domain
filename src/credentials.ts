@@ -20,6 +20,10 @@ export const credentials = {
         engineId: <string>process.env.CUSTOM_SEARCH_ENGINE_ID,
         apiKey: <string>process.env.GOOGLE_API_KEY
     },
+    gmo: {
+        // tslint:disable-next-line:no-magic-numbers
+        timeout: (typeof process.env.GMO_TIMEOUT === 'string') ? Number(process.env.GMO_TIMEOUT) : 10000
+    },
     lineNotify: {
         url: <string>process.env.LINE_NOTIFY_URL,
         accessToken: <string>process.env.LINE_NOTIFY_ACCESS_TOKEN
