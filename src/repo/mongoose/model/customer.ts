@@ -57,6 +57,35 @@ schema.index(
     { name: 'searchByUpdatedAt' }
 );
 
+schema.index(
+    { branchCode: 1 },
+    { name: 'searchByBranchCode' }
+);
+schema.index(
+    { 'project.id': 1, branchCode: 1 },
+    {
+        name: 'searchByProjectId'
+    }
+);
+schema.index(
+    { 'name.ja': 1, branchCode: 1 },
+    {
+        name: 'searchByNameJa',
+        partialFilterExpression: {
+            'name.ja': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'name.en': 1, branchCode: 1 },
+    {
+        name: 'searchByNameEn',
+        partialFilterExpression: {
+            'name.en': { $exists: true }
+        }
+    }
+);
+
 mongoose.model(modelName, schema)
     .on(
         'index',
