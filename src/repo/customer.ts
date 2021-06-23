@@ -28,11 +28,11 @@ export class MongoRepository {
             });
         }
 
-        const identifierRegex = params.identifier?.$regex;
-        if (typeof identifierRegex === 'string') {
+        const branchCodeRegex = params.branchCode?.$regex;
+        if (typeof branchCodeRegex === 'string') {
             andConditions.push({
-                identifier: {
-                    $regex: new RegExp(identifierRegex)
+                branchCode: {
+                    $regex: new RegExp(branchCodeRegex)
                 }
             });
         }
