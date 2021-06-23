@@ -105,7 +105,7 @@ async function processAccountTransaction(params: {
         endpoint: credentials.pecorino.endpoint,
         auth: pecorinoAuthClient
     });
-    pendingTransaction = <any>await withdrawService.start({
+    pendingTransaction = await withdrawService.start({
         transactionNumber: params.transactionNumber,
         project: { typeOf: params.project.typeOf, id: params.project.id },
         typeOf: factory.account.transactionType.Withdraw,
