@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - GMOリクエストにタイムアウトを設定
+- 全リソースのプロジェクトID検索条件を統一
 
 ### Deprecated
 
