@@ -1,7 +1,7 @@
 const domain = require('../lib');
 const mongoose = require('mongoose');
 
-const project = { id: 'sskts-development' };
+const project = { id: '' };
 
 async function main() {
     await mongoose.connect(process.env.MONGOLAB_URI);
@@ -10,7 +10,7 @@ async function main() {
     const placeRepo = new domain.repository.Place(mongoose.connection);
 
     const movieTheaters = await placeRepo.searchMovieTheaters({
-        project: { ids: [project.id] }
+        project: { id: { $eq: project.id } }
     });
     console.log(movieTheaters);
 

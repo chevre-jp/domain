@@ -109,14 +109,14 @@ function aggregateReservationOnProject(params: {
             debug('counting...', reservationForConditions);
 
             reservationCount += await repos.reservation.count({
-                project: { ids: [params.project.id] },
+                project: { id: { $eq: params.project.id } },
                 typeOf: factory.reservationType.EventReservation,
                 reservationFor: reservationForConditions,
                 reservationStatuses: [factory.reservationStatusType.ReservationConfirmed]
             });
 
             attendeeCount += await repos.reservation.count({
-                project: { ids: [params.project.id] },
+                project: { id: { $eq: params.project.id } },
                 typeOf: factory.reservationType.EventReservation,
                 reservationFor: reservationForConditions,
                 // reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],
@@ -124,7 +124,7 @@ function aggregateReservationOnProject(params: {
             });
 
             checkInCount += await repos.reservation.count({
-                project: { ids: [params.project.id] },
+                project: { id: { $eq: params.project.id } },
                 typeOf: factory.reservationType.EventReservation,
                 reservationFor: reservationForConditions,
                 // reservationStatuses: [factory.reservationStatusType.ReservationConfirmed],

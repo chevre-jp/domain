@@ -412,7 +412,7 @@ function cancelDeletedEvents(params: {
     }) => {
         // COAから削除されたイベントをキャンセル済ステータスへ変更
         const ids = await repos.event.search({
-            project: { ids: [params.project.id] },
+            project: { id: { $eq: params.project.id } },
             typeOf: factory.eventType.ScreeningEvent,
             superEvent: {
                 locationBranchCodes: [params.locationBranchCode]

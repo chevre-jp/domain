@@ -8,7 +8,7 @@ async function main() {
     const eventRepo = new domain.repository.Event(mongoose.connection);
 
     await domain.service.aggregation.event.importFromCOA({
-        project: { typeOf: 'Project', id: 'sskts-development' },
+        project: { typeOf: 'Project', id: '' },
         locationBranchCode: '120',
         importFrom: moment().toDate(),
         importThrough: moment().add(1, 'day').toDate()

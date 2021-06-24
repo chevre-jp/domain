@@ -114,7 +114,7 @@ export function createReport(params: ICreateReportActionAttributes) {
         const eventStartThrough = params.object.mentions?.query?.reservationFor?.startThrough;
 
         const conditions: factory.reservation.ISearchConditions<factory.reservationType.EventReservation> = {
-            project: { ids: [params.project.id] },
+            project: { id: { $eq: params.project.id } },
             typeOf: factory.reservationType.EventReservation,
             bookingFrom: (typeof bookingFrom === 'string' && bookingFrom.length > 0)
                 ? moment(bookingFrom)

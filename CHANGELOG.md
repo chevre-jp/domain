@@ -18,6 +18,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.54.0 - 2021-06-24
+
+### Changed
+
+- GMOリクエストにタイムアウトを設定
+- 全リソースのプロジェクトID検索条件を統一
+- 予約取消のttts互換性維持対応を削除
+
 ## v15.53.0 - 2021-06-23
 
 ### Changed

@@ -18,17 +18,14 @@ export class MongoRepository {
         // MongoDB検索条件
         const andConditions: any[] = [];
 
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.project !== undefined) {
-            if (Array.isArray(params.project.ids)) {
-                andConditions.push({
-                    'project.id': {
-                        $exists: true,
-                        $in: params.project.ids
-                    }
-                });
-            }
+        const projectIdEq = params.project?.id?.$eq;
+        if (typeof projectIdEq === 'string') {
+            andConditions.push({
+                'project.id': {
+                    $exists: true,
+                    $eq: projectIdEq
+                }
+            });
         }
 
         const branchCodeEq = params.branchCode?.$eq;

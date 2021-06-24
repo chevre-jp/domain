@@ -4,6 +4,7 @@
 import * as GMO from '@motionpicture/gmo-service';
 import * as createDebug from 'debug';
 
+import { credentials } from '../../credentials';
 import * as factory from '../../factory';
 
 import { MongoRepository as ActionRepo } from '../../repo/action';
@@ -74,7 +75,10 @@ export function authorize(
         }
 
         try {
-            const creditCardService = new GMO.service.Credit({ endpoint: String(availableChannel.serviceUrl) });
+            const creditCardService = new GMO.service.Credit(
+                { endpoint: String(availableChannel.serviceUrl) },
+                { timeout: credentials.gmo.timeout }
+            );
 
             // ベストエフォートでクレジットカード詳細情報を取得
             searchTradeResult = await creditCardService.searchTrade({
@@ -120,7 +124,10 @@ async function processAuthorizeCreditCard(params: {
     let execTranArgs: GMO.factory.credit.IExecTranArgs;
     let execTranResult: GMO.factory.credit.IExecTranResult;
 
-    const creditCardService = new GMO.service.Credit({ endpoint: String(params.availableChannel.serviceUrl) });
+    const creditCardService = new GMO.service.Credit(
+        { endpoint: String(params.availableChannel.serviceUrl) },
+        { timeout: credentials.gmo.timeout }
+    );
 
     entryTranArgs = {
         shopId: params.shopId,
@@ -220,7 +227,10 @@ export function voidTransaction(params: factory.task.voidPayment.IData) {
 
         const { shopId, shopPass } = await getGMOInfoFromSeller({ paymentMethodType, seller: { id: sellerId } })(repos);
 
-        const creditCardService = new GMO.service.Credit({ endpoint: String(availableChannel.serviceUrl) });
+        const creditCardService = new GMO.service.Credit(
+            { endpoint: String(availableChannel.serviceUrl) },
+            { timeout: credentials.gmo.timeout }
+        );
 
         // オーソリ取消
         // 現時点では、ここで失敗したらオーソリ取消をあきらめる
@@ -290,7 +300,10 @@ export function payCreditCard(params: factory.task.pay.IData) {
         const alterTranResults: GMO.factory.credit.IAlterTranResult[] = [];
 
         try {
-            const creditCardService = new GMO.service.Credit({ endpoint: String(availableChannel.serviceUrl) });
+            const creditCardService = new GMO.service.Credit(
+                { endpoint: String(availableChannel.serviceUrl) },
+                { timeout: credentials.gmo.timeout }
+            );
 
             await Promise.all(payObject.map(async (paymentMethod) => {
                 const orderId = paymentMethod.paymentMethod.paymentMethodId;
@@ -465,7 +478,10 @@ async function processChangeTransaction(params: {
 }): Promise<GMO.factory.credit.IAlterTranResult[]> {
     const alterTranResult: GMO.factory.credit.IAlterTranResult[] = [];
 
-    const creditCardService = new GMO.service.Credit({ endpoint: String(params.availableChannel.serviceUrl) });
+    const creditCardService = new GMO.service.Credit(
+        { endpoint: String(params.availableChannel.serviceUrl) },
+        { timeout: credentials.gmo.timeout }
+    );
 
     // 取引状態参照
     const searchTradeResult = await creditCardService.searchTrade({

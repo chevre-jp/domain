@@ -27,15 +27,14 @@ export class MongoRepository implements Repository {
             }
         ];
 
-        if (params.project !== undefined) {
-            if (Array.isArray(params.project.ids)) {
-                andConditions.push({
-                    'project.id': {
-                        $exists: true,
-                        $in: params.project.ids
-                    }
-                });
-            }
+        const projectIdEq = params.project?.id?.$eq;
+        if (typeof projectIdEq === 'string') {
+            andConditions.push({
+                'project.id': {
+                    $exists: true,
+                    $eq: projectIdEq
+                }
+            });
         }
 
         const contentRatingEq = params.contentRating?.$eq;
