@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - GMOリクエストにタイムアウトを設定
 - 全リソースのプロジェクトID検索条件を統一
+- 予約取消のttts互換性維持対応を削除
 
 ### Deprecated
 
