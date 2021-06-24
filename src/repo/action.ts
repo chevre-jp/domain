@@ -23,16 +23,6 @@ export class MongoRepository {
     public static CREATE_MONGO_CONDITIONS(params: factory.action.ISearchConditions) {
         const andConditions: any[] = [];
 
-        const projectIdIn = params.project?.ids;
-        if (Array.isArray(projectIdIn)) {
-            andConditions.push({
-                'project.id': {
-                    $exists: true,
-                    $in: projectIdIn
-                }
-            });
-        }
-
         const projectIdEq = params.project?.id?.$eq;
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */

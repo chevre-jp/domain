@@ -9,7 +9,7 @@ async function main() {
 
     const cursor = await repo.organizationModel.find(
         {
-            // 'project.id': { $ne: 'ttts-test' }
+            // 'project.id': { $ne: '' }
         },
         {
         }

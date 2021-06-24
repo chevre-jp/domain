@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const moment = require('moment');
 
 // const project = { id: 'cinerino' };
-const project = { id: 'sskts-development' };
+const project = { id: '' };
 
 async function main() {
     await mongoose.connect(process.env.MONGOLAB_URI, { autoIndex: true });

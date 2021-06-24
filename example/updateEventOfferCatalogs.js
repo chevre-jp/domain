@@ -8,7 +8,7 @@ async function main() {
 
     const eventRepo = new chevre.repository.Event(mongoose.connection);
 
-    const project = 'ttts-development';
+    const project = '';
     const offerCatalogFrom = '';
     const offerCatalogTo = '';
     const startFrom = moment('2020-04-01T00:00:00+0900').toDate();

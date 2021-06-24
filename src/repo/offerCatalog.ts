@@ -100,17 +100,6 @@ export class MongoRepository {
             });
         }
 
-        // 互換性対応
-        const projectIds = params.project?.ids;
-        if (Array.isArray(projectIds)) {
-            andConditions.push({
-                'project.id': {
-                    $exists: true,
-                    $in: projectIds
-                }
-            });
-        }
-
         return andConditions;
     }
 

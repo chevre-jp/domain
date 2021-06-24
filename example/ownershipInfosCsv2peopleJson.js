@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 
 const csvFilePath = `${__dirname}/test.csv`
 
-const project = { id: 'sskts-production' };
+const project = { id: '' };
 
 const now = moment('2021-05-31T15:00:00Z')
     .toDate();

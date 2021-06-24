@@ -16,7 +16,7 @@ async function main() {
 
     const events = await eventRepo.search({
         typeOf: domain.factory.eventType.ScreeningEvent,
-        project: { ids: [project.id] },
+        project: { id: { $eq: project.id } },
         startFrom: now
         // startFrom: moment().add(-1, 'day').toDate(),
         // startThrough: moment().add(1, 'day').toDate(),

@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 const domain = require('../');
 
-const project = { id: 'sskts-production' };
+const project = { id: '' };
 
 async function main() {
     await mongoose.connect(process.env.MONGOLAB_URI, {

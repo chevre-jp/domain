@@ -37,17 +37,6 @@ export class MongoRepository implements Repository {
             });
         }
 
-        if (params.project !== undefined) {
-            if (Array.isArray(params.project.ids)) {
-                andConditions.push({
-                    'project.id': {
-                        $exists: true,
-                        $in: params.project.ids
-                    }
-                });
-            }
-        }
-
         const contentRatingEq = params.contentRating?.$eq;
         if (typeof contentRatingEq === 'string') {
             andConditions.push({
