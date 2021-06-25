@@ -68,6 +68,16 @@ schema.index(
 );
 
 schema.index(
+    { 'hasOfferCatalog.id': 1, productID: 1 },
+    {
+        name: 'searchByHasOfferCatalog',
+        partialFilterExpression: {
+            'hasOfferCatalog.id': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { 'serviceOutput.typeOf': 1, productID: 1 },
     {
         name: 'searchByServiceOutputTypeOf',
