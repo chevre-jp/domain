@@ -49,6 +49,16 @@ export class MongoRepository {
             });
         }
 
+        const hasOfferCatalogIdEq = params.hasOfferCatalog?.id?.$eq;
+        if (typeof hasOfferCatalogIdEq === 'string') {
+            andConditions.push({
+                'hasOfferCatalog.id': {
+                    $exists: true,
+                    $eq: hasOfferCatalogIdEq
+                }
+            });
+        }
+
         const idEq = params.id?.$eq;
         if (typeof idEq === 'string') {
             andConditions.push({
