@@ -173,7 +173,7 @@ function saveMovieTheater(params: {
         return repos.place.placeModel.findOneAndUpdate(
             {
                 'project.id': {
-                    $exists: true,
+                    // $exists: true,
                     $eq: params.movieTheater.project.id
                 },
                 branchCode: {

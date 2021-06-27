@@ -27,7 +27,7 @@ export class MongoRepository {
         if (typeof projectIdEq === 'string') {
             andConditions.push({
                 'project.id': {
-                    $exists: true,
+                    // $exists: true,
                     $eq: projectIdEq
                 }
             });
@@ -431,7 +431,7 @@ export class MongoRepository {
         doc = await this.offerModel.findOneAndUpdate(
             {
                 'project.id': {
-                    $exists: true,
+                    // $exists: true,
                     $eq: params.project.id
                 },
                 identifier: {
@@ -469,7 +469,7 @@ export class MongoRepository {
                     updateOne: {
                         filter: {
                             'project.id': {
-                                $exists: true,
+                                // $exists: true,
                                 $eq: p.attributes.project.id
                             },
                             identifier: {
