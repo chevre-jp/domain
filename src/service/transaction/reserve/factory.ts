@@ -121,6 +121,8 @@ export function createReservedTicket(params: {
         };
     }
 
+    const ticketType = createTicketType({ availableOffer: params.availableOffer });
+
     return {
         dateIssued: params.dateIssued,
         issuedBy: {
@@ -128,7 +130,7 @@ export function createReservedTicket(params: {
             name: <string>params.event.location.name?.ja
         },
         priceCurrency: factory.priceCurrency.JPY,
-        ticketType: params.availableOffer,
+        ticketType,
         // totalPrice: ticketOffer.priceSpecification, // いったん不要かと思われる
         typeOf: 'Ticket',
         underName: {
@@ -138,6 +140,30 @@ export function createReservedTicket(params: {
         ...(ticketedSeat !== undefined)
             ? { ticketedSeat: ticketedSeat }
             : {}
+    };
+}
+
+/**
+ * 予約に最適化された単価オファーを作成する
+ */
+function createTicketType(params: {
+    availableOffer: factory.offer.IUnitPriceOffer;
+}): factory.reservation.ITicketType<factory.reservationType.EventReservation> {
+    const availableOffer = params.availableOffer;
+
+    return {
+        description: availableOffer.description,
+        id: availableOffer.id,
+        identifier: availableOffer.identifier,
+        name: availableOffer.name,
+        priceCurrency: availableOffer.priceCurrency,
+        priceSpecification: availableOffer.priceSpecification,
+        project: availableOffer.project,
+        typeOf: availableOffer.typeOf,
+        validRateLimit: availableOffer.validRateLimit,
+        ...(Array.isArray(availableOffer.additionalProperty)) ? { additionalProperty: availableOffer.additionalProperty } : undefined,
+        ...(typeof availableOffer.category?.codeValue === 'string') ? { category: availableOffer.category } : undefined,
+        ...(typeof availableOffer.color === 'string') ? { color: availableOffer.color } : undefined
     };
 }
 
