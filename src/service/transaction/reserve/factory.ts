@@ -160,10 +160,10 @@ function createTicketType(params: {
         priceSpecification: availableOffer.priceSpecification,
         project: availableOffer.project,
         typeOf: availableOffer.typeOf,
-        validRateLimit: availableOffer.validRateLimit,
         ...(Array.isArray(availableOffer.additionalProperty)) ? { additionalProperty: availableOffer.additionalProperty } : undefined,
         ...(typeof availableOffer.category?.codeValue === 'string') ? { category: availableOffer.category } : undefined,
-        ...(typeof availableOffer.color === 'string') ? { color: availableOffer.color } : undefined
+        ...(typeof availableOffer.color === 'string') ? { color: availableOffer.color } : undefined,
+        ...(availableOffer.validRateLimit !== undefined) ? { validRateLimit: availableOffer.validRateLimit } : undefined
     };
 }
 
