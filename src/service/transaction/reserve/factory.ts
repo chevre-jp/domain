@@ -157,7 +157,26 @@ function createTicketType(params: {
         identifier: availableOffer.identifier,
         name: availableOffer.name,
         priceCurrency: availableOffer.priceCurrency,
-        priceSpecification: availableOffer.priceSpecification,
+        // priceSpecificationを最適化(accounting不要)
+        // accounting: { typeOf: "Accounting", … }
+        // name: { ja: "大学・専門", en: "College" }
+        // price: 1500
+        // priceCurrency: "JPY"
+        // project: { typeOf: "Project", id: "toei-production" }
+        // referenceQuantity: { typeOf: "QuantitativeValue", value: 1, unitCode: "C62" }
+        // typeOf: "UnitPriceSpecification"
+        // valueAddedTaxIncluded: true
+        priceSpecification: {
+            // ...availableOffer.priceSpecification,
+            name: availableOffer.priceSpecification?.name,
+            price: Number(availableOffer.priceSpecification?.price),
+            priceCurrency: <factory.priceCurrency>availableOffer.priceSpecification?.priceCurrency,
+            project: <factory.project.IProject>availableOffer.priceSpecification?.project,
+            referenceQuantity: <factory.quantitativeValue.IQuantitativeValue<factory.unitCode>>
+                availableOffer.priceSpecification?.referenceQuantity,
+            typeOf: <factory.priceSpecificationType.UnitPriceSpecification>availableOffer.priceSpecification?.typeOf,
+            valueAddedTaxIncluded: <boolean>availableOffer.priceSpecification?.valueAddedTaxIncluded
+        },
         project: availableOffer.project,
         typeOf: availableOffer.typeOf,
         ...(Array.isArray(availableOffer.additionalProperty)) ? { additionalProperty: availableOffer.additionalProperty } : undefined,
