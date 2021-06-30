@@ -6,6 +6,8 @@ import * as moment from 'moment';
 import * as factory from '../../../factory';
 import { settings } from '../../../settings';
 
+const INCLUDE_OFFER_PRICE_SPEC_IN_RESERVATION_TICKET = process.env.INCLUDE_OFFER_PRICE_SPEC_IN_RESERVATION_TICKET === '1';
+
 export function createStartParams(params: factory.assetTransaction.reserve.IStartParamsWithoutDetail & {
     reservationNumber: string;
     projectSettings?: factory.project.ISettings;
@@ -166,23 +168,27 @@ function createTicketType(params: {
         // referenceQuantity: { typeOf: "QuantitativeValue", value: 1, unitCode: "C62" }
         // typeOf: "UnitPriceSpecification"
         // valueAddedTaxIncluded: true
-        priceSpecification: {
-            // ...availableOffer.priceSpecification,
-            name: availableOffer.priceSpecification?.name,
-            price: Number(availableOffer.priceSpecification?.price),
-            priceCurrency: <factory.priceCurrency>availableOffer.priceSpecification?.priceCurrency,
-            project: <factory.project.IProject>availableOffer.priceSpecification?.project,
-            referenceQuantity: <factory.quantitativeValue.IQuantitativeValue<factory.unitCode>>
-                availableOffer.priceSpecification?.referenceQuantity,
-            typeOf: <factory.priceSpecificationType.UnitPriceSpecification>availableOffer.priceSpecification?.typeOf,
-            valueAddedTaxIncluded: <boolean>availableOffer.priceSpecification?.valueAddedTaxIncluded
-        },
         project: availableOffer.project,
         typeOf: availableOffer.typeOf,
         ...(Array.isArray(availableOffer.additionalProperty)) ? { additionalProperty: availableOffer.additionalProperty } : undefined,
         ...(typeof availableOffer.category?.codeValue === 'string') ? { category: availableOffer.category } : undefined,
         ...(typeof availableOffer.color === 'string') ? { color: availableOffer.color } : undefined,
-        ...(availableOffer.validRateLimit !== undefined) ? { validRateLimit: availableOffer.validRateLimit } : undefined
+        ...(availableOffer.validRateLimit !== undefined) ? { validRateLimit: availableOffer.validRateLimit } : undefined,
+        ...(INCLUDE_OFFER_PRICE_SPEC_IN_RESERVATION_TICKET)
+            ? {
+                priceSpecification: {
+                    // ...availableOffer.priceSpecification,
+                    name: availableOffer.priceSpecification?.name,
+                    price: Number(availableOffer.priceSpecification?.price),
+                    priceCurrency: <factory.priceCurrency>availableOffer.priceSpecification?.priceCurrency,
+                    project: <factory.project.IProject>availableOffer.priceSpecification?.project,
+                    referenceQuantity: <factory.quantitativeValue.IQuantitativeValue<factory.unitCode>>
+                        availableOffer.priceSpecification?.referenceQuantity,
+                    typeOf: <factory.priceSpecificationType.UnitPriceSpecification>availableOffer.priceSpecification?.typeOf,
+                    valueAddedTaxIncluded: <boolean>availableOffer.priceSpecification?.valueAddedTaxIncluded
+                }
+            }
+            : undefined
     };
 }
 
