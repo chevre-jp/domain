@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 - 各リソースのプロジェクトID検索条件指定を最適化($exists: trueを削除)
 - 予約の単価オファーを最適化
+- オファーカタログ検索条件拡張
 
 ### Deprecated
 

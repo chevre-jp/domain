@@ -29,8 +29,13 @@ export class MongoRepository {
             });
         }
 
-        if (params.id !== undefined) {
+        if (typeof params.id === 'string') {
             andConditions.push({ _id: new RegExp(params.id) });
+        } else {
+            const idIn = params.id?.$in;
+            if (Array.isArray(idIn)) {
+                andConditions.push({ _id: { $in: idIn } });
+            }
         }
 
         if (typeof params.identifier === 'string') {
