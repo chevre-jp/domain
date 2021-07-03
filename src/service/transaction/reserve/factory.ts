@@ -6,6 +6,8 @@ import * as moment from 'moment';
 import * as factory from '../../../factory';
 import { settings } from '../../../settings';
 
+const INCLUDE_OFFER_PRICE_SPEC_IN_RESERVATION_TICKET = process.env.INCLUDE_OFFER_PRICE_SPEC_IN_RESERVATION_TICKET === '1';
+
 export function createStartParams(params: factory.assetTransaction.reserve.IStartParamsWithoutDetail & {
     reservationNumber: string;
     projectSettings?: factory.project.ISettings;
@@ -121,6 +123,8 @@ export function createReservedTicket(params: {
         };
     }
 
+    const ticketType = createTicketType({ availableOffer: params.availableOffer });
+
     return {
         dateIssued: params.dateIssued,
         issuedBy: {
@@ -128,7 +132,7 @@ export function createReservedTicket(params: {
             name: <string>params.event.location.name?.ja
         },
         priceCurrency: factory.priceCurrency.JPY,
-        ticketType: params.availableOffer,
+        ticketType,
         // totalPrice: ticketOffer.priceSpecification, // いったん不要かと思われる
         typeOf: 'Ticket',
         underName: {
@@ -138,6 +142,53 @@ export function createReservedTicket(params: {
         ...(ticketedSeat !== undefined)
             ? { ticketedSeat: ticketedSeat }
             : {}
+    };
+}
+
+/**
+ * 予約に最適化された単価オファーを作成する
+ */
+function createTicketType(params: {
+    availableOffer: factory.offer.IUnitPriceOffer;
+}): factory.reservation.ITicketType<factory.reservationType.EventReservation> {
+    const availableOffer = params.availableOffer;
+
+    return {
+        description: availableOffer.description,
+        id: availableOffer.id,
+        identifier: availableOffer.identifier,
+        name: availableOffer.name,
+        priceCurrency: availableOffer.priceCurrency,
+        // priceSpecificationを最適化(accounting不要)
+        // accounting: { typeOf: "Accounting", … }
+        // name: { ja: "大学・専門", en: "College" }
+        // price: 1500
+        // priceCurrency: "JPY"
+        // project: { typeOf: "Project", id: "toei-production" }
+        // referenceQuantity: { typeOf: "QuantitativeValue", value: 1, unitCode: "C62" }
+        // typeOf: "UnitPriceSpecification"
+        // valueAddedTaxIncluded: true
+        project: availableOffer.project,
+        typeOf: availableOffer.typeOf,
+        ...(Array.isArray(availableOffer.additionalProperty)) ? { additionalProperty: availableOffer.additionalProperty } : undefined,
+        ...(typeof availableOffer.category?.codeValue === 'string') ? { category: availableOffer.category } : undefined,
+        ...(typeof availableOffer.color === 'string') ? { color: availableOffer.color } : undefined,
+        ...(availableOffer.validRateLimit !== undefined) ? { validRateLimit: availableOffer.validRateLimit } : undefined,
+        ...(INCLUDE_OFFER_PRICE_SPEC_IN_RESERVATION_TICKET)
+            ? {
+                priceSpecification: {
+                    // ...availableOffer.priceSpecification,
+                    name: availableOffer.priceSpecification?.name,
+                    price: Number(availableOffer.priceSpecification?.price),
+                    priceCurrency: <factory.priceCurrency>availableOffer.priceSpecification?.priceCurrency,
+                    project: <factory.project.IProject>availableOffer.priceSpecification?.project,
+                    referenceQuantity: <factory.quantitativeValue.IQuantitativeValue<factory.unitCode>>
+                        availableOffer.priceSpecification?.referenceQuantity,
+                    typeOf: <factory.priceSpecificationType.UnitPriceSpecification>availableOffer.priceSpecification?.typeOf,
+                    valueAddedTaxIncluded: <boolean>availableOffer.priceSpecification?.valueAddedTaxIncluded
+                }
+            }
+            : undefined
     };
 }
 

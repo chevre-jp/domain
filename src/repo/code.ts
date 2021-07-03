@@ -27,25 +27,10 @@ export class MongoRepository {
         if (typeof projectIdEq === 'string') {
             andConditions.push({
                 'project.id': {
-                    $exists: true,
+                    // $exists: true,
                     $eq: projectIdEq
                 }
             });
-        }
-
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.project !== undefined) {
-            if (params.project.id !== undefined && params.project.id !== null) {
-                if (typeof params.project.id.$eq === 'string') {
-                    andConditions.push({
-                        'project.id': {
-                            $exists: true,
-                            $eq: params.project.id.$eq
-                        }
-                    });
-                }
-            }
         }
 
         // tslint:disable-next-line:no-single-line-block-comment

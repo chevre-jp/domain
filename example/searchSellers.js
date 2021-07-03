@@ -7,13 +7,13 @@ async function main() {
     const sellerRepo = new domain.repository.Seller(mongoose.connection);
 
     const sellers = await sellerRepo.search({
-        project: { id: { $eq: '' } },
-        additionalProperty: {
-            $in: [
-                { name: 'branchCode', value: '120' },
-                { name: 'branchCode', value: '112' }
-            ]
-        }
+        project: { id: { $eq: 'cinerino' } },
+        // additionalProperty: {
+        //     $in: [
+        //         { name: 'branchCode', value: '120' },
+        //         { name: 'branchCode', value: '112' }
+        //     ]
+        // }
     });
     console.log(sellers);
     console.log(sellers.length);

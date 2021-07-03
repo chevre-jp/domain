@@ -22,7 +22,7 @@ export class MongoRepository {
         if (typeof projectIdEq === 'string') {
             andConditions.push({
                 'project.id': {
-                    $exists: true,
+                    // $exists: true,
                     $eq: projectIdEq
                 }
             });
@@ -209,7 +209,7 @@ export class MongoRepository {
                     matchStages.push({
                         $match: {
                             'project.id': {
-                                $exists: true,
+                                // $exists: true,
                                 $eq: params.project.id.$eq
                             }
                         }
