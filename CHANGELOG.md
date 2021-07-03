@@ -10,10 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- 各リソースのプロジェクトID検索条件指定を最適化($exists: trueを削除)
-- 予約の単価オファーを最適化
-- オファーカタログ検索条件拡張
-
 ### Deprecated
 
 ### Removed
@@ -21,6 +17,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.56.0 - 2021-07-03
+
+### Changed
+
+- 各リソースのプロジェクトID検索条件指定を最適化($exists: trueを削除)
+- 予約の単価オファーを最適化
+- オファーカタログ検索条件拡張
 
 ## v15.55.0 - 2021-06-25
 
