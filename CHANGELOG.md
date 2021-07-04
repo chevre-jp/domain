@@ -10,8 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- プロジェクトメンバー検索条件拡張
-
 ### Deprecated
 
 ### Removed
@@ -19,6 +17,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.57.0 - 2021-07-04
+
+### Changed
+
+- プロジェクトメンバー検索条件拡張
 
 ## v15.56.0 - 2021-07-03
 
