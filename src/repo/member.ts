@@ -3,25 +3,6 @@ import { Connection, Model } from 'mongoose';
 import * as factory from '../factory';
 import { modelName } from './mongoose/model/member';
 
-export enum RoleType {
-    OrganizationRole = 'OrganizationRole'
-}
-export interface IRole {
-    typeOf: RoleType;
-    roleName: string;
-    memberOf: { typeOf: factory.organizationType.Project; id: string };
-}
-export interface IMember {
-    typeOf: RoleType;
-    project: { typeOf: factory.organizationType.Project; id: string };
-    member: {
-        typeOf: factory.personType;
-        id: string;
-        username: string;
-        hasRole: IRole[];
-    };
-}
-
 /**
  * プロジェクトメンバーリポジトリ
  */
@@ -33,7 +14,7 @@ export class MongoRepository {
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
-    public static CREATE_MONGO_CONDITIONS(params: any) {
+    public static CREATE_MONGO_CONDITIONS(params: factory.iam.ISearchConditions) {
         const andConditions: any[] = [];
 
         // tslint:disable-next-line:no-single-line-block-comment
@@ -106,10 +87,20 @@ export class MongoRepository {
             });
         }
 
+        const memberHasRoleRoleNameEq = params.member?.hasRole?.roleName?.$eq;
+        if (typeof memberHasRoleRoleNameEq === 'string') {
+            andConditions.push({
+                'member.hasRole.roleName': {
+                    $exists: true,
+                    $eq: memberHasRoleRoleNameEq
+                }
+            });
+        }
+
         return andConditions;
     }
 
-    public async count(params: any): Promise<number> {
+    public async count(params: factory.iam.ISearchConditions): Promise<number> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
 
         return this.memberModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
@@ -118,8 +109,8 @@ export class MongoRepository {
     }
 
     public async search(
-        params: any
-    ): Promise<IMember[]> {
+        params: factory.iam.ISearchConditions
+    ): Promise<factory.iam.IMember[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.memberModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},
@@ -139,8 +130,8 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.sort !== undefined) {
-            query.sort(params.sort);
+        if ((<any>params).sort !== undefined) {
+            query.sort((<any>params).sort);
         }
 
         // const explainResult = await (<any>query).explain();
@@ -153,7 +144,7 @@ export class MongoRepository {
 
     public async findById(params: {
         id: string;
-    }): Promise<IMember> {
+    }): Promise<factory.iam.IMember> {
         const doc = await this.memberModel.findOne(
             {
                 _id: params.id
