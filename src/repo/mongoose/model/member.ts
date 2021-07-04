@@ -73,6 +73,16 @@ schema.index(
     }
 );
 
+schema.index(
+    { 'member.hasRole.roleName': 1, 'member.id': 1 },
+    {
+        name: 'searchByMemberHasRoleRoleName',
+        partialFilterExpression: {
+            'member.hasRole.roleName': { $exists: true }
+        }
+    }
+);
+
 mongoose.model(modelName, schema)
     .on(
         'index',
