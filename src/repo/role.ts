@@ -22,60 +22,53 @@ export class MongoRepository {
         this.roleModel = connection.model(modelName);
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
-    public static CREATE_MONGO_CONDITIONS(params: any) {
+    public static CREATE_MONGO_CONDITIONS(params: factory.iam.IRoleSearchConditions) {
         const andConditions: any[] = [];
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.id !== undefined && params.id !== null) {
-            if (typeof params.id.$eq === 'string') {
-                andConditions.push({
-                    _id: {
-                        $eq: params.id.$eq
-                    }
-                });
-            }
-        }
+        // if (params.id !== undefined && params.id !== null) {
+        //     if (typeof params.id.$eq === 'string') {
+        //         andConditions.push({
+        //             _id: {
+        //                 $eq: params.id.$eq
+        //             }
+        //         });
+        //     }
+        // }
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.project !== undefined && params.project !== null) {
-            if (params.project.id !== undefined && params.project.id !== null) {
-                if (typeof params.project.id.$eq === 'string') {
-                    andConditions.push({
-                        'project.id': {
-                            $eq: params.project.id.$eq
-                        }
-                    });
-                }
-            }
+        // if (params.project !== undefined && params.project !== null) {
+        //     if (params.project.id !== undefined && params.project.id !== null) {
+        //         if (typeof params.project.id.$eq === 'string') {
+        //             andConditions.push({
+        //                 'project.id': {
+        //                     $eq: params.project.id.$eq
+        //                 }
+        //             });
+        //         }
+        //     }
+        // }
+
+        if (typeof params.roleName?.$eq === 'string') {
+            andConditions.push({ roleName: { $eq: params.roleName.$eq } });
         }
 
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore else */
-        if (params.roleName !== undefined && params.roleName !== null) {
-            if (typeof params.roleName.$eq === 'string') {
-                andConditions.push({
-                    roleName: {
-                        $eq: params.roleName.$eq
-                    }
-                });
-            }
+        const roleNameIn = params.roleName?.$in;
+        if (Array.isArray(roleNameIn)) {
+            andConditions.push({ roleName: { $in: roleNameIn } });
+        }
 
-            if (Array.isArray(params.roleName.$in)) {
-                andConditions.push({
-                    roleName: {
-                        $in: params.roleName.$in
-                    }
-                });
-            }
+        const permissionsEq = params.permissions?.$eq;
+        if (typeof permissionsEq === 'string') {
+            andConditions.push({ permissions: { $exists: true, $eq: permissionsEq } });
         }
 
         return andConditions;
     }
 
-    public async count(params: any): Promise<number> {
+    public async count(params: factory.iam.IRoleSearchConditions): Promise<number> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
 
         return this.roleModel.countDocuments((conditions.length > 0) ? { $and: conditions } : {})
@@ -83,9 +76,7 @@ export class MongoRepository {
             .exec();
     }
 
-    public async search(
-        params: any
-    ): Promise<IRole[]> {
+    public async search(params: factory.iam.IRoleSearchConditions): Promise<IRole[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.roleModel.find(
             (conditions.length > 0) ? { $and: conditions } : {},

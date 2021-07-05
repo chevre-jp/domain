@@ -54,6 +54,16 @@ schema.index(
     }
 );
 
+schema.index(
+    { permissions: 1, roleName: 1 },
+    {
+        name: 'searchByPermissions',
+        partialFilterExpression: {
+            permissions: { $exists: true }
+        }
+    }
+);
+
 mongoose.model(modelName, schema)
     .on(
         'index',
