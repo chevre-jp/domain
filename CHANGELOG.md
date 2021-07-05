@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 
 - IAMロール検索条件拡張
+- 予約にissuedThroughを追加
 
 ### Deprecated
 

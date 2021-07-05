@@ -412,6 +412,7 @@ export function createReservation(params: {
         project: params.project,
         typeOf: factory.reservationType.EventReservation,
         id: params.id,
+        issuedThrough: { typeOf: factory.product.ProductType.EventService },
         additionalProperty: params.additionalProperty,
         bookingTime: params.reserveDate,
         modifiedTime: params.reserveDate,
