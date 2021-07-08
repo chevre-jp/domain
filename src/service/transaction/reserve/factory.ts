@@ -353,6 +353,7 @@ export function createAdditionalTicketText(params: {
 
 export type IUnitPriceSpecification = factory.priceSpecification.IPriceSpecification<factory.priceSpecificationType.UnitPriceSpecification>;
 
+// tslint:disable-next-line:max-func-body-length
 export function createReservation(params: {
     project: factory.project.IProject;
     id: string;
@@ -412,7 +413,23 @@ export function createReservation(params: {
         project: params.project,
         typeOf: factory.reservationType.EventReservation,
         id: params.id,
-        issuedThrough: { typeOf: factory.product.ProductType.EventService },
+        issuedThrough: {
+            typeOf: factory.product.ProductType.EventService,
+            // issuedThrough.serviceTypeを連携
+            ...(typeof params.reservationFor.offers?.itemOffered.serviceType?.codeValue === 'string')
+                ? {
+                    serviceType: {
+                        codeValue: params.reservationFor.offers.itemOffered.serviceType.codeValue,
+                        inCodeSet: {
+                            typeOf: 'CategoryCodeSet',
+                            identifier: factory.categoryCode.CategorySetIdentifier.ServiceType
+                        },
+                        project: params.project,
+                        typeOf: 'CategoryCode'
+                    }
+                }
+                : undefined
+        },
         additionalProperty: params.additionalProperty,
         bookingTime: params.reserveDate,
         modifiedTime: params.reserveDate,
@@ -426,7 +443,24 @@ export function createReservation(params: {
             ]
         },
         priceCurrency: factory.priceCurrency.JPY,
-        reservationFor: params.reservationFor,
+        // reservationForを最適化
+        reservationFor: {
+            endDate: params.reservationFor.endDate,
+            eventStatus: params.reservationFor.eventStatus,
+            id: params.reservationFor.id,
+            location: params.reservationFor.location,
+            name: params.reservationFor.name,
+            project: params.reservationFor.project,
+            startDate: params.reservationFor.startDate,
+            superEvent: params.reservationFor.superEvent,
+            typeOf: params.reservationFor.typeOf,
+            ...(typeof params.reservationFor.workPerformed?.typeOf === 'string')
+                ? { workPerformed: params.reservationFor.workPerformed }
+                : undefined,
+            ...(params.reservationFor.doorTime instanceof Date)
+                ? { doorTime: params.reservationFor.doorTime }
+                : undefined
+        },
         reservationNumber: params.reservationNumber,
         reservationStatus: factory.reservationStatusType.ReservationPending,
         reservedTicket: params.reservedTicket,
