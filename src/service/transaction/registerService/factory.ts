@@ -148,14 +148,19 @@ export function createServiceOutput(params: {
             throw new factory.errors.NotImplemented(`Product type ${product.typeOf} not implemented`);
     }
 
+    const issuedThrough: factory.product.IProduct = {
+        project: { typeOf: product.project.typeOf, id: product.project.id },
+        typeOf: product.typeOf,
+        id: product.id,
+        ...(typeof product.serviceType?.typeOf === 'string')
+            ? { serviceType: product.serviceType }
+            : undefined
+    };
+
     return {
         project: { typeOf: product.project.typeOf, id: product.project.id },
         identifier: identifier,
-        issuedThrough: {
-            project: { typeOf: product.project.typeOf, id: product.project.id },
-            typeOf: product.typeOf,
-            id: product.id
-        },
+        issuedThrough,
         typeOf: serviceOutputType,
         ...{
             dateIssued: params.dateIssued

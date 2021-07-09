@@ -1,7 +1,7 @@
 
 const chevre = require('../lib/index');
+const moment = require('moment');
 const mongoose = require('mongoose');
-const { isTypeFlagSet } = require('tslint');
 
 const project = { id: '' };
 
@@ -12,6 +12,11 @@ async function main() {
 
     const cursor = await ownershipInfoRepo.ownershipInfoModel.find(
         {
+            ownedFrom: {
+                $gte: moment()
+                    .add(-1, 'days')
+                    .toDate()
+            },
             'typeOfGood.typeOf': {
                 $exists: true,
                 $eq: chevre.factory.reservationType.EventReservation

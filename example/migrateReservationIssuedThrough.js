@@ -1,5 +1,6 @@
 
 const chevre = require('../lib/index');
+const moment = require('moment');
 const mongoose = require('mongoose');
 
 const project = { id: '' };
@@ -11,6 +12,11 @@ async function main() {
 
     const cursor = await reservationRepo.reservationModel.find(
         {
+            bookingTime: {
+                $gte: moment()
+                    .add(-1, 'days')
+                    .toDate()
+            }
             // 'project.id': {
             //     $exists: true,
             //     $eq: project.id
