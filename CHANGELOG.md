@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
+- 決済URL発行ファンクションを追加
+
 ### Changed
 
 - IAMロール検索条件拡張

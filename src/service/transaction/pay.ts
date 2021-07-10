@@ -53,6 +53,67 @@ export type ICheckOperation<T> = (repos: {
     seller: SellerRepo;
 }) => Promise<T>;
 
+export type IPublishPaymentUrlOperation<T> = (repos: {
+    product: ProductRepo;
+    project: ProjectRepo;
+    seller: SellerRepo;
+}) => Promise<T>;
+
+export interface IPublishPaymentUrlResult {
+    paymentMethodId: string;
+    paymentUrl: string;
+}
+
+/**
+ * 外部決済ロケーション発行
+ */
+export function publishPaymentUrl(
+    params: factory.assetTransaction.pay.IStartParamsWithoutDetail
+): IPublishPaymentUrlOperation<IPublishPaymentUrlResult> {
+    return async (repos: {
+        product: ProductRepo;
+        project: ProjectRepo;
+        seller: SellerRepo;
+    }) => {
+        const paymentServiceType = params.object?.typeOf;
+
+        // 金額をfix
+        const amount = params.object.paymentMethod?.amount;
+        if (typeof amount !== 'number') {
+            throw new factory.errors.ArgumentNull('object.paymentMethod.amount');
+        }
+
+        const transactionNumber = params.transactionNumber;
+        if (typeof transactionNumber !== 'string' || transactionNumber.length === 0) {
+            throw new factory.errors.ArgumentNull('transactionNumber');
+        }
+
+        await validateSeller(params)(repos);
+
+        let result: IPublishPaymentUrlResult;
+
+        switch (paymentServiceType) {
+            case factory.service.paymentService.PaymentServiceType.CreditCard:
+                const authorizeResult = await CreditCardPayment.authorize(params)(repos);
+                const acsUrl = authorizeResult.execTranResult.acsUrl;
+                if (typeof acsUrl !== 'string' || acsUrl.length === 0) {
+                    throw new factory.errors.ServiceUnavailable('Payment URL unable to publish');
+                }
+                result = {
+                    paymentMethodId: transactionNumber,
+                    paymentUrl: acsUrl
+                };
+
+                break;
+
+            default:
+                throw new factory.errors.NotImplemented(`Payment service '${paymentServiceType}' not implemented`);
+        }
+
+        return result;
+    };
+}
+
 /**
  * 決済方法認証
  */
