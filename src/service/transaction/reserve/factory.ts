@@ -312,11 +312,14 @@ function validateEligibleMembershipType(params: {
             throw new factory.errors.Argument('programMembershipUsed', 'programMembership required');
         }
 
-        const isEligible = eligibleMembershipType.some((membershipType) => membershipType.codeValue === programMembershipUsed.typeOf);
+        // programMembershipUsed.issuedThrough.serviceTypeで検証する
+        const isEligible = eligibleMembershipType.some(
+            (membershipType) => membershipType.codeValue === programMembershipUsed.issuedThrough?.serviceType?.codeValue
+        );
         if (!isEligible) {
             throw new factory.errors.Argument(
                 'programMembershipUsed',
-                `${programMembershipUsed.typeOf} is not eligible for the offer ${params.availableOffer.id}`
+                `${programMembershipUsed.identifier} is not eligible for the offer ${params.availableOffer.id}`
             );
         }
     }

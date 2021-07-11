@@ -438,8 +438,9 @@ function validateProgramMembershipUsed(params: {
 
             programMembershipUsed = {
                 project: serviceOutput.project,
-                typeOf: <any>serviceOutput.typeOf,
-                identifier: serviceOutput.identifier
+                typeOf: serviceOutput.typeOf,
+                identifier: serviceOutput.identifier,
+                issuedThrough: serviceOutput.issuedThrough
             };
         }
 
