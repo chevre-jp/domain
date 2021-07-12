@@ -135,6 +135,16 @@ export class MongoRepository {
             });
         }
 
+        const serviceTypeCodeValueEq = params.serviceType?.codeValue?.$eq;
+        if (typeof serviceTypeCodeValueEq === 'string') {
+            andConditions.push({
+                'serviceType.codeValue': {
+                    $exists: true,
+                    $eq: serviceTypeCodeValueEq
+                }
+            });
+        }
+
         const nameRegex = params.name?.$regex;
         if (typeof nameRegex === 'string') {
             const nameRegexExp = new RegExp(nameRegex);

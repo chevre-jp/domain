@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 予約のreservationForを最適化
 - プロダクトのserviceTypeをサービスアウトプットに連携
 - 予約のprogramMembershipUsed型をPermitに変更
+- プロダクト検索条件拡張
+- サービスアウトプット検索条件拡張
 
 ### Deprecated
 

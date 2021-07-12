@@ -94,6 +94,16 @@ export class MongoRepository {
             });
         }
 
+        const issuedThroughServiceTypeCodeValueEq = params.issuedThrough?.serviceType?.codeValue?.$eq;
+        if (typeof issuedThroughServiceTypeCodeValueEq === 'string') {
+            andConditions.push({
+                'issuedThrough.serviceType.codeValue': {
+                    $exists: true,
+                    $eq: issuedThroughServiceTypeCodeValueEq
+                }
+            });
+        }
+
         return andConditions;
     }
 

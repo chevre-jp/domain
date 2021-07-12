@@ -98,6 +98,16 @@ schema.index(
 );
 
 schema.index(
+    { 'serviceType.codeValue': 1, productID: 1 },
+    {
+        name: 'searchByServiceTypeCodeValue',
+        partialFilterExpression: {
+            'serviceType.codeValue': { $exists: true }
+        }
+    }
+);
+
+schema.index(
     { typeOf: 1, productID: 1 },
     {
         name: 'searchByTypeOf'
