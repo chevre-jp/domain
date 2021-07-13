@@ -232,14 +232,14 @@ export class MongoRepository {
     public async findAvailableChannel(params: {
         project: { id: string };
         serviceOuput: { typeOf: string };
-        typeOf: string;
+        typeOf: factory.service.paymentService.PaymentServiceType;
     }): Promise<factory.service.paymentService.IAvailableChannel> {
         const paymentServices = await this.search({
             limit: 1,
             page: 1,
             project: { id: { $eq: params.project.id } },
             typeOf: { $eq: params.typeOf },
-            serviceOutput: { typeOf: { $eq: params.serviceOuput.typeOf } }
+            serviceType: { codeValue: { $eq: params.serviceOuput.typeOf } }
         });
         const paymentServiceSetting = <factory.service.paymentService.IService | undefined>paymentServices.shift();
         if (paymentServiceSetting === undefined) {

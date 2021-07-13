@@ -3,7 +3,7 @@ const chevre = require('../lib/index');
 const moment = require('moment-timezone');
 const mongoose = require('mongoose');
 
-const project = { id: 'sskts-test' };
+const project = { id: 'sskts-production' };
 
 async function main() {
     await mongoose.connect(process.env.MONGOLAB_URI);

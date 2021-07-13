@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 予約のprogramMembershipUsed型をPermitに変更
 - プロダクト検索条件拡張
 - サービスアウトプット検索条件拡張
+- 決済サービスのserviceOutputへの依存をserviceTypeへの依存に変更
 
 ### Deprecated
 
