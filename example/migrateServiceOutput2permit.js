@@ -11,7 +11,7 @@ async function main() {
     const result = await serviceOutputRepo.serviceOutputModel.updateMany(
         {
             typeOf: {
-                $eq: 'ProgramMembership'
+                $eq: 'Account'
             }
         },
         {

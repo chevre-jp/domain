@@ -12,6 +12,7 @@ import { MongoRepository as EventRepo } from '../../repo/event';
 import { MongoRepository as ProductRepo } from '../../repo/product';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
 import { MongoRepository as SellerRepo } from '../../repo/seller';
+import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 
 import * as AccountPayment from '../payment/account';
@@ -28,6 +29,7 @@ export type IStartOperation<T> = (repos: {
     product: ProductRepo;
     project: ProjectRepo;
     seller: SellerRepo;
+    serviceOutput: ServiceOutputRepo;
     transaction: TransactionRepo;
     task: TaskRepo;
 }) => Promise<T>;
@@ -165,6 +167,7 @@ export function start(
         product: ProductRepo;
         project: ProjectRepo;
         seller: SellerRepo;
+        serviceOutput: ServiceOutputRepo;
         transaction: TransactionRepo;
         task: TaskRepo;
     }) => {
@@ -256,6 +259,7 @@ function processAuthorizeAccount(
         event: EventRepo;
         project: ProjectRepo;
         seller: SellerRepo;
+        serviceOutput: ServiceOutputRepo;
         transaction: TransactionRepo;
     }): Promise<factory.assetTransaction.pay.ITransaction> => {
         await validateAccount(params)(repos);

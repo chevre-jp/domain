@@ -13,6 +13,7 @@ import * as factory from '../../factory';
 import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as TransactionRepo } from '../../repo/assetTransaction';
 import { MongoRepository as ProjectRepo } from '../../repo/project';
+import { MongoRepository as ServiceOutputRepo } from '../../repo/serviceOutput';
 import { MongoRepository as TaskRepo } from '../../repo/task';
 import { RedisRepository as TransactionNumberRepo } from '../../repo/transactionNumber';
 
@@ -31,6 +32,7 @@ export type IPendingTransaction = factory.account.transaction.withdraw.ITransact
 export function authorize(params: factory.assetTransaction.pay.IStartParamsWithoutDetail) {
     return async (repos: {
         project: ProjectRepo;
+        serviceOutput: ServiceOutputRepo;
     }): Promise<IPendingTransaction> => {
         const project = await repos.project.findById({ id: params.project.id });
 
@@ -38,6 +40,9 @@ export function authorize(params: factory.assetTransaction.pay.IStartParamsWitho
         if (typeof transactionNumber !== 'string') {
             throw new factory.errors.ArgumentNull('transactionNumber');
         }
+
+        // 決済方法検証
+        await validatePaymentMethod(params)(repos);
 
         // 口座取引開始
         let pendingTransaction: IPendingTransaction;
@@ -61,6 +66,58 @@ export function authorize(params: factory.assetTransaction.pay.IStartParamsWitho
         }
 
         return pendingTransaction;
+    };
+}
+
+// tslint:disable-next-line:max-func-body-length
+function validatePaymentMethod(params: factory.assetTransaction.pay.IStartParamsWithoutDetail) {
+    return async (repos: {
+        serviceOutput: ServiceOutputRepo;
+    }): Promise<void> => {
+        const serviceOutputIdentifier = params.object.paymentMethod?.accountId;
+        const amount = params.object.paymentMethod?.amount;
+        const paymentMethodType = params.object.paymentMethod?.typeOf;
+        if (typeof serviceOutputIdentifier !== 'string') {
+            throw new factory.errors.ArgumentNull('object.paymentMethod.accountId');
+        }
+        if (typeof amount !== 'number') {
+            throw new factory.errors.ArgumentNull('object.paymentMethod.amount');
+        }
+        if (typeof paymentMethodType !== 'string') {
+            throw new factory.errors.ArgumentNull('object.paymentMethod.typeOf');
+        }
+
+        // サービスアウトプット存在確認
+        const serviceOutputs = await repos.serviceOutput.search(
+            {
+                limit: 1,
+                project: { id: { $eq: params.project.id } },
+                identifier: { $eq: serviceOutputIdentifier }
+                // issuedThrough: { serviceType: { codeValue: { $eq: paymentMethodType } } }
+            }
+        );
+        const serviceOutput = serviceOutputs.shift();
+        if (serviceOutput === undefined) {
+            throw new factory.errors.NotFound('ServiceOutput');
+        }
+
+        // サービスタイプを確認
+        if (serviceOutput.issuedThrough?.serviceType?.codeValue !== paymentMethodType) {
+            throw new factory.errors.Argument('object.paymentMethod.accountId', 'paymentMethodType not matched');
+        }
+
+        // 出金金額設定を確認
+        const paymentAmount = serviceOutput.paymentAmount;
+        if (typeof paymentAmount?.minValue === 'number') {
+            if (amount < paymentAmount.minValue) {
+                throw new factory.errors.Argument('object.paymentMethod.amount', `mininum payment amount requirement not satisfied`);
+            }
+        }
+        if (typeof paymentAmount?.maxValue === 'number') {
+            if (amount > paymentAmount.maxValue) {
+                throw new factory.errors.Argument('object.paymentMethod.amount', `maximum payment amount requirement not satisfied`);
+            }
+        }
     };
 }
 

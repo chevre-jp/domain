@@ -12,7 +12,7 @@ async function main() {
         {
             'typeOfGood.typeOf': {
                 $exists: true,
-                $eq: 'ProgramMembership'
+                $eq: 'Account'
             }
         },
         {
