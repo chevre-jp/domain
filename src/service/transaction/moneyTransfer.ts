@@ -82,7 +82,7 @@ export function start(
             limit: 1,
             page: 1,
             project: { id: { $eq: params.project.id } },
-            serviceOutput: { typeOf: { $eq: serviceOutputType } }
+            serviceType: { codeValue: { $eq: serviceOutputType } }
         });
         const product = products.shift();
         if (product === undefined) {

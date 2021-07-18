@@ -136,6 +136,16 @@ schema.index(
     }
 );
 
+schema.index(
+    { 'issuedThrough.serviceType.codeValue': 1, productID: 1 },
+    {
+        name: 'searchByIssuedThroughServiceTypeCodeValue',
+        partialFilterExpression: {
+            'issuedThrough.serviceType.codeValue': { $exists: true }
+        }
+    }
+);
+
 mongoose.model(modelName, schema)
     .on(
         'index',

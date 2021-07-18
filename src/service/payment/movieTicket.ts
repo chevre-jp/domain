@@ -690,7 +690,7 @@ function getCredentials(params: {
             page: 1,
             project: { id: { $eq: params.seller.project.id } },
             typeOf: { $eq: factory.service.paymentService.PaymentServiceType.MovieTicket },
-            serviceOutput: { typeOf: { $eq: params.paymentMethodType } }
+            serviceType: { codeValue: { $eq: params.paymentMethodType } }
         });
         const paymentService = paymentServices.shift();
         if (paymentService === undefined) {

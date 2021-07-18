@@ -595,7 +595,7 @@ function getGMOInfoFromSeller(params: {
             page: 1,
             project: { id: { $eq: seller.project.id } },
             typeOf: { $eq: factory.service.paymentService.PaymentServiceType.CreditCard },
-            serviceOutput: { typeOf: { $eq: params.paymentMethodType } }
+            serviceType: { codeValue: { $eq: params.paymentMethodType } }
         });
         const paymentService = paymentServices.shift();
         if (paymentService === undefined) {

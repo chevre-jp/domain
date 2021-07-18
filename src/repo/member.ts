@@ -130,8 +130,8 @@ export class MongoRepository {
 
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if ((<any>params).sort !== undefined) {
-            query.sort((<any>params).sort);
+        if (params.sort !== undefined) {
+            query.sort(params.sort);
         }
 
         // const explainResult = await (<any>query).explain();

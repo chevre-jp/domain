@@ -174,15 +174,11 @@ export function start(
                 const openAccountParams = serviceOutputs.map((serviceOutput) => {
                     const serviceOutputIdentifier = serviceOutput?.identifier;
                     const serviceOutputName = serviceOutput?.name;
-                    const serviceOutputTypeOf = serviceOutput?.typeOf;
                     const accountType = serviceOutput?.amount?.currency;
                     const initialBalance = serviceOutput?.amount?.value;
 
                     if (typeof serviceOutputIdentifier !== 'string') {
                         throw new factory.errors.ServiceUnavailable('serviceOutput identifier undefined');
-                    }
-                    if (typeof serviceOutputTypeOf !== 'string') {
-                        throw new factory.errors.ServiceUnavailable('Account typeOf undefined');
                     }
                     if (typeof accountType !== 'string') {
                         throw new factory.errors.ServiceUnavailable('Account currency undefined');
@@ -192,8 +188,10 @@ export function start(
                         project: { typeOf: project.typeOf, id: project.id },
                         accountType: accountType,
                         accountNumber: serviceOutputIdentifier,
-                        name: (typeof serviceOutputName === 'string') ? serviceOutputName : serviceOutputTypeOf,
-                        typeOf: serviceOutputTypeOf,
+                        name: (typeof serviceOutputName === 'string') ? serviceOutputName : serviceOutputIdentifier,
+                        // ひとまず固定
+                        // 口座は複数のプロダクトに結合する可能性もあり、どのように利用されるかは知らない。ただbalanceを管理するだけ。通貨は知っている。
+                        typeOf: 'Account',
                         ...(typeof initialBalance === 'number') ? { initialBalance } : undefined
                     };
                 });

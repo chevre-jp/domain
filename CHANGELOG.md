@@ -18,6 +18,27 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.58.0 - 2021-07-18
+
+### Added
+
+- 決済URL発行ファンクションを追加
+
+### Changed
+
+- IAMロール検索条件拡張
+- 予約にissuedThroughを追加
+- 予約のreservationForを最適化
+- プロダクトのserviceTypeをサービスアウトプットに連携
+- 予約のprogramMembershipUsed型をPermitに変更
+- プロダクト検索条件拡張
+- サービスアウトプット検索条件拡張
+- 決済サービスのserviceOutputへの依存をserviceTypeへの依存に変更
+- ペイメントカード登録時に作成される口座のtypeOfをAccountに固定
+- ペイメントカード決済承認前に決済方法検証処理を追加
+- 予約開始時にissuedByの指定があれば適用するように調整
+- 注文カスタマーインターフェースをウェブアプリケーションにも拡張
+
 ## v15.57.0 - 2021-07-04
 
 ### Changed

@@ -41,7 +41,8 @@ const schema = new mongoose.Schema(
         underName: mongoose.SchemaTypes.Mixed,
         checkedIn: { type: Boolean, default: false },
         attended: { type: Boolean, default: false },
-        additionalProperty: mongoose.SchemaTypes.Mixed
+        additionalProperty: mongoose.SchemaTypes.Mixed,
+        issuedThrough: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'reservations',

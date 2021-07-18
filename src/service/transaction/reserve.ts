@@ -400,8 +400,13 @@ function validateProgramMembershipUsed(params: {
         const now = new Date();
         let programMembershipUsed: factory.reservation.IProgramMembershipUsed<factory.reservationType.EventReservation> | undefined;
 
-        const programMembershipUsedAccessCode = params.acceptedOffer.itemOffered?.serviceOutput?.programMembershipUsed?.accessCode;
-        const programMembershipUsedIdentifier = params.acceptedOffer.itemOffered?.serviceOutput?.programMembershipUsed?.identifier;
+        const requestedProgramMembershipUsed = params.acceptedOffer.itemOffered?.serviceOutput?.programMembershipUsed;
+        if (typeof requestedProgramMembershipUsed === 'string') {
+            throw new factory.errors.Argument('acceptedOffer.itemOffered.serviceOutput.programMembershipUsed', 'must be object');
+        }
+
+        const programMembershipUsedAccessCode = requestedProgramMembershipUsed?.accessCode;
+        const programMembershipUsedIdentifier = requestedProgramMembershipUsed?.identifier;
         if (typeof programMembershipUsedIdentifier === 'string' && programMembershipUsedIdentifier.length > 0) {
             // メンバーシップの存在確認
             const searchServiceOutputsResult = await repos.serviceOutput.search({
@@ -433,8 +438,9 @@ function validateProgramMembershipUsed(params: {
 
             programMembershipUsed = {
                 project: serviceOutput.project,
-                typeOf: <any>serviceOutput.typeOf,
-                identifier: serviceOutput.identifier
+                typeOf: serviceOutput.typeOf,
+                identifier: serviceOutput.identifier,
+                issuedThrough: serviceOutput.issuedThrough
             };
         }
 
