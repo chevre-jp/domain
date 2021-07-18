@@ -137,9 +137,10 @@ function orderItem2report(params: {
     const age = (typeof order.customer.age === 'string') ? order.customer.age : '';
 
     let username = '';
-    if (typeof order.customer.memberOf?.membershipNumber === 'string') {
-        username = order.customer.memberOf.membershipNumber;
-    }
+    // ↓旧orderの場合の参照なので廃止(2021-07-18)
+    // if (typeof order.customer.memberOf?.membershipNumber === 'string') {
+    //     username = order.customer.memberOf.membershipNumber;
+    // }
     // order.brokerを参照するように変更
     if (Array.isArray(order.broker?.identifier)) {
         const usernameByBroker = order.broker?.identifier.find((p) => p.name === 'username')?.value;

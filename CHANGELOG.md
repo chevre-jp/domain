@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 決済サービスのserviceOutputへの依存をserviceTypeへの依存に変更
 - ペイメントカード登録時に作成される口座のtypeOfをAccountに固定
 - ペイメントカード決済承認前に決済方法検証処理を追加
+- 予約開始時にissuedByの指定があれば適用するように調整
+- 注文カスタマーインターフェースをウェブアプリケーションにも拡張
 
 ### Deprecated
 

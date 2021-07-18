@@ -124,13 +124,15 @@ export function createReservedTicket(params: {
     }
 
     const ticketType = createTicketType({ availableOffer: params.availableOffer });
+    const issuedBy = createIssuedBy({ acceptedOffer: params.acceptedOffer, availableOffer: params.availableOffer });
 
     return {
         dateIssued: params.dateIssued,
-        issuedBy: {
-            typeOf: params.event.location.typeOf,
-            name: <string>params.event.location.name?.ja
-        },
+        // issuedBy: {
+        //     typeOf: params.event.location.typeOf,
+        //     name: <string>params.event.location.name?.ja
+        // },
+        issuedBy,
         priceCurrency: factory.priceCurrency.JPY,
         ticketType,
         // totalPrice: ticketOffer.priceSpecification, // いったん不要かと思われる
@@ -190,6 +192,23 @@ function createTicketType(params: {
             }
             : undefined
     };
+}
+
+function createIssuedBy(params: {
+    acceptedOffer: factory.event.screeningEvent.IAcceptedTicketOfferWithoutDetail;
+    availableOffer: factory.offer.IUnitPriceOffer;
+}): factory.reservation.IUnderName<factory.reservationType.EventReservation> {
+    let typeOf = params.acceptedOffer.itemOffered?.serviceOutput?.reservedTicket?.issuedBy?.typeOf;
+    if (typeof typeOf !== 'string') {
+        typeOf = params.availableOffer.project.typeOf;
+    }
+
+    let name = params.acceptedOffer.itemOffered?.serviceOutput?.reservedTicket?.issuedBy?.name;
+    if (typeof name !== 'string') {
+        name = params.availableOffer.project.id;
+    }
+
+    return { name, typeOf };
 }
 
 function validateDate(params: {

@@ -610,7 +610,9 @@ export function order2report(params: {
             familyName: String(order.customer.familyName),
             email: String(order.customer.email),
             telephone: String(order.customer.telephone),
-            memberOf: order.customer.memberOf,
+            memberOf: (order.customer.typeOf === factory.personType.Person)
+                ? order.customer.memberOf
+                : undefined,
             clientId: (clientIdProperty !== undefined) ? clientIdProperty.value : '',
             tokenIssuer: (tokenIssuerProperty !== undefined) ? tokenIssuerProperty.value : '',
             additionalProperty: (Array.isArray(order.customer.additionalProperty)) ? JSON.stringify(order.customer.additionalProperty) : '',
