@@ -10,8 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- 所有権の所有者インターフェースをウェブアプリケーションにも拡張
-
 ### Deprecated
 
 ### Removed
@@ -19,6 +17,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.58.1 - 2021-07-19
+
+### Changed
+
+- 所有権の所有者インターフェースをウェブアプリケーションにも拡張
 
 ## v15.58.0 - 2021-07-18
 
