@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Security
 
+## v15.58.2 - 2021-07-19
+
+### Changed
+
+- 取引のIAgentをウェブアプリケーションにも拡張
+
 ## v15.58.1 - 2021-07-19
 
 ### Changed

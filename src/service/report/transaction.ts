@@ -355,9 +355,10 @@ export function transaction2report(params: {
                 email: String(profile.email),
                 telephone: String(profile.telephone),
                 memberOf: {
-                    membershipNumber: (params.transaction.agent.memberOf !== undefined) ?
-                        params.transaction.agent.memberOf.membershipNumber :
-                        ''
+                    membershipNumber: (params.transaction.agent.typeOf === factory.personType.Person
+                        && typeof params.transaction.agent.memberOf?.membershipNumber === 'string')
+                        ? params.transaction.agent.memberOf.membershipNumber
+                        : ''
                 },
                 tokenIssuer: tokenIssuer,
                 clientId: clientId
