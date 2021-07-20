@@ -10,8 +10,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
-- 注文カスタマーインターフェースを顧客組織にも拡張
-
 ### Deprecated
 
 ### Removed
@@ -19,6 +17,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ### Security
+
+## v15.58.3 - 2021-07-20
+
+### Changed
+
+- 注文カスタマーインターフェースを顧客組織にも拡張
 
 ## v15.58.2 - 2021-07-19
 
