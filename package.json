@@ -13,7 +13,7 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "4.142.0",
+    "@chevre/factory": "4.143.0",
     "@motionpicture/coa-service": "9.0.0",
     "@motionpicture/gmo-service": "5.2.0",
     "@movieticket/reserve-api-nodejs-client": "1.0.1",
@@ -117,5 +117,5 @@
     "postversion": "git push origin --tags",
     "prepublishOnly": "npm run clean && npm run build && npm test && npm run doc"
   },
-  "version": "15.58.2"
+  "version": "15.58.3"
 }
